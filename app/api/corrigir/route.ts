@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 import { EssaySubmission, EssayResult } from "@/types";
-
-// Simulação de banco de dados em memória para armazenar resultados
-// Agora será exportado para poder ser acessado por outros módulos
-export let results: Record<string, EssayResult> = {};
+import { storeResult, getResult } from "@/lib/store";
 
 export async function POST(request: NextRequest) {
   try {
@@ -106,8 +103,8 @@ export async function POST(request: NextRequest) {
         createdAt: new Date().toISOString()
       };
       
-      // Armazenar o resultado
-      results[id] = mockResult;
+      // Armazenar o resultado usando a função do store
+      storeResult(id, mockResult);
       
       return NextResponse.json({ id });
     }
@@ -176,8 +173,8 @@ export async function POST(request: NextRequest) {
       createdAt: new Date().toISOString()
     };
     
-    // Armazenar o resultado
-    results[id] = result;
+    // Armazenar o resultado usando a função do store
+    storeResult(id, result);
     
     return NextResponse.json({ id });
     
@@ -202,7 +199,7 @@ export async function GET(request: NextRequest) {
     );
   }
   
-  const result = results[id];
+  const result = getResult(id);
   
   if (!result) {
     return NextResponse.json(

@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-
-// Importar resultados do módulo de correção (normalmente seria um DB)
-// Esta é uma implementação simplificada para o exemplo
-import { results } from "../../corrigir/route";
+import { getResult } from "@/lib/store";
 
 export async function GET(
   request: NextRequest,
@@ -17,7 +14,7 @@ export async function GET(
     );
   }
   
-  const result = results[id];
+  const result = getResult(id);
   
   if (!result) {
     return NextResponse.json(
