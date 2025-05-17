@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 import { EssaySubmission, EssayResult, EssayResultResponse } from "@/types";
 import { storeResult, getResult } from "@/lib/store";
-import { Groq } from "groq-sdk";
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,33 +30,35 @@ export async function POST(request: NextRequest) {
     REDAÇÃO DO ESTUDANTE:
     ${body.redacao}
 
-    Forneça uma análise detalhada no seguinte formato JSON (sem explicações adicionais antes ou depois):
+    Você deve responder APENAS com um objeto JSON válido, sem texto antes ou depois, com os seguintes campos, sem usar markdown:
     {
-      "nota": <nota total de 0 a 1000>,
+      "nota": número de 0 a 1000,
       "competencia1": {
-        "nota": <nota de 0 a 200>,
-        "comentario": "<análise detalhada da competência 1>"
+        "nota": número de 0 a 200,
+        "comentario": "análise detalhada da competência 1"
       },
       "competencia2": {
-        "nota": <nota de 0 a 200>,
-        "comentario": "<análise detalhada da competência 2>"
+        "nota": número de 0 a 200,
+        "comentario": "análise detalhada da competência 2"
       },
       "competencia3": {
-        "nota": <nota de 0 a 200>,
-        "comentario": "<análise detalhada da competência 3>"
+        "nota": número de 0 a 200,
+        "comentario": "análise detalhada da competência 3"
       },
       "competencia4": {
-        "nota": <nota de 0 a 200>,
-        "comentario": "<análise detalhada da competência 4>"
+        "nota": número de 0 a 200,
+        "comentario": "análise detalhada da competência 4"
       },
       "competencia5": {
-        "nota": <nota de 0 a 200>,
-        "comentario": "<análise detalhada da competência 5>"
+        "nota": número de 0 a 200,
+        "comentario": "análise detalhada da competência 5"
       },
-      "feedbackGeral": "<feedback geral sobre a redação>",
-      "pontoFortes": ["<ponto forte 1>", "<ponto forte 2>", "<ponto forte 3>"],
-      "pontosAMelhorar": ["<ponto a melhorar 1>", "<ponto a melhorar 2>", "<ponto a melhorar 3>"]
+      "feedbackGeral": "feedback geral sobre a redação",
+      "pontoFortes": ["ponto forte 1", "ponto forte 2", "ponto forte 3"],
+      "pontosAMelhorar": ["ponto a melhorar 1", "ponto a melhorar 2", "ponto a melhorar 3"]
     }
+    
+    LEMBRE-SE: Sua resposta deve ser apenas o objeto JSON, sem qualquer outro texto.
     `;
 
     // Inicializar o cliente Groq com a API key
@@ -107,6 +108,7 @@ export async function POST(request: NextRequest) {
       };
     } else {
       try {
+        console.log("Calling Groq API...");
         // Usar fetch diretamente conforme o exemplo curl para compatibilidade
         const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
           method: "POST",
@@ -119,8 +121,9 @@ export async function POST(request: NextRequest) {
             messages: [
               { role: "user", content: prompt }
             ],
-            temperature: 0.2,
-            max_tokens: 2000
+            temperature: 0.1, // Reduzir temperatura para aumentar determinismo
+            max_tokens: 2000,
+            response_format: { type: "json_object" } // Forçar resposta em formato JSON
           })
         });
 
@@ -133,21 +136,40 @@ export async function POST(request: NextRequest) {
 
         // Extrair o conteúdo da resposta
         const aiContent = responseData.choices?.[0]?.message?.content || "";
+        console.log("AI raw response:", aiContent.substring(0, 200) + "...");
         
         // Tenta parsear o JSON da resposta
         let aiResult: Partial<EssayResult>;
         try {
-          // Extrair o JSON da resposta (pode estar entre codeblocks)
-          const jsonMatch = aiContent.match(/```json\n([\s\S]*)\n```/) || aiContent.match(/({[\sS]*})/);
-          const jsonContent = jsonMatch ? jsonMatch[1] : aiContent;
-          aiResult = JSON.parse(jsonContent);
-        } catch (e) {
-          console.error("Error parsing AI response:", e);
-          console.log("AI content:", aiContent);
-          aiResult = {
-            nota: 0,
-            feedbackGeral: "Ocorreu um erro ao analisar sua redação. Por favor, tente novamente mais tarde."
-          };
+          // Primeiro, tenta parsear diretamente - já deve estar em formato JSON
+          aiResult = JSON.parse(aiContent);
+          console.log("Successfully parsed JSON directly");
+        } catch (parseError) {
+          console.error("Failed direct JSON parse, trying to extract JSON from text:", parseError);
+          
+          try {
+            // Se falhar, tenta extrair o JSON do texto
+            const jsonMatch = aiContent.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/) || 
+                            aiContent.match(/(\{[\s\S]*\})/);
+            
+            if (!jsonMatch || !jsonMatch[1]) {
+              console.error("Could not extract JSON pattern from response");
+              throw new Error("Formato de resposta inválido da API");
+            }
+            
+            const jsonContent = jsonMatch[1].trim();
+            console.log("Extracted JSON:", jsonContent.substring(0, 200) + "...");
+            aiResult = JSON.parse(jsonContent);
+          } catch (extractError) {
+            console.error("Failed to extract and parse JSON:", extractError);
+            throw new Error("Não foi possível processar a resposta da API");
+          }
+        }
+        
+        // Verificar se os campos importantes existem
+        if (!aiResult.nota || !aiResult.feedbackGeral) {
+          console.error("Missing required fields in AI result:", aiResult);
+          throw new Error("A resposta da API está incompleta");
         }
         
         // Criar o resultado completo
@@ -167,7 +189,22 @@ export async function POST(request: NextRequest) {
         };
       } catch (error) {
         console.error("Error calling Groq API:", error);
-        throw new Error("Falha ao comunicar com a API de IA");
+        
+        // Em caso de erro, criar um resultado de fallback
+        result = {
+          id,
+          nota: 0,
+          competencia1: { nota: 0, comentario: "Ocorreu um erro na avaliação." },
+          competencia2: { nota: 0, comentario: "Ocorreu um erro na avaliação." },
+          competencia3: { nota: 0, comentario: "Ocorreu um erro na avaliação." },
+          competencia4: { nota: 0, comentario: "Ocorreu um erro na avaliação." },
+          competencia5: { nota: 0, comentario: "Ocorreu um erro na avaliação." },
+          feedbackGeral: "Não foi possível analisar sua redação devido a um erro técnico. Por favor, tente novamente mais tarde.",
+          pontoFortes: ["Sistema indisponível no momento"],
+          pontosAMelhorar: ["Tente novamente mais tarde"],
+          redacaoOriginal: body.redacao,
+          createdAt: new Date().toISOString()
+        };
       }
     }
     
