@@ -1,15 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getResult } from "@/lib/store";
 
-type Params = {
-  id: string;
-};
-
 export async function GET(
   request: NextRequest,
-  context: { params: Params }
+  { params }: { params: { id: string } }
 ) {
-  const id = context.params.id;
+  const { id } = params;
   
   if (!id) {
     return NextResponse.json(
