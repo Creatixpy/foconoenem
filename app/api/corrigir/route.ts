@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 import { EssaySubmission, EssayResult } from "@/types";
 import { storeResult, getResult } from "@/lib/store";
+import { Groq } from "groq-sdk";
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest) {
     // Gerar um ID único para a submissão
     const id = uuidv4();
     
-    // Preparar payload para OpenRouter
+    // Preparar prompt para o Groq
     const prompt = `
     Você é um corretor especialista em redações do ENEM. Analise a seguinte redação sobre o tema "Os desafios da educação digital no Brasil contemporâneo" seguindo os 5 critérios de avaliação do ENEM:
 
@@ -59,10 +60,11 @@ export async function POST(request: NextRequest) {
     }
     `;
 
-    const openRouterKey = process.env.OPENROUTER_API_KEY;
+    // Inicializar o cliente Groq com a API key
+    const groqApiKey = process.env.GROQ_API_KEY;
     
-    if (!openRouterKey) {
-      console.error("OpenRouter API key not found");
+    if (!groqApiKey) {
+      console.error("Groq API key not found");
       // Modo de fallback para desenvolvimento
       // Gerar um resultado simulado para desenvolvimento
       const mockResult: EssayResult = {
@@ -109,37 +111,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ id });
     }
 
-    // Chamar a API do OpenRouter com o modelo deepseek-r1:free
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${openRouterKey}`,
-        "HTTP-Referer": "https://foconoenem.vercel.app",
-        "X-Title": "Foco no ENEM - Correção de Redação"
-      },
-      body: JSON.stringify({
-        model: "deepseek/deepseek-r1:free",
-        messages: [
-          {
-            role: "user",
-            content: prompt
-          }
-        ],
-        temperature: 0.2,
-        max_tokens: 2000
-      })
+    // Criar cliente Groq e chamar a API
+    const groq = new Groq({ apiKey: groqApiKey });
+    
+    const response = await groq.chat.completions.create({
+      model: "llama-3.1-70b-versatile",
+      messages: [
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.2,
+      max_tokens: 2000
     });
 
-    if (!response.ok) {
-      console.error("OpenRouter API error:", await response.text());
-      throw new Error("Error calling OpenRouter API");
-    }
-
-    const openRouterResponse = await response.json();
-    
-    // Extrair o conteúdo da resposta
-    const aiContent = openRouterResponse.choices[0].message.content;
+    // Extrair o conteúdo da resposta e garantir que não seja nulo
+    const aiContent = response.choices[0]?.message?.content || "";
     
     // Tenta parsear o JSON da resposta
     let aiResult: Partial<EssayResult>;
