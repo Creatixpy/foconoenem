@@ -1,24 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getResult } from "@/lib/store";
+import { EssayResultResponse } from "@/types";
 
-export async function GET(request: NextRequest, context: any) {
-  const id = context.params.id;
+export async function GET(request: NextRequest, context: { params: { id: string } }) {
+  try {
+    const id = context.params.id;
 
-  if (!id) {
+    if (!id) {
+      return NextResponse.json(
+        { error: "ID não fornecido" },
+        { status: 400 }
+      );
+    }
+
+    const result = getResult(id);
+
+    if (!result) {
+      return NextResponse.json(
+        { error: "Resultado não encontrado" },
+        { status: 404 }
+      );
+    }
+
+    const response: EssayResultResponse = { id, result };
+    return NextResponse.json(response);
+  } catch (error) {
+    console.error("Erro ao buscar resultado:", error);
     return NextResponse.json(
-      { error: "ID não fornecido" },
-      { status: 400 }
+      { error: "Erro interno ao buscar resultado" },
+      { status: 500 }
     );
   }
-
-  const result = getResult(id);
-
-  if (!result) {
-    return NextResponse.json(
-      { error: "Resultado não encontrado" },
-      { status: 404 }
-    );
-  }
-
-  return NextResponse.json({ result });
 }

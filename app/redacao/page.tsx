@@ -7,6 +7,7 @@ import Link from "next/link";
 export default function RedacaoPage() {
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const editorRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -24,6 +25,7 @@ export default function RedacaoPage() {
 
     try {
       setIsSubmitting(true);
+      setError(null);
       
       const response = await fetch("/api/corrigir", {
         method: "POST",
@@ -33,11 +35,11 @@ export default function RedacaoPage() {
         body: JSON.stringify({ redacao: content }),
       });
 
-      if (!response.ok) {
-        throw new Error("Erro ao enviar redação");
-      }
-
       const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || data.message || "Erro ao enviar redação");
+      }
       
       // Salvar o ID da redação e redirecionar para a página de resultados
       localStorage.setItem("lastEssayId", data.id);
@@ -45,7 +47,7 @@ export default function RedacaoPage() {
       
     } catch (error) {
       console.error("Erro:", error);
-      alert("Ocorreu um erro ao enviar sua redação. Por favor, tente novamente.");
+      setError(error instanceof Error ? error.message : "Ocorreu um erro ao enviar sua redação. Por favor, tente novamente.");
     } finally {
       setIsSubmitting(false);
     }
@@ -122,6 +124,13 @@ export default function RedacaoPage() {
             </ul>
           </div>
 
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg mb-6">
+              <p className="font-medium">Erro:</p>
+              <p>{error}</p>
+            </div>
+          )}
+
           <div className="mb-6">
             <h3 className="font-semibold mb-2">SUA REDAÇÃO:</h3>
             <div
@@ -145,7 +154,14 @@ export default function RedacaoPage() {
                 isSubmitting ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
               } text-white font-medium py-3 px-6 rounded-full inline-block transition duration-200`}
             >
-              {isSubmitting ? "Enviando..." : "Concluir Redação"}
+              {isSubmitting ? (
+                <>
+                  <span className="inline-block w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                  Enviando...
+                </>
+              ) : (
+                "Concluir Redação"
+              )}
             </button>
           </div>
         </section>

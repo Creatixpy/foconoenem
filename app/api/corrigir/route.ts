@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
-import { EssaySubmission, EssayResult } from "@/types";
+import { EssaySubmission, EssayResult, EssayResultResponse } from "@/types";
 import { storeResult, getResult } from "@/lib/store";
 import { Groq } from "groq-sdk";
 
@@ -63,11 +63,12 @@ export async function POST(request: NextRequest) {
     // Inicializar o cliente Groq com a API key
     const groqApiKey = process.env.GROQ_API_KEY;
     
+    let result: EssayResult;
+    
     if (!groqApiKey) {
-      console.error("Groq API key not found");
+      console.warn("Groq API key not found, using mock data");
       // Modo de fallback para desenvolvimento
-      // Gerar um resultado simulado para desenvolvimento
-      const mockResult: EssayResult = {
+      result = {
         id,
         nota: 780,
         competencia1: {
@@ -104,69 +105,71 @@ export async function POST(request: NextRequest) {
         redacaoOriginal: body.redacao,
         createdAt: new Date().toISOString()
       };
-      
-      // Armazenar o resultado usando a função do store
-      storeResult(id, mockResult);
-      
-      return NextResponse.json({ id });
-    }
+    } else {
+      try {
+        // Criar cliente Groq e chamar a API
+        const groq = new Groq({ apiKey: groqApiKey });
+        
+        const response = await groq.chat.completions.create({
+          model: "llama-3.1-70b-versatile",
+          messages: [
+            { role: "user", content: prompt }
+          ],
+          temperature: 0.2,
+          max_tokens: 2000
+        });
 
-    // Criar cliente Groq e chamar a API
-    const groq = new Groq({ apiKey: groqApiKey });
-    
-    const response = await groq.chat.completions.create({
-      model: "llama-3.1-70b-versatile",
-      messages: [
-        { role: "user", content: prompt }
-      ],
-      temperature: 0.2,
-      max_tokens: 2000
-    });
-
-    // Extrair o conteúdo da resposta e garantir que não seja nulo
-    const aiContent = response.choices[0]?.message?.content || "";
-    
-    // Tenta parsear o JSON da resposta
-    let aiResult: Partial<EssayResult>;
-    try {
-      // Extrair o JSON da resposta (pode estar entre codeblocks)
-      const jsonMatch = aiContent.match(/```json\n([\s\S]*)\n```/) || aiContent.match(/({[\s\S]*})/);
-      const jsonContent = jsonMatch ? jsonMatch[1] : aiContent;
-      aiResult = JSON.parse(jsonContent);
-    } catch (e) {
-      console.error("Error parsing AI response:", e);
-      console.log("AI content:", aiContent);
-      aiResult = {
-        nota: 0,
-        feedbackGeral: "Ocorreu um erro ao analisar sua redação. Por favor, tente novamente mais tarde."
-      };
+        // Extrair o conteúdo da resposta e garantir que não seja nulo
+        const aiContent = response.choices[0]?.message?.content || "";
+        
+        // Tenta parsear o JSON da resposta
+        let aiResult: Partial<EssayResult>;
+        try {
+          // Extrair o JSON da resposta (pode estar entre codeblocks)
+          const jsonMatch = aiContent.match(/```json\n([\s\S]*)\n```/) || aiContent.match(/({[\s\S]*})/);
+          const jsonContent = jsonMatch ? jsonMatch[1] : aiContent;
+          aiResult = JSON.parse(jsonContent);
+        } catch (e) {
+          console.error("Error parsing AI response:", e);
+          console.log("AI content:", aiContent);
+          aiResult = {
+            nota: 0,
+            feedbackGeral: "Ocorreu um erro ao analisar sua redação. Por favor, tente novamente mais tarde."
+          };
+        }
+        
+        // Criar o resultado completo
+        result = {
+          id,
+          nota: aiResult.nota || 0,
+          competencia1: aiResult.competencia1 || { nota: 0, comentario: "Não foi possível avaliar" },
+          competencia2: aiResult.competencia2 || { nota: 0, comentario: "Não foi possível avaliar" },
+          competencia3: aiResult.competencia3 || { nota: 0, comentario: "Não foi possível avaliar" },
+          competencia4: aiResult.competencia4 || { nota: 0, comentario: "Não foi possível avaliar" },
+          competencia5: aiResult.competencia5 || { nota: 0, comentario: "Não foi possível avaliar" },
+          feedbackGeral: aiResult.feedbackGeral || "Não foi possível gerar feedback",
+          pontoFortes: aiResult.pontoFortes || [],
+          pontosAMelhorar: aiResult.pontosAMelhorar || [],
+          redacaoOriginal: body.redacao,
+          createdAt: new Date().toISOString()
+        };
+      } catch (error) {
+        console.error("Error calling Groq API:", error);
+        throw new Error("Falha ao comunicar com a API de IA");
+      }
     }
-    
-    // Criar o resultado completo
-    const result: EssayResult = {
-      id,
-      nota: aiResult.nota || 0,
-      competencia1: aiResult.competencia1 || { nota: 0, comentario: "Não foi possível avaliar" },
-      competencia2: aiResult.competencia2 || { nota: 0, comentario: "Não foi possível avaliar" },
-      competencia3: aiResult.competencia3 || { nota: 0, comentario: "Não foi possível avaliar" },
-      competencia4: aiResult.competencia4 || { nota: 0, comentario: "Não foi possível avaliar" },
-      competencia5: aiResult.competencia5 || { nota: 0, comentario: "Não foi possível avaliar" },
-      feedbackGeral: aiResult.feedbackGeral || "Não foi possível gerar feedback",
-      pontoFortes: aiResult.pontoFortes || [],
-      pontosAMelhorar: aiResult.pontosAMelhorar || [],
-      redacaoOriginal: body.redacao,
-      createdAt: new Date().toISOString()
-    };
     
     // Armazenar o resultado usando a função do store
     storeResult(id, result);
     
-    return NextResponse.json({ id });
+    // Retornar apenas o ID como resposta para reduzir o tamanho da resposta
+    const response: EssayResultResponse = { id };
+    return NextResponse.json(response);
     
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Error in /api/corrigir:", error);
     return NextResponse.json(
-      { error: "Erro ao processar a redação" },
+      { error: "Erro ao processar a redação", message: (error as Error).message },
       { status: 500 }
     );
   }
