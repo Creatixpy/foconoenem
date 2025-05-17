@@ -3,7 +3,8 @@ import { v4 as uuidv4 } from "uuid";
 import { EssaySubmission, EssayResult } from "@/types";
 
 // Simulação de banco de dados em memória para armazenar resultados
-let results: Record<string, EssayResult> = {};
+// Agora será exportado para poder ser acessado por outros módulos
+export let results: Record<string, EssayResult> = {};
 
 export async function POST(request: NextRequest) {
   try {

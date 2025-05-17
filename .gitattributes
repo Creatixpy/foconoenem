@@ -1,0 +1,29 @@
+# Configure Git para tratar os finais de linha de forma consistente
+
+# Por padrão, normalize finais de linha para o padrão do sistema quando o arquivo é verificado
+* text=auto
+
+# Arquivos de texto específicos sempre devem ser normalizados e convertidos para finais de linha nativos no checkout
+*.css text
+*.html text
+*.js text
+*.json text
+*.ts text
+*.tsx text
+*.md text
+
+# Arquivos que sempre devem usar LF
+*.sh text eol=lf
+
+# Arquivos que sempre devem usar CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Arquivos binários que não devem ser modificados
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
