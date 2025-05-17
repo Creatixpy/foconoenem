@@ -2,12 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getResult } from "@/lib/store";
 import { EssayResultResponse } from "@/types";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest) {
   try {
-    const id = params.id;
+    const url = new URL(request.url);
+    const segments = url.pathname.split("/");
+    const id = segments.pop() || "";
 
     if (!id) {
       return NextResponse.json(
