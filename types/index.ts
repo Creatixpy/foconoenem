@@ -30,6 +30,7 @@ export interface EssayResult {
   pontosAMelhorar: string[];
   redacaoOriginal: string;
   createdAt: string;
+  origem: "IA" | "Simulação"; // Adicionado campo para origem da correção
 }
 
 export interface EssayResultResponse {

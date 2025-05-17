@@ -105,6 +105,15 @@ export default function ResultadosPage() {
             Resultado da sua Redação
           </h2>
           
+          {/* Badge indicadora da origem da correção */}
+          <div className="mb-4">
+            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+              result.origem === "IA" ? "bg-purple-100 text-purple-800" : "bg-blue-100 text-blue-800"
+            }`}>
+              {result.origem === "IA" ? "Correção por IA" : "Correção Simulada"}
+            </span>
+          </div>
+          
           <div className="text-center py-6 mb-8 border-b border-gray-200">
             <p className="text-gray-600 mb-2">Sua nota final</p>
             <h3 className={`text-5xl font-bold mb-2 ${getGradeColor(result.nota)}`}>

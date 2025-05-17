@@ -104,7 +104,8 @@ export async function POST(request: NextRequest) {
           "Melhorar a articulação entre os parágrafos"
         ],
         redacaoOriginal: body.redacao,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        origem: "Simulação" // Indicar que é uma simulação
       };
     } else {
       try {
@@ -185,7 +186,8 @@ export async function POST(request: NextRequest) {
           pontoFortes: aiResult.pontoFortes || [],
           pontosAMelhorar: aiResult.pontosAMelhorar || [],
           redacaoOriginal: body.redacao,
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          origem: "IA" // Indicar que foi avaliado pela IA
         };
       } catch (error) {
         console.error("Error calling Groq API:", error);
@@ -203,7 +205,8 @@ export async function POST(request: NextRequest) {
           pontoFortes: ["Sistema indisponível no momento"],
           pontosAMelhorar: ["Tente novamente mais tarde"],
           redacaoOriginal: body.redacao,
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          origem: "Simulação" // Indicar que é uma simulação (fallback)
         };
       }
     }
