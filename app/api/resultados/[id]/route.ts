@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getResult } from "@/lib/store";
 
+type RouteParams = {
+  params: {
+    id: string;
+  };
+};
+
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   const id = params.id;
   
