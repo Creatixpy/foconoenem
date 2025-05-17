@@ -107,26 +107,38 @@ export async function POST(request: NextRequest) {
       };
     } else {
       try {
-        // Criar cliente Groq e chamar a API
-        const groq = new Groq({ apiKey: groqApiKey });
-        
-        const response = await groq.chat.completions.create({
-          model: "llama-3.1-70b-versatile",
-          messages: [
-            { role: "user", content: prompt }
-          ],
-          temperature: 0.2,
-          max_tokens: 2000
+        // Usar fetch diretamente conforme o exemplo curl para compatibilidade
+        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${groqApiKey}`
+          },
+          body: JSON.stringify({
+            model: "llama-3.3-70b-versatile", // Modelo mais recente
+            messages: [
+              { role: "user", content: prompt }
+            ],
+            temperature: 0.2,
+            max_tokens: 2000
+          })
         });
 
-        // Extrair o conteúdo da resposta e garantir que não seja nulo
-        const aiContent = response.choices[0]?.message?.content || "";
+        const responseData = await response.json();
+        
+        if (!response.ok) {
+          console.error("Groq API error:", responseData);
+          throw new Error(`Error from Groq API: ${responseData.error?.message || "Unknown error"}`);
+        }
+
+        // Extrair o conteúdo da resposta
+        const aiContent = responseData.choices?.[0]?.message?.content || "";
         
         // Tenta parsear o JSON da resposta
         let aiResult: Partial<EssayResult>;
         try {
           // Extrair o JSON da resposta (pode estar entre codeblocks)
-          const jsonMatch = aiContent.match(/```json\n([\s\S]*)\n```/) || aiContent.match(/({[\s\S]*})/);
+          const jsonMatch = aiContent.match(/```json\n([\s\S]*)\n```/) || aiContent.match(/({[\sS]*})/);
           const jsonContent = jsonMatch ? jsonMatch[1] : aiContent;
           aiResult = JSON.parse(jsonContent);
         } catch (e) {
