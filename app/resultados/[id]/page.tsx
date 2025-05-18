@@ -105,6 +105,14 @@ export default function ResultadosPage() {
             Resultado da sua Redação
           </h2>
           
+          {/* Exibir o tema usado */}
+          <div className="mb-6 bg-blue-50 p-4 rounded-lg">
+            <h3 className="font-semibold text-lg mb-2">TEMA UTILIZADO:</h3>
+            <p className="text-lg">
+              "{result.tema || "Os desafios da educação digital no Brasil contemporâneo"}"
+            </p>
+          </div>
+          
           {/* Badge indicadora da origem da correção */}
           <div className="mb-4">
             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${

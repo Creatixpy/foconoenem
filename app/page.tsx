@@ -44,10 +44,11 @@ export default function Home() {
         <section className="grid md:grid-cols-3 gap-6 mb-8">
           <div className="bg-blue-50 p-6 rounded-lg shadow-sm">
             <h3 className="text-xl font-semibold mb-3 text-blue-800">
-              Tema Atual
+              Temas Disponíveis
             </h3>
             <p>
-              "Os desafios da educação digital no Brasil contemporâneo"
+              Escolha entre o tema padrão "Os desafios da educação digital no
+              Brasil contemporâneo" ou crie seu próprio tema personalizado.
             </p>
           </div>
           <div className="bg-blue-50 p-6 rounded-lg shadow-sm">
@@ -76,8 +77,8 @@ export default function Home() {
           </h2>
           <ol className="list-decimal pl-6 space-y-3">
             <li>
-              Acesse a página do simulado e leia com atenção o tema proposto e
-              os textos de apoio.
+              Acesse a página do simulado e escolha entre usar o tema padrão ou
+              definir seu próprio tema.
             </li>
             <li>
               Escreva sua redação dissertativa-argumentativa com no mínimo 7 e
@@ -99,7 +100,10 @@ export default function Home() {
       </main>
 
       <footer className="bg-gray-100 p-4 text-center text-gray-600 text-sm">
-        <p>© {new Date().getFullYear()} Foco no ENEM - Todos os direitos reservados</p>
+        <p>
+          © {new Date().getFullYear()} Foco no ENEM - Todos os direitos
+          reservados
+        </p>
       </footer>
     </div>
   );

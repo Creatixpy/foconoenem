@@ -8,6 +8,11 @@ export default function RedacaoPage() {
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [useCustomTheme, setUseCustomTheme] = useState(false);
+  const [customTheme, setCustomTheme] = useState("");
+  const [customText1, setCustomText1] = useState("");
+  const [customText2, setCustomText2] = useState("");
+  
   const editorRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -23,16 +28,46 @@ export default function RedacaoPage() {
       return;
     }
 
+    if (useCustomTheme && customTheme.trim().length < 5) {
+      alert("Por favor, informe um tema personalizado válido com pelo menos 5 caracteres.");
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       setError(null);
+      
+      const payload: {
+        redacao: string;
+        usarTemaPadrao?: boolean;
+        tema?: string;
+        textoApoio1?: string;
+        textoApoio2?: string;
+      } = {
+        redacao: content
+      };
+
+      if (useCustomTheme) {
+        payload.usarTemaPadrao = false;
+        payload.tema = customTheme.trim();
+        
+        if (customText1.trim()) {
+          payload.textoApoio1 = customText1.trim();
+        }
+        
+        if (customText2.trim()) {
+          payload.textoApoio2 = customText2.trim();
+        }
+      } else {
+        payload.usarTemaPadrao = true;
+      }
       
       const response = await fetch("/api/corrigir", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ redacao: content }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
@@ -81,38 +116,113 @@ export default function RedacaoPage() {
             Simulado de Redação do ENEM
           </h2>
           
-          <div className="mb-6 bg-blue-50 p-4 rounded-lg">
-            <h3 className="font-semibold text-lg mb-2">TEMA:</h3>
-            <p className="text-lg">
-              "Os desafios da educação digital no Brasil contemporâneo"
-            </p>
-          </div>
-          
           <div className="mb-6">
-            <h3 className="font-semibold text-lg mb-2">TEXTOS DE APOIO:</h3>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="bg-gray-50 p-4 rounded border">
-                <p className="text-sm mb-2">
-                  <strong>TEXTO I</strong>
-                </p>
-                <p className="text-sm">
-                  Segundo dados do IBGE, em 2021, 85% dos domicílios brasileiros possuíam acesso à internet, 
-                  porém com grande disparidade regional e socioeconômica. Nas regiões Norte e Nordeste, 
-                  e em famílias de baixa renda, o acesso é significativamente menor.
-                </p>
-              </div>
-              <div className="bg-gray-50 p-4 rounded border">
-                <p className="text-sm mb-2">
-                  <strong>TEXTO II</strong>
-                </p>
-                <p className="text-sm">
-                  A pandemia de COVID-19 evidenciou a necessidade de integração digital no ensino, 
-                  mas também mostrou que muitos estudantes e professores não estão preparados para 
-                  o uso efetivo das tecnologias educacionais.
-                </p>
+            <div className="flex items-center mb-4">
+              <h3 className="font-semibold text-lg mr-4">SELECIONE O TEMA:</h3>
+              <div className="flex space-x-4">
+                <label className="inline-flex items-center">
+                  <input
+                    type="radio"
+                    className="form-radio h-4 w-4 text-blue-600"
+                    checked={!useCustomTheme}
+                    onChange={() => setUseCustomTheme(false)}
+                  />
+                  <span className="ml-2">Usar tema padrão</span>
+                </label>
+                <label className="inline-flex items-center">
+                  <input
+                    type="radio"
+                    className="form-radio h-4 w-4 text-blue-600"
+                    checked={useCustomTheme}
+                    onChange={() => setUseCustomTheme(true)}
+                  />
+                  <span className="ml-2">Definir tema personalizado</span>
+                </label>
               </div>
             </div>
           </div>
+          
+          {!useCustomTheme ? (
+            <>
+              <div className="mb-6 bg-blue-50 p-4 rounded-lg">
+                <h3 className="font-semibold text-lg mb-2">TEMA:</h3>
+                <p className="text-lg">
+                  "Os desafios da educação digital no Brasil contemporâneo"
+                </p>
+              </div>
+              
+              <div className="mb-6">
+                <h3 className="font-semibold text-lg mb-2">TEXTOS DE APOIO:</h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="bg-gray-50 p-4 rounded border">
+                    <p className="text-sm mb-2">
+                      <strong>TEXTO I</strong>
+                    </p>
+                    <p className="text-sm">
+                      Segundo dados do IBGE, em 2021, 85% dos domicílios brasileiros possuíam acesso à internet, 
+                      porém com grande disparidade regional e socioeconômica. Nas regiões Norte e Nordeste, 
+                      e em famílias de baixa renda, o acesso é significativamente menor.
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded border">
+                    <p className="text-sm mb-2">
+                      <strong>TEXTO II</strong>
+                    </p>
+                    <p className="text-sm">
+                      A pandemia de COVID-19 evidenciou a necessidade de integração digital no ensino, 
+                      mas também mostrou que muitos estudantes e professores não estão preparados para 
+                      o uso efetivo das tecnologias educacionais.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="mb-6">
+                <label className="block">
+                  <h3 className="font-semibold text-lg mb-2">TEMA PERSONALIZADO:</h3>
+                  <input 
+                    type="text"
+                    value={customTheme}
+                    onChange={(e) => setCustomTheme(e.target.value)}
+                    placeholder="Digite o tema da redação..."
+                    className="w-full p-3 border rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500 transition-colors"
+                  />
+                </label>
+              </div>
+              
+              <div className="mb-6">
+                <h3 className="font-semibold text-lg mb-2">TEXTOS DE APOIO PERSONALIZADOS (OPCIONAL):</h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block mb-2">
+                      <span className="text-sm font-medium">TEXTO I</span>
+                      <textarea
+                        rows={4}
+                        value={customText1}
+                        onChange={(e) => setCustomText1(e.target.value)}
+                        placeholder="Digite o primeiro texto de apoio (opcional)..."
+                        className="w-full mt-1 p-3 border rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500 transition-colors"
+                      ></textarea>
+                    </label>
+                  </div>
+                  <div>
+                    <label className="block mb-2">
+                      <span className="text-sm font-medium">TEXTO II</span>
+                      <textarea
+                        rows={4}
+                        value={customText2}
+                        onChange={(e) => setCustomText2(e.target.value)}
+                        placeholder="Digite o segundo texto de apoio (opcional)..."
+                        className="w-full mt-1 p-3 border rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500 transition-colors"
+                      ></textarea>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
           
           <div className="mb-6">
             <h3 className="font-semibold mb-4">INSTRUÇÕES:</h3>

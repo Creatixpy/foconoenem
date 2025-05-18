@@ -14,19 +14,47 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Verifica se está usando tema personalizado e se ele foi fornecido
+    if (body.usarTemaPadrao === false && (!body.tema || body.tema.trim().length < 5)) {
+      return NextResponse.json(
+        { error: "É necessário fornecer um tema personalizado válido" },
+        { status: 400 }
+      );
+    }
+
     // Gerar um ID único para a submissão
     const id = uuidv4();
     
+    // Determinar o tema e textos de apoio a serem usados
+    const temaPadrao = "Os desafios da educação digital no Brasil contemporâneo";
+    const textoApoio1Padrao = "Segundo dados do IBGE, em 2021, 85% dos domicílios brasileiros possuíam acesso à internet, porém com grande disparidade regional e socioeconômica. Nas regiões Norte e Nordeste, e em famílias de baixa renda, o acesso é significativamente menor.";
+    const textoApoio2Padrao = "A pandemia de COVID-19 evidenciou a necessidade de integração digital no ensino, mas também mostrou que muitos estudantes e professores não estão preparados para o uso efetivo das tecnologias educacionais.";
+    
+    const temaFinal = body.usarTemaPadrao !== false ? temaPadrao : body.tema;
+    const textoApoio1Final = body.usarTemaPadrao !== false ? textoApoio1Padrao : (body.textoApoio1 || "");
+    const textoApoio2Final = body.usarTemaPadrao !== false ? textoApoio2Padrao : (body.textoApoio2 || "");
+    
     // Preparar prompt para o Groq
-    const prompt = `
-    Você é um corretor especialista em redações do ENEM. Analise a seguinte redação sobre o tema "Os desafios da educação digital no Brasil contemporâneo" seguindo os 5 critérios de avaliação do ENEM:
+    let prompt = `
+    Você é um corretor especialista em redações do ENEM. Analise a seguinte redação sobre o tema "${temaFinal}" seguindo os 5 critérios de avaliação do ENEM:
 
     Competência 1: Domínio da norma padrão da língua escrita (0-200 pontos)
     Competência 2: Compreensão da proposta e aplicação de conceitos de várias áreas do conhecimento (0-200 pontos)
     Competência 3: Capacidade de selecionar, relacionar, organizar e interpretar informações em defesa de um ponto de vista (0-200 pontos)
     Competência 4: Conhecimento dos mecanismos linguísticos para construção da argumentação (0-200 pontos)
     Competência 5: Elaboração de proposta de intervenção para o problema, respeitando os direitos humanos (0-200 pontos)
+    `;
 
+    // Adicionar textos de apoio ao prompt, se disponíveis
+    if (textoApoio1Final) {
+      prompt += `\nTEXTO DE APOIO I:\n${textoApoio1Final}\n`;
+    }
+    
+    if (textoApoio2Final) {
+      prompt += `\nTEXTO DE APOIO II:\n${textoApoio2Final}\n`;
+    }
+
+    prompt += `
     REDAÇÃO DO ESTUDANTE:
     ${body.redacao}
 
@@ -105,7 +133,10 @@ export async function POST(request: NextRequest) {
         ],
         redacaoOriginal: body.redacao,
         createdAt: new Date().toISOString(),
-        origem: "Simulação" // Indicar que é uma simulação
+        origem: "Simulação", // Indicar que é uma simulação
+        tema: temaFinal,
+        textoApoio1: textoApoio1Final,
+        textoApoio2: textoApoio2Final
       };
     } else {
       try {
@@ -187,7 +218,10 @@ export async function POST(request: NextRequest) {
           pontosAMelhorar: aiResult.pontosAMelhorar || [],
           redacaoOriginal: body.redacao,
           createdAt: new Date().toISOString(),
-          origem: "IA" // Indicar que foi avaliado pela IA
+          origem: "IA", // Indicar que foi avaliado pela IA
+          tema: temaFinal,
+          textoApoio1: textoApoio1Final,
+          textoApoio2: textoApoio2Final
         };
       } catch (error) {
         console.error("Error calling Groq API:", error);
@@ -206,7 +240,10 @@ export async function POST(request: NextRequest) {
           pontosAMelhorar: ["Tente novamente mais tarde"],
           redacaoOriginal: body.redacao,
           createdAt: new Date().toISOString(),
-          origem: "Simulação" // Indicar que é uma simulação (fallback)
+          origem: "Simulação", // Indicar que é uma simulação (fallback)
+          tema: temaFinal,
+          textoApoio1: textoApoio1Final,
+          textoApoio2: textoApoio2Final
         };
       }
     }

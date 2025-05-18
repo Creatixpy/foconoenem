@@ -1,5 +1,9 @@
 export interface EssaySubmission {
   redacao: string;
+  usarTemaPadrao?: boolean;
+  tema?: string;
+  textoApoio1?: string;
+  textoApoio2?: string;
 }
 
 export interface EssayResult {
@@ -31,6 +35,9 @@ export interface EssayResult {
   redacaoOriginal: string;
   createdAt: string;
   origem: "IA" | "Simulação"; // Adicionado campo para origem da correção
+  tema?: string;
+  textoApoio1?: string;
+  textoApoio2?: string;
 }
 
 export interface EssayResultResponse {
