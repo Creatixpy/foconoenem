@@ -12,6 +12,7 @@ export default function RedacaoPage() {
   const [customTheme, setCustomTheme] = useState("");
   const [customText1, setCustomText1] = useState("");
   const [customText2, setCustomText2] = useState("");
+  const [isGeneratingTheme, setIsGeneratingTheme] = useState(false);
   
   const editorRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -85,6 +86,36 @@ export default function RedacaoPage() {
       setError(error instanceof Error ? error.message : "Ocorreu um erro ao enviar sua redação. Por favor, tente novamente.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Nova função para gerar um tema automaticamente
+  const handleGenerateTheme = async () => {
+    try {
+      setIsGeneratingTheme(true);
+      setError(null);
+      
+      const response = await fetch("/api/gerar-tema");
+      
+      if (!response.ok) {
+        throw new Error("Não foi possível gerar um tema. Tente novamente.");
+      }
+      
+      const data = await response.json();
+      
+      // Ativar o modo de tema personalizado
+      setUseCustomTheme(true);
+      
+      // Preencher os campos com os dados gerados
+      setCustomTheme(data.tema);
+      setCustomText1(data.textoApoio1);
+      setCustomText2(data.textoApoio2);
+      
+    } catch (error) {
+      console.error("Erro ao gerar tema:", error);
+      setError(error instanceof Error ? error.message : "Ocorreu um erro ao gerar o tema. Por favor, tente novamente.");
+    } finally {
+      setIsGeneratingTheme(false);
     }
   };
 
@@ -180,16 +211,38 @@ export default function RedacaoPage() {
           ) : (
             <>
               <div className="mb-6">
-                <label className="block">
-                  <h3 className="font-semibold text-lg mb-2">TEMA PERSONALIZADO:</h3>
-                  <input 
-                    type="text"
-                    value={customTheme}
-                    onChange={(e) => setCustomTheme(e.target.value)}
-                    placeholder="Digite o tema da redação..."
-                    className="w-full p-3 border rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500 transition-colors"
-                  />
-                </label>
+                <div className="flex flex-wrap items-center justify-between mb-2">
+                  <h3 className="font-semibold text-lg">TEMA PERSONALIZADO:</h3>
+                  <button
+                    onClick={handleGenerateTheme}
+                    disabled={isGeneratingTheme}
+                    className={`${
+                      isGeneratingTheme ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"
+                    } text-white font-medium py-2 px-4 rounded-md transition duration-200 text-sm flex items-center ml-2 mb-2`}
+                  >
+                    {isGeneratingTheme ? (
+                      <>
+                        <span className="inline-block w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                        Gerando...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 3a7 7 0 100 14 7 7 0 000-14zm-9 7a9 9 0 1118 0 9 9 0 01-18 0z" clipRule="evenodd" />
+                          <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3.586l2.707 2.707a1 1 0 01-1.414 1.414l-3-3A1 1 0 019 10V6a1 1 0 011-1z" clipRule="evenodd" />
+                        </svg>
+                        Gerar Tema Automático
+                      </>
+                    )}
+                  </button>
+                </div>
+                <input 
+                  type="text"
+                  value={customTheme}
+                  onChange={(e) => setCustomTheme(e.target.value)}
+                  placeholder="Digite o tema da redação..."
+                  className="w-full p-3 border rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500 transition-colors"
+                />
               </div>
               
               <div className="mb-6">

@@ -47,8 +47,9 @@ export default function Home() {
               Temas Disponíveis
             </h3>
             <p>
-              Escolha entre o tema padrão "Os desafios da educação digital no
-              Brasil contemporâneo" ou crie seu próprio tema personalizado.
+              Escolha entre o tema padrão, use a função "Gerar Tema" para criar
+              temas aleatórios, ou defina seu próprio tema personalizado para
+              praticar.
             </p>
           </div>
           <div className="bg-blue-50 p-6 rounded-lg shadow-sm">
@@ -77,8 +78,9 @@ export default function Home() {
           </h2>
           <ol className="list-decimal pl-6 space-y-3">
             <li>
-              Acesse a página do simulado e escolha entre usar o tema padrão ou
-              definir seu próprio tema.
+              Acesse a página do simulado e escolha entre usar o tema padrão,
+              gerar um tema automaticamente ou definir seu próprio tema
+              personalizado.
             </li>
             <li>
               Escreva sua redação dissertativa-argumentativa com no mínimo 7 e
