@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import OperatingHoursIndicator from "../components/OperatingHoursIndicator";
+import { isWithinOperatingHours, getOperatingHoursInfo } from "@/lib/schedule";
 
 export default function RedacaoPage() {
   const [content, setContent] = useState("");
@@ -17,6 +19,8 @@ export default function RedacaoPage() {
   const [generatedText1, setGeneratedText1] = useState("");
   const [generatedText2, setGeneratedText2] = useState("");
   const [isGeneratingTheme, setIsGeneratingTheme] = useState(false);
+  const [isSystemAvailable, setIsSystemAvailable] = useState(isWithinOperatingHours());
+  const [operatingInfo, setOperatingInfo] = useState(getOperatingHoursInfo());
   
   const editorRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -28,6 +32,11 @@ export default function RedacaoPage() {
   };
 
   const handleSubmit = async () => {
+    if (!isSystemAvailable) {
+      setError(`Sistema fora do horário de funcionamento. Disponível das ${operatingInfo.opensAt} às ${operatingInfo.closesAt}.`);
+      return;
+    }
+    
     if (content.trim().length < 50) {
       alert("Sua redação é muito curta. Por favor, desenvolva mais o texto.");
       return;
@@ -98,8 +107,25 @@ export default function RedacaoPage() {
     }
   };
 
+  // Verificar o horário de funcionamento a cada minuto
+  useEffect(() => {
+    const checkAvailability = () => {
+      setIsSystemAvailable(isWithinOperatingHours());
+      setOperatingInfo(getOperatingHoursInfo());
+    };
+    
+    const timer = setInterval(checkAvailability, 60000); // 60 segundos
+    
+    return () => clearInterval(timer);
+  }, []);
+  
   // Função para gerar um tema automaticamente
   const handleGenerateTheme = async () => {
+    if (!isSystemAvailable) {
+      setError(`Sistema fora do horário de funcionamento. Disponível das ${operatingInfo.opensAt} às ${operatingInfo.closesAt}.`);
+      return;
+    }
+    
     try {
       setIsGeneratingTheme(true);
       setError(null);
@@ -132,7 +158,8 @@ export default function RedacaoPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-
+      <OperatingHoursIndicator />
+      
       <main className="flex-grow container mx-auto p-4 md:p-8">
         <section className="card p-6 md:p-8 mb-8 border border-border-color">
           <h2 className="text-2xl md:text-3xl font-bold text-primary mb-6 flex items-center">
@@ -361,13 +388,21 @@ export default function RedacaoPage() {
           <div className="flex justify-end">
             <button
               onClick={handleSubmit}
-              disabled={isSubmitting}
-              className={`${isSubmitting ? "bg-gray-400" : ""} theme-btn btn`}
+              disabled={isSubmitting || !isSystemAvailable}
+              className={`${isSubmitting || !isSystemAvailable ? "bg-gray-400" : ""} theme-btn btn`}
+              title={!isSystemAvailable ? `Sistema disponível apenas das ${operatingInfo.opensAt} às ${operatingInfo.closesAt}` : ""}
             >
               {isSubmitting ? (
                 <>
                   <span className="inline-block w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
                   Enviando...
+                </>
+              ) : !isSystemAvailable ? (
+                <>
+                  Sistema Indisponível
+                  <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
                 </>
               ) : (
                 <>

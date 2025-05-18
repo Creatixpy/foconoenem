@@ -2,9 +2,23 @@ import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 import { EssaySubmission, EssayResult, EssayResultResponse } from "@/types";
 import { storeResult, getResult } from "@/lib/store";
+import { isWithinOperatingHours, getOperatingHoursInfo } from "@/lib/schedule";
 
 export async function POST(request: NextRequest) {
   try {
+    // Verificar se o sistema está em horário de funcionamento
+    if (!isWithinOperatingHours()) {
+      const { message, opensAt, closesAt } = getOperatingHoursInfo();
+      return NextResponse.json(
+        { 
+          error: "Sistema fora do horário de funcionamento", 
+          message: message,
+          horarioFuncionamento: `${opensAt} - ${closesAt}`
+        },
+        { status: 403 } // Forbidden
+      );
+    }
+
     const body: EssaySubmission = await request.json();
     
     if (!body.redacao || body.redacao.trim().length < 50) {
@@ -211,6 +225,7 @@ export async function POST(request: NextRequest) {
 
 // Endpoint para buscar um resultado específico
 export async function GET(request: NextRequest) {
+  // A consulta de resultados funcionará 24/7, sem restrição de horário
   const url = new URL(request.url);
   const id = url.searchParams.get("id");
   

@@ -1,7 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isWithinOperatingHours, getOperatingHoursInfo } from "@/lib/schedule";
 
 export async function GET(request: NextRequest) {
   try {
+    // Verificar se o sistema está em horário de funcionamento
+    if (!isWithinOperatingHours()) {
+      const { message, opensAt, closesAt } = getOperatingHoursInfo();
+      return NextResponse.json(
+        { 
+          error: "Sistema fora do horário de funcionamento", 
+          message: message,
+          horarioFuncionamento: `${opensAt} - ${closesAt}`
+        },
+        { status: 403 } // Forbidden
+      );
+    }
+
     // Inicializar o cliente Groq com a API key
     const groqApiKey = process.env.GROQ_API_KEY;
     
