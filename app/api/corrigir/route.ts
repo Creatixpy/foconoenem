@@ -92,168 +92,113 @@ export async function POST(request: NextRequest) {
     // Inicializar o cliente Groq com a API key
     const groqApiKey = process.env.GROQ_API_KEY;
     
-    let result: EssayResult;
-    
     if (!groqApiKey) {
-      console.warn("Groq API key not found, using mock data");
-      // Modo de fallback para desenvolvimento
-      result = {
+      console.error("Groq API key not found");
+      return NextResponse.json(
+        { error: "Serviço de correção temporariamente indisponível. Configure a API key." },
+        { status: 503 }
+      );
+    }
+    
+    try {
+      console.log("Calling Groq API...");
+      // Usar fetch diretamente conforme o exemplo curl para compatibilidade
+      const apiResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${groqApiKey}`
+        },
+        body: JSON.stringify({
+          model: "deepseek-r1-distill-llama-70b", // Modelo mais recente
+          messages: [
+            { role: "user", content: prompt }
+          ],
+          temperature: 0.1, // Reduzir temperatura para aumentar determinismo
+          max_tokens: 2000,
+          response_format: { type: "json_object" } // Forçar resposta em formato JSON
+        })
+      });
+
+      const responseData = await apiResponse.json();
+      
+      if (!apiResponse.ok) {
+        console.error("Groq API error:", responseData);
+        throw new Error(`Error from Groq API: ${responseData.error?.message || "Unknown error"}`);
+      }
+
+      // Extrair o conteúdo da resposta
+      const aiContent = responseData.choices?.[0]?.message?.content || "";
+      console.log("AI raw response:", aiContent.substring(0, 200) + "...");
+      
+      // Tenta parsear o JSON da resposta
+      let aiResult: Partial<EssayResult>;
+      try {
+        // Primeiro, tenta parsear diretamente - já deve estar em formato JSON
+        aiResult = JSON.parse(aiContent);
+        console.log("Successfully parsed JSON directly");
+      } catch (parseError) {
+        console.error("Failed direct JSON parse, trying to extract JSON from text:", parseError);
+        
+        try {
+          // Se falhar, tenta extrair o JSON do texto
+          const jsonMatch = aiContent.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/) || 
+                          aiContent.match(/(\{[\s\S]*\})/);
+          
+          if (!jsonMatch || !jsonMatch[1]) {
+            console.error("Could not extract JSON pattern from response");
+            throw new Error("Formato de resposta inválido da API");
+          }
+          
+          const jsonContent = jsonMatch[1].trim();
+          console.log("Extracted JSON:", jsonContent.substring(0, 200) + "...");
+          aiResult = JSON.parse(jsonContent);
+        } catch (extractError) {
+          console.error("Failed to extract and parse JSON:", extractError);
+          throw new Error("Não foi possível processar a resposta da API");
+        }
+      }
+      
+      // Verificar se os campos importantes existem
+      if (!aiResult.nota || !aiResult.feedbackGeral) {
+        console.error("Missing required fields in AI result:", aiResult);
+        throw new Error("A resposta da API está incompleta");
+      }
+      
+      // Criar o resultado completo
+      const result: EssayResult = {
         id,
-        nota: 780,
-        competencia1: {
-          nota: 160,
-          comentario: "Demonstra bom domínio da modalidade escrita formal da língua portuguesa, com poucos desvios gramaticais e de convenções da escrita."
-        },
-        competencia2: {
-          nota: 160,
-          comentario: "Desenvolve o tema por meio de argumentação consistente e apresenta bom domínio do texto dissertativo-argumentativo."
-        },
-        competencia3: {
-          nota: 160,
-          comentario: "Apresenta informações, fatos e opiniões relacionados ao tema, de forma organizada, com indícios de autoria."
-        },
-        competencia4: {
-          nota: 150,
-          comentario: "Articula as partes do texto com poucas inadequações e apresenta repertório diversificado de recursos coesivos."
-        },
-        competencia5: {
-          nota: 150,
-          comentario: "Elabora bem proposta de intervenção relacionada ao tema e articulada à discussão desenvolvida no texto."
-        },
-        feedbackGeral: "Seu texto apresenta boa estrutura argumentativa e aborda aspectos relevantes do tema proposto. Há alguns pontos que podem ser aprimorados para elevar ainda mais a qualidade da redação.",
-        pontoFortes: [
-          "Boa compreensão da proposta temática",
-          "Argumentação consistente e lógica",
-          "Repertório sociocultural adequado"
-        ],
-        pontosAMelhorar: [
-          "Aprimorar alguns aspectos gramaticais e ortográficos",
-          "Desenvolver mais a proposta de intervenção",
-          "Melhorar a articulação entre os parágrafos"
-        ],
+        nota: aiResult.nota || 0,
+        competencia1: aiResult.competencia1 || { nota: 0, comentario: "Não foi possível avaliar" },
+        competencia2: aiResult.competencia2 || { nota: 0, comentario: "Não foi possível avaliar" },
+        competencia3: aiResult.competencia3 || { nota: 0, comentario: "Não foi possível avaliar" },
+        competencia4: aiResult.competencia4 || { nota: 0, comentario: "Não foi possível avaliar" },
+        competencia5: aiResult.competencia5 || { nota: 0, comentario: "Não foi possível avaliar" },
+        feedbackGeral: aiResult.feedbackGeral || "Não foi possível gerar feedback",
+        pontoFortes: aiResult.pontoFortes || [],
+        pontosAMelhorar: aiResult.pontosAMelhorar || [],
         redacaoOriginal: body.redacao,
         createdAt: new Date().toISOString(),
-        origem: "Simulação", // Indicar que é uma simulação
+        origem: "IA", // Indicar que foi avaliado pela IA
         tema: temaFinal,
         textoApoio1: textoApoio1Final,
         textoApoio2: textoApoio2Final
       };
-    } else {
-      try {
-        console.log("Calling Groq API...");
-        // Usar fetch diretamente conforme o exemplo curl para compatibilidade
-        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${groqApiKey}`
-          },
-          body: JSON.stringify({
-            model: "deepseek-r1-distill-llama-70b", // Modelo mais recente
-            messages: [
-              { role: "user", content: prompt }
-            ],
-            temperature: 0.1, // Reduzir temperatura para aumentar determinismo
-            max_tokens: 2000,
-            response_format: { type: "json_object" } // Forçar resposta em formato JSON
-          })
-        });
-
-        const responseData = await response.json();
-        
-        if (!response.ok) {
-          console.error("Groq API error:", responseData);
-          throw new Error(`Error from Groq API: ${responseData.error?.message || "Unknown error"}`);
-        }
-
-        // Extrair o conteúdo da resposta
-        const aiContent = responseData.choices?.[0]?.message?.content || "";
-        console.log("AI raw response:", aiContent.substring(0, 200) + "...");
-        
-        // Tenta parsear o JSON da resposta
-        let aiResult: Partial<EssayResult>;
-        try {
-          // Primeiro, tenta parsear diretamente - já deve estar em formato JSON
-          aiResult = JSON.parse(aiContent);
-          console.log("Successfully parsed JSON directly");
-        } catch (parseError) {
-          console.error("Failed direct JSON parse, trying to extract JSON from text:", parseError);
-          
-          try {
-            // Se falhar, tenta extrair o JSON do texto
-            const jsonMatch = aiContent.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/) || 
-                            aiContent.match(/(\{[\s\S]*\})/);
-            
-            if (!jsonMatch || !jsonMatch[1]) {
-              console.error("Could not extract JSON pattern from response");
-              throw new Error("Formato de resposta inválido da API");
-            }
-            
-            const jsonContent = jsonMatch[1].trim();
-            console.log("Extracted JSON:", jsonContent.substring(0, 200) + "...");
-            aiResult = JSON.parse(jsonContent);
-          } catch (extractError) {
-            console.error("Failed to extract and parse JSON:", extractError);
-            throw new Error("Não foi possível processar a resposta da API");
-          }
-        }
-        
-        // Verificar se os campos importantes existem
-        if (!aiResult.nota || !aiResult.feedbackGeral) {
-          console.error("Missing required fields in AI result:", aiResult);
-          throw new Error("A resposta da API está incompleta");
-        }
-        
-        // Criar o resultado completo
-        result = {
-          id,
-          nota: aiResult.nota || 0,
-          competencia1: aiResult.competencia1 || { nota: 0, comentario: "Não foi possível avaliar" },
-          competencia2: aiResult.competencia2 || { nota: 0, comentario: "Não foi possível avaliar" },
-          competencia3: aiResult.competencia3 || { nota: 0, comentario: "Não foi possível avaliar" },
-          competencia4: aiResult.competencia4 || { nota: 0, comentario: "Não foi possível avaliar" },
-          competencia5: aiResult.competencia5 || { nota: 0, comentario: "Não foi possível avaliar" },
-          feedbackGeral: aiResult.feedbackGeral || "Não foi possível gerar feedback",
-          pontoFortes: aiResult.pontoFortes || [],
-          pontosAMelhorar: aiResult.pontosAMelhorar || [],
-          redacaoOriginal: body.redacao,
-          createdAt: new Date().toISOString(),
-          origem: "IA", // Indicar que foi avaliado pela IA
-          tema: temaFinal,
-          textoApoio1: textoApoio1Final,
-          textoApoio2: textoApoio2Final
-        };
-      } catch (error) {
-        console.error("Error calling Groq API:", error);
-        
-        // Em caso de erro, criar um resultado de fallback
-        result = {
-          id,
-          nota: 0,
-          competencia1: { nota: 0, comentario: "Ocorreu um erro na avaliação." },
-          competencia2: { nota: 0, comentario: "Ocorreu um erro na avaliação." },
-          competencia3: { nota: 0, comentario: "Ocorreu um erro na avaliação." },
-          competencia4: { nota: 0, comentario: "Ocorreu um erro na avaliação." },
-          competencia5: { nota: 0, comentario: "Ocorreu um erro na avaliação." },
-          feedbackGeral: "Não foi possível analisar sua redação devido a um erro técnico. Por favor, tente novamente mais tarde.",
-          pontoFortes: ["Sistema indisponível no momento"],
-          pontosAMelhorar: ["Tente novamente mais tarde"],
-          redacaoOriginal: body.redacao,
-          createdAt: new Date().toISOString(),
-          origem: "Simulação", // Indicar que é uma simulação (fallback)
-          tema: temaFinal,
-          textoApoio1: textoApoio1Final,
-          textoApoio2: textoApoio2Final
-        };
-      }
+      
+      // Armazenar o resultado usando a função do store
+      storeResult(id, result);
+      
+      // Retornar apenas o ID como resposta para reduzir o tamanho da resposta
+      const responseObj: EssayResultResponse = { id };
+      return NextResponse.json(responseObj);
+      
+    } catch (error) {
+      console.error("Error calling Groq API:", error);
+      return NextResponse.json(
+        { error: "Erro ao analisar sua redação", message: (error as Error).message },
+        { status: 500 }
+      );
     }
-    
-    // Armazenar o resultado usando a função do store
-    storeResult(id, result);
-    
-    // Retornar apenas o ID como resposta para reduzir o tamanho da resposta
-    const response: EssayResultResponse = { id };
-    return NextResponse.json(response);
     
   } catch (error) {
     console.error("Error in /api/corrigir:", error);

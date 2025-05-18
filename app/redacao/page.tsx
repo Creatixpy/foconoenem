@@ -106,7 +106,8 @@ export default function RedacaoPage() {
       const response = await fetch("/api/gerar-tema");
       
       if (!response.ok) {
-        throw new Error("Não foi possível gerar um tema. Tente novamente.");
+        const errorData = await response.json();
+        throw new Error(errorData.error || errorData.message || "Não foi possível gerar um tema. Tente novamente.");
       }
       
       const data = await response.json();

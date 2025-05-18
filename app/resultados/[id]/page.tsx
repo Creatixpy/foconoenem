@@ -113,12 +113,10 @@ export default function ResultadosPage() {
             </p>
           </div>
           
-          {/* Badge indicadora da origem da correção */}
+          {/* Badge indicadora da origem da correção (sempre IA agora) */}
           <div className="mb-4">
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-              result.origem === "IA" ? "bg-purple-100 text-purple-800" : "bg-blue-100 text-blue-800"
-            }`}>
-              {result.origem === "IA" ? "Correção por IA" : "Correção Simulada"}
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+              Correção por IA
             </span>
           </div>
           
