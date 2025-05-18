@@ -337,6 +337,17 @@ body {
   color: white;
 }
 
+/* Melhorias de contraste para texto no tema escuro */
+[data-theme="dark"] .card p {
+  color: rgba(248, 250, 252, 0.9); /* Cor clara com alta opacidade para bom contraste */
+}
+
+/* Garantir que textos em áreas específicas sempre tenham bom contraste */
+.topic-description {
+  color: var(--foreground);
+  opacity: 0.9;
+}
+
 /* Estilos específicos para responsividade */
 @media (max-width: 640px) {
   .container {
