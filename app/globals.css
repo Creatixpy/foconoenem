@@ -385,3 +385,32 @@ body {
     transition: opacity 200ms, transform 200ms;
   }
 }
+
+/* Estilos específicos para o Chatbot */
+.chatbot-btn {
+  transition: transform 0.2s ease-in-out;
+}
+
+.chatbot-btn:hover {
+  transform: scale(1.1);
+}
+
+.chatbot-container {
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+@keyframes messageIn {
+  from { 
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.chatbot-message {
+  animation: messageIn 0.3s ease forwards;
+}
