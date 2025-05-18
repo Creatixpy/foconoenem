@@ -154,7 +154,7 @@ export default function Home() {
               </span>
               <div>
                 <h3 className="font-semibold text-lg">Escolha um tema</h3>
-                <p className="text-gray-700 dark:text-gray-200">
+                <p className="text-foreground dark:text-gray-200 topic-description">
                   Acesse a página do simulado e escolha entre usar o tema padrão,
                   gerar um tema automaticamente com IA, ou definir seu próprio tema
                   personalizado.
@@ -167,7 +167,7 @@ export default function Home() {
               </span>
               <div>
                 <h3 className="font-semibold text-lg">Escreva sua redação</h3>
-                <p className="text-gray-700 dark:text-gray-200">
+                <p className="text-foreground dark:text-gray-200 topic-description">
                   Escreva sua redação dissertativa-argumentativa com no mínimo 7 e
                   no máximo 30 linhas, seguindo as mesmas regras do ENEM.
                 </p>
@@ -179,7 +179,7 @@ export default function Home() {
               </span>
               <div>
                 <h3 className="font-semibold text-lg">Submeta para correção</h3>
-                <p className="text-gray-700 dark:text-gray-200">
+                <p className="text-foreground dark:text-gray-200 topic-description">
                   Quando finalizar, clique em "Concluir Redação" para enviar seu
                   texto para análise pela nossa inteligência artificial.
                 </p>
@@ -191,7 +191,7 @@ export default function Home() {
               </span>
               <div>
                 <h3 className="font-semibold text-lg">Receba seu resultado</h3>
-                <p className="text-gray-700 dark:text-gray-200">
+                <p className="text-foreground dark:text-gray-200 topic-description">
                   Em poucos segundos, receba sua nota e feedback detalhado para
                   entender como melhorar em cada uma das cinco competências
                   avaliadas no ENEM.

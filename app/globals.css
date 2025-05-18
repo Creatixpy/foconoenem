@@ -348,6 +348,35 @@ body {
   opacity: 0.9;
 }
 
+/* Melhorar contraste para textos na seção "Como Funciona" no tema claro */
+[data-theme="light"] .text-gray-700 {
+  color: #374151; /* Escurecer no tema claro */
+  opacity: 1;
+}
+
+/* Garantir que os textos do footer tenham bom contraste em ambos os temas */
+footer {
+  background-color: var(--card-bg) !important;
+  color: var(--foreground);
+  border-top: 1px solid var(--border-color);
+}
+
+footer p, footer a, footer div {
+  transition: color 0.2s ease;
+}
+
+[data-theme="light"] footer .text-gray-400,
+[data-theme="light"] footer .text-gray-500,
+[data-theme="light"] footer .text-gray-600 {
+  color: #4b5563 !important;
+}
+
+[data-theme="dark"] footer .text-gray-400,
+[data-theme="dark"] footer .text-gray-500,
+[data-theme="dark"] footer .text-gray-600 {
+  color: #9ca3af !important;
+}
+
 /* Estilos específicos para responsividade */
 @media (max-width: 640px) {
   .container {

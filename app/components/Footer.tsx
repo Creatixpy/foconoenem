@@ -1,8 +1,29 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export default function Footer() {
+  const [mounted, setMounted] = useState(false);
+
+  // Garantir que o componente só seja renderizado no cliente
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <footer className="p-6">
+        <div className="container mx-auto">
+          {/* Placeholder durante a carga inicial */}
+          <div className="h-16"></div>
+        </div>
+      </footer>
+    );
+  }
+
   return (
-    <footer className="bg-gray-100 dark:bg-gray-800 p-6">
+    <footer className="p-6">
       <div className="container mx-auto">
         <div className="text-center mb-4">
           <p className="text-gray-600 dark:text-gray-300">
