@@ -26,39 +26,39 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [theme, setTheme] = useState<"light" | "dark" | "system">("system");
+  const [theme, setTheme] = useState<"light" | "dark" | "system">("light");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Verificar se há um tema salvo no localStorage
+    setMounted(true);
     const savedTheme = localStorage.getItem("theme") as "light" | "dark" | "system" | null;
     if (savedTheme) {
       setTheme(savedTheme);
+    } else {
+      // Verificar preferência do sistema
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      setTheme(prefersDark ? "dark" : "light");
     }
-    setMounted(true);
   }, []);
 
   useEffect(() => {
-    // Aplicar o data-theme ao documento
     if (mounted) {
       document.documentElement.setAttribute("data-theme", theme);
-      
-      // Salvar a preferência do usuário
-      if (theme) {
-        localStorage.setItem("theme", theme);
-      }
+      localStorage.setItem("theme", theme);
     }
   }, [theme, mounted]);
 
+  // Usar um tema padrão para o SSR inicial
+  const initialTheme = "light";
+
   return (
-    <html lang="pt-BR" data-theme={theme}>
+    <html lang="pt-BR" data-theme={mounted ? theme : initialTheme}>
       <head>
         <title>{metadata.title}</title>
         <meta name="description" content={metadata.description} />
       </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        {children}
         {mounted && (
           <div className="fixed bottom-4 right-4 z-10">
             <button 
@@ -86,7 +86,6 @@ export default function RootLayout({
             </button>
           </div>
         )}
-        {children}
       </body>
     </html>
   );
