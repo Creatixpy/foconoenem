@@ -52,6 +52,8 @@ export default function RootLayout({
       <head>
         <title>{metadata.title}</title>
         <meta name="description" content={metadata.description} />
+        <link rel="icon" href="/foconoenemicon.png" type="image/png" sizes="any" />
+        <link rel="apple-touch-icon" href="/foconoenemicon.png" />
         <Script 
           async 
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8449266040565561"
