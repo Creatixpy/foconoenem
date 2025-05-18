@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import OperatingHoursIndicator from "../components/OperatingHoursIndicator";
-import { isWithinOperatingHours, getOperatingHoursInfo } from "@/lib/schedule";
+import { isWithinOperatingHours, getOperatingHoursInfo, isWithinOperatingHoursServer, getOperatingHoursInfoServer } from "@/lib/schedule";
 
 export default function RedacaoPage() {
   const [content, setContent] = useState("");
@@ -19,8 +19,9 @@ export default function RedacaoPage() {
   const [generatedText1, setGeneratedText1] = useState("");
   const [generatedText2, setGeneratedText2] = useState("");
   const [isGeneratingTheme, setIsGeneratingTheme] = useState(false);
-  const [isSystemAvailable, setIsSystemAvailable] = useState(isWithinOperatingHours());
+  const [isSystemAvailable, setIsSystemAvailable] = useState(true); // Iniciar como true e verificar com o servidor
   const [operatingInfo, setOperatingInfo] = useState(getOperatingHoursInfo());
+  const [isCheckingServer, setIsCheckingServer] = useState(true);
   
   const editorRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -31,9 +32,51 @@ export default function RedacaoPage() {
     }
   };
 
+  // Verificar disponibilidade do sistema com o servidor
+  const checkServerAvailability = async () => {
+    try {
+      setIsCheckingServer(true);
+      const isAvailable = await isWithinOperatingHoursServer();
+      const serverInfo = await getOperatingHoursInfoServer();
+      
+      setIsSystemAvailable(isAvailable);
+      setOperatingInfo(serverInfo);
+      setIsCheckingServer(false);
+    } catch (error) {
+      console.error("Erro ao verificar disponibilidade com o servidor:", error);
+      // Fallback para verificação local
+      setIsSystemAvailable(isWithinOperatingHours());
+      setOperatingInfo(getOperatingHoursInfo());
+      setIsCheckingServer(false);
+    }
+  };
+
+  // Verificar a disponibilidade ao montar o componente
+  useEffect(() => {
+    checkServerAvailability();
+    
+    // Verificar o horário a cada minuto
+    const timer = setInterval(() => {
+      checkServerAvailability();
+    }, 60000); // 60 segundos
+    
+    return () => clearInterval(timer);
+  }, []);
+
   const handleSubmit = async () => {
-    if (!isSystemAvailable) {
-      setError(`Sistema fora do horário de funcionamento. Disponível das ${operatingInfo.opensAt} às ${operatingInfo.closesAt}.`);
+    // Verificar novamente com o servidor antes de submeter
+    try {
+      const isAvailable = await isWithinOperatingHoursServer();
+      const serverInfo = await getOperatingHoursInfoServer();
+      
+      if (!isAvailable) {
+        setError(`Sistema fora do horário de funcionamento. Disponível das ${serverInfo.opensAt} às ${serverInfo.closesAt}. Hora do servidor: ${serverInfo.serverTime}`);
+        return;
+      }
+    } catch (error) {
+      console.error("Erro ao verificar horário do servidor:", error);
+      // Se não conseguir verificar com o servidor, impedir o envio por segurança
+      setError("Não foi possível verificar o horário do servidor. Tente novamente em instantes.");
       return;
     }
     
@@ -106,23 +149,21 @@ export default function RedacaoPage() {
       setIsSubmitting(false);
     }
   };
-
-  // Verificar o horário de funcionamento a cada minuto
-  useEffect(() => {
-    const checkAvailability = () => {
-      setIsSystemAvailable(isWithinOperatingHours());
-      setOperatingInfo(getOperatingHoursInfo());
-    };
-    
-    const timer = setInterval(checkAvailability, 60000); // 60 segundos
-    
-    return () => clearInterval(timer);
-  }, []);
   
   // Função para gerar um tema automaticamente
   const handleGenerateTheme = async () => {
-    if (!isSystemAvailable) {
-      setError(`Sistema fora do horário de funcionamento. Disponível das ${operatingInfo.opensAt} às ${operatingInfo.closesAt}.`);
+    // Verificar novamente com o servidor antes de gerar tema
+    try {
+      const isAvailable = await isWithinOperatingHoursServer();
+      const serverInfo = await getOperatingHoursInfoServer();
+      
+      if (!isAvailable) {
+        setError(`Sistema fora do horário de funcionamento. Disponível das ${serverInfo.opensAt} às ${serverInfo.closesAt}. Hora do servidor: ${serverInfo.serverTime}`);
+        return;
+      }
+    } catch (error) {
+      console.error("Erro ao verificar horário do servidor:", error);
+      setError("Não foi possível verificar o horário do servidor. Tente novamente em instantes.");
       return;
     }
     
@@ -348,6 +389,13 @@ export default function RedacaoPage() {
             </ul>
           </div>
 
+          {isCheckingServer && (
+            <div className="bg-primary-light p-3 rounded-lg mb-4 text-center">
+              <span className="inline-block w-4 h-4 mr-2 border-2 border-primary border-t-transparent rounded-full animate-spin"></span>
+              Verificando disponibilidade do sistema...
+            </div>
+          )}
+          
           {error && (
             <div className="bg-danger-light text-danger p-4 rounded-lg mb-8 animate-fadeIn flex items-start">
               <svg className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -388,14 +436,18 @@ export default function RedacaoPage() {
           <div className="flex justify-end">
             <button
               onClick={handleSubmit}
-              disabled={isSubmitting || !isSystemAvailable}
-              className={`${isSubmitting || !isSystemAvailable ? "bg-gray-400" : ""} theme-btn btn`}
+              disabled={isSubmitting || !isSystemAvailable || isCheckingServer}
+              className={`${isSubmitting || !isSystemAvailable || isCheckingServer ? "bg-gray-400" : ""} theme-btn btn`}
               title={!isSystemAvailable ? `Sistema disponível apenas das ${operatingInfo.opensAt} às ${operatingInfo.closesAt}` : ""}
             >
               {isSubmitting ? (
                 <>
                   <span className="inline-block w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
                   Enviando...
+                </>
+              ) : isCheckingServer ? (
+                <>
+                  Verificando Horário...
                 </>
               ) : !isSystemAvailable ? (
                 <>
