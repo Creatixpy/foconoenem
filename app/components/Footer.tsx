@@ -6,16 +6,28 @@ import { useEffect, useState } from "react";
 export default function Footer() {
   const [mounted, setMounted] = useState(false);
 
+  // Garantir que o componente só seja renderizado no cliente
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  if (!mounted) {
+    return (
+      <footer className="p-6">
+        <div className="container mx-auto">
+          {/* Placeholder durante a carga inicial */}
+          <div className="h-16"></div>
+        </div>
+      </footer>
+    );
+  }
 
   return (
     <footer className="p-6">
       <div className="container mx-auto">
         <div className="text-center mb-4">
           <p className="text-gray-600 dark:text-gray-300">
-            © {mounted ? new Date().getFullYear() : "2024"} Foco no ENEM - Todos os direitos reservados
+            © {new Date().getFullYear()} Foco no ENEM - Todos os direitos reservados
           </p>
         </div>
         <div className="flex justify-center space-x-6 mb-3">

@@ -26,66 +26,61 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [theme, setTheme] = useState<"light" | "dark" | "system">("light");
-  const [mounted, setMounted] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark" | "system">("system");
 
   useEffect(() => {
-    setMounted(true);
+    // Verificar se há um tema salvo no localStorage
     const savedTheme = localStorage.getItem("theme") as "light" | "dark" | "system" | null;
     if (savedTheme) {
       setTheme(savedTheme);
-    } else {
-      // Verificar preferência do sistema
-      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      setTheme(prefersDark ? "dark" : "light");
     }
   }, []);
 
   useEffect(() => {
-    if (mounted) {
-      document.documentElement.setAttribute("data-theme", theme);
+    // Aplicar o data-theme ao documento
+    document.documentElement.setAttribute("data-theme", theme);
+    
+    // Salvar a preferência do usuário
+    if (theme) {
       localStorage.setItem("theme", theme);
     }
-  }, [theme, mounted]);
-
-  // Usar um tema padrão para o SSR inicial
-  const initialTheme = "light";
+  }, [theme]);
 
   return (
-    <html lang="pt-BR" data-theme={mounted ? theme : initialTheme}>
+    <html lang="pt-BR" data-theme={theme}>
       <head>
         <title>{metadata.title}</title>
         <meta name="description" content={metadata.description} />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <div className="fixed bottom-4 right-4 z-10">
+          <button 
+            onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+            className="p-3 bg-card-bg border border-border-color rounded-full shadow-md hover:bg-muted-bg transition-all"
+            aria-label={theme === "light" ? "Ativar modo escuro" : "Ativar modo claro"}
+          >
+            {theme === "light" ? (
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="4"></circle>
+                <path d="M12 2v2"></path>
+                <path d="M12 20v2"></path>
+                <path d="m4.93 4.93 1.41 1.41"></path>
+                <path d="m17.66 17.66 1.41 1.41"></path>
+                <path d="M2 12h2"></path>
+                <path d="M20 12h2"></path>
+                <path d="m6.34 17.66-1.41 1.41"></path>
+                <path d="m19.07 4.93-1.41 1.41"></path>
+              </svg>
+            )}
+          </button>
+        </div>
         {children}
-        {mounted && (
-          <div className="fixed bottom-4 right-4 z-10">
-            <button 
-              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-              className="p-3 bg-card-bg border border-border-color rounded-full shadow-md hover:bg-muted-bg transition-all"
-              aria-label={theme === "light" ? "Ativar modo escuro" : "Ativar modo claro"}
-            >
-              {theme === "light" ? (
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
-                </svg>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="4"></circle>
-                  <path d="M12 2v2"></path>
-                  <path d="M12 20v2"></path>
-                  <path d="m4.93 4.93 1.41 1.41"></path>
-                  <path d="m17.66 17.66 1.41 1.41"></path>
-                  <path d="M2 12h2"></path>
-                  <path d="M20 12h2"></path>
-                  <path d="m6.34 17.66-1.41 1.41"></path>
-                  <path d="m19.07 4.93-1.41 1.41"></path>
-                </svg>
-              )}
-            </button>
-          </div>
-        )}
       </body>
     </html>
   );
