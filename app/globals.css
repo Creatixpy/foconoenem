@@ -281,3 +281,58 @@ body {
   border-color: #9ca3af;
   cursor: not-allowed;
 }
+
+/* Estilos para temas e textos de apoio */
+.theme-box {
+  background-color: var(--primary-light);
+  color: var(--foreground);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.theme-text {
+  color: var(--foreground);
+  font-size: 1.125rem;
+  line-height: 1.75;
+}
+
+.support-text-box {
+  background-color: var(--card-bg);
+  color: var(--foreground);
+  border: 1px solid var(--border-color);
+  border-radius: 0.25rem;
+  padding: 1rem;
+}
+
+.support-text-title {
+  color: var(--foreground);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.support-text-content {
+  color: var(--foreground);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* Cores específicas para modo escuro */
+[data-theme="dark"] .theme-box {
+  background-color: var(--primary-light);
+  color: white;
+}
+
+[data-theme="dark"] .theme-text {
+  color: white;
+}
+
+[data-theme="dark"] .support-text-box {
+  background-color: var(--card-bg);
+  color: white;
+}
+
+[data-theme="dark"] .support-text-title,
+[data-theme="dark"] .support-text-content {
+  color: white;
+}

@@ -195,31 +195,31 @@ export default function RedacaoPage() {
           {/* Mostrar tema de acordo com o modo selecionado */}
           {themeMode === "padrao" && (
             <>
-              <div className="mb-6 bg-blue-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-lg mb-2">TEMA:</h3>
-                <p className="text-lg">
+              <div className="mb-6 theme-box">
+                <h3 className="font-semibold text-lg mb-2 text-foreground">TEMA:</h3>
+                <p className="theme-text">
                   "Os desafios da educação digital no Brasil contemporâneo"
                 </p>
               </div>
               
               <div className="mb-6">
-                <h3 className="font-semibold text-lg mb-2">TEXTOS DE APOIO:</h3>
+                <h3 className="font-semibold text-lg mb-2 text-foreground">TEXTOS DE APOIO:</h3>
                 <div className="grid md:grid-cols-2 gap-4">
-                  <div className="bg-gray-50 p-4 rounded border">
-                    <p className="text-sm mb-2">
+                  <div className="support-text-box">
+                    <p className="support-text-title">
                       <strong>TEXTO I</strong>
                     </p>
-                    <p className="text-sm">
+                    <p className="support-text-content">
                       Segundo dados do IBGE, em 2021, 85% dos domicílios brasileiros possuíam acesso à internet, 
                       porém com grande disparidade regional e socioeconômica. Nas regiões Norte e Nordeste, 
                       e em famílias de baixa renda, o acesso é significativamente menor.
                     </p>
                   </div>
-                  <div className="bg-gray-50 p-4 rounded border">
-                    <p className="text-sm mb-2">
+                  <div className="support-text-box">
+                    <p className="support-text-title">
                       <strong>TEXTO II</strong>
                     </p>
-                    <p className="text-sm">
+                    <p className="support-text-content">
                       A pandemia de COVID-19 evidenciou a necessidade de integração digital no ensino, 
                       mas também mostrou que muitos estudantes e professores não estão preparados para 
                       o uso efetivo das tecnologias educacionais.
@@ -232,27 +232,27 @@ export default function RedacaoPage() {
 
           {themeMode === "gerado" && (
             <>
-              <div className="mb-6 bg-green-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-lg mb-2">TEMA GERADO:</h3>
-                <p className="text-lg">
+              <div className="mb-6 theme-box">
+                <h3 className="font-semibold text-lg mb-2 text-foreground">TEMA GERADO:</h3>
+                <p className="theme-text">
                   "{generatedTheme}"
                 </p>
               </div>
               
               <div className="mb-6">
-                <h3 className="font-semibold text-lg mb-2">TEXTOS DE APOIO:</h3>
+                <h3 className="font-semibold text-lg mb-2 text-foreground">TEXTOS DE APOIO:</h3>
                 <div className="grid md:grid-cols-2 gap-4">
-                  <div className="bg-gray-50 p-4 rounded border">
-                    <p className="text-sm mb-2">
+                  <div className="support-text-box">
+                    <p className="support-text-title">
                       <strong>TEXTO I</strong>
                     </p>
-                    <p className="text-sm">{generatedText1}</p>
+                    <p className="support-text-content">{generatedText1}</p>
                   </div>
-                  <div className="bg-gray-50 p-4 rounded border">
-                    <p className="text-sm mb-2">
+                  <div className="support-text-box">
+                    <p className="support-text-title">
                       <strong>TEXTO II</strong>
                     </p>
-                    <p className="text-sm">{generatedText2}</p>
+                    <p className="support-text-content">{generatedText2}</p>
                   </div>
                 </div>
               </div>

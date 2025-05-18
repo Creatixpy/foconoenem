@@ -108,14 +108,14 @@ export default function ResultadosPage() {
           </div>
           
           {/* Exibir o tema usado */}
-          <div className="mb-8 p-4 bg-primary-light rounded-lg border border-primary/20">
-            <h3 className="font-semibold text-lg mb-2 flex items-center">
+          <div className="mb-8 theme-box">
+            <h3 className="font-semibold text-lg mb-2 flex items-center text-foreground">
               <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
               TEMA UTILIZADO:
             </h3>
-            <p className="text-lg italic">
+            <p className="theme-text italic">
               "{result.tema || "Os desafios da educação digital no Brasil contemporâneo"}"
             </p>
           </div>

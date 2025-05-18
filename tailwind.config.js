@@ -25,6 +25,12 @@ module.exports = {
         danger: "var(--danger)",
         "danger-light": "var(--danger-light)",
       },
+      textColor: {
+        foreground: "var(--foreground)",
+      },
+      backgroundColor: {
+        card: "var(--card-bg)",
+      }
     },
   },
   safelist: [
@@ -36,6 +42,8 @@ module.exports = {
     'text-blue-600',
     'text-yellow-600',
     'text-red-600',
+    'text-foreground',
+    'bg-card',
   ],
   plugins: [],
 };
