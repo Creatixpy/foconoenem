@@ -20,7 +20,10 @@ export default function ThemeToggle() {
     localStorage.setItem("theme", theme);
   }, [theme, mounted]);
 
-  if (!mounted) return null;
+  // Se não estiver montado, renderize um div vazio para evitar erros de hidratação
+  if (!mounted) {
+    return <div></div>;
+  }
 
   return (
     <div className="fixed bottom-4 right-4 z-10">
