@@ -8,10 +8,13 @@ export default function RedacaoPage() {
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [useCustomTheme, setUseCustomTheme] = useState(false);
+  const [themeMode, setThemeMode] = useState<"padrao" | "personalizado" | "gerado">("padrao");
   const [customTheme, setCustomTheme] = useState("");
   const [customText1, setCustomText1] = useState("");
   const [customText2, setCustomText2] = useState("");
+  const [generatedTheme, setGeneratedTheme] = useState("");
+  const [generatedText1, setGeneratedText1] = useState("");
+  const [generatedText2, setGeneratedText2] = useState("");
   const [isGeneratingTheme, setIsGeneratingTheme] = useState(false);
   
   const editorRef = useRef<HTMLDivElement>(null);
@@ -29,7 +32,7 @@ export default function RedacaoPage() {
       return;
     }
 
-    if (useCustomTheme && customTheme.trim().length < 5) {
+    if (themeMode === "personalizado" && customTheme.trim().length < 5) {
       alert("Por favor, informe um tema personalizado válido com pelo menos 5 caracteres.");
       return;
     }
@@ -48,7 +51,9 @@ export default function RedacaoPage() {
         redacao: content
       };
 
-      if (useCustomTheme) {
+      if (themeMode === "padrao") {
+        payload.usarTemaPadrao = true;
+      } else if (themeMode === "personalizado") {
         payload.usarTemaPadrao = false;
         payload.tema = customTheme.trim();
         
@@ -59,8 +64,11 @@ export default function RedacaoPage() {
         if (customText2.trim()) {
           payload.textoApoio2 = customText2.trim();
         }
-      } else {
-        payload.usarTemaPadrao = true;
+      } else if (themeMode === "gerado") {
+        payload.usarTemaPadrao = false;
+        payload.tema = generatedTheme;
+        payload.textoApoio1 = generatedText1;
+        payload.textoApoio2 = generatedText2;
       }
       
       const response = await fetch("/api/corrigir", {
@@ -89,7 +97,7 @@ export default function RedacaoPage() {
     }
   };
 
-  // Nova função para gerar um tema automaticamente
+  // Função para gerar um tema automaticamente
   const handleGenerateTheme = async () => {
     try {
       setIsGeneratingTheme(true);
@@ -103,13 +111,13 @@ export default function RedacaoPage() {
       
       const data = await response.json();
       
-      // Ativar o modo de tema personalizado
-      setUseCustomTheme(true);
+      // Armazenar os dados gerados
+      setGeneratedTheme(data.tema);
+      setGeneratedText1(data.textoApoio1);
+      setGeneratedText2(data.textoApoio2);
       
-      // Preencher os campos com os dados gerados
-      setCustomTheme(data.tema);
-      setCustomText1(data.textoApoio1);
-      setCustomText2(data.textoApoio2);
+      // Mudar para o modo de tema gerado
+      setThemeMode("gerado");
       
     } catch (error) {
       console.error("Erro ao gerar tema:", error);
@@ -148,32 +156,54 @@ export default function RedacaoPage() {
           </h2>
           
           <div className="mb-6">
-            <div className="flex items-center mb-4">
-              <h3 className="font-semibold text-lg mr-4">SELECIONE O TEMA:</h3>
-              <div className="flex space-x-4">
+            <div className="flex flex-wrap items-center mb-4">
+              <h3 className="font-semibold text-lg mr-4 mb-2">SELECIONE O TEMA:</h3>
+              <div className="flex flex-wrap gap-4">
                 <label className="inline-flex items-center">
                   <input
                     type="radio"
                     className="form-radio h-4 w-4 text-blue-600"
-                    checked={!useCustomTheme}
-                    onChange={() => setUseCustomTheme(false)}
+                    checked={themeMode === "padrao"}
+                    onChange={() => setThemeMode("padrao")}
                   />
-                  <span className="ml-2">Usar tema padrão</span>
+                  <span className="ml-2">Tema padrão</span>
                 </label>
                 <label className="inline-flex items-center">
                   <input
                     type="radio"
                     className="form-radio h-4 w-4 text-blue-600"
-                    checked={useCustomTheme}
-                    onChange={() => setUseCustomTheme(true)}
+                    checked={themeMode === "personalizado"}
+                    onChange={() => setThemeMode("personalizado")}
                   />
                   <span className="ml-2">Definir tema personalizado</span>
                 </label>
+                <button
+                  onClick={handleGenerateTheme}
+                  disabled={isGeneratingTheme}
+                  className={`${
+                    isGeneratingTheme ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"
+                  } text-white font-medium py-2 px-4 rounded-md transition duration-200 text-sm flex items-center`}
+                >
+                  {isGeneratingTheme ? (
+                    <>
+                      <span className="inline-block w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                      Gerando...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 3a7 7 0 100 14 7 7 0 000-14zm-9 7a9 9 0 1118 0 9 9 0 01-18 0z" clipRule="evenodd" />
+                        <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3.586l2.707 2.707a1 1 0 01-1.414 1.414l-3-3A1 1 0 019 10V6a1 1 0 011-1z" clipRule="evenodd" />
+                      </svg>
+                      Gerar Tema Automático
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </div>
           
-          {!useCustomTheme ? (
+          {themeMode === "padrao" && (
             <>
               <div className="mb-6 bg-blue-50 p-4 rounded-lg">
                 <h3 className="font-semibold text-lg mb-2">TEMA:</h3>
@@ -208,41 +238,50 @@ export default function RedacaoPage() {
                 </div>
               </div>
             </>
-          ) : (
+          )}
+
+          {themeMode === "gerado" && (
+            <>
+              <div className="mb-6 bg-green-50 p-4 rounded-lg">
+                <h3 className="font-semibold text-lg mb-2">TEMA GERADO:</h3>
+                <p className="text-lg">
+                  "{generatedTheme}"
+                </p>
+              </div>
+              
+              <div className="mb-6">
+                <h3 className="font-semibold text-lg mb-2">TEXTOS DE APOIO:</h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="bg-gray-50 p-4 rounded border">
+                    <p className="text-sm mb-2">
+                      <strong>TEXTO I</strong>
+                    </p>
+                    <p className="text-sm">{generatedText1}</p>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded border">
+                    <p className="text-sm mb-2">
+                      <strong>TEXTO II</strong>
+                    </p>
+                    <p className="text-sm">{generatedText2}</p>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+          
+          {themeMode === "personalizado" && (
             <>
               <div className="mb-6">
-                <div className="flex flex-wrap items-center justify-between mb-2">
-                  <h3 className="font-semibold text-lg">TEMA PERSONALIZADO:</h3>
-                  <button
-                    onClick={handleGenerateTheme}
-                    disabled={isGeneratingTheme}
-                    className={`${
-                      isGeneratingTheme ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"
-                    } text-white font-medium py-2 px-4 rounded-md transition duration-200 text-sm flex items-center ml-2 mb-2`}
-                  >
-                    {isGeneratingTheme ? (
-                      <>
-                        <span className="inline-block w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                        Gerando...
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-4 h-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M10 3a7 7 0 100 14 7 7 0 000-14zm-9 7a9 9 0 1118 0 9 9 0 01-18 0z" clipRule="evenodd" />
-                          <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3.586l2.707 2.707a1 1 0 01-1.414 1.414l-3-3A1 1 0 019 10V6a1 1 0 011-1z" clipRule="evenodd" />
-                        </svg>
-                        Gerar Tema Automático
-                      </>
-                    )}
-                  </button>
-                </div>
-                <input 
-                  type="text"
-                  value={customTheme}
-                  onChange={(e) => setCustomTheme(e.target.value)}
-                  placeholder="Digite o tema da redação..."
-                  className="w-full p-3 border rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500 transition-colors"
-                />
+                <label className="block">
+                  <h3 className="font-semibold text-lg mb-2">TEMA PERSONALIZADO:</h3>
+                  <input 
+                    type="text"
+                    value={customTheme}
+                    onChange={(e) => setCustomTheme(e.target.value)}
+                    placeholder="Digite o tema da redação..."
+                    className="w-full p-3 border rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500 transition-colors"
+                  />
+                </label>
               </div>
               
               <div className="mb-6">

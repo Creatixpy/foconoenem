@@ -47,9 +47,8 @@ export default function Home() {
               Temas Disponíveis
             </h3>
             <p>
-              Escolha entre o tema padrão, use a função "Gerar Tema" para criar
-              temas aleatórios, ou defina seu próprio tema personalizado para
-              praticar.
+              Escolha entre o tema padrão, gere um tema automaticamente com nossa IA,{" "}
+              ou defina seu próprio tema personalizado para praticar.
             </p>
           </div>
           <div className="bg-blue-50 p-6 rounded-lg shadow-sm">
@@ -79,8 +78,7 @@ export default function Home() {
           <ol className="list-decimal pl-6 space-y-3">
             <li>
               Acesse a página do simulado e escolha entre usar o tema padrão,
-              gerar um tema automaticamente ou definir seu próprio tema
-              personalizado.
+              gerar um tema automaticamente com IA, ou definir seu próprio tema personalizado.
             </li>
             <li>
               Escreva sua redação dissertativa-argumentativa com no mínimo 7 e
