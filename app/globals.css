@@ -1,11 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  --background: #f8fafc;
   --foreground: #171717;
-  --primary: #2563eb;
+  --primary: #3b82f6;
   --primary-dark: #1d4ed8;
+  --primary-light: #dbeafe;
   --secondary: #e2e8f0;
+  --accent: #8b5cf6;
+  --accent-light: #ede9fe;
+  --success: #22c55e;
+  --success-light: #dcfce7;
+  --warning: #eab308;
+  --warning-light: #fef9c3;
+  --danger: #ef4444;
+  --danger-light: #fee2e2;
   --card-bg: #ffffff;
   --muted-bg: #f1f5f9;
   --border-color: #e2e8f0;
@@ -13,28 +22,54 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 [data-theme="dark"] {
-  --background: #0a0a0a;
-  --foreground: #ededed;
+  --background: #0f172a;
+  --foreground: #f8fafc;
   --primary: #3b82f6;
   --primary-dark: #2563eb;
+  --primary-light: #1e3a8a;
   --secondary: #334155;
-  --card-bg: #1a1a1a;
-  --muted-bg: #222222;
+  --accent: #a78bfa;
+  --accent-light: #4c1d95;
+  --success: #22c55e;
+  --success-light: #14532d;
+  --warning: #eab308;
+  --warning-light: #713f12;
+  --danger: #ef4444;
+  --danger-light: #7f1d1d;
+  --card-bg: #1e293b;
+  --muted-bg: #0f172a;
   --border-color: #334155;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.25);
+  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.26);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.26);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.25);
 }
 
 @media (prefers-color-scheme: dark) {
   [data-theme="system"] {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0f172a;
+    --foreground: #f8fafc;
     --primary: #3b82f6;
     --primary-dark: #2563eb;
+    --primary-light: #1e3a8a;
     --secondary: #334155;
-    --card-bg: #1a1a1a;
-    --muted-bg: #222222;
+    --accent: #a78bfa;
+    --accent-light: #4c1d95;
+    --success: #22c55e;
+    --success-light: #14532d;
+    --warning: #eab308;
+    --warning-light: #713f12;
+    --danger: #ef4444;
+    --danger-light: #7f1d1d;
+    --card-bg: #1e293b;
+    --muted-bg: #0f172a;
     --border-color: #334155;
   }
 }
@@ -43,21 +78,97 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  line-height: 1.6;
 }
 
-.editor-container {
-  min-height: 400px;
-  border: 1px solid var(--border-color);
-  border-radius: 0.375rem;
-  padding: 1rem;
-  background: var(--card-bg);
-  line-height: 1.8;
+/* Transições suaves para todos os elementos */
+* {
+  transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+/* Personalização de botões */
+.btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow);
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-dark);
+}
+
+.btn-secondary {
+  background-color: var(--secondary);
   color: var(--foreground);
 }
 
+.btn-outline {
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+}
+
+.btn-outline:hover {
+  background-color: var(--muted-bg);
+}
+
+/* Card com efeito de elevação */
+.card {
+  background-color: var(--card-bg);
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.card-interactive:hover {
+  transform: translateY(-4px);
+}
+
+/* Editor de redação melhorado */
+.editor-container {
+  min-height: 400px;
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  background: var(--card-bg);
+  line-height: 1.8;
+  color: var(--foreground);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
 .editor-container:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.editor-container:empty:before {
+  content: "Digite sua redação aqui...";
+  color: #9ca3af;
+  font-style: italic;
 }
 
 /* Estilização das linhas no editor */
@@ -75,18 +186,72 @@ body {
   margin-top: 0.5rem;
 }
 
-/* Loader para aguardar a correção */
+/* Loader animado para aguardar a correção */
 .loader {
-  border: 4px solid rgba(127, 127, 127, 0.2);
+  border: 3px solid rgba(127, 127, 127, 0.1);
   border-left-color: var(--primary);
   border-radius: 50%;
   width: 40px;
   height: 40px;
-  animation: spin 1s linear infinite;
+  animation: spin 0.8s linear infinite;
   margin: 2rem auto;
 }
 
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* Badge de status */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.badge-primary {
+  background-color: var(--primary-light);
+  color: var(--primary-dark);
+}
+
+.badge-purple {
+  background-color: var(--accent-light);
+  color: var(--accent);
+}
+
+/* Animações de entrada para cards */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.4s ease forwards;
+}
+
+/* Animações de entrada para elementos em cascata */
+.animate-stagger > * {
+  animation: fadeIn 0.4s ease forwards;
+  opacity: 0;
+}
+
+.animate-stagger > *:nth-child(1) { animation-delay: 0.1s; }
+.animate-stagger > *:nth-child(2) { animation-delay: 0.2s; }
+.animate-stagger > *:nth-child(3) { animation-delay: 0.3s; }
+.animate-stagger > *:nth-child(4) { animation-delay: 0.4s; }
+.animate-stagger > *:nth-child(5) { animation-delay: 0.5s; }
+
+/* Tema personalizado para rádios e checkboxes */
+.form-checkbox, .form-radio {
+  color: var(--primary);
+}
+
+/* Seleção de texto */
+::selection {
+  background-color: var(--primary-light);
+  color: var(--primary-dark);
 }

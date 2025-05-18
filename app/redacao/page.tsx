@@ -2,7 +2,8 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 
 export default function RedacaoPage() {
   const [content, setContent] = useState("");
@@ -130,49 +131,39 @@ export default function RedacaoPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="bg-blue-800 text-white p-4">
-        <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Foco no ENEM</h1>
-          <nav>
-            <ul className="flex space-x-4">
-              <li>
-                <Link href="/" className="hover:underline">
-                  Início
-                </Link>
-              </li>
-              <li>
-                <Link href="/redacao" className="hover:underline">
-                  Simulado
-                </Link>
-              </li>
-            </ul>
-          </nav>
-        </div>
-      </header>
+      <Header />
 
       <main className="flex-grow container mx-auto p-4 md:p-8">
-        <section className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <h2 className="text-2xl font-bold text-blue-800 mb-4">
+        <section className="card p-6 md:p-8 mb-8 border border-border-color">
+          <h2 className="text-2xl md:text-3xl font-bold text-primary mb-6 flex items-center">
+            <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
             Simulado de Redação do ENEM
           </h2>
           
-          <div className="mb-6">
+          <div className="mb-8">
             <div className="flex flex-wrap items-center mb-4">
-              <h3 className="font-semibold text-lg mr-4 mb-2">SELECIONE O TEMA:</h3>
+              <h3 className="font-semibold text-lg mr-4 mb-2 flex items-center">
+                <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                SELECIONE O TEMA:
+              </h3>
               <div className="flex flex-wrap gap-4">
-                <label className="inline-flex items-center">
+                <label className="inline-flex items-center cursor-pointer rounded-full px-4 py-2 hover:bg-muted-bg transition-colors">
                   <input
                     type="radio"
-                    className="form-radio h-4 w-4 text-blue-600"
+                    className="form-radio h-4 w-4 text-primary"
                     checked={themeMode === "padrao"}
                     onChange={() => setThemeMode("padrao")}
                   />
                   <span className="ml-2">Tema padrão</span>
                 </label>
-                <label className="inline-flex items-center">
+                <label className="inline-flex items-center cursor-pointer rounded-full px-4 py-2 hover:bg-muted-bg transition-colors">
                   <input
                     type="radio"
-                    className="form-radio h-4 w-4 text-blue-600"
+                    className="form-radio h-4 w-4 text-primary"
                     checked={themeMode === "personalizado"}
                     onChange={() => setThemeMode("personalizado")}
                   />
@@ -182,8 +173,8 @@ export default function RedacaoPage() {
                   onClick={handleGenerateTheme}
                   disabled={isGeneratingTheme}
                   className={`${
-                    isGeneratingTheme ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"
-                  } text-white font-medium py-2 px-4 rounded-md transition duration-200 text-sm flex items-center`}
+                    isGeneratingTheme ? "bg-gray-400" : "bg-success hover:bg-success/90"
+                  } text-white font-medium py-2 px-4 rounded-md transition duration-200 text-sm flex items-center shadow-sm`}
                 >
                   {isGeneratingTheme ? (
                     <>
@@ -192,9 +183,8 @@ export default function RedacaoPage() {
                     </>
                   ) : (
                     <>
-                      <svg className="w-4 h-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M10 3a7 7 0 100 14 7 7 0 000-14zm-9 7a9 9 0 1118 0 9 9 0 01-18 0z" clipRule="evenodd" />
-                        <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3.586l2.707 2.707a1 1 0 01-1.414 1.414l-3-3A1 1 0 019 10V6a1 1 0 011-1z" clipRule="evenodd" />
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                       </svg>
                       Gerar Tema Automático
                     </>
@@ -204,6 +194,7 @@ export default function RedacaoPage() {
             </div>
           </div>
           
+          {/* Mostrar tema de acordo com o modo selecionado */}
           {themeMode === "padrao" && (
             <>
               <div className="mb-6 bg-blue-50 p-4 rounded-lg">
@@ -317,8 +308,13 @@ export default function RedacaoPage() {
             </>
           )}
           
-          <div className="mb-6">
-            <h3 className="font-semibold mb-4">INSTRUÇÕES:</h3>
+          <div className="mb-8 p-4 bg-primary-light rounded-lg border border-border-color">
+            <h3 className="font-semibold mb-4 flex items-center">
+              <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              INSTRUÇÕES:
+            </h3>
             <ul className="list-disc pl-5 space-y-2 text-sm">
               <li>A partir da leitura dos textos motivadores e com base nos conhecimentos construídos ao longo de sua formação, redija um texto dissertativo-argumentativo sobre o tema proposto.</li>
               <li>Apresente proposta de intervenção que respeite os direitos humanos.</li>
@@ -328,14 +324,24 @@ export default function RedacaoPage() {
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg mb-6">
-              <p className="font-medium">Erro:</p>
-              <p>{error}</p>
+            <div className="bg-danger-light text-danger p-4 rounded-lg mb-8 animate-fadeIn flex items-start">
+              <svg className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <p className="font-medium">Erro:</p>
+                <p>{error}</p>
+              </div>
             </div>
           )}
 
-          <div className="mb-6">
-            <h3 className="font-semibold mb-2">SUA REDAÇÃO:</h3>
+          <div className="mb-8">
+            <h3 className="font-semibold mb-4 flex items-center">
+              <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+              SUA REDAÇÃO:
+            </h3>
             <div
               ref={editorRef}
               className="editor-container"
@@ -346,6 +352,11 @@ export default function RedacaoPage() {
             ></div>
             <div className="char-counter">
               {content.length} caracteres | Aproximadamente {Math.ceil(content.length / 80)} linhas
+              {content.length >= 2500 && 
+                <span className="text-danger ml-2">
+                  (Limite de caracteres atingido!)
+                </span>
+              }
             </div>
           </div>
 
@@ -354,8 +365,8 @@ export default function RedacaoPage() {
               onClick={handleSubmit}
               disabled={isSubmitting}
               className={`${
-                isSubmitting ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
-              } text-white font-medium py-3 px-6 rounded-full inline-block transition duration-200`}
+                isSubmitting ? "bg-gray-400" : "bg-primary hover:bg-primary-dark"
+              } btn text-white`}
             >
               {isSubmitting ? (
                 <>
@@ -363,16 +374,19 @@ export default function RedacaoPage() {
                   Enviando...
                 </>
               ) : (
-                "Concluir Redação"
+                <>
+                  Concluir Redação
+                  <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                  </svg>
+                </>
               )}
             </button>
           </div>
         </section>
       </main>
 
-      <footer className="bg-gray-100 p-4 text-center text-gray-600 text-sm">
-        <p>© {new Date().getFullYear()} Foco no ENEM - Todos os direitos reservados</p>
-      </footer>
+      <Footer />
     </div>
   );
 }
