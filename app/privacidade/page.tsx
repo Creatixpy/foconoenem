@@ -107,7 +107,7 @@ export default function PrivacyPolicyPage() {
             <h2 className="text-xl font-semibold mt-6 mb-3">10. Contato</h2>
             <p className="mb-4">
               Se você tiver dúvidas ou preocupações sobre esta Política de Privacidade, entre em contato 
-              conosco através do e-mail: [inserir e-mail de contato].
+              conosco através do e-mail: [creatixpy@gmail.com].
             </p>
           </div>
 

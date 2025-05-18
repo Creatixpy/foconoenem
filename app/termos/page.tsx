@@ -117,7 +117,7 @@ export default function TermsOfServicePage() {
             <h2 className="text-xl font-semibold mt-6 mb-3">12. Contato</h2>
             <p className="mb-4">
               Se você tiver dúvidas sobre estes Termos de Serviço, entre em contato conosco através 
-              do e-mail: [inserir e-mail de contato].
+              do e-mail: [creatixpy@gmail.com].
             </p>
           </div>
 
