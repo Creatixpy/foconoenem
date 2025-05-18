@@ -222,8 +222,97 @@ export default function ResultadosPage() {
                 </div>
               </div>
               
-              {/* Competências 2-5 seguem o mesmo padrão... */}
-              {/* ... */}
+              {/* Competência 2 */}
+              <div className="card overflow-hidden border border-border-color">
+                <div className="bg-muted-bg p-4 border-b border-border-color">
+                  <div className="flex flex-wrap justify-between items-center gap-2">
+                    <h4 className="font-semibold flex-grow">Competência 2: Compreensão da proposta</h4>
+                    <div className="flex items-center">
+                      <div className="w-16 h-2 bg-gray-200 rounded-full mr-2 overflow-hidden">
+                        <div 
+                          className={`h-full ${getCompetenceGradeColor(result.competencia2.nota).replace('text-', 'bg-')}`} 
+                          style={{width: `${(result.competencia2.nota/200)*100}%`}}
+                        ></div>
+                      </div>
+                      <span className={`font-bold ${getCompetenceGradeColor(result.competencia2.nota)}`}>
+                        {result.competencia2.nota}/200
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-4">
+                  <p>{result.competencia2.comentario}</p>
+                </div>
+              </div>
+              
+              {/* Competência 3 */}
+              <div className="card overflow-hidden border border-border-color">
+                <div className="bg-muted-bg p-4 border-b border-border-color">
+                  <div className="flex flex-wrap justify-between items-center gap-2">
+                    <h4 className="font-semibold flex-grow">Competência 3: Capacidade argumentativa</h4>
+                    <div className="flex items-center">
+                      <div className="w-16 h-2 bg-gray-200 rounded-full mr-2 overflow-hidden">
+                        <div 
+                          className={`h-full ${getCompetenceGradeColor(result.competencia3.nota).replace('text-', 'bg-')}`} 
+                          style={{width: `${(result.competencia3.nota/200)*100}%`}}
+                        ></div>
+                      </div>
+                      <span className={`font-bold ${getCompetenceGradeColor(result.competencia3.nota)}`}>
+                        {result.competencia3.nota}/200
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-4">
+                  <p>{result.competencia3.comentario}</p>
+                </div>
+              </div>
+              
+              {/* Competência 4 */}
+              <div className="card overflow-hidden border border-border-color">
+                <div className="bg-muted-bg p-4 border-b border-border-color">
+                  <div className="flex flex-wrap justify-between items-center gap-2">
+                    <h4 className="font-semibold flex-grow">Competência 4: Mecanismos linguísticos</h4>
+                    <div className="flex items-center">
+                      <div className="w-16 h-2 bg-gray-200 rounded-full mr-2 overflow-hidden">
+                        <div 
+                          className={`h-full ${getCompetenceGradeColor(result.competencia4.nota).replace('text-', 'bg-')}`} 
+                          style={{width: `${(result.competencia4.nota/200)*100}%`}}
+                        ></div>
+                      </div>
+                      <span className={`font-bold ${getCompetenceGradeColor(result.competencia4.nota)}`}>
+                        {result.competencia4.nota}/200
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-4">
+                  <p>{result.competencia4.comentario}</p>
+                </div>
+              </div>
+              
+              {/* Competência 5 */}
+              <div className="card overflow-hidden border border-border-color">
+                <div className="bg-muted-bg p-4 border-b border-border-color">
+                  <div className="flex flex-wrap justify-between items-center gap-2">
+                    <h4 className="font-semibold flex-grow">Competência 5: Proposta de intervenção</h4>
+                    <div className="flex items-center">
+                      <div className="w-16 h-2 bg-gray-200 rounded-full mr-2 overflow-hidden">
+                        <div 
+                          className={`h-full ${getCompetenceGradeColor(result.competencia5.nota).replace('text-', 'bg-')}`} 
+                          style={{width: `${(result.competencia5.nota/200)*100}%`}}
+                        ></div>
+                      </div>
+                      <span className={`font-bold ${getCompetenceGradeColor(result.competencia5.nota)}`}>
+                        {result.competencia5.nota}/200
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-4">
+                  <p>{result.competencia5.comentario}</p>
+                </div>
+              </div>
             </div>
           </div>
           
@@ -243,7 +332,7 @@ export default function ResultadosPage() {
           <div className="flex justify-center mt-10">
             <Link
               href="/redacao"
-              className="btn btn-primary inline-flex items-center"
+              className="theme-btn btn"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />

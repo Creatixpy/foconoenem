@@ -172,9 +172,7 @@ export default function RedacaoPage() {
                 <button
                   onClick={handleGenerateTheme}
                   disabled={isGeneratingTheme}
-                  className={`${
-                    isGeneratingTheme ? "bg-gray-400" : "bg-success hover:bg-success/90"
-                  } text-white font-medium py-2 px-4 rounded-md transition duration-200 text-sm flex items-center shadow-sm`}
+                  className="theme-btn py-2 px-4 rounded-md text-sm flex items-center shadow-sm"
                 >
                   {isGeneratingTheme ? (
                     <>
@@ -364,9 +362,7 @@ export default function RedacaoPage() {
             <button
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className={`${
-                isSubmitting ? "bg-gray-400" : "bg-primary hover:bg-primary-dark"
-              } btn text-white`}
+              className={`${isSubmitting ? "bg-gray-400" : ""} theme-btn btn`}
             >
               {isSubmitting ? (
                 <>
