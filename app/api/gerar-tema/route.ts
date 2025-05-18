@@ -1,70 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isWithinOperatingHours, getOperatingHoursInfo } from "@/lib/schedule";
 
-// Verificação com a hora do servidor (garantido)
-function isServerWithinOperatingHours(): boolean {
-  const now = new Date();
-  const hour = now.getHours();
-  return hour >= 7 && hour < 22;
-}
-
-// Obter informações com base na hora do servidor (garantido)
-function getServerOperatingHoursInfo() {
-  const now = new Date();
-  const hour = now.getHours();
-  const isOpen = hour >= 7 && hour < 22;
-  
-  // Formatando a hora do servidor no formato brasileiro
-  const currentTime = now.toLocaleTimeString('pt-BR', { 
-    hour: '2-digit', 
-    minute: '2-digit' 
-  });
-  
-  // Próxima abertura
-  const nextOpenDate = new Date();
-  if (hour >= 22) {
-    nextOpenDate.setDate(nextOpenDate.getDate() + 1);
-    nextOpenDate.setHours(7, 0, 0, 0);
-  } else if (hour < 7) {
-    nextOpenDate.setHours(7, 0, 0, 0);
-  }
-  
-  const nextOpenTime = nextOpenDate.toLocaleTimeString('pt-BR', { 
-    hour: '2-digit', 
-    minute: '2-digit',
-    day: '2-digit',
-    month: '2-digit'
-  });
-  
-  let message;
-  if (isOpen) {
-    message = `O sistema está disponível até às 22h. Hora atual: ${currentTime}`;
-  } else {
-    message = `O sistema está fechado. Funciona das 7h às 22h. Próxima abertura: ${nextOpenTime}. Hora atual: ${currentTime}`;
-  }
-  
-  return {
-    isOpen,
-    opensAt: "07:00",
-    closesAt: "22:00",
-    nextOpenTime,
-    message,
-    serverTime: currentTime
-  };
-}
-
 export async function GET(request: NextRequest) {
   try {
     // Verificar se o sistema está em horário de funcionamento
-    // Usando a hora do servidor diretamente
-    if (!isServerWithinOperatingHours()) {
-      const serverInfo = getServerOperatingHoursInfo();
+    if (!isWithinOperatingHours()) {
+      const { message, opensAt, closesAt } = getOperatingHoursInfo();
       return NextResponse.json(
         { 
           error: "Sistema fora do horário de funcionamento", 
-          message: serverInfo.message,
-          horarioFuncionamento: `${serverInfo.opensAt} - ${serverInfo.closesAt}`,
-          serverTime: serverInfo.serverTime
+          message: message,
+          horarioFuncionamento: `${opensAt} - ${closesAt}`
         },
         { status: 403 } // Forbidden
       );
