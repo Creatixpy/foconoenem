@@ -1,11 +1,23 @@
+import Link from "next/link";
+
 export default function Footer() {
   return (
-    <footer className="bg-gray-100 dark:bg-gray-800 p-6 text-center">
+    <footer className="bg-gray-100 dark:bg-gray-800 p-6">
       <div className="container mx-auto">
-        <p className="text-gray-600 dark:text-gray-300">
-          © {new Date().getFullYear()} Foco no ENEM - Todos os direitos reservados
-        </p>
-        <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+        <div className="text-center mb-4">
+          <p className="text-gray-600 dark:text-gray-300">
+            © {new Date().getFullYear()} Foco no ENEM - Todos os direitos reservados
+          </p>
+        </div>
+        <div className="flex justify-center space-x-6 mb-3">
+          <Link href="/privacidade" className="text-sm text-gray-500 dark:text-gray-400 hover:underline hover:text-primary">
+            Política de Privacidade
+          </Link>
+          <Link href="/termos" className="text-sm text-gray-500 dark:text-gray-400 hover:underline hover:text-primary">
+            Termos de Serviço
+          </Link>
+        </div>
+        <div className="text-xs text-center text-gray-500 dark:text-gray-400">
           Ferramenta de auxílio para estudantes | Não é um site oficial do ENEM ou INEP
         </div>
       </div>
