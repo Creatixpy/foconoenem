@@ -152,7 +152,7 @@ export default function Chatbot() {
 
       {/* Interface do chatbot */}
       {isOpen && (
-        <div className="fixed bottom-20 left-4 z-10 w-80 md:w-96 bg-card-bg border border-border-color rounded-lg shadow-lg flex flex-col animate-fadeIn" style={{ maxHeight: "calc(100vh - 150px)" }}>
+        <div className="fixed bottom-20 left-4 z-10 w-80 md:w-96 bg-card-bg border-2 border-primary rounded-lg shadow-lg flex flex-col animate-fadeIn" style={{ maxHeight: "calc(100vh - 150px)" }}>
           {/* Cabeçalho */}
           <div className="bg-primary text-white p-3 rounded-t-lg flex items-center justify-between">
             <div className="flex items-center">
@@ -168,7 +168,7 @@ export default function Chatbot() {
               >
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
               </svg>
-              <h3 className="font-semibold">Assistente ENEM</h3>
+              <h3 className="font-semibold text-lg">Assistente ENEM</h3>
             </div>
             <button 
               onClick={toggleChat}
@@ -192,7 +192,7 @@ export default function Chatbot() {
           </div>
           
           {/* Corpo da conversa */}
-          <div className="flex-grow overflow-y-auto p-3 bg-muted-bg" style={{ maxHeight: "350px" }}>
+          <div className="flex-grow overflow-y-auto p-3 bg-white dark:bg-gray-800" style={{ maxHeight: "350px" }}>
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -203,20 +203,20 @@ export default function Chatbot() {
                 <div
                   className={`inline-block p-3 rounded-lg max-w-[80%] ${
                     message.isBot
-                      ? "bg-card-bg text-foreground"
+                      ? "bg-gray-100 dark:bg-gray-700 text-foreground border border-gray-200 dark:border-gray-600"
                       : "bg-primary text-white"
                   }`}
                 >
                   {message.content}
                 </div>
-                <div className="text-xs text-gray-500 mt-1">
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </div>
               </div>
             ))}
             {isLoading && (
               <div className="text-left mb-3">
-                <div className="inline-block bg-card-bg text-foreground p-3 rounded-lg">
+                <div className="inline-block bg-gray-100 dark:bg-gray-700 text-foreground p-3 rounded-lg border border-gray-200 dark:border-gray-600">
                   <div className="flex space-x-1">
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
@@ -227,7 +227,7 @@ export default function Chatbot() {
             )}
             {error && (
               <div className="text-center mb-3">
-                <div className="inline-block bg-danger-light text-danger p-2 rounded-lg text-sm">
+                <div className="inline-block bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200 p-2 rounded-lg text-sm font-medium border border-red-200 dark:border-red-800">
                   {error}
                 </div>
               </div>
@@ -236,20 +236,20 @@ export default function Chatbot() {
           </div>
           
           {/* Formulário de envio */}
-          <form onSubmit={handleSubmit} className="border-t border-border-color p-2">
+          <form onSubmit={handleSubmit} className="border-t-2 border-gray-200 dark:border-gray-700 p-2">
             <div className="flex items-center">
               <input
                 ref={inputRef}
                 type="text"
                 value={inputValue}
                 onChange={handleInputChange}
-                className="flex-grow p-2 border rounded-l-lg focus:outline-none focus:ring-1 focus:ring-primary"
+                className="flex-grow p-2 border-2 border-gray-300 dark:border-gray-600 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                 placeholder="Faça uma pergunta sobre o ENEM..."
                 disabled={isLoading}
               />
               <button
                 type="submit"
-                className="bg-primary text-white p-2 rounded-r-lg hover:bg-primary-dark disabled:bg-gray-400"
+                className="bg-primary text-white p-2 rounded-r-lg hover:bg-primary-dark disabled:bg-gray-400 border-2 border-primary"
                 disabled={isLoading || !inputValue.trim()}
               >
                 <svg 
@@ -267,7 +267,7 @@ export default function Chatbot() {
                 </svg>
               </button>
             </div>
-            <p className="text-xs text-gray-500 mt-1 px-2">
+            <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mt-1 px-2">
               Pergunte apenas sobre o ENEM, vestibular e educação.
             </p>
           </form>

@@ -389,6 +389,7 @@ body {
 /* Estilos específicos para o Chatbot */
 .chatbot-btn {
   transition: transform 0.2s ease-in-out;
+  opacity: 1 !important; /* Garantir opacidade total */
 }
 
 .chatbot-btn:hover {
@@ -396,8 +397,9 @@ body {
 }
 
 .chatbot-container {
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease;
+  opacity: 1 !important; /* Garantir opacidade total */
 }
 
 @keyframes messageIn {
@@ -413,4 +415,44 @@ body {
 
 .chatbot-message {
   animation: messageIn 0.3s ease forwards;
+  opacity: 1 !important; /* Garantir opacidade total */
+}
+
+/* Estilos adicionais para o chatbot com alta visibilidade */
+.chat-header {
+  opacity: 1 !important;
+  font-weight: 600;
+}
+
+.chat-input {
+  opacity: 1 !important;
+  background-color: white !important;
+  color: #333 !important;
+  border: 2px solid #3b82f6 !important;
+}
+
+.chat-message-bot {
+  opacity: 1 !important;
+  background-color: #f1f5f9 !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #1e293b !important;
+}
+
+.chat-message-user {
+  opacity: 1 !important;
+  background-color: #3b82f6 !important;
+  color: white !important;
+}
+
+/* Em tema escuro */
+[data-theme="dark"] .chat-input {
+  background-color: #1e293b !important;
+  color: #f8fafc !important;
+  border-color: #3b82f6 !important;
+}
+
+[data-theme="dark"] .chat-message-bot {
+  background-color: #334155 !important;
+  border-color: #475569 !important;
+  color: #f8fafc !important;
 }
