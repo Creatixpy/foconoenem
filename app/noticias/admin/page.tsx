@@ -49,7 +49,7 @@ export default function AdminDestaques() {
   // Verificar senha
   const handleVerificarSenha = () => {
     // Senha simples para demonstração. Em produção, use um sistema de autenticação mais seguro
-    const senhaPadrao = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "focoenem2025";
+    const senhaPadrao = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "focoenem2026";
     
     if (senha === senhaPadrao) {
       setAutorizado(true);
