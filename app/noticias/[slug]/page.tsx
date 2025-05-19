@@ -6,15 +6,13 @@ import OperatingHoursIndicator from '../../components/OperatingHoursIndicator';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-// Remova a interface personalizada e use as tipagens corretas do Next.js
-type PageParams = {
-  slug: string;
-};
-
 // Função para gerar metadados dinâmicos
-export async function generateMetadata({ params }: { params: PageParams }): Promise<Metadata> {
-  const { slug } = params;
-  const news = await getNewsBySlug(slug);
+export async function generateMetadata({
+  params,
+}: {
+  params: { slug: string };
+}): Promise<Metadata> {
+  const news = await getNewsBySlug(params.slug);
   
   if (!news) {
     return {
@@ -29,11 +27,12 @@ export async function generateMetadata({ params }: { params: PageParams }): Prom
 }
 
 // Componente de página usando as tipagens corretas do Next.js
-export default async function NewsDetailPage({ params }: { params: PageParams }) {
-  const { slug } = params;
-  
-  // Buscar a notícia pelo slug
-  const news = await getNewsBySlug(slug);
+export default async function NewsDetailPage({
+  params,
+}: {
+  params: { slug: string };
+}) {
+  const news = await getNewsBySlug(params.slug);
   
   // Se a notícia não for encontrada, redireciona para 404
   if (!news) {
