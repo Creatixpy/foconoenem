@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
-import { verificarStatusDestaques } from "@/lib/supabase";
+import { verificarStatusDestaques, getNoticiasDestaque } from "@/lib/supabase";
+import { Noticia } from "@/types";
 
 export default function AdminDestaques() {
   const [isLoading, setIsLoading] = useState(false);
@@ -17,6 +19,9 @@ export default function AdminDestaques() {
   const [senha, setSenha] = useState("");
   const [autorizado, setAutorizado] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [noticiasDestaque, setNoticiasDestaque] = useState<Noticia[]>([]);
+  const [loadingDestaques, setLoadingDestaques] = useState(false);
+  const [removeLoading, setRemoveLoading] = useState<{[key: string]: boolean}>({});
 
   // Carregar status inicial
   useEffect(() => {
@@ -31,6 +36,26 @@ export default function AdminDestaques() {
 
     verificarStatus();
   }, []);
+
+  // Carregar notícias em destaque quando autorizado
+  useEffect(() => {
+    if (autorizado) {
+      carregarNoticiasDestaque();
+    }
+  }, [autorizado]);
+
+  // Função para carregar notícias em destaque
+  const carregarNoticiasDestaque = async () => {
+    try {
+      setLoadingDestaques(true);
+      const destaques = await getNoticiasDestaque(10); // Buscar até 10 destaques
+      setNoticiasDestaque(destaques);
+    } catch (error) {
+      console.error("Erro ao carregar notícias em destaque:", error);
+    } finally {
+      setLoadingDestaques(false);
+    }
+  };
 
   // Formatar data para exibição
   const formatarData = (dataString: string | null) => {
@@ -73,6 +98,9 @@ export default function AdminDestaques() {
       // Recarregar status após atualização
       const novoStatus = await verificarStatusDestaques();
       setStatusDestaques(novoStatus);
+      
+      // Recarregar notícias em destaque
+      await carregarNoticiasDestaque();
     } catch (error) {
       console.error("Erro ao atualizar destaques:", error);
       setResult({
@@ -81,6 +109,37 @@ export default function AdminDestaques() {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Remover notícia do destaque
+  const handleRemoverDestaque = async (id: string) => {
+    try {
+      // Marcar como carregando
+      setRemoveLoading(prev => ({...prev, [id]: true}));
+      
+      // Chamar API para remover destaque
+      const response = await fetch('/api/destaques/remover', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Falha ao remover destaque');
+      }
+      
+      // Atualizar a lista de destaques
+      setNoticiasDestaque(noticiasDestaque.filter(noticia => noticia.id !== id));
+      
+    } catch (error) {
+      console.error('Erro ao remover destaque:', error);
+      setErro('Não foi possível remover o destaque. Tente novamente.');
+    } finally {
+      // Remover estado de carregamento
+      setRemoveLoading(prev => ({...prev, [id]: false}));
     }
   };
 
@@ -164,6 +223,94 @@ export default function AdminDestaques() {
                     </span>
                   </p>
                 </div>
+              </div>
+              
+              {/* Lista de notícias em destaque */}
+              <div className="mb-8">
+                <h2 className="text-xl font-semibold mb-4 flex items-center">
+                  <svg className="w-6 h-6 mr-2 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                  </svg>
+                  Notícias em Destaque ({noticiasDestaque.length}/5)
+                </h2>
+                
+                {loadingDestaques ? (
+                  <div className="flex justify-center my-8">
+                    <div className="loader"></div>
+                  </div>
+                ) : noticiasDestaque.length === 0 ? (
+                  <div className="text-center py-8 bg-muted-bg rounded-lg">
+                    <svg className="w-12 h-12 mx-auto text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="text-gray-500">Nenhuma notícia em destaque no momento</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {noticiasDestaque.map((noticia) => (
+                      <div key={noticia.id} className="card flex flex-col md:flex-row overflow-hidden border border-border-color hover:shadow-md transition-all">
+                        <div className="h-48 md:h-auto md:w-48 relative flex-shrink-0">
+                          {noticia.imagem_url ? (
+                            <Image
+                              src={noticia.imagem_url}
+                              alt={noticia.titulo}
+                              fill
+                              className="object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-primary-light flex items-center justify-center">
+                              <svg className="w-12 h-12 text-primary opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-4 flex-grow flex flex-col">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="font-bold text-lg mb-2">{noticia.titulo}</h3>
+                              <p className="text-sm text-gray-600 dark:text-gray-300 mb-2 line-clamp-2">
+                                {noticia.resumo}
+                              </p>
+                            </div>
+                            <span className="badge badge-primary ml-2 flex-shrink-0">Destaque</span>
+                          </div>
+                          
+                          <div className="flex items-center text-xs text-gray-500 mb-4">
+                            <span className="mr-4">Por {noticia.autor}</span>
+                            <span>Publicado em {formatarData(noticia.data_publicacao)}</span>
+                          </div>
+                          
+                          <div className="mt-auto flex justify-between items-center">
+                            <Link href={`/noticias/${noticia.slug}`} className="text-primary hover:underline" target="_blank">
+                              Ver notícia
+                            </Link>
+                            
+                            <button
+                              onClick={() => handleRemoverDestaque(noticia.id)}
+                              disabled={removeLoading[noticia.id]}
+                              className="btn bg-danger text-white hover:bg-danger-dark py-1 px-3 rounded text-sm"
+                            >
+                              {removeLoading[noticia.id] ? (
+                                <>
+                                  <span className="inline-block w-3 h-3 mr-1 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                                  Removendo...
+                                </>
+                              ) : (
+                                <>
+                                  <svg className="w-4 h-4 mr-1 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                  Remover Destaque
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               
               <div className="mb-6">

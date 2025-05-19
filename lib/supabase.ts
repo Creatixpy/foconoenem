@@ -36,7 +36,7 @@ export async function getNoticiasPorTag(tag: string, limit = 10) {
   return data || [];
 }
 
-export async function getNoticiasDestaque(limit = 3) {
+export async function getNoticiasDestaque(limit = 5) {
   const { data, error } = await supabase
     .from('noticias')
     .select('*')
