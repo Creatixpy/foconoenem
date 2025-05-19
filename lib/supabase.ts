@@ -82,3 +82,51 @@ export async function getNoticiasPorPesquisa(termo: string, limit = 10) {
   
   return data || [];
 }
+
+export async function verificarStatusDestaques() {
+  try {
+    // Verificar quando foi a última atualização
+    const { data: configData, error: configError } = await supabase
+      .from('configuracoes')
+      .select('valor')
+      .eq('chave', 'ultima_atualizacao_destaques')
+      .single();
+    
+    if (configError && configError.code !== 'PGRST116') {
+      console.error("Erro ao verificar status dos destaques:", configError);
+      return {
+        ultimaAtualizacao: null,
+        proxima: null,
+        status: 'error'
+      };
+    }
+    
+    if (!configData) {
+      return {
+        ultimaAtualizacao: null,
+        proxima: null,
+        status: 'never'
+      };
+    }
+    
+    const ultimaAtualizacao = new Date(configData.valor);
+    const agora = new Date();
+    
+    // Calcular próxima atualização (última + 12 horas)
+    const proximaAtualizacao = new Date(ultimaAtualizacao);
+    proximaAtualizacao.setHours(proximaAtualizacao.getHours() + 12);
+    
+    return {
+      ultimaAtualizacao: ultimaAtualizacao.toISOString(),
+      proxima: proximaAtualizacao.toISOString(),
+      status: agora > proximaAtualizacao ? 'pending' : 'updated'
+    };
+  } catch (error) {
+    console.error("Erro ao verificar status dos destaques:", error);
+    return {
+      ultimaAtualizacao: null,
+      proxima: null,
+      status: 'error'
+    };
+  }
+}

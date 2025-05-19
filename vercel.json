@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/atualizarDestaques",
+      "schedule": "0 */12 * * *"
+    }
+  ]
+}
