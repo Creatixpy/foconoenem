@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/atualizarDestaques",
-      "schedule": "0 0,12 * * *"
+      "schedule": "0 1 * * *"
     }
   ]
 }
