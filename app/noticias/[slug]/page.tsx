@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import Header from "@/app/components/Header";
@@ -15,10 +15,18 @@ export default function NoticiaDetalhePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const params = useParams();
+  const router = useRouter();
   const slug = params?.slug as string;
   
-  // Carregar a notícia
+  // Redirecionar para a página de admin se o slug for "admin"
   useEffect(() => {
+    if (slug === "admin") {
+      // Este efeito garante que a página de admin seja tratada como uma rota separada
+      router.replace("/noticias/admin-page");
+      return;
+    }
+    
+    // Continuar com o carregamento normal da notícia apenas se não for "admin"
     const carregarNoticia = async () => {
       if (!slug) return;
       
@@ -53,7 +61,7 @@ export default function NoticiaDetalhePage() {
     };
     
     carregarNoticia();
-  }, [slug]);
+  }, [slug, router]);
   
   // Formatar data para padrão brasileiro
   const formatarData = (dataString: string) => {

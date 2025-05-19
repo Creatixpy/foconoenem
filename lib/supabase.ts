@@ -53,18 +53,34 @@ export async function getNoticiasDestaque(limit = 3) {
 }
 
 export async function getNoticiaPorSlug(slug: string) {
-  const { data, error } = await supabase
-    .from('noticias')
-    .select('*')
-    .eq('slug', slug)
-    .single();
-  
-  if (error) {
-    console.error('Erro ao buscar notícia por slug:', error);
+  if (!slug) {
+    console.error('Erro: slug não fornecido');
     return null;
   }
   
-  return data;
+  try {
+    const { data, error } = await supabase
+      .from('noticias')
+      .select('*')
+      .eq('slug', slug)
+      .single();
+    
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // PGRST116 = not found
+        console.log(`Notícia com slug "${slug}" não encontrada`);
+        return null;
+      }
+      
+      console.error('Erro ao buscar notícia por slug:', error);
+      return null;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Exceção ao buscar notícia por slug:', error);
+    return null;
+  }
 }
 
 export async function getNoticiasPorPesquisa(termo: string, limit = 10) {
