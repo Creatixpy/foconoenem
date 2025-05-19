@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.38.6",
     "groq-sdk": "^0.22.0",
     "next": "15.3.2",
     "react": "^19.0.0",
