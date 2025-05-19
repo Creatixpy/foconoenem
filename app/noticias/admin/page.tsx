@@ -317,7 +317,7 @@ export default function AdminDestaques() {
                 <h2 className="text-xl font-semibold mb-4">Atualização Manual</h2>
                 <p className="mb-4">
                   Clique no botão abaixo para acionar a atualização dos destaques manualmente.
-                  Normalmente, esse processo ocorre automaticamente a cada 12 horas.
+                  Normalmente, esse processo ocorre automaticamente a cada 24 horas.
                 </p>
                 <button
                   onClick={handleAtualizarDestaques}
@@ -368,7 +368,7 @@ export default function AdminDestaques() {
                 <h3 className="font-semibold mb-2">Importante!</h3>
                 <p>
                   Este sistema usa IA para selecionar automaticamente até 5 notícias para destaque com base em relevância,
-                  atualidade e interesse para estudantes do ENEM. A atualização automática ocorre a cada 12 horas.
+                  atualidade e interesse para estudantes do ENEM. A atualização automática ocorre a cada 24 horas.
                 </p>
               </div>
             </>

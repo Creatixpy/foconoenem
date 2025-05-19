@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
-// Função auxiliar para verificar se a última atualização foi há mais de 12 horas
+// Função auxiliar para verificar se a última atualização foi há mais de 24 horas
 async function isUpdateNeeded(): Promise<boolean> {
   try {
     // Buscar a última atualização de destaques
@@ -20,12 +20,12 @@ async function isUpdateNeeded(): Promise<boolean> {
       return true; // Se não há registro de última atualização, deve atualizar
     }
 
-    // Verificar se passaram 12 horas desde a última atualização
+    // Verificar se passaram 24 horas desde a última atualização
     const ultimaAtualizacao = new Date(configData.valor);
     const agora = new Date();
     const horasDesdeUltimaAtualizacao = (agora.getTime() - ultimaAtualizacao.getTime()) / (1000 * 60 * 60);
 
-    return horasDesdeUltimaAtualizacao >= 12;
+    return horasDesdeUltimaAtualizacao >= 24;
   } catch (error) {
     console.error("Erro ao verificar necessidade de atualização:", error);
     return true; // Em caso de erro, melhor atualizar
@@ -63,14 +63,20 @@ async function atualizarTimestampAtualizacao(): Promise<void> {
 
 export async function GET(request: NextRequest) {
   try {
-    // Verificar se precisa atualizar (passou 12 horas desde a última vez)
-    const precisaAtualizar = await isUpdateNeeded();
+    // Verificar se é uma atualização automática via cron job
+    const isAutomaticUpdate = request.nextUrl.searchParams.get('automatic') === 'true';
     
-    if (!precisaAtualizar) {
-      return NextResponse.json({
-        status: "skipped",
-        message: "Atualização de destaques não necessária. Menos de 12 horas desde a última atualização."
-      });
+    // Se for atualização automática, verifica se é necessário
+    // Para atualizações manuais, sempre prossegue
+    if (isAutomaticUpdate) {
+      const precisaAtualizar = await isUpdateNeeded();
+      
+      if (!precisaAtualizar) {
+        return NextResponse.json({
+          status: "skipped",
+          message: "Atualização de destaques não necessária. Menos de 24 horas desde a última atualização."
+        });
+      }
     }
 
     // 1. Buscar todas as notícias recentes (últimos 30 dias)

@@ -112,9 +112,9 @@ export async function verificarStatusDestaques() {
     const ultimaAtualizacao = new Date(configData.valor);
     const agora = new Date();
     
-    // Calcular próxima atualização (última + 12 horas)
+    // Calcular próxima atualização (última + 24 horas)
     const proximaAtualizacao = new Date(ultimaAtualizacao);
-    proximaAtualizacao.setHours(proximaAtualizacao.getHours() + 12);
+    proximaAtualizacao.setHours(proximaAtualizacao.getHours() + 24);
     
     return {
       ultimaAtualizacao: ultimaAtualizacao.toISOString(),
