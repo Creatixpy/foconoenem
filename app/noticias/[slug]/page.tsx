@@ -1,11 +1,11 @@
-import Link from 'next/link';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
-import NewsContent from '../../components/NewsContent';
-import { getNewsBySlug, getFeaturedNews } from '@/lib/news';
-import NewsCard from '../../components/NewsCard';
+import { getNewsBySlug } from '@/lib/news';
 import OperatingHoursIndicator from '../../components/OperatingHoursIndicator';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
 
+// Corrigido o tipo de parâmetros para estar em conformidade com o Next.js 15
 interface NewsDetailPageProps {
   params: {
     slug: string;
@@ -14,41 +14,22 @@ interface NewsDetailPageProps {
 
 export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
   const { slug } = params;
+  
+  // Buscar a notícia pelo slug
   const news = await getNewsBySlug(slug);
   
-  // Buscar notícias relacionadas (usando as destacadas por simplicidade)
-  const relatedNews = await getFeaturedNews(3);
-  
-  // Se a notícia não for encontrada
+  // Se a notícia não for encontrada, redireciona para 404
   if (!news) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <OperatingHoursIndicator />
-        
-        <main className="flex-grow container mx-auto p-4 md:p-8 flex items-center justify-center">
-          <div className="card p-8 max-w-md w-full text-center">
-            <svg className="w-20 h-20 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <h1 className="text-2xl font-bold mb-4">Notícia não encontrada</h1>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">
-              A notícia que você está procurando não existe ou foi removida.
-            </p>
-            <Link 
-              href="/noticias" 
-              className="btn btn-primary"
-            >
-              Voltar para Notícias
-            </Link>
-          </div>
-        </main>
-        
-        <Footer />
-      </div>
-    );
+    notFound();
   }
   
+  // Formatar a data de publicação
+  const publishDate = new Date(news.published_at).toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric'
+  });
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -58,27 +39,78 @@ export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
         <div className="mb-6">
           <Link 
             href="/noticias" 
-            className="text-primary flex items-center hover:underline"
+            className="text-primary hover:underline flex items-center"
           >
-            <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            Voltar para Notícias
+            Voltar para todas as notícias
           </Link>
         </div>
         
-        <NewsContent news={news} />
+        <article className="card border border-border-color p-6 md:p-8 mb-8">
+          <header className="mb-6">
+            <div className="mb-4">
+              <span className="inline-block bg-primary-light text-primary-dark text-xs font-semibold px-3 py-1 rounded-full">
+                {news.category}
+              </span>
+              <time className="text-sm text-gray-500 dark:text-gray-400 ml-3" dateTime={news.published_at}>
+                {publishDate}
+              </time>
+            </div>
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4">
+              {news.title}
+            </h1>
+            <p className="text-lg text-gray-700 dark:text-gray-300 mb-6">
+              {news.description}
+            </p>
+            {news.image_url && (
+              <div className="mb-6 rounded-lg overflow-hidden border border-border-color">
+                <img 
+                  src={news.image_url} 
+                  alt={news.title} 
+                  className="w-full object-cover h-auto md:h-80"
+                />
+              </div>
+            )}
+          </header>
+          
+          <div className="prose dark:prose-invert max-w-none">
+            {news.content.split('\n\n').map((paragraph, index) => (
+              <p key={index} className="mb-4">{paragraph}</p>
+            ))}
+          </div>
+          
+          {news.source && (
+            <div className="mt-8 pt-4 border-t border-border-color">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                <strong>Fonte:</strong> {news.source}
+              </p>
+            </div>
+          )}
+          
+          {news.tags && news.tags.length > 0 && (
+            <div className="mt-6 flex flex-wrap gap-2">
+              {news.tags.map(tag => (
+                <Link 
+                  key={tag} 
+                  href={`/noticias?tag=${tag}`}
+                  className="text-xs bg-muted-bg hover:bg-primary-light text-foreground hover:text-primary-dark px-3 py-1 rounded-full transition-colors"
+                >
+                  #{tag}
+                </Link>
+              ))}
+            </div>
+          )}
+        </article>
         
-        {relatedNews.length > 0 && (
-          <section className="mt-16">
-            <h2 className="text-2xl font-bold mb-6 text-primary">Notícias Relacionadas</h2>
-            <div className="grid md:grid-cols-3 gap-6">
-              {relatedNews
-                .filter(item => item.slug !== slug)
-                .slice(0, 3)
-                .map(item => (
-                  <NewsCard key={item.id} news={item} />
-                ))}
+        {news.related_posts && news.related_posts.length > 0 && (
+          <section className="mt-8">
+            <h2 className="text-xl font-bold mb-4 text-primary">
+              Notícias Relacionadas
+            </h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Aqui você pode adicionar cards para posts relacionados */}
             </div>
           </section>
         )}
