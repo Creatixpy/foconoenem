@@ -6,15 +6,13 @@ import OperatingHoursIndicator from '../../components/OperatingHoursIndicator';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-// Tipo correto para os parâmetros da página no Next.js 15
-interface PageProps {
-  params: {
-    slug: string;
-  };
-}
+// Remova a interface personalizada e use as tipagens corretas do Next.js
+type PageParams = {
+  slug: string;
+};
 
 // Função para gerar metadados dinâmicos
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: PageParams }): Promise<Metadata> {
   const { slug } = params;
   const news = await getNewsBySlug(slug);
   
@@ -30,8 +28,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-// Componente de página com tipagem correta
-export default async function NewsDetailPage({ params }: PageProps) {
+// Componente de página usando as tipagens corretas do Next.js
+export default async function NewsDetailPage({ params }: { params: PageParams }) {
   const { slug } = params;
   
   // Buscar a notícia pelo slug
