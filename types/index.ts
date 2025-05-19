@@ -44,3 +44,17 @@ export interface EssayResultResponse {
   id: string;
   result?: EssayResult;
 }
+
+export interface Noticia {
+  id: string;
+  titulo: string;
+  slug: string;
+  resumo: string;
+  conteudo: string;
+  imagem_url: string;
+  autor: string;
+  data_publicacao: string;
+  tags: string[];
+  destaque: boolean;
+  created_at: string;
+}
