@@ -1,12 +1,13 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
+// Correção da assinatura da função GET para aceitar o formato correto de parâmetros
 export async function GET(
-  request: Request,
-  { params }: { params: { slug: string } }
+  request: NextRequest,
+  context: { params: { slug: string } }
 ) {
   try {
-    const slug = params.slug;
+    const slug = context.params.slug;
     
     if (!slug) {
       return NextResponse.json({ error: 'Slug não fornecido' }, { status: 400 });
