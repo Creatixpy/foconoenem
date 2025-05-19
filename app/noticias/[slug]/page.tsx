@@ -1,3 +1,4 @@
+import { Metadata } from 'next';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { getNewsBySlug } from '@/lib/news';
@@ -5,14 +6,32 @@ import OperatingHoursIndicator from '../../components/OperatingHoursIndicator';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-// Corrigido o tipo de parâmetros para estar em conformidade com o Next.js 15
-interface NewsDetailPageProps {
+// Tipo correto para os parâmetros da página no Next.js 15
+interface PageProps {
   params: {
     slug: string;
   };
 }
 
-export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
+// Função para gerar metadados dinâmicos
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = params;
+  const news = await getNewsBySlug(slug);
+  
+  if (!news) {
+    return {
+      title: 'Notícia não encontrada - Foco no ENEM',
+    };
+  }
+  
+  return {
+    title: `${news.title} - Foco no ENEM`,
+    description: news.description,
+  };
+}
+
+// Componente de página com tipagem correta
+export default async function NewsDetailPage({ params }: PageProps) {
   const { slug } = params;
   
   // Buscar a notícia pelo slug
