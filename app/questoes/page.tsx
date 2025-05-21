@@ -15,6 +15,10 @@ const subjectNames = {
   geografia: "Geografia"
 };
 
+// Constantes para controle de tempo
+const QUESTION_COOLDOWN = 10 * 60 * 1000; // 10 minutos em milissegundos
+const STORAGE_KEY = "questoes_cache";
+
 export default function QuestoesPage() {
   const [questions, setQuestions] = useState<MultipleChoiceQuestion[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,33 +30,88 @@ export default function QuestoesPage() {
   const [isSystemAvailable, setIsSystemAvailable] = useState(isWithinOperatingHours());
   const [operatingInfo, setOperatingInfo] = useState(getOperatingHoursInfo());
   const [timeRemaining, setTimeRemaining] = useState(30 * 60); // 30 minutos em segundos
+  const [nextGenerationTime, setNextGenerationTime] = useState<number | null>(null);
+  const [cooldownRemaining, setCooldownRemaining] = useState<number>(0);
 
-  // Carregar as questões ao montar o componente
-  useEffect(() => {
-    const loadQuestions = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  // Função para carregar questões, seja do cache ou da API
+  const loadQuestions = async (forceReload = false) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Verificar se temos questões em cache e se ainda estão dentro do período válido
+      if (!forceReload) {
+        const cachedData = localStorage.getItem(STORAGE_KEY);
         
-        const response = await fetch("/api/gerar-questoes");
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || errorData.message || "Erro ao carregar questões");
+        if (cachedData) {
+          try {
+            const { questions: cachedQuestions, timestamp, userAnswers: cachedAnswers = [] } = JSON.parse(cachedData);
+            const currentTime = new Date().getTime();
+            
+            // Se o cache ainda é válido (menos de 10 minutos)
+            if (cachedQuestions && cachedQuestions.length > 0 && currentTime - timestamp < QUESTION_COOLDOWN) {
+              // Calcular quando poderá gerar novas questões
+              const nextGenTime = timestamp + QUESTION_COOLDOWN;
+              setNextGenerationTime(nextGenTime);
+              setQuestions(cachedQuestions);
+              
+              // Restaurar respostas do usuário, se houver
+              if (cachedAnswers.length === cachedQuestions.length) {
+                setUserAnswers(cachedAnswers);
+              } else {
+                setUserAnswers(new Array(cachedQuestions.length).fill(null));
+              }
+              
+              setLoading(false);
+              return;
+            }
+          } catch (e) {
+            console.error("Erro ao parsear cache:", e);
+            // Se houver erro ao ler o cache, ignoramos e buscamos novas questões
+          }
         }
-        
-        const data = await response.json();
-        setQuestions(data.questions);
-        // Inicializar array de respostas com null para cada questão
-        setUserAnswers(new Array(data.questions.length).fill(null));
-      } catch (error) {
-        console.error("Erro ao carregar questões:", error);
-        setError(error instanceof Error ? error.message : "Erro ao carregar as questões. Tente novamente.");
-      } finally {
-        setLoading(false);
       }
-    };
+      
+      // Se não há cache válido ou forceReload é true, buscar da API
+      const response = await fetch("/api/gerar-questoes");
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || errorData.message || "Erro ao carregar questões");
+      }
+      
+      const data = await response.json();
+      
+      // Armazenar as questões no estado
+      setQuestions(data.questions);
+      
+      // Inicializar array de respostas com null para cada questão
+      const newAnswers = new Array(data.questions.length).fill(null);
+      setUserAnswers(newAnswers);
+      
+      // Salvar no localStorage com timestamp
+      const cacheData = {
+        questions: data.questions,
+        timestamp: new Date().getTime(),
+        userAnswers: newAnswers
+      };
+      
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cacheData));
+      
+      // Definir o próximo horário de geração
+      const nextGenTime = new Date().getTime() + QUESTION_COOLDOWN;
+      setNextGenerationTime(nextGenTime);
+      
+    } catch (error) {
+      console.error("Erro ao carregar questões:", error);
+      setError(error instanceof Error ? error.message : "Erro ao carregar as questões. Tente novamente.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  // Efeito inicial para carregar questões
+  useEffect(() => {
     if (isSystemAvailable) {
       loadQuestions();
     }
@@ -68,6 +127,29 @@ export default function QuestoesPage() {
     const timer = setInterval(checkAvailability, 60000); // 60 segundos
     return () => clearInterval(timer);
   }, []);
+
+  // Atualizar o contador de tempo para novas questões
+  useEffect(() => {
+    if (!nextGenerationTime) return;
+    
+    const updateCooldown = () => {
+      const now = new Date().getTime();
+      const remaining = Math.max(0, nextGenerationTime - now);
+      
+      if (remaining <= 0) {
+        setCooldownRemaining(0);
+        setNextGenerationTime(null);
+      } else {
+        setCooldownRemaining(Math.ceil(remaining / 1000)); // Converter para segundos
+      }
+    };
+    
+    // Atualizar imediatamente e depois a cada segundo
+    updateCooldown();
+    const timer = setInterval(updateCooldown, 1000);
+    
+    return () => clearInterval(timer);
+  }, [nextGenerationTime]);
 
   // Timer para o simulado
   useEffect(() => {
@@ -87,11 +169,51 @@ export default function QuestoesPage() {
     }
   }, [loading, questions, showResult]);
 
+  // Atualizar o localStorage quando as respostas mudam
+  useEffect(() => {
+    if (questions.length > 0 && userAnswers.length === questions.length) {
+      try {
+        const cachedData = localStorage.getItem(STORAGE_KEY);
+        
+        if (cachedData) {
+          const parsedData = JSON.parse(cachedData);
+          parsedData.userAnswers = userAnswers;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(parsedData));
+        }
+      } catch (e) {
+        console.error("Erro ao salvar respostas no cache:", e);
+      }
+    }
+  }, [userAnswers, questions]);
+
   // Formatar o tempo restante
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+  };
+
+  // Formatar o tempo de cooldown
+  const formatCooldown = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}m ${remainingSeconds}s`;
+  };
+
+  // Forçar nova geração de questões
+  const handleForceRegenerate = () => {
+    if (cooldownRemaining > 0) {
+      if (!confirm(`Você precisa esperar mais ${formatCooldown(cooldownRemaining)} para gerar novas questões gratuitamente. Deseja continuar mesmo assim?`)) {
+        return;
+      }
+    }
+    
+    // Reiniciar o simulado com novas questões
+    loadQuestions(true);
+    setCurrentQuestionIndex(0);
+    setTimeRemaining(30 * 60); // Reiniciar o timer do simulado
+    setShowResult(false);
+    setQuizResult(null);
   };
 
   // Ir para a próxima questão
@@ -156,30 +278,25 @@ export default function QuestoesPage() {
     setShowResult(true);
   };
 
-  // Reiniciar o simulado
-  const handleRestartQuiz = async () => {
+  // Reiniciar o simulado com as mesmas questões
+  const handleRestartSameQuiz = () => {
+    // Limpa as respostas mas mantém as mesmas questões
+    setUserAnswers(new Array(questions.length).fill(null));
+    setCurrentQuestionIndex(0);
+    setTimeRemaining(30 * 60); // Reiniciar o timer
+    setShowResult(false);
+    setQuizResult(null);
+    
+    // Atualizar o cache com as respostas limpas
     try {
-      setShowResult(false);
-      setLoading(true);
-      setError(null);
-      
-      const response = await fetch("/api/gerar-questoes");
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || errorData.message || "Erro ao carregar questões");
+      const cachedData = localStorage.getItem(STORAGE_KEY);
+      if (cachedData) {
+        const parsedData = JSON.parse(cachedData);
+        parsedData.userAnswers = new Array(questions.length).fill(null);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(parsedData));
       }
-      
-      const data = await response.json();
-      setQuestions(data.questions);
-      setUserAnswers(new Array(data.questions.length).fill(null));
-      setCurrentQuestionIndex(0);
-      setTimeRemaining(30 * 60); // Reiniciar o timer
-    } catch (error) {
-      console.error("Erro ao reiniciar simulado:", error);
-      setError(error instanceof Error ? error.message : "Erro ao reiniciar o simulado. Tente novamente.");
-    } finally {
-      setLoading(false);
+    } catch (e) {
+      console.error("Erro ao resetar respostas no cache:", e);
     }
   };
 
@@ -360,15 +477,30 @@ export default function QuestoesPage() {
               ))}
             </div>
             
-            <div className="flex justify-center">
+            <div className="flex flex-wrap justify-center gap-4">
               <button 
-                onClick={handleRestartQuiz}
+                onClick={handleRestartSameQuiz}
                 className="btn btn-primary"
               >
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                Fazer Novo Simulado
+                Refazer com Mesmas Questões
+              </button>
+              
+              <button 
+                onClick={handleForceRegenerate}
+                className={`btn ${cooldownRemaining > 0 ? 'btn-outline' : 'btn-primary'}`}
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                </svg>
+                Gerar Novas Questões
+                {cooldownRemaining > 0 && (
+                  <span className="ml-1 text-xs">
+                    ({formatCooldown(cooldownRemaining)})
+                  </span>
+                )}
               </button>
             </div>
           </section>
@@ -421,20 +553,22 @@ export default function QuestoesPage() {
             
             <div className="space-y-3">
               {currentQuestion.options.map((option, index) => (
-                <div 
+                <button 
                   key={index}
                   onClick={() => handleSelectAnswer(index)}
-                  className={`p-4 rounded-lg border cursor-pointer transition-colors ${
+                  className={`w-full text-left p-4 rounded-lg border cursor-pointer transition-colors ${
                     userAnswers[currentQuestionIndex] === index 
                       ? 'bg-primary-light border-primary' 
                       : 'bg-card-bg border-border-color hover:bg-muted-bg'
                   }`}
+                  type="button"
+                  aria-label={`Opção ${String.fromCharCode(65 + index)}`}
                 >
                   <div className="flex items-start">
-                    <div className="mr-2 font-bold">{String.fromCharCode(65 + index)}.</div>
+                    <div className="mr-2 font-bold flex-shrink-0">{String.fromCharCode(65 + index)}.</div>
                     <div>{option}</div>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           </div>
@@ -452,6 +586,15 @@ export default function QuestoesPage() {
             </button>
             
             <div className="flex gap-2">
+              {cooldownRemaining > 0 && (
+                <div className="hidden md:flex items-center text-xs text-gray-500 mr-4">
+                  <svg className="w-4 h-4 mr-1 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Novas questões em: {formatCooldown(cooldownRemaining)}
+                </div>
+              )}
+              
               {currentQuestionIndex < questions.length - 1 ? (
                 <button
                   onClick={handleNextQuestion}
@@ -479,24 +622,90 @@ export default function QuestoesPage() {
           </div>
         </section>
         
-        <section className="card p-4 mb-8 border border-border-color">
-          <h3 className="font-semibold mb-4">Navegação Rápida</h3>
+        <section className="card p-4 md:p-6 mb-8 border border-border-color">
+          <div className="flex flex-col md:flex-row justify-between items-center mb-4">
+            <h3 className="font-semibold mb-2 md:mb-0 flex items-center">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+              </svg>
+              Navegação Rápida
+            </h3>
+            
+            {cooldownRemaining > 0 && (
+              <div className="text-xs text-gray-500 flex items-center bg-muted-bg py-1 px-2 rounded-full">
+                <svg className="w-3.5 h-3.5 mr-1 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Novas questões em: {formatCooldown(cooldownRemaining)}
+              </div>
+            )}
+          </div>
+          
           <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
             {questions.map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentQuestionIndex(index)}
-                className={`w-full p-2 text-center rounded-md transition-colors ${
+                className={`w-full py-3 px-2 text-center rounded-md transition-all shadow hover:shadow-md ${
                   index === currentQuestionIndex
-                    ? 'bg-primary text-white'
+                    ? 'bg-primary text-white font-bold'
                     : userAnswers[index] !== null
-                    ? 'bg-success-light text-success'
-                    : 'bg-muted-bg'
+                    ? 'bg-success-light text-success border border-success/30 font-medium'
+                    : 'bg-muted-bg hover:bg-secondary border border-border-color'
                 }`}
+                aria-label={`Ir para questão ${index + 1}`}
+                title={
+                  index === currentQuestionIndex 
+                    ? `Questão atual: ${index + 1}` 
+                    : userAnswers[index] !== null 
+                    ? `Questão ${index + 1} (respondida)` 
+                    : `Ir para questão ${index + 1}`
+                }
               >
-                {index + 1}
+                <span className="text-base">{index + 1}</span>
+                {userAnswers[index] !== null && index !== currentQuestionIndex && (
+                  <div className="w-2 h-2 bg-success rounded-full mx-auto mt-1"></div>
+                )}
               </button>
             ))}
+          </div>
+          
+          <div className="mt-4 text-xs text-center text-gray-500">
+            <div className="flex items-center justify-center gap-4">
+              <div className="flex items-center">
+                <div className="w-3 h-3 rounded-md bg-primary mr-1"></div>
+                <span>Atual</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-3 h-3 rounded-md bg-success-light border border-success/30 mr-1"></div>
+                <span>Respondida</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-3 h-3 rounded-md bg-muted-bg border border-border-color mr-1"></div>
+                <span>Não respondida</span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Botão para forçar a geração de novas questões */}
+          <div className="mt-6 flex justify-center">
+            <button
+              onClick={handleForceRegenerate}
+              disabled={loading}
+              className={`text-sm px-3 py-1.5 rounded-md flex items-center ${
+                cooldownRemaining > 0 
+                  ? 'bg-muted-bg text-gray-600 hover:bg-secondary' 
+                  : 'bg-primary-light text-primary hover:bg-primary hover:text-white'
+              } transition-colors`}
+            >
+              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              {cooldownRemaining > 0 
+                ? `Gerar Novas Questões (${formatCooldown(cooldownRemaining)})` 
+                : 'Gerar Novas Questões'
+              }
+            </button>
           </div>
         </section>
       </main>
