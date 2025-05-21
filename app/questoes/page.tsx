@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { MultipleChoiceQuestion } from "@/types";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -23,7 +23,12 @@ const TIME_KEY = "questoes_timer"; // Nova chave para armazenar o tempo
 const INITIAL_TIME = 30 * 60; // 30 minutos em segundos
 const LAST_QUIZ_COMPLETED_KEY = "last_quiz_completed"; // Nova chave para armazenar quando o último simulado foi concluído
 
-export default function QuestoesPage() {
+// Componente para conteúdo com Suspense
+function QuestoesContent() {
+  const searchParams = useSearchParams();
+  const reuse = searchParams?.get('reuse') === 'true';
+  
+  // Restante do código que usa o parâmetro reuse
   const [questions, setQuestions] = useState<MultipleChoiceQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,9 +41,6 @@ export default function QuestoesPage() {
   const [cooldownRemaining, setCooldownRemaining] = useState<number>(0);
   const [simuladoStarted, setSimuladoStarted] = useState(false); // Controla se o simulado foi iniciado
   const [showRecentQuizModal, setShowRecentQuizModal] = useState(false); // Modal para perguntar se deseja refazer um simulado recente
-  
-  const searchParams = useSearchParams();
-  const reuse = searchParams?.get('reuse') === 'true';
 
   // Função para carregar questões, seja do cache ou da API
   const loadQuestions = async (forceReload = false) => {
@@ -218,7 +220,7 @@ export default function QuestoesPage() {
     if (isSystemAvailable) {
       loadQuestions(false);
     }
-  }, [isSystemAvailable]);
+  }, [isSystemAvailable, reuse]);
 
   // Verificar o horário de funcionamento a cada minuto
   useEffect(() => {
@@ -758,5 +760,28 @@ export default function QuestoesPage() {
       
       <Footer />
     </div>
+  );
+}
+
+// Componente principal com Suspense
+export default function QuestoesPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <OperatingHoursIndicator />
+        
+        <main className="flex-grow container mx-auto p-4 md:p-8 flex items-center justify-center">
+          <div className="text-center">
+            <div className="loader mx-auto"></div>
+            <p className="mt-4 text-xl">Carregando simulado...</p>
+          </div>
+        </main>
+        
+        <Footer />
+      </div>
+    }>
+      <QuestoesContent />
+    </Suspense>
   );
 }
