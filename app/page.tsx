@@ -19,33 +19,55 @@ export default function Home() {
             </svg>
           </div>
           <h2 className="text-4xl font-bold text-primary mb-4">
-            Simulado de Redação do ENEM
+            Simulados para o ENEM
           </h2>
           <p className="text-lg mb-8 max-w-3xl">
-            Pratique sua redação para o ENEM e receba feedback detalhado com
-            análise baseada em inteligência artificial e nos critérios oficiais do
-            exame.
+            Pratique para o ENEM com nossos simulados de redação e questões de
+            múltipla escolha. Receba feedback detalhado com análise baseada em
+            inteligência artificial e nos critérios oficiais do exame.
           </p>
-          <Link
-            href="/redacao"
-            className="btn btn-primary group"
-          >
-            Iniciar Simulado
-            <svg
-              className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
+          <div className="flex flex-wrap gap-4">
+            <Link
+              href="/redacao"
+              className="btn btn-primary group"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 7l5 5m0 0l-5 5m5-5H6"
-              />
-            </svg>
-          </Link>
+              Simulado de Redação
+              <svg
+                className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                />
+              </svg>
+            </Link>
+            <Link
+              href="/questoes"
+              className="btn btn-outline group"
+            >
+              Simulado de Questões
+              <svg
+                className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                />
+              </svg>
+            </Link>
+          </div>
         </section>
 
         <section className="grid md:grid-cols-3 gap-8 mb-12 animate-stagger">
@@ -112,16 +134,17 @@ export default function Home() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
             </div>
             <h3 className="text-xl font-semibold mb-3 text-primary">
-              Feedback Inteligente
+              Simulado de Questões
             </h3>
             <p>
-              Receba análise completa sobre pontos fortes e fracos da sua
-              redação, com orientações específicas para melhorar.
+              Teste seus conhecimentos com questões de múltipla escolha em
+              Matemática, Português, Química, Física e Geografia, geradas por IA
+              no estilo ENEM.
             </p>
           </div>
         </section>
@@ -153,11 +176,11 @@ export default function Home() {
                 1
               </span>
               <div>
-                <h3 className="font-semibold text-lg">Escolha um tema</h3>
+                <h3 className="font-semibold text-lg">Escolha seu simulado</h3>
                 <p className="text-foreground dark:text-gray-200 topic-description">
-                  Acesse a página do simulado e escolha entre usar o tema padrão,
-                  gerar um tema automaticamente com IA, ou definir seu próprio tema
-                  personalizado.
+                  Decida entre fazer um simulado de redação dissertativa ou um
+                  conjunto de questões de múltipla escolha com conteúdos de
+                  Matemática, Português, Química, Física e Geografia.
                 </p>
               </div>
             </li>
@@ -166,10 +189,11 @@ export default function Home() {
                 2
               </span>
               <div>
-                <h3 className="font-semibold text-lg">Escreva sua redação</h3>
+                <h3 className="font-semibold text-lg">Pratique com qualidade</h3>
                 <p className="text-foreground dark:text-gray-200 topic-description">
-                  Escreva sua redação dissertativa-argumentativa com no mínimo 7 e
-                  no máximo 30 linhas, seguindo as mesmas regras do ENEM.
+                  Resolva questões ou escreva sua redação seguindo as mesmas
+                  regras do ENEM, em um ambiente que simula a experiência do
+                  exame.
                 </p>
               </div>
             </li>
@@ -180,8 +204,8 @@ export default function Home() {
               <div>
                 <h3 className="font-semibold text-lg">Submeta para correção</h3>
                 <p className="text-foreground dark:text-gray-200 topic-description">
-                  Quando finalizar, clique em "Concluir Redação" para enviar seu
-                  texto para análise pela nossa inteligência artificial.
+                  Envie sua redação ou suas respostas para análise pela nossa
+                  inteligência artificial especializada em avaliação educacional.
                 </p>
               </div>
             </li>
@@ -190,11 +214,11 @@ export default function Home() {
                 4
               </span>
               <div>
-                <h3 className="font-semibold text-lg">Receba seu resultado</h3>
+                <h3 className="font-semibold text-lg">Receba feedback detalhado</h3>
                 <p className="text-foreground dark:text-gray-200 topic-description">
-                  Em poucos segundos, receba sua nota e feedback detalhado para
-                  entender como melhorar em cada uma das cinco competências
-                  avaliadas no ENEM.
+                  Em poucos segundos, receba sua nota com explicações para cada
+                  resposta e recomendações personalizadas para melhorar seu
+                  desempenho no ENEM.
                 </p>
               </div>
             </li>
