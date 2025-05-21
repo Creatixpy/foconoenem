@@ -6,6 +6,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import OperatingHoursIndicator from "../components/OperatingHoursIndicator";
 import { isWithinOperatingHours, getOperatingHoursInfo } from "@/lib/schedule";
+import { useSearchParams } from "next/navigation";
 
 const subjectNames = {
   matematica: "Matemática",
@@ -20,6 +21,7 @@ const QUESTION_COOLDOWN = 10 * 60 * 1000; // 10 minutos em milissegundos
 const STORAGE_KEY = "questoes_cache";
 const TIME_KEY = "questoes_timer"; // Nova chave para armazenar o tempo
 const INITIAL_TIME = 30 * 60; // 30 minutos em segundos
+const LAST_QUIZ_COMPLETED_KEY = "last_quiz_completed"; // Nova chave para armazenar quando o último simulado foi concluído
 
 export default function QuestoesPage() {
   const [questions, setQuestions] = useState<MultipleChoiceQuestion[]>([]);
@@ -33,6 +35,10 @@ export default function QuestoesPage() {
   const [nextGenerationTime, setNextGenerationTime] = useState<number | null>(null);
   const [cooldownRemaining, setCooldownRemaining] = useState<number>(0);
   const [simuladoStarted, setSimuladoStarted] = useState(false); // Controla se o simulado foi iniciado
+  const [showRecentQuizModal, setShowRecentQuizModal] = useState(false); // Modal para perguntar se deseja refazer um simulado recente
+  
+  const searchParams = useSearchParams();
+  const reuse = searchParams?.get('reuse') === 'true';
 
   // Função para carregar questões, seja do cache ou da API
   const loadQuestions = async (forceReload = false) => {
@@ -40,8 +46,35 @@ export default function QuestoesPage() {
       setLoading(true);
       setError(null);
       
+      // Se estiver reutilizando questões, não verificamos tempo de cache
+      if (reuse) {
+        const cachedData = localStorage.getItem(STORAGE_KEY);
+        
+        if (cachedData) {
+          try {
+            const { questions: cachedQuestions, timestamp } = JSON.parse(cachedData);
+            const currentTime = new Date().getTime();
+            const nextGenTime = timestamp + QUESTION_COOLDOWN;
+            
+            setNextGenerationTime(nextGenTime);
+            setQuestions(cachedQuestions);
+            
+            // Reiniciar as respostas
+            setUserAnswers(new Array(cachedQuestions.length).fill(null));
+            
+            // Resetar o timer para um novo simulado
+            resetTimer();
+            
+            setLoading(false);
+            return;
+          } catch (e) {
+            console.error("Erro ao parsear cache:", e);
+          }
+        }
+      }
+      
       // Verificar se temos questões em cache e se ainda estão dentro do período válido
-      if (!forceReload) {
+      if (!forceReload && !reuse) {
         const cachedData = localStorage.getItem(STORAGE_KEY);
         
         if (cachedData) {
@@ -157,10 +190,33 @@ export default function QuestoesPage() {
     }));
   };
 
+  // Efeito para verificar se um simulado foi concluído recentemente
+  useEffect(() => {
+    if (reuse) {
+      return; // Se estamos reutilizando questões, pulamos esta verificação
+    }
+    
+    try {
+      const lastQuizCompletedStr = localStorage.getItem(LAST_QUIZ_COMPLETED_KEY);
+      
+      if (lastQuizCompletedStr) {
+        const lastQuizCompleted = parseInt(lastQuizCompletedStr, 10);
+        const now = new Date().getTime();
+        
+        // Se um simulado foi concluído nos últimos 10 minutos
+        if (now - lastQuizCompleted < QUESTION_COOLDOWN) {
+          setShowRecentQuizModal(true);
+        }
+      }
+    } catch (e) {
+      console.error("Erro ao verificar simulado recente:", e);
+    }
+  }, [reuse]);
+
   // Efeito inicial para carregar questões
   useEffect(() => {
     if (isSystemAvailable) {
-      loadQuestions();
+      loadQuestions(false);
     }
   }, [isSystemAvailable]);
 
@@ -361,6 +417,9 @@ export default function QuestoesPage() {
       answeredQuestions
     };
     
+    // Registrar o momento que o simulado foi concluído
+    localStorage.setItem(LAST_QUIZ_COMPLETED_KEY, Date.now().toString());
+    
     // Armazenar o resultado no localStorage com um ID único baseado em timestamp
     const resultId = `quiz-${Date.now()}`;
     localStorage.setItem(`quiz_result_${resultId}`, JSON.stringify(result));
@@ -370,6 +429,15 @@ export default function QuestoesPage() {
     
     // Redirecionar para a página de resultado
     window.location.href = `/questoes-resultado/${resultId}`;
+  };
+
+  // Função para lidar com a decisão de refazer simulado recente
+  const handleRecentQuizDecision = (refazer: boolean) => {
+    setShowRecentQuizModal(false);
+    
+    if (refazer) {
+      loadQuestions(true); // Força recarregar questões
+    }
   };
 
   // Verificar se todas as questões foram respondidas
@@ -453,6 +521,32 @@ export default function QuestoesPage() {
     <div className="min-h-screen flex flex-col">
       <Header />
       <OperatingHoursIndicator />
+      
+      {/* Modal para perguntar se deseja refazer um simulado recente */}
+      {showRecentQuizModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fadeIn">
+          <div className="bg-card-bg p-6 rounded-lg max-w-md w-full shadow-lg border border-border-color">
+            <h3 className="text-xl font-bold mb-4 text-primary">Simulado Recente</h3>
+            <p className="mb-6">
+              Você concluiu um simulado há poucos minutos. Deseja reutilizar as mesmas questões ou gerar novas?
+            </p>
+            <div className="flex flex-wrap gap-3 justify-end">
+              <button 
+                onClick={() => handleRecentQuizDecision(false)}
+                className="btn btn-outline"
+              >
+                Manter Questões
+              </button>
+              <button 
+                onClick={() => handleRecentQuizDecision(true)}
+                className="btn btn-primary"
+              >
+                Gerar Novas Questões
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       <main className="flex-grow container mx-auto p-4 md:p-8">
         <section className="card p-6 md:p-8 mb-8 border border-border-color">
