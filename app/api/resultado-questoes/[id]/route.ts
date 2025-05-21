@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getQuizResult } from "@/app/api/corrigir-questoes/route";
+import { getQuizResult } from "@/lib/quizStore";
 import { QuizResultResponse } from "@/types";
 
 export async function GET(request: NextRequest) {

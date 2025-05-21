@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 import { QuizResult, MultipleChoiceQuestion } from "@/types";
 import { isWithinOperatingHours, getOperatingHoursInfo } from "@/lib/schedule";
+import { storeQuizResult } from "@/lib/quizStore";
 
 interface SubmissionData {
   questoes: MultipleChoiceQuestion[];
@@ -9,9 +10,6 @@ interface SubmissionData {
     [questionId: string]: "a" | "b" | "c" | "d";
   };
 }
-
-// Função para armazenar resultados (simplificada, em produção usaria um banco de dados)
-const quizResults: Record<string, QuizResult> = {};
 
 export async function POST(request: NextRequest) {
   try {
@@ -80,7 +78,7 @@ export async function POST(request: NextRequest) {
     };
 
     // Armazenar o resultado
-    quizResults[id] = result;
+    storeQuizResult(id, result);
 
     // Retornar apenas o ID do resultado
     return NextResponse.json({ id });
@@ -92,9 +90,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-// Função para recuperar um resultado armazenado
-export function getQuizResult(id: string): QuizResult | undefined {
-  return quizResults[id];
 }
