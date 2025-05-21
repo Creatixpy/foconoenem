@@ -232,6 +232,7 @@ export default function QuestoesPage() {
 
   // Selecionar uma resposta
   const handleSelectAnswer = (optionIndex: number) => {
+    console.log(`Selecionando resposta: ${optionIndex}`); // Adicionar log para debug
     const newAnswers = [...userAnswers];
     newAnswers[currentQuestionIndex] = optionIndex;
     setUserAnswers(newAnswers);
@@ -553,22 +554,31 @@ export default function QuestoesPage() {
             
             <div className="space-y-3">
               {currentQuestion.options.map((option, index) => (
-                <button 
+                <div 
                   key={index}
-                  onClick={() => handleSelectAnswer(index)}
+                  onClick={() => {
+                    console.log(`Clique na opção: ${index}`); // Adicionar log para debug
+                    handleSelectAnswer(index);
+                  }}
                   className={`w-full text-left p-4 rounded-lg border cursor-pointer transition-colors ${
                     userAnswers[currentQuestionIndex] === index 
                       ? 'bg-primary-light border-primary' 
                       : 'bg-card-bg border-border-color hover:bg-muted-bg'
                   }`}
-                  type="button"
-                  aria-label={`Opção ${String.fromCharCode(65 + index)}`}
+                  role="button"
+                  aria-pressed={userAnswers[currentQuestionIndex] === index}
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      handleSelectAnswer(index);
+                    }
+                  }}
                 >
                   <div className="flex items-start">
                     <div className="mr-2 font-bold flex-shrink-0">{String.fromCharCode(65 + index)}.</div>
                     <div>{option}</div>
                   </div>
-                </button>
+                </div>
               ))}
             </div>
           </div>
