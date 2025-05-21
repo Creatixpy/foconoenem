@@ -19,33 +19,54 @@ export default function Home() {
             </svg>
           </div>
           <h2 className="text-4xl font-bold text-primary mb-4">
-            Simulado de Redação do ENEM
+            Pratique para o ENEM
           </h2>
           <p className="text-lg mb-8 max-w-3xl">
-            Pratique sua redação para o ENEM e receba feedback detalhado com
-            análise baseada em inteligência artificial e nos critérios oficiais do
-            exame.
+            Escolha entre o simulado de redação para receber feedback detalhado
+            ou o simulado de questões objetivas para testar seus conhecimentos
+            nas disciplinas do ENEM.
           </p>
-          <Link
-            href="/redacao"
-            className="btn btn-primary group"
-          >
-            Iniciar Simulado
-            <svg
-              className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
+
+          <div className="flex flex-wrap gap-4">
+            <Link href="/redacao" className="btn btn-primary group">
+              Simulado de Redação
+              <svg
+                className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                />
+              </svg>
+            </Link>
+
+            <Link
+              href="/questoes"
+              className="btn btn-outline group bg-card-bg hover:bg-muted-bg text-foreground"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 7l5 5m0 0l-5 5m5-5H6"
-              />
-            </svg>
-          </Link>
+              Simulado de Questões
+              <svg
+                className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                />
+              </svg>
+            </Link>
+          </div>
         </section>
 
         <section className="grid md:grid-cols-3 gap-8 mb-12 animate-stagger">

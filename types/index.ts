@@ -58,3 +58,32 @@ export interface Noticia {
   destaque: boolean;
   created_at: string;
 }
+
+// Interfaces para questões de múltipla escolha
+export interface Alternative {
+  id: string;
+  text: string;
+  isCorrect: boolean;
+}
+
+export interface Question {
+  id: string;
+  discipline: 'Matemática' | 'Português' | 'Química' | 'Física' | 'Geografia';
+  text: string;
+  explanation: string;
+  alternatives: Alternative[];
+}
+
+export interface QuizResult {
+  totalQuestions: number;
+  correctAnswers: number;
+  wrongAnswers: number;
+  unansweredQuestions: number;
+  score: number;
+  questionResults: {
+    questionId: string;
+    isCorrect: boolean;
+    selectedAlternativeId?: string;
+    correctAlternativeId: string;
+  }[];
+}
