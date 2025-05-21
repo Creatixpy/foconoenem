@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Question } from "@/types";
 
 interface QuestionCardProps {
@@ -22,6 +22,11 @@ export default function QuestionCard({
 }: QuestionCardProps) {
   
   const [selectedId, setSelectedId] = useState<string | undefined>(selectedAlternativeId);
+  
+  // Atualizar o estado local quando as props mudam
+  useEffect(() => {
+    setSelectedId(selectedAlternativeId);
+  }, [selectedAlternativeId]);
   
   const handleSelectAlternative = (alternativeId: string) => {
     if (showResults) return; // Não permitir alterações se já mostrou resultados
