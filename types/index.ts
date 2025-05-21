@@ -58,3 +58,40 @@ export interface Noticia {
   destaque: boolean;
   created_at: string;
 }
+
+// Novas interfaces para questões de múltipla escolha
+export interface MultipleChoiceQuestion {
+  id: string;
+  disciplina: "Matemática" | "Português" | "Química" | "Física" | "Geografia";
+  enunciado: string;
+  alternativas: {
+    a: string;
+    b: string;
+    c: string;
+    d: string;
+  };
+  respostaCorreta: "a" | "b" | "c" | "d";
+  explicacao?: string;
+}
+
+export interface QuizSubmission {
+  respostas: {
+    [questionId: string]: "a" | "b" | "c" | "d";
+  };
+}
+
+export interface QuizResult {
+  id: string;
+  questoes: MultipleChoiceQuestion[];
+  respostas: {
+    [questionId: string]: "a" | "b" | "c" | "d";
+  };
+  acertos: number;
+  pontuacao: number;
+  createdAt: string;
+}
+
+export interface QuizResultResponse {
+  id: string;
+  result?: QuizResult;
+}

@@ -19,33 +19,55 @@ export default function Home() {
             </svg>
           </div>
           <h2 className="text-4xl font-bold text-primary mb-4">
-            Simulado de Redação do ENEM
+            Simulados para o ENEM
           </h2>
           <p className="text-lg mb-8 max-w-3xl">
-            Pratique sua redação para o ENEM e receba feedback detalhado com
+            Pratique com nossos simulados e receba feedback detalhado com
             análise baseada em inteligência artificial e nos critérios oficiais do
             exame.
           </p>
-          <Link
-            href="/redacao"
-            className="btn btn-primary group"
-          >
-            Iniciar Simulado
-            <svg
-              className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
+          <div className="flex flex-wrap gap-4">
+            <Link
+              href="/redacao"
+              className="btn btn-primary group"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 7l5 5m0 0l-5 5m5-5H6"
-              />
-            </svg>
-          </Link>
+              Simulado de Redação
+              <svg
+                className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                />
+              </svg>
+            </Link>
+            <Link
+              href="/questoes"
+              className="btn btn-outline group hover:bg-primary hover:text-white"
+            >
+              Simulado de Questões
+              <svg
+                className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                />
+              </svg>
+            </Link>
+          </div>
         </section>
 
         <section className="grid md:grid-cols-3 gap-8 mb-12 animate-stagger">
@@ -67,12 +89,20 @@ export default function Home() {
               </svg>
             </div>
             <h3 className="text-xl font-semibold mb-3 text-primary">
-              Temas Variados
+              Redação Dissertativa
             </h3>
             <p>
-              Escolha entre o tema padrão, gere um tema automaticamente com nossa
-              IA, ou defina seu próprio tema personalizado para praticar.
+              Pratique sua redação com temas variados, receba feedback detalhado
+              e melhore sua pontuação nas cinco competências avaliadas no ENEM.
             </p>
+            <div className="mt-4">
+              <Link href="/redacao" className="text-primary hover:underline flex items-center">
+                Iniciar simulado
+                <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+            </div>
           </div>
           <div className="card p-6 card-interactive border border-border-color">
             <div className="text-primary mb-4">
@@ -87,17 +117,25 @@ export default function Home() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"
                 />
               </svg>
             </div>
             <h3 className="text-xl font-semibold mb-3 text-primary">
-              Critérios Oficiais
+              Questões de Múltipla Escolha
             </h3>
             <p>
-              Sua redação será avaliada nos mesmos 5 critérios do ENEM, com
-              pontuação de 0 a 1000 e feedback detalhado para cada competência.
+              Teste seus conhecimentos com questões de Matemática, Português, Química, 
+              Física e Geografia, recebendo correção automática e explicações.
             </p>
+            <div className="mt-4">
+              <Link href="/questoes" className="text-primary hover:underline flex items-center">
+                Iniciar simulado
+                <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+            </div>
           </div>
           <div className="card p-6 card-interactive border border-border-color">
             <div className="text-primary mb-4">
@@ -112,17 +150,25 @@ export default function Home() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"
                 />
               </svg>
             </div>
             <h3 className="text-xl font-semibold mb-3 text-primary">
-              Feedback Inteligente
+              Notícias do ENEM
             </h3>
             <p>
-              Receba análise completa sobre pontos fortes e fracos da sua
-              redação, com orientações específicas para melhorar.
+              Fique por dentro das últimas novidades, datas importantes, e conteúdos
+              relacionados ao ENEM e ao mundo educacional.
             </p>
+            <div className="mt-4">
+              <Link href="/noticias" className="text-primary hover:underline flex items-center">
+                Ver notícias
+                <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+            </div>
           </div>
         </section>
 
@@ -153,11 +199,10 @@ export default function Home() {
                 1
               </span>
               <div>
-                <h3 className="font-semibold text-lg">Escolha um tema</h3>
+                <h3 className="font-semibold text-lg">Escolha um simulado</h3>
                 <p className="text-foreground dark:text-gray-200 topic-description">
-                  Acesse a página do simulado e escolha entre usar o tema padrão,
-                  gerar um tema automaticamente com IA, ou definir seu próprio tema
-                  personalizado.
+                  Acesse o simulado de redação para praticar sua escrita dissertativa ou o simulado de questões 
+                  para testar seus conhecimentos em diversas disciplinas.
                 </p>
               </div>
             </li>
@@ -166,10 +211,10 @@ export default function Home() {
                 2
               </span>
               <div>
-                <h3 className="font-semibold text-lg">Escreva sua redação</h3>
+                <h3 className="font-semibold text-lg">Realize o simulado</h3>
                 <p className="text-foreground dark:text-gray-200 topic-description">
-                  Escreva sua redação dissertativa-argumentativa com no mínimo 7 e
-                  no máximo 30 linhas, seguindo as mesmas regras do ENEM.
+                  Escreva sua redação dissertativa-argumentativa ou responda às questões de múltipla escolha 
+                  de acordo com as instruções fornecidas.
                 </p>
               </div>
             </li>
@@ -180,8 +225,7 @@ export default function Home() {
               <div>
                 <h3 className="font-semibold text-lg">Submeta para correção</h3>
                 <p className="text-foreground dark:text-gray-200 topic-description">
-                  Quando finalizar, clique em "Concluir Redação" para enviar seu
-                  texto para análise pela nossa inteligência artificial.
+                  Quando finalizar, envie seu simulado para análise pela nossa inteligência artificial.
                 </p>
               </div>
             </li>
@@ -192,9 +236,8 @@ export default function Home() {
               <div>
                 <h3 className="font-semibold text-lg">Receba seu resultado</h3>
                 <p className="text-foreground dark:text-gray-200 topic-description">
-                  Em poucos segundos, receba sua nota e feedback detalhado para
-                  entender como melhorar em cada uma das cinco competências
-                  avaliadas no ENEM.
+                  Em poucos segundos, receba sua nota, feedback detalhado e explicações para entender 
+                  seu desempenho e como melhorar.
                 </p>
               </div>
             </li>
