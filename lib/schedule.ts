@@ -4,13 +4,18 @@
 
 /**
  * Verifica se o horário atual está dentro do período de funcionamento (7h às 22h)
+ * TEMPORARIAMENTE DESATIVADO PARA TESTES - sempre retorna true
  */
 export function isWithinOperatingHours(): boolean {
-  const now = new Date();
-  const hour = now.getHours();
+  // Código original comentado
+  // const now = new Date();
+  // const hour = now.getHours();
   
   // Funcionamento entre 7h da manhã e 22h (10h da noite)
-  return hour >= 7 && hour < 22;
+  // return hour >= 7 && hour < 22;
+
+  // Temporariamente desativado para testes - sempre disponível
+  return true;
 }
 
 /**
@@ -25,7 +30,9 @@ export function getOperatingHoursInfo(): {
 } {
   const now = new Date();
   const hour = now.getHours();
-  const isOpen = isWithinOperatingHours();
+  
+  // Em modo normal, o sistema estaria aberto neste horário?
+  const wouldBeOpen = hour >= 7 && hour < 22;
   
   // Formatando a hora atual no formato brasileiro
   const currentTime = now.toLocaleTimeString('pt-BR', { 
@@ -53,14 +60,14 @@ export function getOperatingHoursInfo(): {
   
   // Mensagem de status
   let message;
-  if (isOpen) {
-    message = `O sistema está disponível até às 22h. Hora atual: ${currentTime}`;
+  if (wouldBeOpen) {
+    message = `[MODO DE TESTE] Sistema sempre disponível. Normalmente funcionaria até às 22h. Hora atual: ${currentTime}`;
   } else {
-    message = `O sistema está fechado. Funciona das 7h às 22h. Próxima abertura: ${nextOpenTime}. Hora atual: ${currentTime}`;
+    message = `[MODO DE TESTE] Sistema sempre disponível. Normalmente funcionaria das 7h às 22h. Hora atual: ${currentTime}`;
   }
   
   return {
-    isOpen,
+    isOpen: true, // Sempre disponível no modo de teste
     opensAt: "07:00",
     closesAt: "22:00",
     nextOpenTime,
