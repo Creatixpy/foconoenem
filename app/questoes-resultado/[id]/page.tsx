@@ -25,8 +25,11 @@ export default function ResultadoQuestoes() {
         const cachedResult = localStorage.getItem(`quiz_result_${id}`);
         
         if (cachedResult) {
-          setResult(JSON.parse(cachedResult));
-          setLoading(false);
+          // Adicionar um pequeno atraso para garantir que os estilos sejam carregados corretamente
+          setTimeout(() => {
+            setResult(JSON.parse(cachedResult));
+            setLoading(false);
+          }, 300);
           return;
         }
         
@@ -38,7 +41,9 @@ export default function ResultadoQuestoes() {
         console.error("Error fetching result:", error);
         setError("Não foi possível carregar o resultado. Tente novamente mais tarde.");
       } finally {
-        setLoading(false);
+        if (!localStorage.getItem(`quiz_result_${id}`)) {
+          setLoading(false);
+        }
       }
     };
 
@@ -88,9 +93,9 @@ export default function ResultadoQuestoes() {
         <main className="flex-grow container mx-auto p-4 md:p-8 flex items-center justify-center">
           <div className="text-center">
             <div className="loader mx-auto"></div>
-            <p className="mt-4 text-xl">Carregando resultados...</p>
-            <p className="text-sm mt-2 text-gray-500">
-              Aguarde enquanto processamos seus resultados
+            <p className="mt-4 text-xl">Carregando seus resultados...</p>
+            <p className="text-sm mt-2 opacity-70">
+              Estamos preparando a análise detalhada do seu desempenho
             </p>
           </div>
         </main>
@@ -106,7 +111,7 @@ export default function ResultadoQuestoes() {
         <Header />
         
         <main className="flex-grow container mx-auto p-4 md:p-8 flex items-center justify-center">
-          <div className="card p-8 max-w-md w-full text-center">
+          <div className="card p-8 max-w-md w-full text-center border border-border-color animate-fadeIn">
             <svg className="w-16 h-16 mx-auto text-danger mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -134,24 +139,32 @@ export default function ResultadoQuestoes() {
       <Header />
       
       <main className="flex-grow container mx-auto p-4 md:p-8">
-        <section className="card p-6 md:p-8 mb-8 border border-border-color">
-          <h2 className="text-2xl md:text-3xl font-bold text-primary mb-6 flex items-center">
-            <svg className="w-7 h-7 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-            Resultado do Simulado
-          </h2>
+        <section className="card p-6 md:p-8 mb-8 border border-border-color animate-fadeIn">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-start mb-6">
+            <h2 className="text-2xl md:text-3xl font-bold text-primary mb-4 md:mb-0 flex items-center">
+              <svg className="w-7 h-7 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              Resultado do Simulado
+            </h2>
+            <span className="badge badge-purple">
+              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Avaliação Automática
+            </span>
+          </div>
           
-          <div className="text-center mb-8 bg-card-bg p-6 rounded-lg shadow-md border border-border-color">
-            <h3 className="text-2xl font-bold mb-2">Seu desempenho</h3>
+          <div className="text-center mb-8 bg-primary-light p-6 rounded-lg shadow-md border border-primary/20 animate-fadeIn" style={{animationDelay: "0.1s"}}>
+            <h3 className="text-2xl font-bold mb-2 text-primary-dark">Seu desempenho</h3>
             
             <div className="flex flex-col md:flex-row justify-center items-center gap-6 mt-6">
               <div className="text-center">
                 <div className="relative mb-4">
-                  <div className="w-36 h-36 rounded-full flex items-center justify-center border-8 border-muted-bg overflow-hidden">
+                  <div className="w-36 h-36 rounded-full flex items-center justify-center border-[6px] border-card-bg overflow-hidden">
                     <div 
-                      className={`absolute bottom-0 left-0 right-0 ${getScoreBgColor(result.score)}`} 
-                      style={{height: `${result.score}%`, transition: 'height 1s ease-out'}}
+                      className={`absolute bottom-0 left-0 right-0 transition-all duration-1000 ease-out ${getScoreBgColor(result.score)}`} 
+                      style={{height: `${result.score}%`}}
                     ></div>
                     <div className="relative z-10">
                       <div className={`text-5xl font-bold ${getScoreColor(result.score)}`}>
@@ -162,14 +175,14 @@ export default function ResultadoQuestoes() {
                   </div>
                 </div>
                 
-                <div className={`text-sm font-medium ${getScoreColor(result.score)} bg-muted-bg py-1 px-3 rounded-full inline-block`}>
+                <div className={`text-sm font-medium ${getScoreColor(result.score)} py-1 px-3 rounded-full inline-block shadow-sm bg-card-bg`}>
                   {getScoreMessage(result.score)}
                 </div>
               </div>
               
               <div className="grid grid-cols-2 gap-4 md:gap-6 text-center">
                 <div className="bg-card-bg p-5 rounded-lg shadow-md border border-border-color relative overflow-hidden">
-                  <div className="absolute inset-0 bg-success-light opacity-20" style={{width: `${(result.correctAnswers/result.totalQuestions)*100}%`}}></div>
+                  <div className="absolute inset-0 bg-success-light opacity-20 transition-all duration-700" style={{width: `${(result.correctAnswers/result.totalQuestions)*100}%`}}></div>
                   <div className="relative">
                     <div className="text-3xl font-bold text-success">{result.correctAnswers}</div>
                     <div className="text-sm">Acertos</div>
@@ -177,7 +190,7 @@ export default function ResultadoQuestoes() {
                 </div>
                 
                 <div className="bg-card-bg p-5 rounded-lg shadow-md border border-border-color relative overflow-hidden">
-                  <div className="absolute inset-0 bg-danger-light opacity-20" style={{width: `${(result.wrongAnswers/result.totalQuestions)*100}%`}}></div>
+                  <div className="absolute inset-0 bg-danger-light opacity-20 transition-all duration-700" style={{width: `${(result.wrongAnswers/result.totalQuestions)*100}%`}}></div>
                   <div className="relative">
                     <div className="text-3xl font-bold text-danger">{result.wrongAnswers}</div>
                     <div className="text-sm">Erros</div>
@@ -185,12 +198,12 @@ export default function ResultadoQuestoes() {
                 </div>
                 
                 <div className="bg-card-bg p-5 rounded-lg shadow-md border border-border-color col-span-2">
-                  <div className="text-3xl font-bold">{result.totalQuestions}</div>
+                  <div className="text-3xl font-bold text-foreground">{result.totalQuestions}</div>
                   <div className="text-sm">Total de questões</div>
                   
                   <div className="mt-3 w-full h-2 bg-muted-bg rounded-full overflow-hidden">
                     <div 
-                      className="h-full bg-success" 
+                      className="h-full bg-success transition-all duration-700 ease-out" 
                       style={{width: `${(result.correctAnswers/result.totalQuestions)*100}%`}}
                     ></div>
                   </div>
@@ -199,7 +212,7 @@ export default function ResultadoQuestoes() {
             </div>
             
             <div className="mt-6 text-center">
-              <div className="inline-flex items-center bg-muted-bg py-2 px-4 rounded-lg text-sm">
+              <div className="inline-flex items-center bg-card-bg py-2 px-4 rounded-lg text-sm shadow-sm border border-border-color">
                 <svg className="w-4 h-4 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -211,25 +224,25 @@ export default function ResultadoQuestoes() {
             </div>
           </div>
           
-          <h3 className="text-xl font-bold mb-4 flex items-center text-primary">
+          <h3 className="text-xl font-bold mb-4 flex items-center text-primary animate-fadeIn" style={{animationDelay: "0.2s"}}>
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             Revisão das Questões
           </h3>
           
-          <div className="space-y-6 mb-8">
+          <div className="space-y-6 mb-8 animate-stagger">
             {result.answeredQuestions.map((item, index) => (
-              <div key={index} className="card overflow-hidden border border-border-color animate-fadeIn" style={{animationDelay: `${index * 0.05}s`}}>
-                <div className={`p-4 ${item.isCorrect ? 'bg-success-light' : 'bg-danger-light'}`}>
+              <div key={index} className="card overflow-hidden border border-border-color shadow-sm transition-transform hover:shadow-md" style={{opacity: 0}}>
+                <div className={`p-4 ${item.isCorrect ? 'bg-success-light border-b border-success/20' : 'bg-danger-light border-b border-danger/20'}`}>
                   <div className="flex justify-between items-start">
                     <h4 className="font-semibold flex items-center">
-                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-card-bg mr-2 text-sm">
+                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-card-bg mr-2 text-sm shadow-sm">
                         {index + 1}
                       </span>
                       {subjectNames[item.question.subject]}
                     </h4>
-                    <span className={`badge ${item.isCorrect ? 'bg-success text-white' : 'bg-danger text-white'} flex items-center`}>
+                    <span className={`badge ${item.isCorrect ? 'bg-success text-white' : 'bg-danger text-white'} flex items-center shadow-sm`}>
                       {item.isCorrect ? (
                         <>
                           <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -258,9 +271,9 @@ export default function ResultadoQuestoes() {
                         key={optionIndex}
                         className={`p-3 rounded-lg border transition-colors ${
                           optionIndex === item.question.correctAnswer
-                            ? 'bg-success-light border-success/30 shadow-md'
+                            ? 'bg-success-light border-success/30 shadow-sm'
                             : optionIndex === item.userAnswer && !item.isCorrect
-                            ? 'bg-danger-light border-danger/30 shadow-md'
+                            ? 'bg-danger-light border-danger/30 shadow-sm'
                             : optionIndex === item.userAnswer
                             ? 'bg-primary-light border-primary/30'
                             : 'bg-card-bg border-border-color'
@@ -308,10 +321,10 @@ export default function ResultadoQuestoes() {
             ))}
           </div>
           
-          <div className="flex flex-wrap justify-center gap-4">
+          <div className="flex flex-wrap justify-center gap-4 animate-fadeIn" style={{animationDelay: "0.3s"}}>
             <Link 
               href="/questoes" 
-              className="btn btn-primary flex items-center"
+              className="btn btn-primary flex items-center shadow-md hover:shadow-lg transition-all duration-300"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
