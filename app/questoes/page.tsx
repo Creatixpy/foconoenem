@@ -18,6 +18,8 @@ const subjectNames = {
 // Constantes para controle de tempo
 const QUESTION_COOLDOWN = 10 * 60 * 1000; // 10 minutos em milissegundos
 const STORAGE_KEY = "questoes_cache";
+const TIME_KEY = "questoes_timer"; // Nova chave para armazenar o tempo
+const INITIAL_TIME = 30 * 60; // 30 minutos em segundos
 
 export default function QuestoesPage() {
   const [questions, setQuestions] = useState<MultipleChoiceQuestion[]>([]);
@@ -27,9 +29,10 @@ export default function QuestoesPage() {
   const [userAnswers, setUserAnswers] = useState<(number | null)[]>([]);
   const [isSystemAvailable, setIsSystemAvailable] = useState(isWithinOperatingHours());
   const [operatingInfo, setOperatingInfo] = useState(getOperatingHoursInfo());
-  const [timeRemaining, setTimeRemaining] = useState(30 * 60); // 30 minutos em segundos
+  const [timeRemaining, setTimeRemaining] = useState(INITIAL_TIME); // Inicializa com o tempo padrão
   const [nextGenerationTime, setNextGenerationTime] = useState<number | null>(null);
   const [cooldownRemaining, setCooldownRemaining] = useState<number>(0);
+  const [simuladoStarted, setSimuladoStarted] = useState(false); // Controla se o simulado foi iniciado
 
   // Função para carregar questões, seja do cache ou da API
   const loadQuestions = async (forceReload = false) => {
@@ -58,6 +61,30 @@ export default function QuestoesPage() {
                 setUserAnswers(cachedAnswers);
               } else {
                 setUserAnswers(new Array(cachedQuestions.length).fill(null));
+              }
+              
+              // Recuperar informações do tempo restante
+              const timerData = localStorage.getItem(TIME_KEY);
+              if (timerData) {
+                try {
+                  const { endTime } = JSON.parse(timerData);
+                  const now = new Date().getTime();
+                  const remaining = Math.max(0, Math.floor((endTime - now) / 1000));
+                  
+                  // Se ainda tem tempo restante, use-o
+                  if (remaining > 0) {
+                    setTimeRemaining(remaining);
+                    setSimuladoStarted(true);
+                  } else {
+                    // Se o tempo acabou, iniciar um novo timer
+                    resetTimer();
+                  }
+                } catch (e) {
+                  console.error("Erro ao parsear dados do timer:", e);
+                  resetTimer();
+                }
+              } else {
+                resetTimer();
               }
               
               setLoading(false);
@@ -100,12 +127,34 @@ export default function QuestoesPage() {
       const nextGenTime = new Date().getTime() + QUESTION_COOLDOWN;
       setNextGenerationTime(nextGenTime);
       
+      // Resetar o timer para um novo simulado
+      resetTimer();
+      
     } catch (error) {
       console.error("Erro ao carregar questões:", error);
       setError(error instanceof Error ? error.message : "Erro ao carregar as questões. Tente novamente.");
     } finally {
       setLoading(false);
     }
+  };
+
+  // Função para resetar o timer para um novo simulado
+  const resetTimer = () => {
+    setTimeRemaining(INITIAL_TIME);
+    setSimuladoStarted(false);
+    // Limpar dados do timer no localStorage
+    localStorage.removeItem(TIME_KEY);
+  };
+
+  // Função para salvar o tempo restante no localStorage
+  const saveTimerState = (seconds: number) => {
+    const now = new Date().getTime();
+    const endTime = now + (seconds * 1000);
+    localStorage.setItem(TIME_KEY, JSON.stringify({ 
+      endTime,
+      startedAt: now,
+      initialTime: INITIAL_TIME
+    }));
   };
 
   // Efeito inicial para carregar questões
@@ -152,20 +201,38 @@ export default function QuestoesPage() {
   // Timer para o simulado
   useEffect(() => {
     if (!loading && questions.length > 0) {
-      const timer = setInterval(() => {
-        setTimeRemaining((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            handleSubmit(); // Submeter automaticamente quando o tempo acabar
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+      // Iniciar o timer apenas quando o usuário interagir pela primeira vez
+      if (!simuladoStarted && userAnswers.some(answer => answer !== null)) {
+        setSimuladoStarted(true);
+        // Salvar o estado inicial do timer
+        saveTimerState(timeRemaining);
+      }
       
-      return () => clearInterval(timer);
+      if (simuladoStarted) {
+        const timer = setInterval(() => {
+          setTimeRemaining((prev) => {
+            const newTime = prev <= 1 ? 0 : prev - 1;
+            
+            // Se o tempo acabou
+            if (newTime <= 0) {
+              clearInterval(timer);
+              handleSubmit(); // Submeter automaticamente quando o tempo acabar
+              return 0;
+            }
+            
+            // Salvar o tempo restante a cada 15 segundos para reduzir operações de I/O
+            if (prev % 15 === 0) {
+              saveTimerState(newTime);
+            }
+            
+            return newTime;
+          });
+        }, 1000);
+        
+        return () => clearInterval(timer);
+      }
     }
-  }, [loading, questions]);
+  }, [loading, questions, simuladoStarted, userAnswers]);
 
   // Atualizar o localStorage quando as respostas mudam
   useEffect(() => {
@@ -177,12 +244,19 @@ export default function QuestoesPage() {
           const parsedData = JSON.parse(cachedData);
           parsedData.userAnswers = userAnswers;
           localStorage.setItem(STORAGE_KEY, JSON.stringify(parsedData));
+          
+          // Se o usuário respondeu alguma questão mas o simulado não iniciou ainda
+          if (!simuladoStarted && userAnswers.some(answer => answer !== null)) {
+            setSimuladoStarted(true);
+            // Salvar o estado inicial do timer
+            saveTimerState(timeRemaining);
+          }
         }
       } catch (e) {
         console.error("Erro ao salvar respostas no cache:", e);
       }
     }
-  }, [userAnswers, questions]);
+  }, [userAnswers, questions, simuladoStarted, timeRemaining]);
 
   // Formatar o tempo restante
   const formatTime = (seconds: number) => {
@@ -209,7 +283,7 @@ export default function QuestoesPage() {
     // Reiniciar o simulado com novas questões
     loadQuestions(true);
     setCurrentQuestionIndex(0);
-    setTimeRemaining(30 * 60); // Reiniciar o timer do simulado
+    resetTimer();
   };
 
   // Ir para a próxima questão
@@ -232,6 +306,12 @@ export default function QuestoesPage() {
     const newAnswers = [...userAnswers];
     newAnswers[currentQuestionIndex] = optionIndex;
     setUserAnswers(newAnswers);
+    
+    // Se esta é a primeira resposta, iniciar o timer
+    if (!simuladoStarted) {
+      setSimuladoStarted(true);
+      saveTimerState(timeRemaining);
+    }
     
     // Forçar atualização da interface - podemos adicionar um feedback visual aqui
     const selectedOption = document.querySelector(`[data-option-index="${optionIndex}"]`);
@@ -284,6 +364,9 @@ export default function QuestoesPage() {
     // Armazenar o resultado no localStorage com um ID único baseado em timestamp
     const resultId = `quiz-${Date.now()}`;
     localStorage.setItem(`quiz_result_${resultId}`, JSON.stringify(result));
+    
+    // Limpar dados do timer, já que o simulado foi concluído
+    localStorage.removeItem(TIME_KEY);
     
     // Redirecionar para a página de resultado
     window.location.href = `/questoes-resultado/${resultId}`;
