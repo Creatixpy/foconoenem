@@ -236,6 +236,16 @@ export default function QuestoesPage() {
     const newAnswers = [...userAnswers];
     newAnswers[currentQuestionIndex] = optionIndex;
     setUserAnswers(newAnswers);
+    
+    // Forçar atualização da interface - podemos adicionar um feedback visual aqui
+    const selectedOption = document.querySelector(`[data-option-index="${optionIndex}"]`);
+    if (selectedOption) {
+      // Aplicar brevemente uma classe adicional para feedback visual
+      selectedOption.classList.add('animate-pulse');
+      setTimeout(() => {
+        selectedOption.classList.remove('animate-pulse');
+      }, 300);
+    }
   };
 
   // Submeter o simulado
@@ -557,12 +567,13 @@ export default function QuestoesPage() {
                 <div 
                   key={index}
                   onClick={() => {
-                    console.log(`Clique na opção: ${index}`); // Adicionar log para debug
+                    console.log(`Clique na opção: ${index}`);
                     handleSelectAnswer(index);
                   }}
+                  data-option-index={index}
                   className={`w-full text-left p-4 rounded-lg border cursor-pointer transition-colors ${
                     userAnswers[currentQuestionIndex] === index 
-                      ? 'bg-primary-light border-primary' 
+                      ? 'bg-primary-light border-primary border-2 shadow-md' 
                       : 'bg-card-bg border-border-color hover:bg-muted-bg'
                   }`}
                   role="button"
@@ -663,6 +674,13 @@ export default function QuestoesPage() {
                     ? 'bg-success-light text-success border border-success/30 font-medium'
                     : 'bg-muted-bg hover:bg-secondary border border-border-color'
                 }`}
+                style={
+                  index === currentQuestionIndex
+                    ? {backgroundColor: "var(--primary)", color: "white"} 
+                    : userAnswers[index] !== null
+                    ? {backgroundColor: "var(--success-light)", color: "var(--success)", borderColor: "rgba(var(--success), 0.3)"}
+                    : {backgroundColor: "var(--muted-bg)", borderColor: "var(--border-color)"}
+                }
                 aria-label={`Ir para questão ${index + 1}`}
                 title={
                   index === currentQuestionIndex 
@@ -674,7 +692,7 @@ export default function QuestoesPage() {
               >
                 <span className="text-base">{index + 1}</span>
                 {userAnswers[index] !== null && index !== currentQuestionIndex && (
-                  <div className="w-2 h-2 bg-success rounded-full mx-auto mt-1"></div>
+                  <div className="w-2 h-2 bg-success rounded-full mx-auto mt-1" style={{backgroundColor: "var(--success)"}}></div>
                 )}
               </button>
             ))}
@@ -683,15 +701,15 @@ export default function QuestoesPage() {
           <div className="mt-4 text-xs text-center text-gray-500">
             <div className="flex items-center justify-center gap-4">
               <div className="flex items-center">
-                <div className="w-3 h-3 rounded-md bg-primary mr-1"></div>
+                <div className="w-3 h-3 rounded-md bg-primary mr-1" style={{backgroundColor: "var(--primary)"}}></div>
                 <span>Atual</span>
               </div>
               <div className="flex items-center">
-                <div className="w-3 h-3 rounded-md bg-success-light border border-success/30 mr-1"></div>
+                <div className="w-3 h-3 rounded-md bg-success-light border border-success/30 mr-1" style={{backgroundColor: "var(--success-light)", borderColor: "rgba(var(--success), 0.3)"}}></div>
                 <span>Respondida</span>
               </div>
               <div className="flex items-center">
-                <div className="w-3 h-3 rounded-md bg-muted-bg border border-border-color mr-1"></div>
+                <div className="w-3 h-3 rounded-md bg-muted-bg border border-border-color mr-1" style={{backgroundColor: "var(--muted-bg)", borderColor: "var(--border-color)"}}></div>
                 <span>Não respondida</span>
               </div>
             </div>
