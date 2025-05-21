@@ -35,6 +35,11 @@ export default function QuestionCard({
     onAnswerSelected(question.id, alternativeId);
   };
   
+  // Função helper para debugging
+  useEffect(() => {
+    console.log(`QuestionCard ${questionNumber}: selectedId=${selectedId}, props.selectedAlternativeId=${selectedAlternativeId}`);
+  }, [selectedId, selectedAlternativeId, questionNumber]);
+  
   const getCorrectAlternativeId = () => {
     return question.alternatives.find(alt => alt.isCorrect)?.id;
   };
@@ -73,54 +78,79 @@ export default function QuestionCard({
         <p className="mb-4 whitespace-pre-line">{question.text}</p>
         
         <div className="space-y-3 mb-4">
-          {question.alternatives.map((alternative) => (
-            <div 
-              key={alternative.id}
-              onClick={() => handleSelectAlternative(alternative.id)}
-              className={`p-3 rounded-lg border cursor-pointer transition-colors flex items-start gap-3 ${
-                selectedId === alternative.id 
-                  ? 'border-primary bg-primary-light' 
-                  : 'border-border-color hover:bg-muted-bg'
-              } ${
-                showResults && alternative.isCorrect
-                  ? 'border-success bg-success-light'
-                  : showResults && selectedId === alternative.id && !alternative.isCorrect
-                  ? 'border-danger bg-danger-light'
-                  : ''
-              }`}
-            >
-              <div className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full font-medium text-sm ${
-                selectedId === alternative.id
-                  ? 'bg-primary text-white'
-                  : 'bg-secondary text-foreground'
-              } ${
-                showResults && alternative.isCorrect
-                  ? 'bg-success text-white'
-                  : showResults && selectedId === alternative.id && !alternative.isCorrect
-                  ? 'bg-danger text-white'
-                  : ''
-              }`}>
-                {alternative.id}
+          {question.alternatives.map((alternative) => {
+            // Verificar se esta alternativa está selecionada
+            const isSelected = selectedId === alternative.id;
+            
+            // Classes para o container da alternativa
+            let alternativeClasses = "p-3 rounded-lg border cursor-pointer transition-colors flex items-start gap-3 ";
+            
+            if (isSelected) {
+              alternativeClasses += "border-primary bg-primary-light/50 ring-2 ring-primary/70 ";
+            } else {
+              alternativeClasses += "border-border-color hover:bg-muted-bg ";
+            }
+            
+            // Adicionar classes para resultados
+            if (showResults) {
+              if (alternative.isCorrect) {
+                alternativeClasses += "border-success bg-success-light ";
+              } else if (isSelected && !alternative.isCorrect) {
+                alternativeClasses += "border-danger bg-danger-light ";
+              }
+            }
+            
+            // Classes para o círculo que contém a letra da alternativa
+            let circleClasses = "flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full font-medium text-sm ";
+            
+            if (isSelected) {
+              circleClasses += "bg-primary text-white ";
+            } else {
+              circleClasses += "bg-secondary text-foreground ";
+            }
+            
+            // Adicionar classes para resultados
+            if (showResults) {
+              if (alternative.isCorrect) {
+                circleClasses += "bg-success text-white ";
+              } else if (isSelected && !alternative.isCorrect) {
+                circleClasses += "bg-danger text-white ";
+              }
+            }
+            
+            return (
+              <div 
+                key={alternative.id}
+                onClick={() => handleSelectAlternative(alternative.id)}
+                className={alternativeClasses}
+                role="button"
+                tabIndex={0}
+                aria-checked={isSelected}
+                aria-label={`Alternativa ${alternative.id}`}
+              >
+                <div className={circleClasses}>
+                  {alternative.id}
+                </div>
+                <div className="flex-grow pt-1">{alternative.text}</div>
+                
+                {showResults && alternative.isCorrect && (
+                  <div className="flex-shrink-0 text-success">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                )}
+                
+                {showResults && isSelected && !alternative.isCorrect && (
+                  <div className="flex-shrink-0 text-danger">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </div>
+                )}
               </div>
-              <div className="flex-grow pt-1">{alternative.text}</div>
-              
-              {showResults && alternative.isCorrect && (
-                <div className="flex-shrink-0 text-success">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-              )}
-              
-              {showResults && selectedId === alternative.id && !alternative.isCorrect && (
-                <div className="flex-shrink-0 text-danger">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </div>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
         
         {showResults && (

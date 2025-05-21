@@ -64,11 +64,22 @@ export default function QuestoesPage() {
   }, [isSystemAvailable]);
   
   const handleAnswerSelected = (questionId: string, alternativeId: string) => {
-    setSelectedAnswers(prev => ({
-      ...prev,
-      [questionId]: alternativeId
-    }));
+    console.log(`Resposta selecionada: Questão ${questionId}, Alternativa ${alternativeId}`);
+    
+    setSelectedAnswers(prev => {
+      const updated = {
+        ...prev,
+        [questionId]: alternativeId
+      };
+      console.log("Estado atualizado:", updated);
+      return updated;
+    });
   };
+  
+  // Debugging: Monitorar mudanças em selectedAnswers
+  useEffect(() => {
+    console.log("selectedAnswers atualizado:", selectedAnswers);
+  }, [selectedAnswers]);
   
   const calculateResults = () => {
     if (!questions.length) return null;
@@ -199,17 +210,22 @@ export default function QuestoesPage() {
             )}
             
             <div className="my-8">
-              {questions.map((question, index) => (
-                <QuestionCard
-                  key={question.id}
-                  question={question}
-                  questionNumber={index + 1}
-                  onAnswerSelected={handleAnswerSelected}
-                  selectedAlternativeId={selectedAnswers[question.id]}
-                  showResults={showResults}
-                  isCorrect={getQuestionResult(question.id)?.isCorrect}
-                />
-              ))}
+              {questions.map((question, index) => {
+                const selected = selectedAnswers[question.id];
+                console.log(`Renderizando questão ${index + 1}, ID ${question.id}, Selecionada: ${selected}`);
+                
+                return (
+                  <QuestionCard
+                    key={question.id}
+                    question={question}
+                    questionNumber={index + 1}
+                    onAnswerSelected={handleAnswerSelected}
+                    selectedAlternativeId={selected}
+                    showResults={showResults}
+                    isCorrect={getQuestionResult(question.id)?.isCorrect}
+                  />
+                );
+              })}
             </div>
             
             {!showResults && (

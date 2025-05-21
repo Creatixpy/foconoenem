@@ -414,3 +414,18 @@ footer p, footer a, footer div {
     transition: opacity 200ms, transform 200ms;
   }
 }
+
+/* Estilos para alternativas de questões */
+.alternative-selected {
+  transform: translateX(4px);
+  box-shadow: var(--shadow-md);
+}
+
+.alternative-option {
+  transition: all 0.2s ease;
+}
+
+.alternative-option:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
