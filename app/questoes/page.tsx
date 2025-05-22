@@ -157,34 +157,35 @@ export default function QuestoesPage() {
           </svg>
           Simulado de Questões Objetivas
         </h2>
-        <p className="text-lg text-foreground dark:text-gray-300">
+        <p className="text-lg text-foreground mb-2">
           Teste seus conhecimentos nas principais disciplinas do ENEM
         </p>
       </div>
       
-      <div className="bg-primary-light p-6 rounded-lg mb-8 text-foreground">
-        <h3 className="text-xl font-semibold mb-4 flex items-center">
-          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      {/* Melhorando o contraste do box de instruções */}
+      <div className="bg-blue-50 dark:bg-blue-900/30 p-6 rounded-lg mb-8 border border-blue-200 dark:border-blue-800">
+        <h3 className="text-xl font-semibold mb-4 flex items-center text-foreground">
+          <svg className="w-5 h-5 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           Como funciona:
         </h3>
-        <ul className="space-y-3">
+        <ul className="space-y-3 text-foreground">
           <li className="flex items-start">
             <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white font-bold mr-2 text-sm">1</span>
-            <p>O simulado contém 10 questões de múltipla escolha (2 de cada disciplina: Matemática, Português, Química, Física e Geografia)</p>
+            <p className="text-foreground">O simulado contém 10 questões de múltipla escolha (2 de cada disciplina: Matemática, Português, Química, Física e Geografia)</p>
           </li>
           <li className="flex items-start">
             <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white font-bold mr-2 text-sm">2</span>
-            <p>Selecione uma alternativa para cada questão (A, B, C ou D)</p>
+            <p className="text-foreground">Selecione uma alternativa para cada questão (A, B, C ou D)</p>
           </li>
           <li className="flex items-start">
             <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white font-bold mr-2 text-sm">3</span>
-            <p>Após responder, clique em "Finalizar e Ver Resultados"</p>
+            <p className="text-foreground">Após responder, clique em "Finalizar e Ver Resultados"</p>
           </li>
           <li className="flex items-start">
             <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white font-bold mr-2 text-sm">4</span>
-            <p>Você receberá sua pontuação e explicações detalhadas para cada questão</p>
+            <p className="text-foreground">Você receberá sua pontuação e explicações detalhadas para cada questão</p>
           </li>
         </ul>
       </div>
@@ -196,23 +197,23 @@ export default function QuestoesPage() {
           
           switch(discipline) {
             case 'Matemática':
-              bgColor = 'bg-blue-100 dark:bg-blue-900/30';
+              bgColor = 'bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800';
               textColor = 'text-blue-800 dark:text-blue-300';
               break;
             case 'Português':
-              bgColor = 'bg-red-100 dark:bg-red-900/30';
+              bgColor = 'bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800';
               textColor = 'text-red-800 dark:text-red-300';
               break;
             case 'Química':
-              bgColor = 'bg-green-100 dark:bg-green-900/30';
+              bgColor = 'bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800';
               textColor = 'text-green-800 dark:text-green-300';
               break;
             case 'Física':
-              bgColor = 'bg-purple-100 dark:bg-purple-900/30';
+              bgColor = 'bg-purple-100 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-800';
               textColor = 'text-purple-800 dark:text-purple-300';
               break;
             case 'Geografia':
-              bgColor = 'bg-amber-100 dark:bg-amber-900/30';
+              bgColor = 'bg-amber-100 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800';
               textColor = 'text-amber-800 dark:text-amber-300';
               break;
           }
@@ -231,7 +232,7 @@ export default function QuestoesPage() {
       </div>
       
       <div className="flex flex-col items-center mt-10">
-        <p className="text-sm text-gray-500 mb-4">
+        <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
           Ao clicar em "Iniciar Simulado", nossas questões serão geradas pela IA com base nas disciplinas do ENEM
         </p>
         <button 

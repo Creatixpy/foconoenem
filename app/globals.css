@@ -515,3 +515,62 @@ footer p, footer a, footer div {
   border-color: var(--warning);
   color: var(--warning-dark);
 }
+
+/* Melhorias para a página de questões */
+.quiz-intro-text {
+  color: var(--foreground);
+  font-weight: 500;
+}
+
+.quiz-intro-box {
+  background-color: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+[data-theme="light"] .quiz-intro-box {
+  background-color: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.15);
+}
+
+.quiz-intro-steps li {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+  color: var(--foreground);
+}
+
+.quiz-intro-steps .step-number {
+  background-color: var(--primary);
+  color: white;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.875rem;
+}
+
+.discipline-badge {
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  text-align: center;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.discipline-badge:hover {
+  transform: translateY(-2px);
+}
+
+/* Melhorando contrastes específicos para modo claro */
+[data-theme="light"] .text-gray-300,
+[data-theme="light"] .text-gray-200 {
+  color: #374151; /* Cor mais escura para texto no tema claro */
+}
