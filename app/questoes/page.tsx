@@ -162,30 +162,30 @@ export default function QuestoesPage() {
         </p>
       </div>
       
-      {/* Melhorando o contraste do box de instruções */}
-      <div className="bg-blue-50 dark:bg-blue-900/30 p-6 rounded-lg mb-8 border border-blue-200 dark:border-blue-800">
-        <h3 className="text-xl font-semibold mb-4 flex items-center text-foreground">
-          <svg className="w-5 h-5 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      {/* Corrigindo o contraste do box de instruções */}
+      <div className="bg-blue-50 dark:bg-blue-950/50 p-6 rounded-lg mb-8 border border-blue-200 dark:border-blue-800">
+        <h3 className="text-xl font-semibold mb-4 flex items-center text-blue-900 dark:text-blue-100">
+          <svg className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           Como funciona:
         </h3>
-        <ul className="space-y-3 text-foreground">
+        <ul className="space-y-3 text-blue-800 dark:text-blue-200">
           <li className="flex items-start">
-            <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white font-bold mr-2 text-sm">1</span>
-            <p className="text-foreground">O simulado contém 10 questões de múltipla escolha (2 de cada disciplina: Matemática, Português, Química, Física e Geografia)</p>
+            <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 dark:bg-blue-500 text-white font-bold mr-2 text-sm">1</span>
+            <p className="text-blue-800 dark:text-blue-200">O simulado contém 10 questões de múltipla escolha (2 de cada disciplina: Matemática, Português, Química, Física e Geografia)</p>
           </li>
           <li className="flex items-start">
-            <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white font-bold mr-2 text-sm">2</span>
-            <p className="text-foreground">Selecione uma alternativa para cada questão (A, B, C ou D)</p>
+            <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 dark:bg-blue-500 text-white font-bold mr-2 text-sm">2</span>
+            <p className="text-blue-800 dark:text-blue-200">Selecione uma alternativa para cada questão (A, B, C ou D)</p>
           </li>
           <li className="flex items-start">
-            <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white font-bold mr-2 text-sm">3</span>
-            <p className="text-foreground">Após responder, clique em "Finalizar e Ver Resultados"</p>
+            <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 dark:bg-blue-500 text-white font-bold mr-2 text-sm">3</span>
+            <p className="text-blue-800 dark:text-blue-200">Após responder, clique em "Finalizar e Ver Resultados"</p>
           </li>
           <li className="flex items-start">
-            <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white font-bold mr-2 text-sm">4</span>
-            <p className="text-foreground">Você receberá sua pontuação e explicações detalhadas para cada questão</p>
+            <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 dark:bg-blue-500 text-white font-bold mr-2 text-sm">4</span>
+            <p className="text-blue-800 dark:text-blue-200">Você receberá sua pontuação e explicações detalhadas para cada questão</p>
           </li>
         </ul>
       </div>
