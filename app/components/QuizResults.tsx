@@ -12,8 +12,8 @@ export default function QuizResults({ result, onRetakeQuiz }: QuizResultsProps) 
   const getScoreColor = (score: number) => {
     const percentage = (score / result.totalQuestions) * 100;
     if (percentage >= 80) return "text-success";
-    if (percentage >= 60) return "text-blue-600";
-    if (percentage >= 40) return "text-yellow-600";
+    if (percentage >= 60) return "text-blue-600 dark:text-blue-400";
+    if (percentage >= 40) return "text-yellow-600 dark:text-yellow-400";
     return "text-danger";
   };
   
@@ -59,7 +59,7 @@ export default function QuizResults({ result, onRetakeQuiz }: QuizResultsProps) 
                 <span className={`text-3xl font-bold ${getScoreColor(result.score)}`}>
                   {result.score}
                 </span>
-                <span className="text-sm text-gray-500 block">
+                <span className="text-sm text-gray-500 dark:text-gray-400 block">
                   /{result.totalQuestions}
                 </span>
               </div>
@@ -69,28 +69,28 @@ export default function QuizResults({ result, onRetakeQuiz }: QuizResultsProps) 
         
         <div className="grid md:grid-cols-3 gap-4 mb-8">
           <div className="bg-success-light p-4 rounded-lg text-center">
-            <div className="text-success font-bold text-3xl mb-1">
+            <div className="text-success-dark font-bold text-3xl mb-1">
               {result.correctAnswers}
             </div>
-            <div className="text-sm text-success-dark dark:text-success">
+            <div className="text-sm text-success-dark">
               Acertos
             </div>
           </div>
           
           <div className="bg-danger-light p-4 rounded-lg text-center">
-            <div className="text-danger font-bold text-3xl mb-1">
+            <div className="text-danger-dark font-bold text-3xl mb-1">
               {result.wrongAnswers}
             </div>
-            <div className="text-sm text-danger-dark dark:text-danger">
+            <div className="text-sm text-danger-dark">
               Erros
             </div>
           </div>
           
           <div className="bg-warning-light p-4 rounded-lg text-center">
-            <div className="text-warning font-bold text-3xl mb-1">
+            <div className="text-warning-dark font-bold text-3xl mb-1">
               {result.unansweredQuestions}
             </div>
-            <div className="text-sm text-warning-dark dark:text-warning">
+            <div className="text-sm text-warning-dark">
               Não respondidas
             </div>
           </div>

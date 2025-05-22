@@ -82,21 +82,19 @@ export default function QuestionCard({
             // Verificar se esta alternativa está selecionada
             const isSelected = selectedId === alternative.id;
             
-            // Classes para o container da alternativa
-            let alternativeClasses = "p-3 rounded-lg border cursor-pointer transition-colors flex items-start gap-3 ";
+            // Determinar classes com base no estado
+            let alternativeClasses = "question-alternative p-3 rounded-lg cursor-pointer flex items-start gap-3 ";
             
             if (isSelected) {
-              alternativeClasses += "border-primary bg-primary-light/50 ring-2 ring-primary/70 ";
-            } else {
-              alternativeClasses += "border-border-color hover:bg-muted-bg ";
+              alternativeClasses += "selected ";
             }
             
             // Adicionar classes para resultados
             if (showResults) {
               if (alternative.isCorrect) {
-                alternativeClasses += "border-success bg-success-light ";
+                alternativeClasses += "correct ";
               } else if (isSelected && !alternative.isCorrect) {
-                alternativeClasses += "border-danger bg-danger-light ";
+                alternativeClasses += "incorrect ";
               }
             }
             
@@ -131,7 +129,7 @@ export default function QuestionCard({
                 <div className={circleClasses}>
                   {alternative.id}
                 </div>
-                <div className="flex-grow pt-1">{alternative.text}</div>
+                <div className="flex-grow pt-1 text-foreground">{alternative.text}</div>
                 
                 {showResults && alternative.isCorrect && (
                   <div className="flex-shrink-0 text-success">
@@ -154,12 +152,8 @@ export default function QuestionCard({
         </div>
         
         {showResults && (
-          <div className={`mt-4 p-4 rounded-lg ${
-            isCorrect 
-              ? 'bg-success-light border border-success/30' 
-              : 'bg-warning-light border border-warning/30'
-          }`}>
-            <h4 className={`font-medium ${isCorrect ? 'text-success' : 'text-warning'} flex items-center mb-2`}>
+          <div className={`mt-4 result-box ${isCorrect ? 'correct' : 'incorrect'}`}>
+            <h4 className={`font-medium flex items-center mb-2`}>
               {isCorrect ? (
                 <>
                   <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
