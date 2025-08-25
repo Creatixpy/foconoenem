@@ -69,10 +69,6 @@ export async function GET(request: NextRequest) {
     // Extrair o conteúdo da resposta
     const aiContent = response.choices?.[0]?.message?.content || "";
     console.log("AI raw response:", aiContent.substring(0, 200) + "...");
-
-    // Extrair o conteúdo da resposta
-    const aiContent = responseData.choices?.[0]?.message?.content || "";
-    console.log("AI raw response:", aiContent.substring(0, 200) + "...");
     
     // Parsear o JSON da resposta
     let aiResult: {
