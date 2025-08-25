@@ -14,9 +14,11 @@ export default function NoticiasPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
+  const [buscaIA, setBuscaIA] = useState(""); // Nova state para busca com IA
   const [filtroTag, setFiltroTag] = useState<string | null>(null);
   const [pagina, setPagina] = useState(1);
   const [temMaisNoticias, setTemMaisNoticias] = useState(true);
+  const [noticiasIA, setNoticiasIA] = useState<string | null>(null); // State para resultados da IA
   const limitePorPagina = 6;
 
   // Carregar notícias
@@ -55,6 +57,47 @@ export default function NoticiasPage() {
     carregarNoticias();
   }, [pagina]);
 
+  // Função para buscar notícias com IA
+  const buscarComIA = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!buscaIA.trim()) return;
+    
+    try {
+      setIsLoading(true);
+      setError(null);
+      setNoticiasIA(null);
+      
+      const response = await fetch('/api/noticias/gpt-busca', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ termo: buscaIA }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao buscar notícias com IA');
+      }
+      
+      setNoticiasIA(data.noticias);
+    } catch (erro) {
+      console.error("Erro ao buscar notícias com IA:", erro);
+      setError("Não foi possível buscar notícias com IA. Tente novamente mais tarde.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Função para limpar a busca com IA
+  const limparBuscaIA = () => {
+    setBuscaIA("");
+    setNoticiasIA(null);
+    setError(null);
+  };
+
   // Formatar data para padrão brasileiro
   const formatarData = (dataString: string) => {
     const data = new Date(dataString);
@@ -84,7 +127,8 @@ export default function NoticiasPage() {
           </h1>
           
           <div className="mb-8">
-            <div className="relative">
+            {/* Busca tradicional */}
+            <div className="relative mb-4">
               <input
                 type="text"
                 value={busca}
@@ -106,6 +150,62 @@ export default function NoticiasPage() {
                   d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                 />
               </svg>
+            </div>
+            
+            {/* Busca com IA */}
+            <div className="card border border-border-color p-4 rounded-lg">
+              <h3 className="font-bold text-lg mb-3 flex items-center">
+                <svg className="w-5 h-5 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                Busca Inteligente com IA
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                Utilize a inteligência artificial para buscar notícias atualizadas sobre o ENEM diretamente da web.
+              </p>
+              <form onSubmit={buscarComIA} className="flex">
+                <input
+                  type="text"
+                  value={buscaIA}
+                  onChange={(e) => setBuscaIA(e.target.value)}
+                  placeholder="Buscar notícias com IA (ex: inscrições ENEM 2024)..."
+                  className="flex-grow p-3 rounded-l-lg border border-border-color focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                  disabled={isLoading}
+                />
+                <button
+                  type="submit"
+                  disabled={isLoading || !buscaIA.trim()}
+                  className="bg-primary hover:bg-primary-dark text-white p-3 rounded-r-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                >
+                  {isLoading ? (
+                    <span className="inline-block w-4 h-4 mr-1 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  )}
+                  <span className="ml-1">Buscar</span>
+                </button>
+              </form>
+              {noticiasIA && (
+                <div className="mt-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <h4 className="font-semibold">Resultados da Busca com IA:</h4>
+                    <button 
+                      onClick={limparBuscaIA}
+                      className="text-sm text-primary hover:underline"
+                    >
+                      Limpar
+                    </button>
+                  </div>
+                  <div className="bg-muted-bg p-4 rounded-lg max-h-96 overflow-y-auto">
+                    <pre className="whitespace-pre-wrap text-sm">{noticiasIA}</pre>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    * Estas informações foram buscadas em tempo real da web utilizando inteligência artificial.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
           
