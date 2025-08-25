@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
           ],
           model: "openai/gpt-oss-120b",
           temperature: 0.7,
-          max_completion_tokens: 8000, // Limite ajustado para 8000 tokens
+          max_completion_tokens: 8050, // Limite ajustado para 8050 tokens
           top_p: 1,
           stream: false,
           reasoning_effort: "medium",
