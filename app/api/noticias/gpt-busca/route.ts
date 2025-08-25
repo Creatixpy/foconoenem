@@ -47,9 +47,24 @@ export async function POST(request: NextRequest) {
       max_completion_tokens: 8000,
       top_p: 1,
       stream: false,
+      tool_choice: "auto",
       tools: [
         {
-          type: "browser_search"
+          type: "function",
+          function: {
+            name: "browser_search",
+            description: "Buscar informações atualizadas na web",
+            parameters: {
+              type: "object",
+              properties: {
+                query: {
+                  type: "string",
+                  description: "Termo de busca para procurar informações na web"
+                }
+              },
+              required: ["query"]
+            }
+          }
         }
       ]
     });
