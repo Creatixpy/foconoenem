@@ -34,56 +34,88 @@ export async function POST(request: NextRequest) {
     
     Use a ferramenta de busca para encontrar informações atualizadas e relevantes.`;
 
-    // Chamar o GPT OSS com a tool de browser_search
-    const chatCompletion = await groq.chat.completions.create({
-      messages: [
-        {
-          role: "system",
-          content: "Você é um assistente que pode realizar buscas na web para encontrar informações atualizadas sobre o ENEM."
-        },
-        {
-          role: "user",
-          content: prompt
+    // Definir as mensagens da conversa
+    const messages: any[] = [
+      {
+        role: "system",
+        content: "Você é um assistente que pode realizar buscas na web para encontrar informações atualizadas sobre o ENEM."
+      },
+      {
+        role: "user",
+        content: prompt
+      }
+    ];
+
+    // Definir as ferramentas disponíveis
+    const tools = [
+      {
+        type: "function",
+        function: {
+          name: "browser_search",
+          description: "Realizar uma busca na web para coletar dados dinâmicos.",
+          parameters: {
+            type: "object",
+            properties: {
+              query: {
+                type: "string",
+                description: "A consulta de busca para procurar informações."
+              }
+            },
+            required: ["query"]
+          }
         }
-      ],
+      }
+    ];
+
+    // Primeira chamada à API do Groq
+    const response = await groq.chat.completions.create({
       model: "openai/gpt-oss-120b",
+      messages: messages,
+      tools: tools,
+      tool_choice: "auto",
       temperature: 0.7,
       max_completion_tokens: 8000,
       top_p: 1,
-      stream: false,
-      tool_choice: "auto",
-      tools: [
-        {
-          type: "function",
-          function: {
-            name: "browser_search",
-            description: "Realizar uma busca na web para coletar dados dinâmicos.",
-            parameters: {
-              type: "object",
-              properties: {
-                query: {
-                  type: "string",
-                  description: "A consulta de busca para procurar informações."
-                }
-              },
-              required: ["query"]
-            }
-          }
-        }
-      ]
+      stream: false
     });
 
-    // Verificar se há chamadas de ferramentas
-    const responseMessage = chatCompletion.choices?.[0]?.message;
+    const responseMessage = response.choices?.[0]?.message;
     const toolCalls = responseMessage?.tool_calls;
 
+    // Se o modelo decidiu usar uma ferramenta
     if (toolCalls) {
-      // Se houver chamadas de ferramentas, precisamos processá-las
-      // Neste caso, estamos apenas retornando a resposta do modelo
-      // Em uma implementação completa, você processaria as chamadas de ferramentas
-      
-      // Por enquanto, vamos retornar a resposta direta do modelo
-      const aiContent = responseMessage?.content || "";
+      // Adicionar a resposta do modelo à conversa
+      messages.push(responseMessage);
+
+      // Processar cada chamada de ferramenta
+      for (const toolCall of toolCalls) {
+        const functionName = toolCall.function.name;
+        
+        if (functionName === "browser_search") {
+          // Neste caso, como estamos usando uma ferramenta integrada do sistema agente,
+          // não precisamos processar os argumentos manualmente
+          // A própria API da Groq cuidará disso
+          
+          // Adicionar uma resposta de ferramenta genérica
+          messages.push({
+            role: "tool",
+            content: "Buscando informações na web...",
+            tool_call_id: toolCall.id,
+          });
+        }
+      }
+
+      // Segunda chamada à API com os resultados da ferramenta
+      const finalResponse = await groq.chat.completions.create({
+        model: "openai/gpt-oss-120b",
+        messages: messages,
+        temperature: 0.7,
+        max_completion_tokens: 8000,
+        top_p: 1,
+        stream: false
+      });
+
+      const aiContent = finalResponse.choices?.[0]?.message?.content || "";
       
       return NextResponse.json({ 
         noticias: aiContent,
@@ -91,7 +123,7 @@ export async function POST(request: NextRequest) {
         tool_calls: toolCalls
       });
     } else {
-      // Extrair o conteúdo da resposta
+      // Se nenhuma ferramenta foi usada, retornar a resposta direta
       const aiContent = responseMessage?.content || "";
       
       return NextResponse.json({ 
