@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { Groq } from 'groq-sdk';
 
 // Função auxiliar para verificar se a última atualização foi há mais de 24 horas
 async function isUpdateNeeded(): Promise<boolean> {
@@ -129,32 +130,23 @@ export async function GET(request: NextRequest) {
       "destaques": ["id1", "id2", "id3"]
     }`;
 
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${groqApiKey}`
-      },
-      body: JSON.stringify({
-        model: "openai/gpt-oss-120b",
-        messages: [
-          { role: "user", content: prompt }
-        ],
-        temperature: 0.3, // Baixa temperatura para decisões mais consistentes
-        max_tokens: 500,
-        response_format: { type: "json_object" }
-      })
+    const groq = new Groq({ apiKey: groqApiKey });
+    
+    const response = await groq.chat.completions.create({
+      messages: [
+        { role: "user", content: prompt }
+      ],
+      model: "openai/gpt-oss-120b",
+      temperature: 0.3, // Baixa temperatura para decisões mais consistentes
+      max_completion_tokens: 14000, // Aumentar significativamente para o modelo mais poderoso
+      top_p: 1,
+      stream: false,
+      reasoning_effort: "medium",
+      response_format: { type: "json_object" }
     });
 
-    const responseData = await response.json();
-    
-    if (!response.ok) {
-      console.error("Groq API error:", responseData);
-      throw new Error(`Erro da API Groq: ${responseData.error?.message || "Erro desconhecido"}`);
-    }
-
-    // Extrair IDs das notícias selecionadas
-    const aiContent = responseData.choices?.[0]?.message?.content || "";
+    // Extrair o conteúdo da resposta
+    const aiContent = response.choices?.[0]?.message?.content || "";
     let aiResult;
     
     try {

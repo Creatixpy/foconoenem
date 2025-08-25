@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 import { Question } from "@/types";
 import { isWithinOperatingHours, getOperatingHoursInfo } from "@/lib/schedule";
+import { Groq } from 'groq-sdk';
 
 export async function GET(request: NextRequest) {
   try {
@@ -73,33 +74,26 @@ export async function GET(request: NextRequest) {
       }`;
       
       try {
-        // Usar fetch diretamente para obter resposta da API
-        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${groqApiKey}`
-          },
-          body: JSON.stringify({
-            model: "openai/gpt-oss-120b", // Modelo mais recente
-            messages: [
-              { role: "user", content: prompt }
-            ],
-            temperature: 0.7,
-            max_tokens: 2000,
-            response_format: { type: "json_object" } // Forçar resposta em formato JSON
-          })
+        // Usar o SDK da Groq para chamadas mais robustas
+        const groq = new Groq({ apiKey: groqApiKey });
+        
+        console.log("Calling Groq API to generate questions with SDK...");
+        
+        const response = await groq.chat.completions.create({
+          messages: [
+            { role: "user", content: prompt }
+          ],
+          model: "openai/gpt-oss-120b",
+          temperature: 0.7,
+          max_completion_tokens: 14000, // Aumentar significativamente para o modelo mais poderoso
+          top_p: 1,
+          stream: false,
+          reasoning_effort: "medium",
+          response_format: { type: "json_object" } // Forçar resposta em formato JSON
         });
 
-        const responseData = await response.json();
-        
-        if (!response.ok) {
-          console.error(`Groq API error for ${discipline}:`, responseData);
-          throw new Error(`Error from Groq API for ${discipline}: ${responseData.error?.message || "Unknown error"}`);
-        }
-
         // Extrair o conteúdo da resposta
-        const aiContent = responseData.choices?.[0]?.message?.content || "";
+        const aiContent = response.choices?.[0]?.message?.content || "";
         console.log(`AI response for ${discipline}:`, aiContent.substring(0, 100) + "...");
         
         // Parsear o JSON da resposta

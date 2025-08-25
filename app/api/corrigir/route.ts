@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import { EssaySubmission, EssayResult, EssayResultResponse } from "@/types";
 import { storeResult, getResult } from "@/lib/store";
 import { isWithinOperatingHours, getOperatingHoursInfo } from "@/lib/schedule";
+import { Groq } from 'groq-sdk';
 
 export async function POST(request: NextRequest) {
   try {
@@ -115,34 +116,25 @@ export async function POST(request: NextRequest) {
     }
     
     try {
-      console.log("Calling Groq API...");
-      // Usar fetch diretamente conforme o exemplo curl para compatibilidade
-      const apiResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${groqApiKey}`
-        },
-        body: JSON.stringify({
-          model: "openai/gpt-oss-120b", // Modelo mais recente
-          messages: [
-            { role: "user", content: prompt }
-          ],
-          temperature: 0.1, // Reduzir temperatura para aumentar determinismo
-          max_tokens: 2000,
-          response_format: { type: "json_object" } // Forçar resposta em formato JSON
-        })
+      console.log("Calling Groq API with SDK...");
+      // Usar o SDK da Groq para chamadas mais robustas
+      const groq = new Groq({ apiKey: groqApiKey });
+      
+      const apiResponse = await groq.chat.completions.create({
+        messages: [
+          { role: "user", content: prompt }
+        ],
+        model: "openai/gpt-oss-120b",
+        temperature: 0.1, // Reduzir temperatura para aumentar determinismo
+        max_completion_tokens: 14000, // Aumentar significativamente para o modelo mais poderoso
+        top_p: 1,
+        stream: false,
+        reasoning_effort: "medium",
+        response_format: { type: "json_object" } // Forçar resposta em formato JSON
       });
 
-      const responseData = await apiResponse.json();
-      
-      if (!apiResponse.ok) {
-        console.error("Groq API error:", responseData);
-        throw new Error(`Error from Groq API: ${responseData.error?.message || "Unknown error"}`);
-      }
-
       // Extrair o conteúdo da resposta
-      const aiContent = responseData.choices?.[0]?.message?.content || "";
+      const aiContent = apiResponse.choices?.[0]?.message?.content || "";
       console.log("AI raw response:", aiContent.substring(0, 200) + "...");
       
       // Tenta parsear o JSON da resposta
