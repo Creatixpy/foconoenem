@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       query = query.eq('destaque', true);
     }
     
-    // Ordenar, limitar e paginar
+    // Ordenar, limitar e pagina
     const { data, error } = await query
       .order('data_publicacao', { ascending: false })
       .range(offset, offset + limit - 1);
