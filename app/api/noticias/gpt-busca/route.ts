@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
           }
         }
       }
-    ];
+    ] as Array<any>; // Type assertion to avoid TypeScript errors
 
     // Primeira chamada à API do Groq
     const response = await groq.chat.completions.create({
