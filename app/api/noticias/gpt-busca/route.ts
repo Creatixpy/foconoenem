@@ -38,6 +38,10 @@ export async function POST(request: NextRequest) {
     const chatCompletion = await groq.chat.completions.create({
       messages: [
         {
+          role: "system",
+          content: "Você é um assistente que pode realizar buscas na web para encontrar informações atualizadas sobre o ENEM."
+        },
+        {
           role: "user",
           content: prompt
         }
@@ -53,13 +57,13 @@ export async function POST(request: NextRequest) {
           type: "function",
           function: {
             name: "browser_search",
-            description: "Buscar informações atualizadas na web",
+            description: "Realizar uma busca na web para coletar dados dinâmicos.",
             parameters: {
               type: "object",
               properties: {
                 query: {
                   type: "string",
-                  description: "Termo de busca para procurar informações na web"
+                  description: "A consulta de busca para procurar informações."
                 }
               },
               required: ["query"]
@@ -69,13 +73,32 @@ export async function POST(request: NextRequest) {
       ]
     });
 
-    // Extrair o conteúdo da resposta
-    const aiContent = chatCompletion.choices?.[0]?.message?.content || "";
-    
-    return NextResponse.json({ 
-      noticias: aiContent,
-      modelo: "GPT OSS com Browser Search" 
-    });
+    // Verificar se há chamadas de ferramentas
+    const responseMessage = chatCompletion.choices?.[0]?.message;
+    const toolCalls = responseMessage?.tool_calls;
+
+    if (toolCalls) {
+      // Se houver chamadas de ferramentas, precisamos processá-las
+      // Neste caso, estamos apenas retornando a resposta do modelo
+      // Em uma implementação completa, você processaria as chamadas de ferramentas
+      
+      // Por enquanto, vamos retornar a resposta direta do modelo
+      const aiContent = responseMessage?.content || "";
+      
+      return NextResponse.json({ 
+        noticias: aiContent,
+        modelo: "GPT OSS com Browser Search",
+        tool_calls: toolCalls
+      });
+    } else {
+      // Extrair o conteúdo da resposta
+      const aiContent = responseMessage?.content || "";
+      
+      return NextResponse.json({ 
+        noticias: aiContent,
+        modelo: "GPT OSS com Browser Search" 
+      });
+    }
     
   } catch (error) {
     console.error('Erro na API de busca de notícias com GPT OSS:', error);
