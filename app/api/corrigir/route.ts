@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
           "Authorization": `Bearer ${groqApiKey}`
         },
         body: JSON.stringify({
-          model: "deepseek-r1-distill-llama-70b", // Modelo mais recente
+          model: "openai/gpt-oss-120b", // Modelo mais recente
           messages: [
             { role: "user", content: prompt }
           ],
