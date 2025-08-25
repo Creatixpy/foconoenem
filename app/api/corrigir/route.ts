@@ -129,7 +129,6 @@ export async function POST(request: NextRequest) {
         max_completion_tokens: 8050, // Limite ajustado para 8050 tokens
         top_p: 1,
         stream: false,
-        reasoning_effort: "medium",
         response_format: { type: "json_object" } // Forçar resposta em formato JSON
       });
 
