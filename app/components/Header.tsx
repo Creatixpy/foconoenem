@@ -26,8 +26,8 @@ export default function Header() {
       fixed top-0 left-0 right-0 z-50 
       bg-gradient-to-r from-blue-700 to-blue-900 text-white 
       transition-all duration-300 ease-in-out
-      ${isScrolled 
-        ? 'py-2 px-4 shadow-lg mx-4 mt-4 rounded-2xl' 
+      ${isScrolled
+        ? 'py-2 px-4 shadow-lg mx-2 mt-4 rounded-2xl'
         : 'py-4 px-4 shadow-md'
       }
     `}>
