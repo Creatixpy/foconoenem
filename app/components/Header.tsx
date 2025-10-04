@@ -116,7 +116,7 @@ export default function Header() {
               <li>
                 <Link 
                   href="/" 
-                  className="block hover:bg-blue-800 py-2 px-3 rounded transition-colors flex items-center"
+                  className="flex items-center hover:bg-blue-800 py-2 px-3 rounded transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -128,7 +128,7 @@ export default function Header() {
               <li>
                 <Link 
                   href="/redacao" 
-                  className="block hover:bg-blue-800 py-2 px-3 rounded transition-colors flex items-center"
+                  className="flex items-center hover:bg-blue-800 py-2 px-3 rounded transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -140,7 +140,7 @@ export default function Header() {
               <li>
                 <Link 
                   href="/questoes" 
-                  className="block hover:bg-blue-800 py-2 px-3 rounded transition-colors flex items-center"
+                  className="flex items-center hover:bg-blue-800 py-2 px-3 rounded transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -152,7 +152,7 @@ export default function Header() {
               <li>
                 <Link 
                   href="/noticias" 
-                  className="block hover:bg-blue-800 py-2 px-3 rounded transition-colors flex items-center"
+                  className="flex items-center hover:bg-blue-800 py-2 px-3 rounded transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
