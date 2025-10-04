@@ -27,7 +27,7 @@ export default function Header() {
       bg-gradient-to-r from-blue-700 to-blue-900 text-white 
       transition-all duration-300 ease-in-out
       ${isScrolled
-        ? 'py-2 px-4 shadow-lg mx-2 mt-4 rounded-2xl'
+        ? 'py-2 px-4 shadow-lg mx-8 mt-4 rounded-2xl'
         : 'py-4 px-4 shadow-md'
       }
     `}>
