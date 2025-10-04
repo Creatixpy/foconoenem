@@ -32,7 +32,25 @@ export async function GET(request: NextRequest) {
     
     console.log("Calling Groq API to generate questions...");
     
-    const disciplines = ['Matemática', 'Português', 'Química', 'Física', 'Geografia'];
+    // Obter disciplinas selecionadas do query parameter
+    const { searchParams } = new URL(request.url);
+    const disciplinesParam = searchParams.get('disciplines');
+    
+    // Se nenhuma disciplina foi especificada, usar todas
+    const allDisciplines = ['Matemática', 'Português', 'Química', 'Física', 'Geografia'];
+    const disciplines = disciplinesParam 
+      ? disciplinesParam.split(',').filter(d => allDisciplines.includes(d))
+      : allDisciplines;
+    
+    // Validar se pelo menos uma disciplina foi selecionada
+    if (disciplines.length === 0) {
+      return NextResponse.json(
+        { error: "Pelo menos uma disciplina deve ser selecionada" },
+        { status: 400 }
+      );
+    }
+    
+    console.log("Generating questions for disciplines:", disciplines);
     let allQuestions: Question[] = [];
     
     for (const discipline of disciplines) {

@@ -20,6 +20,10 @@ export default function QuestoesPage() {
   const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
   // Novo estado para controlar se o usuário iniciou o simulado
   const [hasStarted, setHasStarted] = useState(false);
+  // Estado para disciplinas selecionadas
+  const [selectedDisciplines, setSelectedDisciplines] = useState<Set<string>>(
+    new Set(['Matemática', 'Português', 'Química', 'Física', 'Geografia'])
+  );
   
   // Verificar horário de funcionamento a cada minuto
   useEffect(() => {
@@ -31,6 +35,19 @@ export default function QuestoesPage() {
     
     return () => clearInterval(timer);
   }, []);
+  
+  // Função para alternar seleção de disciplina
+  const toggleDiscipline = (discipline: string) => {
+    setSelectedDisciplines(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(discipline)) {
+        newSet.delete(discipline);
+      } else {
+        newSet.add(discipline);
+      }
+      return newSet;
+    });
+  };
   
   // Função para iniciar o simulado e carregar as questões
   const startQuiz = async () => {
@@ -45,7 +62,16 @@ export default function QuestoesPage() {
         return;
       }
       
-      const response = await fetch("/api/questoes");
+      if (selectedDisciplines.size === 0) {
+        setError("Selecione pelo menos uma disciplina para iniciar o simulado.");
+        setLoading(false);
+        setHasStarted(false);
+        return;
+      }
+      
+      // Passar disciplinas selecionadas como query parameter
+      const disciplinesParam = Array.from(selectedDisciplines).join(',');
+      const response = await fetch(`/api/questoes?disciplines=${encodeURIComponent(disciplinesParam)}`);
       
       if (!response.ok) {
         const errorData = await response.json();
@@ -135,6 +161,7 @@ export default function QuestoesPage() {
     setQuizResult(null);
     setSelectedAnswers({});
     setHasStarted(false); // Voltar para a tela inicial
+    setQuestions([]);
   };
   
   const isQuestionAnswered = (questionId: string) => {
@@ -162,6 +189,60 @@ export default function QuestoesPage() {
         </p>
       </div>
       
+      {/* Seleção de Disciplinas */}
+      <div className="mb-8">
+        <h3 className="text-lg font-semibold mb-4 quiz-instructions-text flex items-center justify-center">
+          <svg className="w-5 h-5 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          Escolha as disciplinas do seu simulado:
+        </h3>
+        <p className="text-sm quiz-instructions-text text-center mb-4 opacity-80">
+          Selecione as matérias que deseja praticar. Serão geradas 2 questões por disciplina escolhida.
+        </p>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 max-w-4xl mx-auto">
+          {[
+            { name: 'Matemática', class: 'discipline-badge-math bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-300' },
+            { name: 'Português', class: 'discipline-badge-portuguese bg-red-100 dark:bg-red-900/30 border-red-200 dark:border-red-800 text-red-800 dark:text-red-300' },
+            { name: 'Química', class: 'discipline-badge-chemistry bg-green-100 dark:bg-green-900/30 border-green-200 dark:border-green-800 text-green-800 dark:text-green-300' },
+            { name: 'Física', class: 'discipline-badge-physics bg-purple-100 dark:bg-purple-900/30 border-purple-200 dark:border-purple-800 text-purple-800 dark:text-purple-300' },
+            { name: 'Geografia', class: 'discipline-badge-geography bg-amber-100 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300' }
+          ].map((discipline) => {
+            const isSelected = selectedDisciplines.has(discipline.name);
+            return (
+              <button
+                key={discipline.name}
+                onClick={() => toggleDiscipline(discipline.name)}
+                className={`p-4 rounded-lg text-center border-2 transition-all duration-200 ${discipline.class} ${
+                  isSelected 
+                    ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-105' 
+                    : 'opacity-50 hover:opacity-75 scale-95'
+                }`}
+              >
+                <div className="flex flex-col items-center">
+                  <span className="text-sm font-medium mb-2">
+                    {discipline.name}
+                  </span>
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                    isSelected ? 'bg-primary border-primary' : 'border-gray-400'
+                  }`}>
+                    {isSelected && (
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+        <p className="text-center text-sm quiz-instructions-text mt-4 opacity-70">
+          {selectedDisciplines.size} {selectedDisciplines.size === 1 ? 'disciplina selecionada' : 'disciplinas selecionadas'} 
+          {selectedDisciplines.size > 0 && ` • ${selectedDisciplines.size * 2} questões serão geradas`}
+        </p>
+      </div>
+      
       {/* Box de instruções com melhor contraste */}
       <div className="quiz-intro-box">
         <h3 className="text-xl font-semibold mb-4 flex items-center quiz-instructions-text">
@@ -173,69 +254,37 @@ export default function QuestoesPage() {
         <ul className="space-y-3">
           <li className="flex items-start">
             <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white font-bold mr-2 text-sm">1</span>
-            <p className="instruction-item">O simulado contém 10 questões de múltipla escolha (2 de cada disciplina: Matemática, Português, Química, Física e Geografia)</p>
+            <p className="instruction-item">Escolha as disciplinas que deseja praticar (você pode selecionar de 1 a 5 disciplinas)</p>
           </li>
           <li className="flex items-start">
             <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white font-bold mr-2 text-sm">2</span>
-            <p className="instruction-item">Selecione uma alternativa para cada questão (A, B, C ou D)</p>
+            <p className="instruction-item">Serão geradas 2 questões de múltipla escolha para cada disciplina selecionada</p>
           </li>
           <li className="flex items-start">
             <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white font-bold mr-2 text-sm">3</span>
-            <p className="instruction-item">Após responder, clique em "Finalizar e Ver Resultados"</p>
+            <p className="instruction-item">Selecione uma alternativa para cada questão (A, B, C ou D)</p>
           </li>
           <li className="flex items-start">
             <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white font-bold mr-2 text-sm">4</span>
-            <p className="instruction-item">Você receberá sua pontuação e explicações detalhadas para cada questão</p>
+            <p className="instruction-item">Após responder, clique em "Finalizar e Ver Resultados" para ver sua pontuação e explicações detalhadas</p>
           </li>
         </ul>
       </div>
       
-      <div className="grid md:grid-cols-5 gap-4 mb-8">
-        {['Matemática', 'Português', 'Química', 'Física', 'Geografia'].map((discipline) => {
-          let badgeClass = '';
-          
-          switch(discipline) {
-            case 'Matemática':
-              badgeClass = 'discipline-badge-math bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-300';
-              break;
-            case 'Português':
-              badgeClass = 'discipline-badge-portuguese bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-300';
-              break;
-            case 'Química':
-              badgeClass = 'discipline-badge-chemistry bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-300';
-              break;
-            case 'Física':
-              badgeClass = 'discipline-badge-physics bg-purple-100 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-800 text-purple-800 dark:text-purple-300';
-              break;
-            case 'Geografia':
-              badgeClass = 'discipline-badge-geography bg-amber-100 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300';
-              break;
-          }
-          
-          return (
-            <div 
-              key={discipline} 
-              className={`p-3 rounded-lg text-center ${badgeClass}`}
-            >
-              <span className="text-sm font-medium">
-                {discipline}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-      
+
       <div className="flex flex-col items-center mt-10">
         <p className="text-sm quiz-instructions-text mb-4">
-          Ao clicar em "Iniciar Simulado", nossas questões serão geradas pela IA com base nas disciplinas do ENEM
+          Ao clicar em "Iniciar Simulado", as questões serão geradas pela IA com base nas disciplinas selecionadas
         </p>
         <button 
           onClick={startQuiz} 
-          disabled={!isSystemAvailable}
+          disabled={!isSystemAvailable || selectedDisciplines.size === 0}
           className="theme-btn btn flex items-center"
         >
           {!isSystemAvailable ? (
             "Sistema Indisponível"
+          ) : selectedDisciplines.size === 0 ? (
+            "Selecione pelo menos uma disciplina"
           ) : (
             <>
               Iniciar Simulado
@@ -268,8 +317,8 @@ export default function QuestoesPage() {
                 Simulado de Questões Objetivas
               </h2>
               <p className="quiz-instructions-text mb-8">
-                Responda as 10 questões abaixo e teste seus conhecimentos em diferentes disciplinas. 
-                O simulado contém 2 questões de cada uma das seguintes matérias: Matemática, Português, Química, Física e Geografia.
+                Responda as questões abaixo e teste seus conhecimentos. 
+                O simulado contém 2 questões de cada uma das seguintes matérias selecionadas: {Array.from(selectedDisciplines).join(', ')}.
               </p>
             </section>
             
