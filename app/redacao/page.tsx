@@ -156,16 +156,18 @@ export default function RedacaoPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-muted-bg">
       <Header />
       <OperatingHoursIndicator />
       
-      <main className="flex-grow container mx-auto p-4 md:p-8">
-        <section className="card p-6 md:p-8 mb-8 border border-border-color">
-          <h2 className="text-2xl md:text-3xl font-bold text-primary mb-6 flex items-center">
-            <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
+      <main className="flex-grow container mx-auto p-4 md:p-8 max-w-6xl">
+        <section className="card card-gradient p-6 md:p-10 mb-8 border border-border-color animate-fadeIn">
+          <h2 className="text-3xl md:text-4xl font-bold text-primary mb-8 flex items-center">
+            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mr-4">
+              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </div>
             Simulado de Redação do ENEM
           </h2>
           

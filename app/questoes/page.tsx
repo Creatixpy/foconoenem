@@ -176,15 +176,17 @@ export default function QuestoesPage() {
   
   // Componente de introdução do simulado
   const QuizIntroduction = () => (
-    <div className="card p-8 border border-border-color animate-fadeIn">
-      <div className="text-center mb-6">
-        <h2 className="text-2xl md:text-3xl font-bold text-primary mb-4 flex items-center justify-center">
-          <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <div className="card card-gradient p-8 md:p-12 border border-border-color animate-fadeIn">
+      <div className="text-center mb-8">
+        <div className="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+          <svg className="w-12 h-12 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
           </svg>
+        </div>
+        <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">
           Simulado de Questões Objetivas
         </h2>
-        <p className="text-lg quiz-instructions-text mb-2">
+        <p className="text-lg md:text-xl quiz-instructions-text mb-2 leading-relaxed">
           Teste seus conhecimentos nas principais disciplinas do ENEM
         </p>
       </div>
@@ -299,21 +301,23 @@ export default function QuestoesPage() {
   );
   
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-muted-bg">
       <Header />
       <OperatingHoursIndicator />
       
-      <main className="flex-grow container mx-auto p-4 md:p-8">
+      <main className="flex-grow container mx-auto p-4 md:p-8 max-w-6xl">
         {/* Se o usuário ainda não iniciou o simulado, mostrar a introdução */}
         {!hasStarted ? (
           <QuizIntroduction />
         ) : (
           <>
             <section className="mb-8">
-              <h2 className="text-2xl md:text-3xl font-bold text-primary mb-4 flex items-center">
-                <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                </svg>
+              <h2 className="text-3xl md:text-4xl font-bold text-primary mb-6 flex items-center">
+                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mr-4">
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                  </svg>
+                </div>
                 Simulado de Questões Objetivas
               </h2>
               <p className="quiz-instructions-text mb-8">
