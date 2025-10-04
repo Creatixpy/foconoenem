@@ -27,11 +27,11 @@ export default function Header() {
       bg-gradient-to-r from-blue-700 to-blue-900 text-white 
       transition-all duration-300 ease-in-out
       ${isScrolled 
-        ? 'py-2 px-4 shadow-lg mx-4 mt-4 rounded-2xl' 
+        ? 'py-2 px-4 shadow-lg md:mx-6 md:mt-4 md:rounded-2xl' 
         : 'py-4 px-4 shadow-md'
       }
     `}>
-      <div className={`container mx-auto transition-all duration-300 ${isScrolled ? 'max-w-screen-xl' : ''}`}>
+      <div className={`container mx-auto transition-all duration-300 ${isScrolled ? 'md:max-w-5xl' : ''}`}>
         {/* Desktop Header */}
         <div className="flex justify-between items-center">
           <Link href="/" className="flex items-center">
@@ -64,34 +64,34 @@ export default function Header() {
           
           {/* Desktop Navigation */}
           <nav className="hidden md:block">
-            <ul className={`flex items-center transition-all duration-300 ${isScrolled ? 'space-x-3' : 'space-x-6'}`}>
+            <ul className={`flex items-center transition-all duration-300 ${isScrolled ? 'space-x-2' : 'space-x-6'}`}>
               <li>
-                <Link href="/" className={`hover:text-blue-200 transition-all duration-300 flex items-center ${isScrolled ? 'text-sm' : ''}`}>
-                  <svg className={`transition-all duration-300 ${isScrolled ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <Link href="/" className={`hover:text-blue-200 transition-all duration-300 flex items-center ${isScrolled ? 'text-base font-medium' : ''}`}>
+                  <svg className={`transition-all duration-300 ${isScrolled ? 'w-4 h-4' : 'w-4 h-4'} mr-1`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                   </svg>
                   <span>Início</span>
                 </Link>
               </li>
               <li>
-                <Link href="/redacao" className={`hover:text-blue-200 transition-all duration-300 flex items-center ${isScrolled ? 'text-sm' : ''}`}>
-                  <svg className={`transition-all duration-300 ${isScrolled ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <Link href="/redacao" className={`hover:text-blue-200 transition-all duration-300 flex items-center ${isScrolled ? 'text-base font-medium' : ''}`}>
+                  <svg className={`transition-all duration-300 ${isScrolled ? 'w-4 h-4' : 'w-4 h-4'} mr-1`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
                   <span>Redação</span>
                 </Link>
               </li>
               <li>
-                <Link href="/questoes" className={`hover:text-blue-200 transition-all duration-300 flex items-center ${isScrolled ? 'text-sm' : ''}`}>
-                  <svg className={`transition-all duration-300 ${isScrolled ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <Link href="/questoes" className={`hover:text-blue-200 transition-all duration-300 flex items-center ${isScrolled ? 'text-base font-medium' : ''}`}>
+                  <svg className={`transition-all duration-300 ${isScrolled ? 'w-4 h-4' : 'w-4 h-4'} mr-1`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                   </svg>
                   <span>Questões</span>
                 </Link>
               </li>
               <li>
-                <Link href="/noticias" className={`hover:text-blue-200 transition-all duration-300 flex items-center ${isScrolled ? 'text-sm' : ''}`}>
-                  <svg className={`transition-all duration-300 ${isScrolled ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <Link href="/noticias" className={`hover:text-blue-200 transition-all duration-300 flex items-center ${isScrolled ? 'text-base font-medium' : ''}`}>
+                  <svg className={`transition-all duration-300 ${isScrolled ? 'w-4 h-4' : 'w-4 h-4'} mr-1`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
                   </svg>
                   <span>Notícias</span>
