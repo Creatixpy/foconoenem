@@ -31,7 +31,7 @@ export default function Header() {
         : 'py-4 px-4 shadow-md'
       }
     `}>
-      <div className={`container mx-auto transition-all duration-300 ${isScrolled ? 'max-w-screen-xl' : ''}`}>
+      <div className={`container mx-auto max-w-7xl transition-all duration-300`}>
         {/* Desktop Header */}
         <div className="flex justify-between items-center">
           <Link href="/" className="flex items-center">
