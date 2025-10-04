@@ -24,11 +24,11 @@ export default function Header() {
   return (
     <header className={`
       fixed top-0 left-0 right-0 z-50 
-      ${isScrolled ? 'bg-gradient-to-r from-blue-700/60 to-blue-900/60 border-2 border-black/40' : 'bg-gradient-to-r from-blue-700 to-blue-900'} text-white
+      ${isScrolled ? 'bg-gradient-to-r from-blue-700/60 to-blue-900/60 border-2 border-gray-600' : 'bg-gradient-to-r from-blue-700 to-blue-900'} text-white
       transition-all duration-300 ease-in-out
       ${isScrolled
-        ? 'py-2 px-4 shadow-lg mx-2 md:mx-[420px] mt-4 rounded-2xl'
-        : 'py-4 px-4 shadow-md'
+        ? 'py-2 px-4 shadow-sm mx-2 md:mx-[420px] mt-4 rounded-2xl'
+        : 'py-4 px-4 shadow-sm'
       }
     `}>
       <div className={`container mx-auto max-w-7xl transition-all duration-300`}>
