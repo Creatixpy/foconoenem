@@ -21,119 +21,69 @@ export async function POST(request: NextRequest) {
     // Inicializar o cliente Groq
     const groq = new Groq({ apiKey: groqApiKey });
     
-    // Prompt para buscar notícias sobre ENEM
-    const prompt = `Você é um assistente especializado em buscar notícias sobre o ENEM (Exame Nacional do Ensino Médio) no Brasil. 
-    Busque notícias recentes e relevantes sobre o tema: "${termo}".
-    
-    Foque em informações como:
-    - Alterações no edital ou datas
-    - Notícias sobre o Ministério da Educação (MEC)
-    - Informações sobre inscrições
-    - Dicas e orientações para os estudantes
-    - Estatísticas e dados importantes
-    
-    Use a ferramenta de busca para encontrar informações atualizadas e relevantes.`;
+    // Prompt para buscar notícias atualizadas sobre ENEM
+    const prompt = `Busque informações atualizadas e relevantes sobre: "${termo}" relacionado ao ENEM (Exame Nacional do Ensino Médio) no Brasil.
 
-    // Definir as mensagens da conversa
-    const messages: any[] = [
-      {
-        role: "system",
-        content: "Você é um assistente que pode realizar buscas na web para encontrar informações atualizadas sobre o ENEM."
-      },
-      {
-        role: "user",
-        content: prompt
-      }
-    ];
+Forneça uma resposta completa incluindo:
+- Notícias recentes e informações atualizadas
+- Datas importantes e prazos (se aplicável)
+- Informações do MEC/INEP quando relevante
+- Dicas práticas para estudantes
+- Orientações importantes
 
-    // Definir as ferramentas disponíveis
-    const tools = [
-      {
-        type: "function",
-        function: {
-          name: "browser_search",
-          description: "Realizar uma busca na web para coletar dados dinâmicos.",
-          parameters: {
-            type: "object",
-            properties: {
-              query: {
-                type: "string",
-                description: "A consulta de busca para procurar informações."
-              }
-            },
-            required: ["query"]
-          }
+Seja claro, objetivo e use linguagem acessível para estudantes.`;
+
+    // Usar o modelo GPT OSS com browser_search como built-in tool
+    const chatCompletion = await groq.chat.completions.create({
+      messages: [
+        {
+          role: "user",
+          content: prompt
         }
-      }
-    ] as Array<any>; // Type assertion to avoid TypeScript errors
-
-    // Primeira chamada à API do Groq
-    const response = await groq.chat.completions.create({
+      ],
       model: "openai/gpt-oss-120b",
-      messages: messages,
-      tools: tools,
-      tool_choice: "auto",
       temperature: 0.7,
-      max_completion_tokens: 8000,
+      max_completion_tokens: 8192,
       top_p: 1,
-      stream: false
+      stream: true,
+      reasoning_effort: "medium",
+      stop: null,
+      tools: [
+        {
+          type: "browser_search"
+        }
+      ]
     });
 
-    const responseMessage = response.choices?.[0]?.message;
-    const toolCalls = responseMessage?.tool_calls;
-
-    // Se o modelo decidiu usar uma ferramenta
-    if (toolCalls) {
-      // Adicionar a resposta do modelo à conversa
-      messages.push(responseMessage);
-
-      // Processar cada chamada de ferramenta
-      for (const toolCall of toolCalls) {
-        const functionName = toolCall.function.name;
-        
-        if (functionName === "browser_search") {
-          // Neste caso, como estamos usando uma ferramenta integrada do sistema agente,
-          // não precisamos processar os argumentos manualmente
-          // A própria API da Groq cuidará disso
-          
-          // Adicionar uma resposta de ferramenta genérica
-          messages.push({
-            role: "tool",
-            content: "Buscando informações na web...",
-            tool_call_id: toolCall.id,
-          });
-        }
-      }
-
-      // Segunda chamada à API com os resultados da ferramenta
-      const finalResponse = await groq.chat.completions.create({
-        model: "openai/gpt-oss-120b",
-        messages: messages,
-        temperature: 0.7,
-        max_completion_tokens: 8000,
-        top_p: 1,
-        stream: false
-      });
-
-      const aiContent = finalResponse.choices?.[0]?.message?.content || "";
-      
-      return NextResponse.json({ 
-        noticias: aiContent,
-        modelo: "GPT OSS com Browser Search",
-        tool_calls: toolCalls
-      });
-    } else {
-      // Se nenhuma ferramenta foi usada, retornar a resposta direta
-      const aiContent = responseMessage?.content || "";
-      
-      return NextResponse.json({ 
-        noticias: aiContent,
-        modelo: "GPT OSS com Browser Search" 
-      });
+    // Coletar o conteúdo do stream
+    let aiContent = "";
+    
+    for await (const chunk of chatCompletion) {
+      const content = chunk.choices?.[0]?.delta?.content || '';
+      aiContent += content;
     }
     
+    if (!aiContent || aiContent.trim().length === 0) {
+      return NextResponse.json(
+        { error: 'Não foi possível gerar conteúdo' },
+        { status: 500 }
+      );
+    }
+    
+    return NextResponse.json({ 
+      noticias: aiContent,
+      modelo: "GPT OSS 120B com Browser Search"
+    });
+    
   } catch (error) {
-    console.error('Erro na API de busca de notícias com GPT OSS:', error);
-    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
+    console.error('Erro na API de busca de notícias com IA:', error);
+    
+    // Tratamento de erro mais específico
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    
+    return NextResponse.json({ 
+      error: 'Erro ao processar a solicitação com busca na web.',
+      details: errorMessage
+    }, { status: 500 });
   }
 }
