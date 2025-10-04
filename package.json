@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.7",
-    "groq-sdk": "^0.22.0",
+    "groq-sdk": "^0.33.0",
     "next": "15.3.2",
     "next-sitemap": "^4.2.3",
     "react": "^19.0.0",
