@@ -79,6 +79,14 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
   line-height: 1.6;
+  padding-top: 80px; /* Space for fixed header */
+}
+
+/* Adjust padding when header is scrolled */
+@media (min-width: 768px) {
+  body {
+    padding-top: 88px;
+  }
 }
 
 /* Transições suaves para todos os elementos */
