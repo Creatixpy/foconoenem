@@ -123,9 +123,14 @@ export default function Header() {
                   <div className="relative">
                     <button
                       onClick={() => setShowUserMenu(!showUserMenu)}
-                      className="flex items-center space-x-2 hover:bg-blue-800 rounded-lg px-3 py-2 transition-colors"
+                      className={`flex items-center hover:bg-blue-800 rounded-lg transition-all ${
+                        isScrolled ? 'p-1' : 'space-x-2 px-3 py-2'
+                      }`}
+                      title={isScrolled ? profile?.nome_completo || user.email?.split('@')[0] : ""}
                     >
-                      <div className="w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center text-sm font-bold">
+                      <div className={`bg-blue-400 rounded-full flex items-center justify-center font-bold transition-all ${
+                        isScrolled ? 'w-9 h-9 text-base' : 'w-8 h-8 text-sm'
+                      }`}>
                         {profile?.nome_completo?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
                       </div>
                       {!isScrolled && (
@@ -156,12 +161,17 @@ export default function Header() {
                 ) : (
                   <button
                     onClick={() => setShowAuthModal(true)}
-                    className="flex items-center space-x-1 bg-white text-blue-700 hover:bg-blue-50 rounded-lg px-4 py-2 transition-colors font-medium text-sm"
+                    className={`flex items-center bg-white text-blue-700 hover:bg-blue-50 rounded-lg transition-all font-medium ${
+                      isScrolled 
+                        ? 'p-2 justify-center' 
+                        : 'px-4 py-2 space-x-1'
+                    }`}
+                    title={isScrolled ? "Entrar / Criar Conta" : ""}
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className={`transition-all ${isScrolled ? 'w-5 h-5' : 'w-4 h-4'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
-                    <span>Entrar</span>
+                    <span className={`transition-all text-sm ${isScrolled ? 'hidden' : 'inline'}`}>Entrar</span>
                   </button>
                 )}
               </li>

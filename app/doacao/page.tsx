@@ -1,12 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Link from 'next/link';
-
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 const DONATION_AMOUNTS = [
   { value: 5, label: 'R$ 5', description: 'Ajuda básica' },
@@ -58,9 +55,10 @@ export default function DoacaoPage() {
       } else {
         throw new Error('URL de checkout não recebida');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Erro na doação:', err);
-      setError(err.message || 'Erro ao processar doação');
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao processar doação';
+      setError(errorMessage);
       setIsProcessing(false);
     }
   };

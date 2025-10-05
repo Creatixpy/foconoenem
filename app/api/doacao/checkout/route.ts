@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ url: session.url, sessionId: session.id });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Erro ao criar sessão de checkout:', error);
     return NextResponse.json(
       { error: 'Erro ao processar pagamento' },
