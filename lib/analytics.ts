@@ -127,7 +127,7 @@ export async function countEventsByType(
     
     // Contar eventos por tipo
     const counts: Record<string, number> = {};
-    data.forEach((event: AnalyticsEvent) => {
+    data.forEach((event: { event_type: string }) => {
       counts[event.event_type] = (counts[event.event_type] || 0) + 1;
     });
     
