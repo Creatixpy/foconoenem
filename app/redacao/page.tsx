@@ -227,7 +227,7 @@ export default function RedacaoPage() {
               <div className="mb-6 theme-box">
                 <h3 className="font-semibold text-lg mb-2 text-foreground">TEMA:</h3>
                 <p className="theme-text">
-                  "Os desafios da educação digital no Brasil contemporâneo"
+                  &ldquo;Os desafios da educação digital no Brasil contemporâneo&rdquo;
                 </p>
               </div>
               
@@ -264,7 +264,7 @@ export default function RedacaoPage() {
               <div className="mb-6 theme-box">
                 <h3 className="font-semibold text-lg mb-2 text-foreground">TEMA GERADO:</h3>
                 <p className="theme-text">
-                  "{generatedTheme}"
+                  &ldquo;{generatedTheme}&rdquo;
                 </p>
               </div>
               

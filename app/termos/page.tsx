@@ -102,7 +102,7 @@ export default function TermsOfServicePage() {
               Limitação de Garantias
             </h2>
             <p className="mb-4 leading-relaxed opacity-90">
-              Nosso serviço é fornecido "como está" e "conforme disponível", sem garantias de qualquer tipo, 
+              Nosso serviço é fornecido &ldquo;como está&rdquo; e &ldquo;conforme disponível&rdquo;, sem garantias de qualquer tipo, 
               expressas ou implícitas. Não garantimos que:
             </p>
             <ul className="list-disc ml-8 mb-6 space-y-2 opacity-90">

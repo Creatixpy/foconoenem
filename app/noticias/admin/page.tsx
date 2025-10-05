@@ -8,9 +8,16 @@ import Footer from "@/app/components/Footer";
 import { verificarStatusDestaques, getNoticiasDestaque } from "@/lib/supabase";
 import { Noticia } from "@/types";
 
+type DestaquesUpdateResult = {
+  status?: "success" | "error" | "skipped";
+  message?: string;
+  destaques?: string[];
+  error?: string;
+};
+
 export default function AdminDestaques() {
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<DestaquesUpdateResult | null>(null);
   const [statusDestaques, setStatusDestaques] = useState<{
     ultimaAtualizacao: string | null;
     proxima: string | null;
@@ -350,7 +357,7 @@ export default function AdminDestaques() {
                   "bg-warning-light text-warning"
                 }`}>
                   <h3 className="font-semibold mb-2">Resultado da Operação</h3>
-                  <p>{result.message}</p>
+                  <p>{result.message ?? result.error ?? "Operação concluída."}</p>
                   {result.destaques && (
                     <div className="mt-3">
                       <p className="font-semibold">IDs dos destaques selecionados:</p>

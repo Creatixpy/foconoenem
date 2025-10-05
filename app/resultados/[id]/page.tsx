@@ -116,7 +116,7 @@ export default function ResultadosPage() {
               TEMA UTILIZADO:
             </h3>
             <p className="theme-text italic">
-              "{result.tema || "Os desafios da educação digital no Brasil contemporâneo"}"
+              &ldquo;{result.tema || "Os desafios da educação digital no Brasil contemporâneo"}&rdquo;
             </p>
           </div>
           

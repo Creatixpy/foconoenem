@@ -276,7 +276,7 @@ export default function Home() {
               <div className="flex-1">
                 <h3 className="font-bold text-lg mb-2 text-foreground">Submeta para correção</h3>
                 <p className="text-foreground opacity-80 leading-relaxed">
-                  Quando finalizar, clique em "Concluir Redação" para enviar seu
+                  Quando finalizar, clique em &ldquo;Concluir Redação&rdquo; para enviar seu
                   texto para análise pela nossa inteligência artificial.
                 </p>
               </div>
@@ -329,8 +329,8 @@ export default function Home() {
               <div className="flex-1">
                 <h3 className="font-bold text-lg mb-2 text-foreground">Inicie o simulado</h3>
                 <p className="text-foreground opacity-80 leading-relaxed">
-                  Acesse a página de simulado de questões e clique em "Iniciar
-                  Simulado" para gerar um conjunto de 10 questões objetivas de
+                  Acesse a página de simulado de questões e clique em &ldquo;Iniciar
+                  Simulado&rdquo; para gerar um conjunto de 10 questões objetivas de
                   múltipla escolha.
                 </p>
               </div>
@@ -356,7 +356,7 @@ export default function Home() {
                 <h3 className="font-bold text-lg mb-2 text-foreground">Finalize o simulado</h3>
                 <p className="text-foreground opacity-80 leading-relaxed">
                   Quando terminar de responder todas as questões (ou quantas
-                  conseguir), clique em "Finalizar e Ver Resultados" para
+                  conseguir), clique em &ldquo;Finalizar e Ver Resultados&rdquo; para
                   submeter suas respostas.
                 </p>
               </div>

@@ -15,7 +15,6 @@ export default function NoticiasPage() {
   const [error, setError] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
   const [buscaIA, setBuscaIA] = useState(""); // Nova state para busca com IA
-  const [filtroTag, setFiltroTag] = useState<string | null>(null);
   const [pagina, setPagina] = useState(1);
   const [temMaisNoticias, setTemMaisNoticias] = useState(true);
   const [noticiasIA, setNoticiasIA] = useState<string | null>(null); // State para resultados da IA

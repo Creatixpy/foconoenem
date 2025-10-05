@@ -30,7 +30,7 @@ export default function PrivacyPolicyPage() {
               Introdução
             </h2>
             <p className="mb-4 leading-relaxed opacity-90">
-              O Foco no ENEM ("nós", "nosso" ou "site") está comprometido em proteger sua privacidade. 
+              O Foco no ENEM (&ldquo;nós&rdquo;, &ldquo;nosso&rdquo; ou &ldquo;site&rdquo;) está comprometido em proteger sua privacidade. 
               Esta Política de Privacidade explica como coletamos, usamos e protegemos suas informações 
               quando você utiliza nosso serviço de simulado de redação do ENEM.
             </p>

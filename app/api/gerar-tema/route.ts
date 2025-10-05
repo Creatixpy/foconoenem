@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { isWithinOperatingHours, getOperatingHoursInfo } from "@/lib/schedule";
 import { Groq } from 'groq-sdk';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Verificar se o sistema está em horário de funcionamento
     if (!isWithinOperatingHours()) {
