@@ -15,6 +15,7 @@
   --warning-light: #fef3c7;
   --danger: #ef4444;
   --danger-light: #fee2e2;
+  --step-number-color: #0f172a;
   --card-bg: #ffffff;
   --muted-bg: #f1f5f9;
   --border-color: #e2e8f0;
@@ -44,6 +45,7 @@
   --warning-light: #78350f;
   --danger: #ef4444;
   --danger-light: #7f1d1d;
+  --step-number-color: #f8fafc;
   --card-bg: #1e293b;
   --muted-bg: #0f172a;
   --border-color: #334155;
@@ -73,6 +75,7 @@
     --card-bg: #1e293b;
     --muted-bg: #0f172a;
     --border-color: #334155;
+    --step-number-color: #f8fafc;
   }
 }
 
@@ -211,6 +214,10 @@ body {
 .card-interactive:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-xl);
+}
+
+.step-number {
+  color: var(--step-number-color);
 }
 
 /* Gradiente sutil no topo dos cards */

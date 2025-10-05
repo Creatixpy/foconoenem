@@ -1,57 +1,99 @@
 import { EssayResult } from "@/types";
-
-// Simulação de banco de dados em memória para armazenar resultados
-let results: Record<string, EssayResult> = {};
+import { supabase } from "./supabase";
 
 /**
- * Obtém um resultado de redação pelo ID
+ * Obtém um resultado de redação pelo ID do Supabase
  */
-export function getResult(id: string): EssayResult | undefined {
+export async function getResult(id: string): Promise<EssayResult | null> {
   try {
-    // Para testes, verifica se existe no localStorage
-    if (typeof window !== 'undefined') {
-      const storedResult = localStorage.getItem(`essay_result_${id}`);
-      if (storedResult) {
-        try {
-          return JSON.parse(storedResult) as EssayResult;
-        } catch (e) {
-          console.error("Erro ao parsear resultado do localStorage:", e);
-        }
-      }
+    const { data, error } = await supabase
+      .from('essay_results')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) {
+      console.error("Erro ao buscar resultado:", error);
+      return null;
     }
     
-    // Retorna do armazenamento em memória
-    return results[id];
+    if (!data) return null;
+    
+    // Converter do formato do banco para o formato da aplicação
+    return {
+      id: data.id,
+      nota: data.nota,
+      competencia1: data.competencia1,
+      competencia2: data.competencia2,
+      competencia3: data.competencia3,
+      competencia4: data.competencia4,
+      competencia5: data.competencia5,
+      feedbackGeral: data.feedback_geral,
+      pontoFortes: data.ponto_fortes || [],
+      pontosAMelhorar: data.pontos_a_melhorar || [],
+      redacaoOriginal: data.redacao_original,
+      createdAt: data.created_at,
+      origem: data.origem as "IA" | "Simulação",
+      tema: data.tema,
+      textoApoio1: data.texto_apoio1,
+      textoApoio2: data.texto_apoio2
+    };
   } catch (error) {
     console.error("Erro ao obter resultado:", error);
-    return undefined;
+    return null;
   }
 }
 
 /**
- * Armazena um resultado de redação
+ * Armazena um resultado de redação no Supabase
  */
-export function storeResult(id: string, result: EssayResult): void {
+export async function storeResult(id: string, result: EssayResult): Promise<void> {
   try {
-    // Armazena em memória
-    results[id] = result;
+    const { error } = await supabase
+      .from('essay_results')
+      .insert({
+        id,
+        nota: result.nota,
+        competencia1: result.competencia1,
+        competencia2: result.competencia2,
+        competencia3: result.competencia3,
+        competencia4: result.competencia4,
+        competencia5: result.competencia5,
+        feedback_geral: result.feedbackGeral,
+        ponto_fortes: result.pontoFortes,
+        pontos_a_melhorar: result.pontosAMelhorar,
+        redacao_original: result.redacaoOriginal,
+        origem: result.origem,
+        tema: result.tema,
+        texto_apoio1: result.textoApoio1,
+        texto_apoio2: result.textoApoio2,
+        created_at: result.createdAt
+      });
     
-    // Para testes, armazena também no localStorage
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.setItem(`essay_result_${id}`, JSON.stringify(result));
-      } catch (e) {
-        console.error("Erro ao armazenar no localStorage:", e);
-      }
+    if (error) {
+      console.error("Erro ao armazenar resultado:", error);
+      throw error;
     }
   } catch (error) {
     console.error("Erro ao armazenar resultado:", error);
+    throw error;
   }
 }
 
 /**
  * Limpa o armazenamento de resultados (útil para testes)
  */
-export function clearResults(): void {
-  results = {};
+export async function clearResults(): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('essay_results')
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000'); // Deleta todos
+    
+    if (error) {
+      console.error("Erro ao limpar resultados:", error);
+    }
+  } catch (error) {
+    console.error("Erro ao limpar resultados:", error);
+  }
 }

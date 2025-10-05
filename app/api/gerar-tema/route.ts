@@ -1,9 +1,37 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { isWithinOperatingHours, getOperatingHoursInfo } from "@/lib/schedule";
+import { getCachedTheme, cacheTheme } from "@/lib/cache";
+import { trackEvent } from "@/lib/analytics";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { Groq } from 'groq-sdk';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    // Obter IP do usuário para rate limiting e analytics
+    const ip = request.headers.get('x-forwarded-for') || 
+               request.headers.get('x-real-ip') || 
+               'unknown';
+    const userAgent = request.headers.get('user-agent') || 'unknown';
+    
+    // Verificar rate limit (3 requisições por minuto para geração de tema)
+    const rateLimitResult = await checkRateLimit(ip, '/api/gerar-tema', 3, 1);
+    
+    if (!rateLimitResult.allowed) {
+      const resetTime = rateLimitResult.resetAt.toLocaleTimeString('pt-BR', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      
+      return NextResponse.json(
+        { 
+          error: "Muitas requisições", 
+          message: `Você atingiu o limite de requisições. Tente novamente após ${resetTime}.`,
+          resetAt: rateLimitResult.resetAt.toISOString()
+        },
+        { status: 429 }
+      );
+    }
+    
     // Verificar se o sistema está em horário de funcionamento
     if (!isWithinOperatingHours()) {
       const { message, opensAt, closesAt } = getOperatingHoursInfo();
@@ -15,6 +43,28 @@ export async function GET() {
         },
         { status: 403 } // Forbidden
       );
+    }
+    
+    // Tentar buscar tema do cache primeiro
+    const cachedTheme = await getCachedTheme();
+    
+    if (cachedTheme) {
+      console.log("Usando tema do cache:", cachedTheme.tema);
+      
+      // Registrar uso de tema em cache
+      await trackEvent('theme_cached', {
+        tema: cachedTheme.tema,
+        cache_age_hours: Math.floor(
+          (Date.now() - new Date(cachedTheme.created_at).getTime()) / (1000 * 60 * 60)
+        )
+      }, ip, userAgent);
+      
+      return NextResponse.json({
+        tema: cachedTheme.tema,
+        textoApoio1: cachedTheme.texto_apoio1,
+        textoApoio2: cachedTheme.texto_apoio2,
+        cached: true
+      });
     }
 
     // Inicializar o cliente Groq com a API key
@@ -106,8 +156,17 @@ export async function GET() {
     const result = {
       tema: aiResult.tema,
       textoApoio1: aiResult.textoApoio1,
-      textoApoio2: aiResult.textoApoio2
+      textoApoio2: aiResult.textoApoio2,
+      cached: false
     };
+    
+    // Armazenar no cache para uso futuro
+    await cacheTheme(aiResult.tema, aiResult.textoApoio1, aiResult.textoApoio2);
+    
+    // Registrar geração de tema
+    await trackEvent('theme_generated', {
+      tema: aiResult.tema
+    }, ip, userAgent);
     
     return NextResponse.json(result);
     

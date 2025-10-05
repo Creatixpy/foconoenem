@@ -245,7 +245,7 @@ export default function Home() {
           </h2>
           <ol className="space-y-6">
             <li className="flex items-start group">
-              <span className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl bg-primary text-white font-bold mr-4 text-lg shadow-md group-hover:scale-110 transition-transform">
+              <span className="step-number flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl border border-primary/40 bg-primary font-bold mr-4 text-lg shadow-md group-hover:scale-110 transition-transform">
                 1
               </span>
               <div className="flex-1">
@@ -258,7 +258,7 @@ export default function Home() {
               </div>
             </li>
             <li className="flex items-start group">
-              <span className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl bg-primary text-white font-bold mr-4 text-lg shadow-md group-hover:scale-110 transition-transform">
+              <span className="step-number flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl border border-primary/40 bg-primary font-bold mr-4 text-lg shadow-md group-hover:scale-110 transition-transform">
                 2
               </span>
               <div className="flex-1">
@@ -270,7 +270,7 @@ export default function Home() {
               </div>
             </li>
             <li className="flex items-start group">
-              <span className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl bg-primary text-white font-bold mr-4 text-lg shadow-md group-hover:scale-110 transition-transform">
+              <span className="step-number flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl border border-primary/40 bg-primary font-bold mr-4 text-lg shadow-md group-hover:scale-110 transition-transform">
                 3
               </span>
               <div className="flex-1">
@@ -282,7 +282,7 @@ export default function Home() {
               </div>
             </li>
             <li className="flex items-start group">
-              <span className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl bg-primary text-white font-bold mr-4 text-lg shadow-md group-hover:scale-110 transition-transform">
+              <span className="step-number flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl border border-primary/40 bg-primary font-bold mr-4 text-lg shadow-md group-hover:scale-110 transition-transform">
                 4
               </span>
               <div className="flex-1">
@@ -323,7 +323,7 @@ export default function Home() {
           </h2>
           <ol className="space-y-6">
             <li className="flex items-start group">
-              <span className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl bg-accent text-white font-bold mr-4 text-lg shadow-md group-hover:scale-110 transition-transform">
+              <span className="step-number flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl border border-accent/40 bg-accent font-bold mr-4 text-lg shadow-md group-hover:scale-110 transition-transform">
                 1
               </span>
               <div className="flex-1">
@@ -336,7 +336,7 @@ export default function Home() {
               </div>
             </li>
             <li className="flex items-start group">
-              <span className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl bg-accent text-white font-bold mr-4 text-lg shadow-md group-hover:scale-110 transition-transform">
+              <span className="step-number flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl border border-accent/40 bg-accent font-bold mr-4 text-lg shadow-md group-hover:scale-110 transition-transform">
                 2
               </span>
               <div className="flex-1">
@@ -349,7 +349,7 @@ export default function Home() {
               </div>
             </li>
             <li className="flex items-start group">
-              <span className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl bg-accent text-white font-bold mr-4 text-lg shadow-md group-hover:scale-110 transition-transform">
+              <span className="step-number flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl border border-accent/40 bg-accent font-bold mr-4 text-lg shadow-md group-hover:scale-110 transition-transform">
                 3
               </span>
               <div className="flex-1">
@@ -362,7 +362,7 @@ export default function Home() {
               </div>
             </li>
             <li className="flex items-start group">
-              <span className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl bg-accent text-white font-bold mr-4 text-lg shadow-md group-hover:scale-110 transition-transform">
+              <span className="step-number flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl border border-accent/40 bg-accent font-bold mr-4 text-lg shadow-md group-hover:scale-110 transition-transform">
                 4
               </span>
               <div className="flex-1">

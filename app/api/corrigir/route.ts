@@ -3,10 +3,40 @@ import { v4 as uuidv4 } from "uuid";
 import { EssaySubmission, EssayResult, EssayResultResponse } from "@/types";
 import { storeResult, getResult } from "@/lib/store";
 import { isWithinOperatingHours, getOperatingHoursInfo } from "@/lib/schedule";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { trackEvent } from "@/lib/analytics";
 import { Groq } from 'groq-sdk';
+
+const MAX_ESSAY_LENGTH = 5000;
+const MIN_ESSAY_LENGTH = 50;
 
 export async function POST(request: NextRequest) {
   try {
+    // Obter IP do usuário para rate limiting
+    const ip = request.headers.get('x-forwarded-for') || 
+               request.headers.get('x-real-ip') || 
+               'unknown';
+    const userAgent = request.headers.get('user-agent') || 'unknown';
+    
+    // Verificar rate limit (5 requisições por minuto)
+    const rateLimitResult = await checkRateLimit(ip, '/api/corrigir', 5, 1);
+    
+    if (!rateLimitResult.allowed) {
+      const resetTime = rateLimitResult.resetAt.toLocaleTimeString('pt-BR', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      
+      return NextResponse.json(
+        { 
+          error: "Muitas requisições", 
+          message: `Você atingiu o limite de requisições. Tente novamente após ${resetTime}.`,
+          resetAt: rateLimitResult.resetAt.toISOString()
+        },
+        { status: 429 }
+      );
+    }
+    
     // Verificar se o sistema está em horário de funcionamento
     if (!isWithinOperatingHours()) {
       const { message, opensAt, closesAt } = getOperatingHoursInfo();
@@ -22,9 +52,26 @@ export async function POST(request: NextRequest) {
 
     const body: EssaySubmission = await request.json();
     
-    if (!body.redacao || body.redacao.trim().length < 50) {
+    // Validações aprimoradas
+    if (!body.redacao || typeof body.redacao !== 'string') {
       return NextResponse.json(
-        { error: "A redação é muito curta" },
+        { error: "Redação inválida" },
+        { status: 400 }
+      );
+    }
+    
+    const essayLength = body.redacao.trim().length;
+    
+    if (essayLength < MIN_ESSAY_LENGTH) {
+      return NextResponse.json(
+        { error: `A redação deve ter no mínimo ${MIN_ESSAY_LENGTH} caracteres` },
+        { status: 400 }
+      );
+    }
+    
+    if (essayLength > MAX_ESSAY_LENGTH) {
+      return NextResponse.json(
+        { error: `A redação não pode exceder ${MAX_ESSAY_LENGTH} caracteres` },
         { status: 400 }
       );
     }
@@ -191,7 +238,15 @@ export async function POST(request: NextRequest) {
       };
       
       // Armazenar o resultado usando a função do store
-      storeResult(id, result);
+      await storeResult(id, result);
+      
+      // Registrar evento de analytics
+      await trackEvent('essay_submitted', {
+        theme_type: body.usarTemaPadrao !== false ? 'padrao' : (body.tema ? 'personalizado' : 'gerado'),
+        essay_length: essayLength,
+        score: result.nota,
+        tema: temaFinal
+      }, ip, userAgent);
       
       // Retornar apenas o ID como resposta para reduzir o tamanho da resposta
       const responseObj: EssayResultResponse = { id };
@@ -227,7 +282,7 @@ export async function GET(request: NextRequest) {
     );
   }
   
-  const result = getResult(id);
+  const result = await getResult(id);
   
   if (!result) {
     return NextResponse.json(
@@ -235,6 +290,11 @@ export async function GET(request: NextRequest) {
       { status: 404 }
     );
   }
+  
+  // Registrar visualização
+  const ip = request.headers.get('x-forwarded-for') || 'unknown';
+  const userAgent = request.headers.get('user-agent') || 'unknown';
+  await trackEvent('essay_viewed', { essay_id: id }, ip, userAgent);
   
   return NextResponse.json({ result });
 }
