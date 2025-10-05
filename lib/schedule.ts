@@ -4,18 +4,12 @@
 
 /**
  * Verifica se o horário atual está dentro do período de funcionamento (7h às 22h)
- * TEMPORARIAMENTE DESATIVADO PARA TESTES - sempre retorna true
  */
 export function isWithinOperatingHours(): boolean {
-  // Código original comentado
-  // const now = new Date();
-  // const hour = now.getHours();
-  
-  // Funcionamento entre 7h da manhã e 22h (10h da noite)
-  // return hour >= 7 && hour < 22;
+  const now = new Date();
+  const hour = now.getHours();
 
-  // Temporariamente desativado para testes - sempre disponível
-  return true;
+  return hour >= 7 && hour < 22;
 }
 
 /**
@@ -30,9 +24,7 @@ export function getOperatingHoursInfo(): {
 } {
   const now = new Date();
   const hour = now.getHours();
-  
-  // Em modo normal, o sistema estaria aberto neste horário?
-  const wouldBeOpen = hour >= 7 && hour < 22;
+  const isOpen = isWithinOperatingHours();
   
   // Formatando a hora atual no formato brasileiro
   const currentTime = now.toLocaleTimeString('pt-BR', { 
@@ -49,6 +41,9 @@ export function getOperatingHoursInfo(): {
   } else if (hour < 7) {
     // Se é antes das 7h, a próxima abertura é às 7h do mesmo dia
     nextOpenDate.setHours(7, 0, 0, 0);
+  } else {
+    // Já estamos abertos, indicar fechamento às 22h do mesmo dia
+    nextOpenDate.setHours(22, 0, 0, 0);
   }
   
   const nextOpenTime = nextOpenDate.toLocaleTimeString('pt-BR', { 
@@ -59,15 +54,15 @@ export function getOperatingHoursInfo(): {
   });
   
   // Mensagem de status
-  let message;
-  if (wouldBeOpen) {
-    message = `[MODO DE TESTE] Sistema sempre disponível. Normalmente funcionaria até às 22h. Hora atual: ${currentTime}`;
+  let message: string;
+  if (isOpen) {
+    message = `Sistema disponível agora. Atendemos até às 22h · Hora atual: ${currentTime}`;
   } else {
-    message = `[MODO DE TESTE] Sistema sempre disponível. Normalmente funcionaria das 7h às 22h. Hora atual: ${currentTime}`;
+    message = `Sistema indisponível no momento · Funcionamos das 7h às 22h · Próxima abertura: ${nextOpenTime} · Hora atual: ${currentTime}`;
   }
   
   return {
-    isOpen: true, // Sempre disponível no modo de teste
+    isOpen,
     opensAt: "07:00",
     closesAt: "22:00",
     nextOpenTime,
