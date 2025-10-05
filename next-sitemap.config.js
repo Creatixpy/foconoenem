@@ -10,7 +10,14 @@ module.exports = {
       },
     ],
   },
-  exclude: ['/resultados/*', '/api/*'],
+  exclude: [
+    '/resultados/*', 
+    '/api/*', 
+    '/auth/*', 
+    '/conta/*',
+    '/doacao/sucesso',
+    '/noticias/admin'
+  ],
   generateIndexSitemap: false,
   outDir: 'public',
   changefreq: 'daily',
@@ -38,6 +45,22 @@ module.exports = {
         loc: path,
         changefreq: 'daily',
         priority: 0.8,
+        lastmod: new Date().toISOString(),
+      };
+    }
+    if (path === '/doacao') {
+      return {
+        loc: path,
+        changefreq: 'weekly',
+        priority: 0.6,
+        lastmod: new Date().toISOString(),
+      };
+    }
+    if (path === '/sobre') {
+      return {
+        loc: path,
+        changefreq: 'monthly',
+        priority: 0.5,
         lastmod: new Date().toISOString(),
       };
     }
