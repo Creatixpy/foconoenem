@@ -39,26 +39,94 @@ export default function TermsOfServicePage() {
               Descrição do Serviço
             </h2>
             <p className="mb-4 leading-relaxed opacity-90">
-              O Foco no ENEM oferece um simulado de redação com correção por inteligência artificial, 
-              seguindo os critérios de avaliação do Exame Nacional do Ensino Médio (ENEM). 
-              Nosso serviço permite que estudantes pratiquem suas habilidades de redação e recebam feedback detalhado.
+              O Foco no ENEM oferece:
+            </p>
+            <ul className="list-disc ml-8 mb-6 space-y-2 opacity-90">
+              <li><strong>Simulado de redação:</strong> Com correção por inteligência artificial seguindo os critérios do ENEM</li>
+              <li><strong>Simulado de questões:</strong> Questões objetivas de múltiplas disciplinas</li>
+              <li><strong>Sistema de contas opcional:</strong> Dashboard com análises, gráficos e recomendações personalizadas</li>
+              <li><strong>Notícias educacionais:</strong> Conteúdo relevante para estudantes do ENEM</li>
+            </ul>
+            <p className="mb-4 leading-relaxed opacity-90">
+              Nosso serviço permite que estudantes pratiquem suas habilidades e recebam feedback detalhado,
+              com a opção de acompanhar seu progresso ao longo do tempo através de uma conta gratuita.
             </p>
 
             <h2 className="text-2xl font-bold mt-8 mb-4 text-primary flex items-center">
               <span className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center mr-3 text-lg">3</span>
-              Cadastro e Responsabilidades
+              Sistema de Contas
             </h2>
+            
+            <h3 className="text-xl font-semibold mt-6 mb-3 text-accent">3.1 Uso sem Cadastro</h3>
             <p className="mb-4 leading-relaxed opacity-90">
-              Atualmente, não exigimos cadastro para uso do serviço. No entanto, você é responsável por:
+              O cadastro NÃO é obrigatório. Você pode usar livremente:
             </p>
             <ul className="list-disc ml-8 mb-6 space-y-2 opacity-90">
-              <li>Fornecer informações precisas e verdadeiras em suas redações</li>
-              <li>Manter a confidencialidade de quaisquer dados relacionados à sua utilização do serviço</li>
-              <li>Usar o serviço de forma responsável e ética</li>
+              <li>Simulado de redação com correção completa</li>
+              <li>Simulado de questões objetivas</li>
+              <li>Visualização de resultados individuais</li>
+              <li>Leitura de notícias educacionais</li>
+            </ul>
+
+            <h3 className="text-xl font-semibold mt-6 mb-3 text-accent">3.2 Benefícios da Conta</h3>
+            <p className="mb-4 leading-relaxed opacity-90">
+              Ao criar uma conta gratuita, você ganha acesso a:
+            </p>
+            <ul className="list-disc ml-8 mb-6 space-y-2 opacity-90">
+              <li><strong>Dashboard de métricas:</strong> Visualize seu desempenho em gráficos interativos</li>
+              <li><strong>Histórico completo:</strong> Todas suas redações e simulados salvos</li>
+              <li><strong>Análises inteligentes:</strong> Identifique seus pontos fortes e fracos</li>
+              <li><strong>Recomendações personalizadas:</strong> Saiba exatamente o que estudar</li>
+              <li><strong>Evolução temporal:</strong> Acompanhe seu progresso ao longo do tempo</li>
+              <li><strong>Estatísticas detalhadas:</strong> Médias, taxa de acerto, comparações</li>
+            </ul>
+
+            <h3 className="text-xl font-semibold mt-6 mb-3 text-accent">3.3 Criação de Conta</h3>
+            <p className="mb-4 leading-relaxed opacity-90">
+              Para criar uma conta, você precisará fornecer:
+            </p>
+            <ul className="list-disc ml-8 mb-6 space-y-2 opacity-90">
+              <li>Email válido (usado para login e comunicação)</li>
+              <li>Senha segura (mínimo 6 caracteres)</li>
+              <li>Nome completo (para personalização)</li>
+            </ul>
+            <p className="mb-4 leading-relaxed opacity-90">
+              Ao criar uma conta, você concorda em:
+            </p>
+            <ul className="list-disc ml-8 mb-6 space-y-2 opacity-90">
+              <li>Fornecer informações precisas e verdadeiras</li>
+              <li>Manter a confidencialidade de sua senha</li>
+              <li>Notificar-nos imediatamente sobre qualquer uso não autorizado</li>
+              <li>Ser responsável por todas as atividades em sua conta</li>
+            </ul>
+
+            <h3 className="text-xl font-semibold mt-6 mb-3 text-accent">3.4 Encerramento de Conta</h3>
+            <p className="mb-4 leading-relaxed opacity-90">
+              Você pode solicitar o encerramento de sua conta a qualquer momento através do email 
+              de suporte. Ao encerrar sua conta:
+            </p>
+            <ul className="list-disc ml-8 mb-6 space-y-2 opacity-90">
+              <li>Todos os seus dados pessoais serão excluídos</li>
+              <li>Seu histórico será permanentemente apagado</li>
+              <li>Esta ação é irreversível</li>
             </ul>
 
             <h2 className="text-2xl font-bold mt-8 mb-4 text-primary flex items-center">
               <span className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center mr-3 text-lg">4</span>
+              Responsabilidades do Usuário
+            </h2>
+            <p className="mb-4 leading-relaxed opacity-90">
+              Ao usar nosso serviço (com ou sem conta), você é responsável por:
+            </p>
+            <ul className="list-disc ml-8 mb-6 space-y-2 opacity-90">
+              <li>Fornecer informações precisas e verdadeiras</li>
+              <li>Usar o serviço de forma responsável e ética</li>
+              <li>Não compartilhar suas credenciais de acesso</li>
+              <li>Manter a segurança de sua conta</li>
+            </ul>
+
+            <h2 className="text-2xl font-bold mt-8 mb-4 text-primary flex items-center">
+              <span className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center mr-3 text-lg">5</span>
               Horário de Funcionamento
             </h2>
             <p className="mb-4 leading-relaxed opacity-90">
@@ -68,7 +136,7 @@ export default function TermsOfServicePage() {
             </p>
 
             <h2 className="text-2xl font-bold mt-8 mb-4 text-primary flex items-center">
-              <span className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center mr-3 text-lg">5</span>
+              <span className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center mr-3 text-lg">6</span>
               Restrições de Uso
             </h2>
             <p className="mb-4 leading-relaxed opacity-90">
@@ -84,8 +152,8 @@ export default function TermsOfServicePage() {
             </ul>
 
             <h2 className="text-2xl font-bold mt-8 mb-4 text-primary flex items-center">
-              <span className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center mr-3 text-lg">6</span>
-              Propriedade Intelectual
+              <span className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center mr-3 text-lg">7</span>
+              Propriedade Intelectual e Uso de Dados
             </h2>
             <p className="mb-4 leading-relaxed opacity-90">
               O conteúdo disponibilizado em nosso site, incluindo textos, gráficos, logotipos, imagens e software, 
@@ -93,12 +161,21 @@ export default function TermsOfServicePage() {
             </p>
             <p className="mb-4 leading-relaxed opacity-90">
               Você mantém todos os direitos sobre as redações que envia para correção. No entanto, ao usar nosso serviço, 
-              você nos concede uma licença limitada para processar e armazenar temporariamente seu texto 
-              com a finalidade de fornecer feedback.
+              você nos concede uma licença limitada para:
+            </p>
+            <ul className="list-disc ml-8 mb-6 space-y-2 opacity-90">
+              <li>Processar seu texto através de IA para fornecer correção</li>
+              <li>Armazenar temporariamente (usuários sem conta) ou permanentemente (usuários com conta) seu conteúdo</li>
+              <li>Gerar estatísticas e análises baseadas no seu desempenho (apenas para usuários com conta)</li>
+              <li>Usar dados agregados e anônimos para melhorar o serviço</li>
+            </ul>
+            <p className="mb-4 leading-relaxed opacity-90">
+              <strong>Importante:</strong> Seus dados individuais nunca são compartilhados publicamente ou vendidos a terceiros.
+              Dados agregados e anônimos podem ser usados para estatísticas gerais.
             </p>
 
             <h2 className="text-2xl font-bold mt-8 mb-4 text-primary flex items-center">
-              <span className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center mr-3 text-lg">7</span>
+              <span className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center mr-3 text-lg">8</span>
               Limitação de Garantias
             </h2>
             <p className="mb-4 leading-relaxed opacity-90">
@@ -113,7 +190,7 @@ export default function TermsOfServicePage() {
             </ul>
 
             <h2 className="text-2xl font-bold mt-8 mb-4 text-primary flex items-center">
-              <span className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center mr-3 text-lg">8</span>
+              <span className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center mr-3 text-lg">9</span>
               Limitação de Responsabilidade
             </h2>
             <p className="mb-4 leading-relaxed opacity-90">
@@ -127,7 +204,7 @@ export default function TermsOfServicePage() {
             </p>
 
             <h2 className="text-2xl font-bold mt-8 mb-4 text-primary flex items-center">
-              <span className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center mr-3 text-lg">9</span>
+              <span className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center mr-3 text-lg">10</span>
               Modificações ao Serviço
             </h2>
             <p className="mb-4 leading-relaxed opacity-90">
@@ -136,7 +213,7 @@ export default function TermsOfServicePage() {
             </p>
 
             <h2 className="text-2xl font-bold mt-8 mb-4 text-primary flex items-center">
-              <span className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center mr-3 text-lg">10</span>
+              <span className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center mr-3 text-lg">11</span>
               Alterações aos Termos
             </h2>
             <p className="mb-4 leading-relaxed opacity-90">
@@ -146,7 +223,7 @@ export default function TermsOfServicePage() {
             </p>
 
             <h2 className="text-2xl font-bold mt-8 mb-4 text-primary flex items-center">
-              <span className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center mr-3 text-lg">11</span>
+              <span className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center mr-3 text-lg">12</span>
               Lei Aplicável
             </h2>
             <p className="mb-4 leading-relaxed opacity-90">
@@ -155,12 +232,16 @@ export default function TermsOfServicePage() {
             </p>
 
             <h2 className="text-2xl font-bold mt-8 mb-4 text-primary flex items-center">
-              <span className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center mr-3 text-lg">12</span>
+              <span className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center mr-3 text-lg">13</span>
               Contato
             </h2>
             <p className="mb-4 leading-relaxed opacity-90">
               Se você tiver dúvidas sobre estes Termos de Serviço, entre em contato conosco através 
-              do e-mail: [creatixpy@gmail.com].
+              do e-mail: <strong>creatixpy@gmail.com</strong>
+            </p>
+            <p className="mb-4 leading-relaxed opacity-90">
+              <strong>Suporte:</strong> creatixpy@gmail.com<br/>
+              <strong>Tempo de resposta:</strong> Até 48 horas
             </p>
           </div>
 
