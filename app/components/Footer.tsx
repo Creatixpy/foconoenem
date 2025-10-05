@@ -33,7 +33,10 @@ export default function Footer() {
             © {new Date().getFullYear()} Foco no ENEM - Todos os direitos reservados
           </p>
         </div>
-        <div className="flex justify-center space-x-6 mb-3">
+        <div className="flex flex-wrap justify-center gap-4 md:gap-6 mb-3">
+          <Link href="/sobre" className="text-sm text-gray-500 dark:text-gray-400 hover:underline hover:text-primary">
+            Sobre
+          </Link>
           <Link href="/privacidade" className="text-sm text-gray-500 dark:text-gray-400 hover:underline hover:text-primary">
             Política de Privacidade
           </Link>
