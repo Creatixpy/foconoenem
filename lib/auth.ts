@@ -114,10 +114,15 @@ export async function signIn(email: string, password: string) {
  * Faz login com Google OAuth
  */
 export async function signInWithGoogle() {
+  // Usa a URL de produção para evitar problemas de redirect_uri_mismatch
+  const redirectTo = process.env.NODE_ENV === 'production'
+    ? 'https://foconoenem.vercel.app/auth/callback'
+    : `${window.location.origin}/auth/callback`;
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${window.location.origin}/auth/callback`,
+      redirectTo,
       queryParams: {
         access_type: 'offline',
         prompt: 'consent',
