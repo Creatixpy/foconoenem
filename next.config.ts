@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   images: {
-    domains: ['images.unsplash.com', 'firebasestorage.googleapis.com'],
+    domains: ['images.unsplash.com', 'firebasestorage.googleapis.com', 'lh3.googleusercontent.com'],
     remotePatterns: [
       {
         protocol: 'https',

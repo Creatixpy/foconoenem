@@ -105,8 +105,49 @@ export async function signIn(email: string, password: string) {
     email,
     password,
   });
-  
+
   if (error) throw error;
+  return data;
+}
+
+/**
+ * Faz login com Google OAuth
+ */
+export async function signInWithGoogle() {
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: `${window.location.origin}/auth/callback`,
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'consent',
+      },
+    },
+  });
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Trata o callback do OAuth e obtém a sessão
+ */
+export async function handleOAuthCallback() {
+  const { data, error } = await supabase.auth.getSession();
+
+  if (error) throw error;
+
+  if (data.session?.user) {
+    // Verificar se o perfil existe, caso contrário criar
+    const profile = await getUserProfile(data.session.user.id);
+    if (!profile) {
+      const nomeCompleto = data.session.user.user_metadata?.nome_completo ||
+                          data.session.user.user_metadata?.full_name ||
+                          data.session.user.email?.split('@')[0] || 'Usuário';
+      await createUserProfile(data.session.user.id, nomeCompleto);
+    }
+  }
+
   return data;
 }
 
