@@ -413,8 +413,8 @@ export default function QuestoesPage() {
             ) : (
               <>
                 <section className="mb-8 space-y-6">
-                  <div className="rounded-3xl border border-border-color bg-card-bg/90 p-6 shadow-sm backdrop-blur">
-                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <div className="rounded-3xl border border-border-color bg-card-bg/90 p-5 shadow-sm backdrop-blur sm:p-6">
+                    <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
                       <div>
                         <p className="text-sm uppercase tracking-wide text-primary">Simulado em andamento</p>
                         <h2 className="mt-1 text-2xl font-bold text-foreground">
@@ -425,8 +425,8 @@ export default function QuestoesPage() {
                           {questions.length > 0 && " Complete todas para aproveitar o feedback detalhado."}
                         </p>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <div className="relative flex h-20 w-20 items-center justify-center rounded-full border-4 border-primary/30">
+                      <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:gap-5">
+                        <div className="relative flex h-16 w-16 items-center justify-center rounded-full border-4 border-primary/30 sm:h-20 sm:w-20">
                           <svg className="absolute h-full w-full -rotate-90" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
                             <path
                               className="text-primary/20"
@@ -448,7 +448,7 @@ export default function QuestoesPage() {
                           </svg>
                           <span className="relative text-lg font-semibold text-primary">{progressPercentage}%</span>
                         </div>
-                        <div className="text-sm text-foreground/70">
+                        <div className="text-center text-sm text-foreground/70 sm:text-left">
                           <p><strong>{answeredCount}</strong> respondidas</p>
                           <p><strong>{unansweredCount}</strong> pendentes</p>
                           <p>Próxima questão: {nextQuestionIndex || 1}</p>
@@ -474,27 +474,11 @@ export default function QuestoesPage() {
                   />
                 )}
                 
-                <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
-                  <div>
-                    {questions.map((question, index) => {
-                      const selected = selectedAnswers[question.id];
-                      return (
-                        <QuestionCard
-                          key={question.id}
-                          question={question}
-                          questionNumber={index + 1}
-                          onAnswerSelected={handleAnswerSelected}
-                          selectedAlternativeId={selected}
-                          showResults={showResults}
-                          isCorrect={getQuestionResult(question.id)?.isCorrect}
-                        />
-                      );
-                    })}
-                  </div>
-                  <aside className="flex h-fit flex-col gap-4 rounded-3xl border border-border-color bg-card-bg/90 p-5 shadow-sm backdrop-blur">
-                    <div>
+                <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-start lg:gap-8">
+                  <aside className="order-first flex h-fit flex-col gap-4 rounded-3xl border border-border-color bg-card-bg/90 p-5 shadow-sm backdrop-blur lg:order-last lg:sticky lg:top-28">
+                    <div className="flex flex-col gap-2">
                       <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground/60">Resumo rápido</h3>
-                      <p className="mt-2 text-foreground/80">
+                      <p className="text-foreground/80">
                         {answeredCount} de {questions.length} questões respondidas.
                         {unansweredCount > 0 && ` Faltam ${unansweredCount}.`}
                       </p>
@@ -534,16 +518,32 @@ export default function QuestoesPage() {
                       </button>
                     )}
                   </aside>
+                  <div className="order-last lg:order-first">
+                    {questions.map((question, index) => {
+                      const selected = selectedAnswers[question.id];
+                      return (
+                        <QuestionCard
+                          key={question.id}
+                          question={question}
+                          questionNumber={index + 1}
+                          onAnswerSelected={handleAnswerSelected}
+                          selectedAlternativeId={selected}
+                          showResults={showResults}
+                          isCorrect={getQuestionResult(question.id)?.isCorrect}
+                        />
+                      );
+                    })}
+                  </div>
                 </div>
                 
                 {!showResults && questions.length > 0 && (
-                  <div className="sticky bottom-0 mt-6 -mx-4 flex items-center justify-between border-t border-border-color bg-background/80 px-4 py-5 backdrop-blur">
-                    <div className="text-sm text-foreground/70">
+                  <div className="sticky bottom-0 mt-6 -mx-4 flex flex-col gap-3 border-t border-border-color bg-background/90 px-4 py-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:gap-0">
+                    <div className="text-sm text-foreground/70 sm:text-left">
                       <span className="font-semibold text-foreground">
                         {answeredCount} / {questions.length}
                       </span>
                       {unansweredCount > 0 && (
-                        <span className="ml-2">Restam {unansweredCount} {unansweredCount === 1 ? "questão" : "questões"}</span>
+                        <span className="ml-0 block sm:ml-2 sm:inline">Restam {unansweredCount} {unansweredCount === 1 ? "questão" : "questões"}</span>
                       )}
                     </div>
                     <button

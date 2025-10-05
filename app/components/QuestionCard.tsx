@@ -57,12 +57,12 @@ export default function QuestionCard({
   return (
     <article className="group relative mb-6 overflow-hidden rounded-3xl border border-border-color bg-card-bg shadow-sm transition-transform duration-200 animate-fadeIn">
       <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/60 via-accent/60 to-primary/60 opacity-70"></div>
-      <header className="flex flex-col gap-3 border-b border-border-color bg-muted-bg/80 px-6 py-5 md:flex-row md:items-center md:justify-between">
+      <header className="flex flex-col gap-3 border-b border-border-color bg-muted-bg/80 px-4 py-4 sm:px-6 sm:py-5 md:flex-row md:items-center md:justify-between">
         <div>
           <h3 className="text-sm font-medium uppercase tracking-wide text-foreground/60">Questão {questionNumber}</h3>
-          <p className="mt-1 text-lg font-semibold text-foreground">{question.text}</p>
+          <p className="mt-1 text-base font-semibold text-foreground sm:text-lg">{question.text}</p>
         </div>
-        <div className="flex flex-col items-start gap-2 text-xs md:items-end">
+        <div className="flex flex-col items-start gap-2 text-xs sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 md:flex-col md:items-end">
           <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 font-medium ${getDisciplineColor(question.discipline)}`}>
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -75,7 +75,7 @@ export default function QuestionCard({
         </div>
       </header>
 
-      <section className="px-6 py-6">
+      <section className="px-4 py-5 sm:px-6 sm:py-6">
         <div className="space-y-3">
           {question.alternatives.map((alternative) => {
             const isSelected = selectedId === alternative.id;
@@ -89,25 +89,27 @@ export default function QuestionCard({
                 onClick={() => handleSelectAlternative(alternative.id)}
                 disabled={showResults}
                 type="button"
-                className={`relative flex w-full items-start gap-4 rounded-2xl border border-border-color bg-card-bg/60 p-4 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+                className={`relative flex w-full flex-col gap-3 rounded-2xl border border-border-color bg-card-bg/60 p-4 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:flex-row sm:items-center sm:gap-4 ${
                   isSelected && !showResults ? "border-primary bg-primary/5 shadow-md" : ""
                 } ${showAsCorrect ? "border-success bg-success/10" : ""} ${showAsWrong ? "border-danger bg-danger/10" : ""}`}
                 aria-pressed={isSelected}
                 aria-label={`Alternativa ${alternative.id}`}
               >
-                <span className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border-2 text-sm font-semibold transition-colors ${
-                  showAsCorrect
-                    ? "border-success bg-success text-white"
-                    : showAsWrong
-                      ? "border-danger bg-danger text-white"
-                      : isSelected
-                        ? "border-primary bg-primary text-white"
-                        : "border-border-color bg-card-bg text-foreground/70"
-                }`}>
-                  {alternative.id}
-                </span>
-                <span className="flex-1 pt-1 text-foreground">{alternative.text}</span>
-                <span className="flex flex-shrink-0 items-center gap-2 text-xs font-medium text-foreground/50">
+                <div className="flex w-full items-start gap-4">
+                  <span className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border-2 text-sm font-semibold transition-colors sm:h-10 sm:w-10 ${
+                    showAsCorrect
+                      ? "border-success bg-success text-white"
+                      : showAsWrong
+                        ? "border-danger bg-danger text-white"
+                        : isSelected
+                          ? "border-primary bg-primary text-white"
+                          : "border-border-color bg-card-bg text-foreground/70"
+                  }`}>
+                    {alternative.id}
+                  </span>
+                  <span className="flex-1 pt-0 text-foreground sm:pt-1">{alternative.text}</span>
+                </div>
+                <span className="flex items-center gap-2 text-xs font-medium text-foreground/50 sm:ml-auto">
                   {showAsCorrect && (
                     <>
                       <svg className="h-4 w-4 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
