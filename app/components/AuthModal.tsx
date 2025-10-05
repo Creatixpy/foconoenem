@@ -49,11 +49,11 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
 
   if (success) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="card card-gradient max-w-md w-full p-8 relative">
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+        <div className="bg-white dark:bg-gray-800 max-w-md w-full p-8 relative rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700">
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-foreground opacity-60 hover:opacity-100"
+            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -61,20 +61,20 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
           </button>
 
           <div className="text-center">
-            <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-foreground mb-4">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
               Conta criada com sucesso!
             </h2>
-            <p className="text-foreground opacity-80 mb-6">
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
               Verifique seu email para confirmar sua conta e fazer login.
             </p>
             <button
               onClick={onClose}
-              className="btn btn-primary w-full"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium w-full transition-colors"
             >
               Entendi
             </button>
@@ -85,28 +85,28 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="card card-gradient max-w-md w-full p-8 relative">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white dark:bg-gray-800 max-w-md w-full p-8 relative rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-foreground opacity-60 hover:opacity-100"
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
 
-        <h2 className="text-2xl font-bold text-foreground mb-2">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
           {mode === 'login' ? 'Entrar' : 'Criar Conta'}
         </h2>
-        <p className="text-foreground opacity-70 mb-6">
-          {mode === 'login' 
-            ? 'Acesse sua conta para ver seu progresso' 
+        <p className="text-gray-600 dark:text-gray-300 mb-6">
+          {mode === 'login'
+            ? 'Acesse sua conta para ver seu progresso'
             : 'Crie uma conta gratuita e acompanhe sua evolução'}
         </p>
 
         {error && (
-          <div className="bg-danger-light border border-danger text-danger p-3 rounded-lg mb-4">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 p-3 rounded-lg mb-4">
             {error}
           </div>
         )}
@@ -114,7 +114,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === 'register' && (
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Nome Completo
               </label>
               <input
@@ -122,14 +122,14 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
                 value={nomeCompleto}
                 onChange={(e) => setNomeCompleto(e.target.value)}
                 required
-                className="w-full"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Seu nome"
               />
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Email
             </label>
             <input
@@ -137,13 +137,13 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="seu@email.com"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Senha
             </label>
             <input
@@ -152,11 +152,11 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              className="w-full"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="••••••••"
             />
             {mode === 'register' && (
-              <p className="text-xs text-foreground opacity-60 mt-1">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 Mínimo 6 caracteres
               </p>
             )}
@@ -165,11 +165,11 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
           <button
             type="submit"
             disabled={loading}
-            className="btn btn-primary w-full"
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center"
           >
             {loading ? (
               <span className="flex items-center justify-center">
-                <div className="loader-small mr-2"></div>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                 Processando...
               </span>
             ) : (
@@ -181,10 +181,10 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
         <div className="mt-6 text-center">
           <button
             onClick={toggleMode}
-            className="text-primary hover:text-primary-dark text-sm font-medium"
+            className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium transition-colors"
           >
-            {mode === 'login' 
-              ? 'Não tem conta? Criar uma agora' 
+            {mode === 'login'
+              ? 'Não tem conta? Criar uma agora'
               : 'Já tem conta? Fazer login'}
           </button>
         </div>
@@ -193,7 +193,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
           <div className="mt-4 text-center">
             <button
               onClick={onClose}
-              className="text-foreground opacity-60 hover:opacity-80 text-sm"
+              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 text-sm transition-colors"
             >
               Continuar sem login
             </button>

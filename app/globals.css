@@ -669,6 +669,54 @@ footer p, footer a, footer div {
   --primary-contrast: #ffffff; /* Cor de contraste para texto sobre fundos primary */
 }
 
+/* Melhorias específicas para modo claro */
+[data-theme="light"] input[type="text"],
+[data-theme="light"] input[type="email"],
+[data-theme="light"] input[type="password"],
+[data-theme="light"] textarea,
+[data-theme="light"] select {
+  background-color: #ffffff;
+  border-color: #d1d5db;
+  color: #111827;
+}
+
+[data-theme="light"] input[type="text"]:focus,
+[data-theme="light"] input[type="email"]:focus,
+[data-theme="light"] input[type="password"]:focus,
+[data-theme="light"] textarea:focus,
+[data-theme="light"] select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Melhorar contraste de elementos específicos no modo claro */
+[data-theme="light"] .modal-overlay {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="light"] .modal-content {
+  background-color: #ffffff;
+  color: #111827;
+  border: 1px solid #e5e7eb;
+}
+
+/* Garantir melhor contraste para textos no modo claro */
+[data-theme="light"] .text-gray-600 {
+  color: #4b5563 !important;
+}
+
+[data-theme="light"] .text-gray-700 {
+  color: #374151 !important;
+}
+
+[data-theme="light"] .text-gray-800 {
+  color: #1f2937 !important;
+}
+
+[data-theme="light"] .text-gray-900 {
+  color: #111827 !important;
+}
+
 [data-theme="dark"] {
   --success-dark: #4ade80;  /* Verde claro para o tema escuro */
   --warning-dark: #fbbf24;  /* Amarelo claro para o tema escuro */
