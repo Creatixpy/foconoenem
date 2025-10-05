@@ -26,7 +26,10 @@ export default function Footer() {
     <footer className="p-6">
       <div className="container mx-auto">
         <div className="text-center mb-4">
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className="text-gray-600 dark:text-gray-300 font-semibold mb-2">
+            💙 Criado por alunos, para alunos
+          </p>
+          <p className="text-gray-600 dark:text-gray-300 text-sm">
             © {new Date().getFullYear()} Foco no ENEM - Todos os direitos reservados
           </p>
         </div>
