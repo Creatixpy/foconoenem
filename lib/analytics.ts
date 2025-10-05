@@ -17,7 +17,7 @@ export type EventType =
  * Interface para metadados do evento
  */
 interface EventMetadata {
-  [key: string]: any;
+  [key: string]: string | number | boolean | null | undefined | string[] | number[];
 }
 
 /**
@@ -49,13 +49,25 @@ export async function trackEvent(
 }
 
 /**
+ * Interface para evento de analytics
+ */
+interface AnalyticsEvent {
+  id: string;
+  event_type: string;
+  metadata: Record<string, unknown>;
+  user_ip: string | null;
+  user_agent: string | null;
+  created_at: string;
+}
+
+/**
  * Busca estatísticas de eventos
  */
 export async function getEventStats(
   eventType?: EventType,
   startDate?: Date,
   endDate?: Date
-): Promise<any[]> {
+): Promise<AnalyticsEvent[]> {
   try {
     let query = supabase
       .from('analytics_events')
@@ -115,7 +127,7 @@ export async function countEventsByType(
     
     // Contar eventos por tipo
     const counts: Record<string, number> = {};
-    data.forEach((event: any) => {
+    data.forEach((event: AnalyticsEvent) => {
       counts[event.event_type] = (counts[event.event_type] || 0) + 1;
     });
     
