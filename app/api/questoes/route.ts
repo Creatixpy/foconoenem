@@ -4,6 +4,21 @@ import { Question } from "@/types";
 import { isWithinOperatingHours, getOperatingHoursInfo } from "@/lib/schedule";
 import { Groq } from 'groq-sdk';
 
+const QUESTIONS_PER_DISCIPLINE = 3;
+
+type RawAlternative = {
+  id?: string;
+  text?: string;
+  isCorrect?: boolean;
+};
+
+type RawQuestion = {
+  discipline?: string;
+  text?: string;
+  explanation?: string;
+  alternatives?: RawAlternative[];
+};
+
 export async function GET(request: NextRequest) {
   try {
     // Verificar se o sistema está em horário de funcionamento
@@ -51,11 +66,11 @@ export async function GET(request: NextRequest) {
     }
     
     console.log("Generating questions for disciplines:", disciplines);
-    let allQuestions: Question[] = [];
+  const allQuestions: Question[] = [];
     
     for (const discipline of disciplines) {
       const prompt = `
-      Crie 2 questões de múltipla escolha sobre ${discipline} de nível ENEM para estudantes do ensino médio.
+      Crie ${QUESTIONS_PER_DISCIPLINE} questões de múltipla escolha sobre ${discipline} de nível ENEM para estudantes do ensino médio.
       
       Cada questão deve ter:
       1. Um enunciado claro
@@ -68,7 +83,7 @@ export async function GET(request: NextRequest) {
         "questions": [
           {
             "discipline": "${discipline}",
-            "text": "Enunciado da questão 1",
+            "text": "Enunciado da questão",
             "alternatives": [
               {"id": "A", "text": "Alternativa A", "isCorrect": false},
               {"id": "B", "text": "Alternativa B", "isCorrect": false},
@@ -76,20 +91,11 @@ export async function GET(request: NextRequest) {
               {"id": "D", "text": "Alternativa D", "isCorrect": false}
             ],
             "explanation": "Explicação da resposta correta"
-          },
-          {
-            "discipline": "${discipline}",
-            "text": "Enunciado da questão 2",
-            "alternatives": [
-              {"id": "A", "text": "Alternativa A", "isCorrect": false},
-              {"id": "B", "text": "Alternativa B", "isCorrect": true},
-              {"id": "C", "text": "Alternativa C", "isCorrect": false},
-              {"id": "D", "text": "Alternativa D", "isCorrect": false}
-            ],
-            "explanation": "Explicação da resposta correta"
           }
         ]
-      }`;
+      }
+      
+      Certifique-se de gerar exatamente ${QUESTIONS_PER_DISCIPLINE} questões distintas no array "questions".`;
       
       try {
         // Usar o SDK da Groq para chamadas mais robustas
@@ -114,7 +120,7 @@ export async function GET(request: NextRequest) {
         console.log(`AI response for ${discipline}:`, aiContent.substring(0, 100) + "...");
         
         // Parsear o JSON da resposta
-        let questionsData: any[] = [];
+  let questionsData: RawQuestion[] = [];
         
         try {
           // Primeiro, tenta parsear diretamente
@@ -188,38 +194,42 @@ export async function GET(request: NextRequest) {
         }
         
         // Adicionar IDs únicos e adicionar à lista geral
-        const questionsWithIds = questionsData.map(q => ({
-          ...q,
-          id: uuidv4(),
-          // Garante que o campo discipline tenha o valor correto
-          discipline: discipline as Question['discipline']
-        }));
-        
-        // Verificar se cada questão tem todas as propriedades necessárias
-        for (const q of questionsWithIds) {
-          // Se não tiver texto ou alternativas, ignorar esta questão
-          if (!q.text || !q.alternatives || !Array.isArray(q.alternatives) || q.alternatives.length < 4) {
+        const normalizedQuestions: Question[] = [];
+
+        for (const q of questionsData) {
+          if (!q.text || !Array.isArray(q.alternatives) || q.alternatives.length < 4) {
             console.warn(`Skipping invalid question in ${discipline}:`, q);
             continue;
           }
-          
-          // Garantir que exista uma explicação, mesmo que vazia
-          if (!q.explanation) {
-            q.explanation = "Sem explicação disponível.";
-          }
-          
-          // Garantir que exista pelo menos uma alternativa correta
-          const hasCorrectAlternative = q.alternatives.some((alt: { isCorrect: any; }) => alt.isCorrect);
-          if (!hasCorrectAlternative) {
+
+          const normalizedAlternatives: Question['alternatives'] = q.alternatives.map((alt, index) => {
+            const letter = String.fromCharCode(65 + index);
+            return {
+              id: alt?.id ?? letter,
+              text: alt?.text ?? `Alternativa ${letter}`,
+              isCorrect: Boolean(alt?.isCorrect)
+            };
+          });
+
+          if (!normalizedAlternatives.some(alt => alt.isCorrect)) {
             console.warn(`Question without correct alternative in ${discipline}, setting first as correct:`, q);
-            q.alternatives[0].isCorrect = true;
+            normalizedAlternatives[0].isCorrect = true;
           }
-          
-          // Adicionar à lista global de questões
-          allQuestions.push(q as Question);
+
+          const normalizedQuestion: Question = {
+            id: uuidv4(),
+            discipline: discipline as Question['discipline'],
+            text: q.text,
+            explanation: q.explanation ?? "Sem explicação disponível.",
+            alternatives: normalizedAlternatives
+          };
+
+          normalizedQuestions.push(normalizedQuestion);
         }
-        
-        console.log(`Added ${questionsWithIds.length} questions for ${discipline}`);
+
+        allQuestions.push(...normalizedQuestions);
+
+        console.log(`Added ${normalizedQuestions.length} questions for ${discipline}`);
         
       } catch (disciplineError) {
         // Registrar erro para esta disciplina, mas continuar com as outras
@@ -236,25 +246,25 @@ export async function GET(request: NextRequest) {
       );
     }
     
-    // Garantir que temos pelo menos uma questão de cada disciplina
-    const disciplineCounts = disciplines.map(disc => {
-      return {
-        discipline: disc,
-        count: allQuestions.filter(q => q.discipline === disc).length
-      };
+    const balancedQuestions = disciplines.flatMap(disc => {
+      const discQuestions = allQuestions.filter(q => q.discipline === disc);
+      return discQuestions.slice(0, QUESTIONS_PER_DISCIPLINE);
     });
-    
+
+    const limitedQuestions = balancedQuestions.length ? balancedQuestions : allQuestions;
+
+    const disciplineCounts = disciplines.map(disc => ({
+      discipline: disc,
+      count: limitedQuestions.filter(q => q.discipline === disc).length
+    }));
+
     console.log("Questions by discipline:", disciplineCounts);
-    
-    // Embaralhar as questões para não ficarem agrupadas por disciplina
-    const shuffledQuestions = allQuestions.sort(() => Math.random() - 0.5);
-    
-    // Limitar a 10 questões (2 de cada disciplina idealmente)
-    const finalQuestions = shuffledQuestions.slice(0, 10);
+
+    const shuffledQuestions = [...limitedQuestions].sort(() => Math.random() - 0.5);
     
     return NextResponse.json({
-      questions: finalQuestions,
-      totalQuestions: finalQuestions.length,
+      questions: shuffledQuestions,
+      totalQuestions: shuffledQuestions.length,
       disciplineCounts: disciplineCounts
     });
     

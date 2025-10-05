@@ -9,6 +9,8 @@ import QuizResults from "../components/QuizResults";
 import { Question, QuizResult } from "@/types";
 import { isWithinOperatingHours } from "@/lib/schedule";
 
+const QUESTIONS_PER_DISCIPLINE = 3;
+
 export default function QuestoesPage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(false);
@@ -89,22 +91,14 @@ export default function QuestoesPage() {
   };
   
   const handleAnswerSelected = (questionId: string, alternativeId: string) => {
-    console.log(`Resposta selecionada: Questão ${questionId}, Alternativa ${alternativeId}`);
-    
     setSelectedAnswers(prev => {
       const updated = {
         ...prev,
         [questionId]: alternativeId
       };
-      console.log("Estado atualizado:", updated);
       return updated;
     });
   };
-  
-  // Debugging: Monitorar mudanças em selectedAnswers
-  useEffect(() => {
-    console.log("selectedAnswers atualizado:", selectedAnswers);
-  }, [selectedAnswers]);
   
   const calculateResults = () => {
     if (!questions.length) return null;
@@ -164,141 +158,230 @@ export default function QuestoesPage() {
     setQuestions([]);
   };
   
-  const isQuestionAnswered = (questionId: string) => {
-    return !!selectedAnswers[questionId];
-  };
-  
   const getQuestionResult = (questionId: string) => {
     if (!showResults || !quizResult) return undefined;
     
     return quizResult.questionResults.find(result => result.questionId === questionId);
   };
   
+  const answeredCount = Object.keys(selectedAnswers).length;
+  const unansweredCount = Math.max(questions.length - answeredCount, 0);
+  const progressPercentage = questions.length ? Math.round((answeredCount / questions.length) * 100) : 0;
+  const nextQuestionIndex = Math.min(answeredCount + 1, questions.length);
+  
   // Componente de introdução do simulado
-  const QuizIntroduction = () => (
-    <div className="card card-gradient p-8 md:p-12 border border-border-color animate-fadeIn">
-      <div className="text-center mb-8">
-        <div className="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
-          <svg className="w-12 h-12 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+  const QuizIntroduction = () => {
+    const disciplineOptions = [
+      {
+        name: "Matemática",
+        description: "Cálculo, funções e estatística",
+        accent: "from-blue-500/10 to-blue-700/10",
+        icon: (
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m0 4v11m0-11H4m4 0h4m4 10v4m0-4V6m0 10h4m-4 0h-4m-7 5h14" />
           </svg>
-        </div>
-        <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">
-          Simulado de Questões Objetivas
-        </h2>
-        <p className="text-lg md:text-xl quiz-instructions-text mb-2 leading-relaxed">
-          Teste seus conhecimentos nas principais disciplinas do ENEM
-        </p>
-      </div>
-      
-      {/* Seleção de Disciplinas */}
-      <div className="mb-8">
-        <h3 className="text-lg font-semibold mb-4 quiz-instructions-text flex items-center justify-center">
-          <svg className="w-5 h-5 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        ),
+      },
+      {
+        name: "Português",
+        description: "Interpretação de textos e gramática",
+        accent: "from-rose-500/10 to-red-600/10",
+        icon: (
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 20h9" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16.5 3.5l4 4-11 11H5v-4l11-11z" />
           </svg>
-          Escolha as disciplinas do seu simulado:
-        </h3>
-        <p className="text-sm quiz-instructions-text text-center mb-4 opacity-80">
-          Selecione as matérias que deseja praticar. Serão geradas 2 questões por disciplina escolhida.
-        </p>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 max-w-4xl mx-auto">
-          {[
-            { name: 'Matemática', class: 'discipline-badge-math bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-300' },
-            { name: 'Português', class: 'discipline-badge-portuguese bg-red-100 dark:bg-red-900/30 border-red-200 dark:border-red-800 text-red-800 dark:text-red-300' },
-            { name: 'Química', class: 'discipline-badge-chemistry bg-green-100 dark:bg-green-900/30 border-green-200 dark:border-green-800 text-green-800 dark:text-green-300' },
-            { name: 'Física', class: 'discipline-badge-physics bg-purple-100 dark:bg-purple-900/30 border-purple-200 dark:border-purple-800 text-purple-800 dark:text-purple-300' },
-            { name: 'Geografia', class: 'discipline-badge-geography bg-amber-100 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300' }
-          ].map((discipline) => {
-            const isSelected = selectedDisciplines.has(discipline.name);
-            return (
-              <button
-                key={discipline.name}
-                onClick={() => toggleDiscipline(discipline.name)}
-                className={`p-4 rounded-lg text-center border-2 transition-all duration-200 ${discipline.class} ${
-                  isSelected 
-                    ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-105' 
-                    : 'opacity-50 hover:opacity-75 scale-95'
-                }`}
-              >
-                <div className="flex flex-col items-center">
-                  <span className="text-sm font-medium mb-2">
-                    {discipline.name}
-                  </span>
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                    isSelected ? 'bg-primary border-primary' : 'border-gray-400'
-                  }`}>
-                    {isSelected && (
-                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </div>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-        <p className="text-center text-sm quiz-instructions-text mt-4 opacity-70">
-          {selectedDisciplines.size} {selectedDisciplines.size === 1 ? 'disciplina selecionada' : 'disciplinas selecionadas'} 
-          {selectedDisciplines.size > 0 && ` • ${selectedDisciplines.size * 2} questões serão geradas`}
-        </p>
-      </div>
-      
-      {/* Box de instruções com melhor contraste */}
-      <div className="quiz-intro-box">
-        <h3 className="text-xl font-semibold mb-4 flex items-center quiz-instructions-text">
-          <svg className="w-5 h-5 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        ),
+      },
+      {
+        name: "Química",
+        description: "Reações, ligações e química orgânica",
+        accent: "from-emerald-500/10 to-emerald-700/10",
+        icon: (
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 4h-4l-3 7 1 9h4l3-7-1-9zM5 4h4l3 7-1 9H7l-3-7 1-9z" />
           </svg>
-          Como funciona:
-        </h3>
-        <ul className="space-y-3">
-          <li className="flex items-start">
-            <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white font-bold mr-2 text-sm">1</span>
-            <p className="instruction-item">Escolha as disciplinas que deseja praticar (você pode selecionar de 1 a 5 disciplinas)</p>
-          </li>
-          <li className="flex items-start">
-            <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white font-bold mr-2 text-sm">2</span>
-            <p className="instruction-item">Serão geradas 2 questões de múltipla escolha para cada disciplina selecionada</p>
-          </li>
-          <li className="flex items-start">
-            <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white font-bold mr-2 text-sm">3</span>
-            <p className="instruction-item">Selecione uma alternativa para cada questão (A, B, C ou D)</p>
-          </li>
-          <li className="flex items-start">
-            <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white font-bold mr-2 text-sm">4</span>
-            <p className="instruction-item">Após responder, clique em "Finalizar e Ver Resultados" para ver sua pontuação e explicações detalhadas</p>
-          </li>
-        </ul>
-      </div>
-      
+        ),
+      },
+      {
+        name: "Física",
+        description: "Movimentos, energia e eletricidade",
+        accent: "from-purple-500/10 to-indigo-700/10",
+        icon: (
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+          </svg>
+        ),
+      },
+      {
+        name: "Geografia",
+        description: "Mapas, climatologia e globalização",
+        accent: "from-amber-500/10 to-orange-600/10",
+        icon: (
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 12a4 4 0 110-8 4 4 0 010 8z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2 12a10 10 0 0020 0 10 10 0 00-20 0zm10 10c-2.5 0-3.5-1.5-4-2" />
+          </svg>
+        ),
+      },
+    ];
 
-      <div className="flex flex-col items-center mt-10">
-        <p className="text-sm quiz-instructions-text mb-4">
-          Ao clicar em "Iniciar Simulado", as questões serão geradas pela IA com base nas disciplinas selecionadas
-        </p>
-        <button 
-          onClick={startQuiz} 
-          disabled={!isSystemAvailable || selectedDisciplines.size === 0}
-          className="theme-btn btn flex items-center"
-        >
-          {!isSystemAvailable ? (
-            "Sistema Indisponível"
-          ) : selectedDisciplines.size === 0 ? (
-            "Selecione pelo menos uma disciplina"
-          ) : (
-            <>
-              Iniciar Simulado
-              <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-              </svg>
-            </>
-          )}
-        </button>
+    return (
+      <div className="relative overflow-hidden rounded-3xl border border-border-color bg-gradient-to-br from-background via-background to-muted-bg p-6 md:p-12 animate-fadeIn">
+        <div className="absolute inset-0 -z-10 opacity-30" aria-hidden>
+          <div className="absolute -top-24 right-0 h-64 w-64 rounded-full bg-primary/20 blur-3xl"></div>
+          <div className="absolute -bottom-10 left-10 h-52 w-52 rounded-full bg-accent/20 blur-3xl"></div>
+        </div>
+
+        <div className="flex flex-col gap-6 md:gap-10">
+          <div className="grid gap-6 md:grid-cols-[1.3fr_1fr]">
+            <div className="space-y-6">
+              <div className="flex items-center gap-4 rounded-2xl border border-border-color bg-card-bg/70 p-6 shadow-sm backdrop-blur">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/10 to-primary/20 text-primary">
+                  <svg className="h-9 w-9" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm uppercase tracking-wide text-primary">Simulado inteligente</p>
+                  <h2 className="text-3xl md:text-4xl font-bold text-foreground">Construa seu treino personalizado do ENEM</h2>
+                  <p className="mt-3 text-base text-foreground/80">
+                    Selecione as disciplinas que quer focar, receba 3 questões geradas por IA para cada uma e veja explicações detalhadas logo após finalizar.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-3">
+                {[{
+                  label: "Questões sob medida",
+                  value: `${selectedDisciplines.size || 1} x ${QUESTIONS_PER_DISCIPLINE}`,
+                  detail: "Por disciplina selecionada",
+                }, {
+                  label: "Tempo sugerido",
+                  value: "20 min",
+                  detail: "Para concluir o bloco completo",
+                }, {
+                  label: "Feedback imediato",
+                  value: "100% IA",
+                  detail: "Explicações comentadas por questão",
+                }].map((item) => (
+                  <div key={item.label} className="rounded-2xl border border-border-color bg-card-bg/80 p-4 shadow-sm backdrop-blur">
+                    <p className="text-xs uppercase tracking-wide text-foreground/70">{item.label}</p>
+                    <p className="text-2xl font-bold text-primary mt-1">{item.value}</p>
+                    <p className="text-sm text-foreground/70 mt-2">{item.detail}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="h-full rounded-2xl border border-border-color bg-card-bg/80 p-6 shadow-sm backdrop-blur">
+              <h3 className="text-lg font-semibold text-foreground">Como funciona</h3>
+              <ol className="mt-4 space-y-4 text-sm text-foreground/80">
+                {[
+                  "Escolha de 1 a 5 disciplinas para praticar agora.",
+                  `Geramos automaticamente ${QUESTIONS_PER_DISCIPLINE} questões inéditas para cada disciplina.`,
+                  "Responda no seu ritmo e acompanhe o progresso em tempo real.",
+                  "Finalize para descobrir acertos, erros, lacunas e receber explicações bem diretas.",
+                ].map((step, index) => (
+                  <li key={index} className="flex gap-3">
+                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                      {index + 1}
+                    </span>
+                    <span>{step}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className="flex flex-col gap-3 text-center">
+              <h3 className="text-xl font-semibold text-foreground flex items-center justify-center gap-2">
+                <svg className="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Monte seu simulado escolhendo as matérias:
+              </h3>
+              <p className="text-sm text-foreground/70">
+                Cada disciplina adiciona automaticamente três questões. Misture áreas para um treino completo ou foque naqueles tópicos que mais precisa revisar.
+              </p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+              {disciplineOptions.map((discipline) => {
+                const isSelected = selectedDisciplines.has(discipline.name);
+                return (
+                  <button
+                    key={discipline.name}
+                    onClick={() => toggleDiscipline(discipline.name)}
+                    className={`group flex h-full flex-col rounded-2xl border border-border-color bg-card-bg/80 p-5 text-left shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background ${isSelected ? "ring-2 ring-primary/70 ring-offset-2 ring-offset-background" : "opacity-75 hover:opacity-100"}`}
+                  >
+                    <span className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${discipline.accent} text-primary`}>{discipline.icon}</span>
+                    <strong className="text-base text-foreground">{discipline.name}</strong>
+                    <span className="mt-2 text-sm text-foreground/70">{discipline.description}</span>
+                    <span className={`mt-4 inline-flex w-fit items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${isSelected ? "border-primary/40 bg-primary/10 text-primary" : "border-border-color text-foreground/60"}`}>
+                      {isSelected ? (
+                        <>
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Selecionada
+                        </>
+                      ) : (
+                        <>
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                          </svg>
+                          Adicionar ao treino
+                        </>
+                      )}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="rounded-2xl border border-dashed border-primary/40 bg-primary/5 p-5 text-sm text-foreground/80">
+              <p>
+                {selectedDisciplines.size === 0 ? (
+                  "Selecione pelo menos uma disciplina para liberar o botão de iniciar simulado."
+                ) : (
+                  <>
+                    <strong>{selectedDisciplines.size}</strong> {selectedDisciplines.size === 1 ? "disciplina escolhida" : "disciplinas escolhidas"} •
+                    <strong> {selectedDisciplines.size * QUESTIONS_PER_DISCIPLINE}</strong> questões serão geradas nesta rodada.
+                  </>
+                )}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center gap-3 rounded-2xl border border-border-color bg-card-bg/90 p-6 text-center shadow-sm backdrop-blur">
+            <p className="text-sm text-foreground/70">
+              As questões são criadas na hora por IA e trazem explicações para cada alternativa após a correção.
+            </p>
+            <button
+              onClick={startQuiz}
+              disabled={!isSystemAvailable || selectedDisciplines.size === 0}
+              className="theme-btn btn flex items-center"
+            >
+              {!isSystemAvailable ? (
+                "Sistema Indisponível"
+              ) : selectedDisciplines.size === 0 ? (
+                "Selecione pelo menos uma disciplina"
+              ) : (
+                <>
+                  Iniciar simulado agora
+                  <svg className="ml-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                  </svg>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
   
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-muted-bg">
@@ -311,21 +394,6 @@ export default function QuestoesPage() {
           <QuizIntroduction />
         ) : (
           <>
-            <section className="mb-8">
-              <h2 className="text-3xl md:text-4xl font-bold text-primary mb-6 flex items-center">
-                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mr-4">
-                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                  </svg>
-                </div>
-                Simulado de Questões Objetivas
-              </h2>
-              <p className="quiz-instructions-text mb-8">
-                Responda as questões abaixo e teste seus conhecimentos. 
-                O simulado contém 2 questões de cada uma das seguintes matérias selecionadas: {Array.from(selectedDisciplines).join(', ')}.
-              </p>
-            </section>
-            
             {loading ? (
               <div className="flex flex-col items-center justify-center py-12">
                 <div className="loader"></div>
@@ -344,6 +412,61 @@ export default function QuestoesPage() {
               </div>
             ) : (
               <>
+                <section className="mb-8 space-y-6">
+                  <div className="rounded-3xl border border-border-color bg-card-bg/90 p-6 shadow-sm backdrop-blur">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                      <div>
+                        <p className="text-sm uppercase tracking-wide text-primary">Simulado em andamento</p>
+                        <h2 className="mt-1 text-2xl font-bold text-foreground">
+                          {showResults ? "Confira seu desempenho" : "Responda as questões abaixo"}
+                        </h2>
+                        <p className="mt-3 max-w-2xl text-sm text-foreground/70">
+                          Você selecionou {selectedDisciplines.size} {selectedDisciplines.size === 1 ? "disciplina" : "disciplinas"}: {Array.from(selectedDisciplines).join(', ')}.
+                          {questions.length > 0 && " Complete todas para aproveitar o feedback detalhado."}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="relative flex h-20 w-20 items-center justify-center rounded-full border-4 border-primary/30">
+                          <svg className="absolute h-full w-full -rotate-90" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                              className="text-primary/20"
+                              stroke="currentColor"
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                              fill="none"
+                              d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831"
+                            />
+                            <path
+                              className="text-primary"
+                              stroke="currentColor"
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                              strokeDasharray={`${progressPercentage}, 100`}
+                              fill="none"
+                              d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831"
+                            />
+                          </svg>
+                          <span className="relative text-lg font-semibold text-primary">{progressPercentage}%</span>
+                        </div>
+                        <div className="text-sm text-foreground/70">
+                          <p><strong>{answeredCount}</strong> respondidas</p>
+                          <p><strong>{unansweredCount}</strong> pendentes</p>
+                          <p>Próxima questão: {nextQuestionIndex || 1}</p>
+                        </div>
+                      </div>
+                    </div>
+                    {questions.length > 0 && (
+                      <div className="mt-6 h-2 w-full overflow-hidden rounded-full bg-muted-bg">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-primary via-accent to-primary transition-all"
+                          style={{ width: `${progressPercentage}%` }}
+                          aria-hidden
+                        ></div>
+                      </div>
+                    )}
+                  </div>
+                </section>
+
                 {showResults && quizResult && (
                   <QuizResults 
                     result={quizResult} 
@@ -351,31 +474,77 @@ export default function QuestoesPage() {
                   />
                 )}
                 
-                <div className="my-8">
-                  {questions.map((question, index) => {
-                    const selected = selectedAnswers[question.id];
-                    console.log(`Renderizando questão ${index + 1}, ID ${question.id}, Selecionada: ${selected}`);
-                    
-                    return (
-                      <QuestionCard
-                        key={question.id}
-                        question={question}
-                        questionNumber={index + 1}
-                        onAnswerSelected={handleAnswerSelected}
-                        selectedAlternativeId={selected}
-                        showResults={showResults}
-                        isCorrect={getQuestionResult(question.id)?.isCorrect}
-                      />
-                    );
-                  })}
+                <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+                  <div>
+                    {questions.map((question, index) => {
+                      const selected = selectedAnswers[question.id];
+                      return (
+                        <QuestionCard
+                          key={question.id}
+                          question={question}
+                          questionNumber={index + 1}
+                          onAnswerSelected={handleAnswerSelected}
+                          selectedAlternativeId={selected}
+                          showResults={showResults}
+                          isCorrect={getQuestionResult(question.id)?.isCorrect}
+                        />
+                      );
+                    })}
+                  </div>
+                  <aside className="flex h-fit flex-col gap-4 rounded-3xl border border-border-color bg-card-bg/90 p-5 shadow-sm backdrop-blur">
+                    <div>
+                      <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground/60">Resumo rápido</h3>
+                      <p className="mt-2 text-foreground/80">
+                        {answeredCount} de {questions.length} questões respondidas.
+                        {unansweredCount > 0 && ` Faltam ${unansweredCount}.`}
+                      </p>
+                    </div>
+                    <div className="rounded-2xl border border-border-color bg-muted-bg/60 p-4">
+                      <p className="text-xs uppercase tracking-wide text-primary">Dica</p>
+                      <p className="mt-2 text-sm text-foreground/80">
+                        Use as respostas incorretas como diagnóstico: leia cada explicação com calma e anote os conceitos que precisam de revisão rápida.
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-semibold text-foreground/80">Disciplinas desta rodada</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {Array.from(selectedDisciplines).map((disciplina) => (
+                          <span key={disciplina} className="rounded-full border border-border-color bg-card-bg px-3 py-1 text-xs text-foreground/70">
+                            {disciplina}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    {!showResults && questions.length > 0 && (
+                      <button
+                        onClick={handleSubmitQuiz}
+                        disabled={!isSystemAvailable}
+                        className="btn btn-primary mt-2"
+                      >
+                        {!isSystemAvailable ? (
+                          "Sistema Indisponível"
+                        ) : (
+                          <>
+                            Finalizar e ver resultados
+                            <svg className="ml-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </aside>
                 </div>
                 
                 {!showResults && questions.length > 0 && (
-                  <div className="flex justify-between items-center py-6 sticky bottom-0 bg-background/80 backdrop-blur-sm border-t border-border-color mt-6 -mx-4 px-4">
-                    <div className="text-sm">
-                      <span className="font-medium">
-                        {Object.keys(selectedAnswers).length} de {questions.length} respondidas
+                  <div className="sticky bottom-0 mt-6 -mx-4 flex items-center justify-between border-t border-border-color bg-background/80 px-4 py-5 backdrop-blur">
+                    <div className="text-sm text-foreground/70">
+                      <span className="font-semibold text-foreground">
+                        {answeredCount} / {questions.length}
                       </span>
+                      {unansweredCount > 0 && (
+                        <span className="ml-2">Restam {unansweredCount} {unansweredCount === 1 ? "questão" : "questões"}</span>
+                      )}
                     </div>
                     <button
                       onClick={handleSubmitQuiz}
