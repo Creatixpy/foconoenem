@@ -47,7 +47,7 @@ export async function getResult(id: string): Promise<EssayResult | null> {
 /**
  * Armazena um resultado de redação no Supabase
  */
-export async function storeResult(id: string, result: EssayResult): Promise<void> {
+export async function storeResult(id: string, result: EssayResult & { user_id?: string }): Promise<void> {
   try {
     const { error } = await supabase
       .from('essay_results')
@@ -67,6 +67,7 @@ export async function storeResult(id: string, result: EssayResult): Promise<void
         tema: result.tema,
         texto_apoio1: result.textoApoio1,
         texto_apoio2: result.textoApoio2,
+        user_id: result.user_id || null,
         created_at: result.createdAt
       });
     

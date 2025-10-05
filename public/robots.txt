@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://foconoenem.vercel.app
+
+# Sitemaps
+Sitemap: https://foconoenem.vercel.app/sitemap.xml

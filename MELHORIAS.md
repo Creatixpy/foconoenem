@@ -6,6 +6,24 @@ Este documento descreve as melhorias implementadas no projeto para aumentar a ro
 
 ---
 
+## 🤖 Modelo de IA Utilizado
+
+**Modelo:** `openai/gpt-oss-120b` via Groq API
+
+Este modelo é utilizado para:
+- Correção automática de redações (análise das 5 competências do ENEM)
+- Geração de temas de redação relevantes
+- Criação de questões objetivas de múltipla escolha
+- Explicações detalhadas das alternativas
+
+**Configurações:**
+- Temperature: 0.1 (correção de redações - mais determinístico)
+- Temperature: 0.7 (geração de temas e questões - mais criativo)
+- Max tokens: 8050
+- Response format: JSON object (para respostas estruturadas)
+
+---
+
 ## ✅ 1. Persistência de Dados com Supabase
 
 ### Problema Anterior:

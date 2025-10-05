@@ -6,6 +6,7 @@ import { isWithinOperatingHours, getOperatingHoursInfo } from "@/lib/schedule";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { trackEvent } from "@/lib/analytics";
 import { Groq } from 'groq-sdk';
+import { supabase } from "@/lib/supabase";
 
 const MAX_ESSAY_LENGTH = 5000;
 const MIN_ESSAY_LENGTH = 50;
@@ -86,6 +87,21 @@ export async function POST(request: NextRequest) {
 
     // Gerar um ID único para a submissão
     const id = uuidv4();
+    
+    // Verificar se há usuário autenticado
+    const authHeader = request.headers.get('authorization');
+    let userId: string | null = null;
+    
+    if (authHeader) {
+      try {
+        const token = authHeader.replace('Bearer ', '');
+        const { data: { user } } = await supabase.auth.getUser(token);
+        userId = user?.id || null;
+      } catch {
+        // Continuar sem autenticação se token inválido
+        console.log('Token inválido ou expirado');
+      }
+    }
     
     // Determinar o tema e textos de apoio a serem usados
     const temaPadrao = "Os desafios da educação digital no Brasil contemporâneo";
@@ -237,8 +253,9 @@ export async function POST(request: NextRequest) {
         textoApoio2: textoApoio2Final
       };
       
-      // Armazenar o resultado usando a função do store
-      await storeResult(id, result);
+      // Armazenar o resultado usando a função do store (inclui user_id se autenticado)
+      const resultWithUser = userId ? { ...result, user_id: userId } : result;
+      await storeResult(id, resultWithUser);
       
       // Registrar evento de analytics
       await trackEvent('essay_submitted', {

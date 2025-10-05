@@ -2,10 +2,15 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useAuth } from "@/app/contexts/AuthContext";
+import AuthModal from "./AuthModal";
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const { user, profile, signOut } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -105,6 +110,53 @@ export default function Header() {
                   7h às 22h
                 </div>
               </li>
+              <li>
+                {user ? (
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowUserMenu(!showUserMenu)}
+                      className="flex items-center space-x-2 hover:bg-blue-800 rounded-lg px-3 py-2 transition-colors"
+                    >
+                      <div className="w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center text-sm font-bold">
+                        {profile?.nome_completo?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
+                      </div>
+                      {!isScrolled && (
+                        <span className="text-sm">{profile?.nome_completo || user.email?.split('@')[0]}</span>
+                      )}
+                    </button>
+                    {showUserMenu && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg py-2 z-50">
+                        <Link
+                          href="/conta"
+                          className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          onClick={() => setShowUserMenu(false)}
+                        >
+                          Minha Conta
+                        </Link>
+                        <button
+                          onClick={() => {
+                            signOut();
+                            setShowUserMenu(false);
+                          }}
+                          className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        >
+                          Sair
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowAuthModal(true)}
+                    className="flex items-center space-x-1 bg-white text-blue-700 hover:bg-blue-50 rounded-lg px-4 py-2 transition-colors font-medium text-sm"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <span>Entrar</span>
+                  </button>
+                )}
+              </li>
             </ul>
           </nav>
         </div>
@@ -169,10 +221,56 @@ export default function Header() {
                   Horário de funcionamento: 7h às 22h
                 </div>
               </li>
+              <li className="border-t border-blue-500 pt-4 mt-4">
+                {user ? (
+                  <>
+                    <Link
+                      href="/conta"
+                      className="flex items-center hover:bg-blue-800 py-2 px-3 rounded transition-colors mb-2"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <div className="w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center text-sm font-bold mr-2">
+                        {profile?.nome_completo?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
+                      </div>
+                      {profile?.nome_completo || user.email?.split('@')[0]}
+                    </Link>
+                    <button
+                      onClick={() => {
+                        signOut();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="flex items-center w-full hover:bg-red-800 py-2 px-3 rounded transition-colors text-red-300"
+                    >
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      Sair
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setShowAuthModal(true);
+                      setMobileMenuOpen(false);
+                    }}
+                    className="flex items-center w-full bg-white text-blue-700 hover:bg-blue-50 py-2 px-3 rounded transition-colors font-medium"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    Entrar / Criar Conta
+                  </button>
+                )}
+              </li>
             </ul>
           </nav>
         )}
       </div>
+      
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)} 
+      />
     </header>
   );
 }
