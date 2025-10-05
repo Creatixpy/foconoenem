@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 
-export default function DoacaoSucessoPage() {
+function DoacaoSucessoContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session_id');
   const [isLoading, setIsLoading] = useState(true);
@@ -189,5 +189,24 @@ export default function DoacaoSucessoPage() {
 
       <Footer />
     </div>
+  );
+}
+
+export default function DoacaoSucessoPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-muted-bg">
+        <Header />
+        <main className="flex-grow container mx-auto p-4 md:p-8 max-w-4xl flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-primary mb-4"></div>
+            <p className="text-lg text-foreground opacity-70">Carregando...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    }>
+      <DoacaoSucessoContent />
+    </Suspense>
   );
 }
