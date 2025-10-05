@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const result = getResult(id);
+    const result = await getResult(id);
 
     if (!result) {
       return NextResponse.json(
