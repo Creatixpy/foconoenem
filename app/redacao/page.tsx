@@ -6,6 +6,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import OperatingHoursIndicator from "../components/OperatingHoursIndicator";
 import { isWithinOperatingHours, getOperatingHoursInfo } from "@/lib/schedule";
+import { supabase } from "@/lib/supabase";
 
 export default function RedacaoPage() {
   const [content, setContent] = useState("");
@@ -81,11 +82,20 @@ export default function RedacaoPage() {
         payload.textoApoio2 = generatedText2;
       }
       
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+      };
+
+      if (accessToken) {
+        headers.Authorization = `Bearer ${accessToken}`;
+      }
+
       const response = await fetch("/api/corrigir", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify(payload),
       });
 

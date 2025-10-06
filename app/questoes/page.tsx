@@ -8,6 +8,7 @@ import QuestionCard from "../components/QuestionCard";
 import QuizResults from "../components/QuizResults";
 import { Question, QuizResult } from "@/types";
 import { isWithinOperatingHours } from "@/lib/schedule";
+import { supabase } from "@/lib/supabase";
 
 const QUESTIONS_PER_DISCIPLINE = 3;
 
@@ -20,6 +21,7 @@ export default function QuestoesPage() {
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [showResults, setShowResults] = useState(false);
   const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
+  const [saveStatusMessage, setSaveStatusMessage] = useState<string | null>(null);
   // Novo estado para controlar se o usuário iniciou o simulado
   const [hasStarted, setHasStarted] = useState(false);
   // Estado para disciplinas selecionadas
@@ -57,6 +59,7 @@ export default function QuestoesPage() {
       setLoading(true);
       setError(null);
       setHasStarted(true);
+      setSaveStatusMessage(null);
       
       if (!isSystemAvailable) {
         setError("O sistema está fora do horário de funcionamento (7h às 22h).");
@@ -145,6 +148,11 @@ export default function QuestoesPage() {
     const result = calculateResults();
     setQuizResult(result);
     setShowResults(true);
+    setSaveStatusMessage(null);
+
+    if (result) {
+      void saveQuizResult(result);
+    }
     
     // Rolar para o topo da página para mostrar o resultado
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -156,6 +164,7 @@ export default function QuestoesPage() {
     setSelectedAnswers({});
     setHasStarted(false); // Voltar para a tela inicial
     setQuestions([]);
+    setSaveStatusMessage(null);
   };
   
   const getQuestionResult = (questionId: string) => {
@@ -168,6 +177,77 @@ export default function QuestoesPage() {
   const unansweredCount = Math.max(questions.length - answeredCount, 0);
   const progressPercentage = questions.length ? Math.round((answeredCount / questions.length) * 100) : 0;
   const nextQuestionIndex = Math.min(answeredCount + 1, questions.length);
+
+  const saveQuizResult = async (computedResult: QuizResult) => {
+    try {
+      setSaveStatusMessage("Salvando resultado na sua conta...");
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+
+      if (!accessToken) {
+        setSaveStatusMessage("Faça login para salvar seus simulados no histórico da conta.");
+        return;
+      }
+
+      const response = await fetch("/api/questoes", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          result: computedResult,
+          selectedAnswers,
+          questions,
+          disciplines: Array.from(selectedDisciplines),
+        }),
+      });
+
+      let responseData: unknown = null;
+      try {
+        responseData = await response.json();
+      } catch {
+        responseData = null;
+      }
+
+      const parsed = (() => {
+        if (responseData && typeof responseData === "object") {
+          const record = responseData as Record<string, unknown>;
+          return {
+            saved: typeof record.saved === "boolean" ? record.saved : undefined,
+            reason: typeof record.reason === "string" ? record.reason : undefined,
+            error: typeof record.error === "string" ? record.error : undefined,
+            message: typeof record.message === "string" ? record.message : undefined,
+          };
+        }
+        return {} as {
+          saved?: boolean;
+          reason?: string;
+          error?: string;
+          message?: string;
+        };
+      })();
+
+      if (!response.ok) {
+        const message = parsed.error || parsed.message || "Falha ao salvar resultado do simulado";
+        throw new Error(message);
+      }
+
+      if (parsed.saved) {
+        setSaveStatusMessage("Simulado salvo na sua conta! Revise seus dados em Minha Conta.");
+      } else if (parsed.reason === "invalid_token") {
+        setSaveStatusMessage("Sua sessão expirou. Faça login novamente para salvar seus resultados.");
+      } else if (parsed.reason === "not_authenticated" || parsed.reason === "user_not_found") {
+        setSaveStatusMessage("Faça login para salvar seus simulados no histórico da conta.");
+      } else {
+        setSaveStatusMessage("Não foi possível confirmar o salvamento deste simulado. Tente novamente mais tarde.");
+      }
+    } catch (error) {
+      console.error("Erro ao salvar resultado do simulado:", error);
+      setSaveStatusMessage("Não foi possível salvar o resultado do simulado. Tente novamente mais tarde.");
+    }
+  };
   
   // Componente de introdução do simulado
   const QuizIntroduction = () => {
@@ -468,10 +548,17 @@ export default function QuestoesPage() {
                 </section>
 
                 {showResults && quizResult && (
-                  <QuizResults 
-                    result={quizResult} 
-                    onRetakeQuiz={handleRetakeQuiz} 
-                  />
+                  <>
+                    <QuizResults 
+                      result={quizResult} 
+                      onRetakeQuiz={handleRetakeQuiz} 
+                    />
+                    {saveStatusMessage && (
+                      <div className="mt-4 rounded-xl border border-border-color bg-muted-bg/80 p-4 text-sm text-foreground/80">
+                        {saveStatusMessage}
+                      </div>
+                    )}
+                  </>
                 )}
                 
                 <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-start lg:gap-8">

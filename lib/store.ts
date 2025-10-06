@@ -1,4 +1,4 @@
-import { EssayResult } from "@/types";
+import { EssayResult, Question } from "@/types";
 import { supabase } from "./supabase";
 
 /**
@@ -96,5 +96,45 @@ export async function clearResults(): Promise<void> {
     }
   } catch (error) {
     console.error("Erro ao limpar resultados:", error);
+  }
+}
+
+type QuizResultStoragePayload = {
+  user_id?: string | null;
+  total_questions: number;
+  correct_answers: number;
+  wrong_answers: number;
+  unanswered_questions: number;
+  score: number;
+  questions: Question[];
+  answers: Record<string, string>;
+  disciplines: string[];
+  created_at?: string;
+};
+
+export async function storeQuizResult(payload: QuizResultStoragePayload): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('quiz_results')
+      .insert({
+        user_id: payload.user_id ?? null,
+        total_questions: payload.total_questions,
+        correct_answers: payload.correct_answers,
+        wrong_answers: payload.wrong_answers,
+        unanswered_questions: payload.unanswered_questions,
+        score: payload.score,
+        questions_data: payload.questions,
+        answers_data: payload.answers,
+        disciplines: payload.disciplines,
+        created_at: payload.created_at ?? new Date().toISOString()
+      });
+
+    if (error) {
+      console.error("Erro ao armazenar resultado de simulado:", error);
+      throw error;
+    }
+  } catch (error) {
+    console.error("Erro ao armazenar resultado de simulado:", error);
+    throw error;
   }
 }

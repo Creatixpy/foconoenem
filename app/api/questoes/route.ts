@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 import { Question } from "@/types";
 import { isWithinOperatingHours, getOperatingHoursInfo } from "@/lib/schedule";
+import { storeQuizResult } from "@/lib/store";
+import { supabase } from "@/lib/supabase";
+import { recalculateUserStatistics } from "@/lib/auth";
 import { Groq } from 'groq-sdk';
 
 const QUESTIONS_PER_DISCIPLINE = 3;
@@ -272,6 +275,62 @@ export async function GET(request: NextRequest) {
     console.error("Error in /api/questoes:", error);
     return NextResponse.json(
       { error: "Erro ao gerar questões", message: (error as Error).message },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { result, selectedAnswers, questions, disciplines } = body ?? {};
+
+    if (!result || !Array.isArray(questions) || typeof selectedAnswers !== "object" || selectedAnswers === null) {
+      return NextResponse.json(
+        { error: "Dados do resultado inválidos" },
+        { status: 400 }
+      );
+    }
+
+    const authHeader = request.headers.get("authorization");
+    if (!authHeader) {
+      return NextResponse.json({ success: true, saved: false, reason: "not_authenticated" });
+    }
+
+    let userId: string | null = null;
+    try {
+      const token = authHeader.replace("Bearer ", "");
+      const { data: { user } } = await supabase.auth.getUser(token);
+      userId = user?.id ?? null;
+    } catch (authError) {
+      console.error("Erro ao validar token do usuário para resultado do simulado:", authError);
+      return NextResponse.json({ success: true, saved: false, reason: "invalid_token" });
+    }
+
+    if (!userId) {
+      return NextResponse.json({ success: true, saved: false, reason: "user_not_found" });
+    }
+
+    await storeQuizResult({
+      user_id: userId,
+      total_questions: Number(result.totalQuestions) || questions.length,
+      correct_answers: Number(result.correctAnswers) || 0,
+      wrong_answers: Number(result.wrongAnswers) || 0,
+      unanswered_questions: Number(result.unansweredQuestions) || 0,
+      score: Number(result.score) || 0,
+      questions,
+      answers: selectedAnswers,
+      disciplines: Array.isArray(disciplines) ? disciplines : [],
+      created_at: new Date().toISOString()
+    });
+
+    await recalculateUserStatistics(userId);
+
+    return NextResponse.json({ success: true, saved: true });
+  } catch (error) {
+    console.error("Erro ao salvar resultado do simulado:", error);
+    return NextResponse.json(
+      { error: "Erro ao salvar resultado do simulado" },
       { status: 500 }
     );
   }
