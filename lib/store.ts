@@ -10,13 +10,13 @@ export async function getResult(id: string): Promise<EssayResult | null> {
       .from('essay_results')
       .select('*')
       .eq('id', id)
-      .single();
-    
+      .maybeSingle();
+
     if (error) {
       console.error("Erro ao buscar resultado:", error);
       return null;
     }
-    
+
     if (!data) return null;
     
     // Converter do formato do banco para o formato da aplicação
