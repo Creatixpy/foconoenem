@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import OperatingHoursIndicator from "../components/OperatingHoursIndicator";
-import { isWithinOperatingHours, getOperatingHoursInfo } from "@/lib/schedule";
+import { getOperatingHoursInfo, type OperatingHoursInfo } from "@/lib/schedule";
 import { supabase } from "@/lib/supabase";
 
 export default function RedacaoPage() {
@@ -20,8 +20,8 @@ export default function RedacaoPage() {
   const [generatedText1, setGeneratedText1] = useState("");
   const [generatedText2, setGeneratedText2] = useState("");
   const [isGeneratingTheme, setIsGeneratingTheme] = useState(false);
-  const [isSystemAvailable, setIsSystemAvailable] = useState(isWithinOperatingHours());
-  const [operatingInfo, setOperatingInfo] = useState(getOperatingHoursInfo());
+  const [isSystemAvailable, setIsSystemAvailable] = useState<boolean | null>(null);
+  const [operatingInfo, setOperatingInfo] = useState<OperatingHoursInfo | null>(null);
   
   const editorRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -32,9 +32,31 @@ export default function RedacaoPage() {
     }
   };
 
+  const fetchOperatingInfo = useCallback(async () => {
+    try {
+      return await getOperatingHoursInfo();
+    } catch (error) {
+      console.error("Erro ao atualizar horário de funcionamento:", error);
+      return null;
+    }
+  }, []);
+
+  const applyOperatingInfo = useCallback((info: OperatingHoursInfo | null) => {
+    if (!info) return;
+    setOperatingInfo(info);
+    setIsSystemAvailable(info.isOpen);
+  }, []);
+
   const handleSubmit = async () => {
-    if (!isSystemAvailable) {
-      setError(`Sistema fora do horário de funcionamento. Disponível das ${operatingInfo.opensAt} às ${operatingInfo.closesAt}.`);
+    const info = operatingInfo ?? (await fetchOperatingInfo());
+    applyOperatingInfo(info);
+
+    if (!info?.isOpen) {
+      setError(
+        info
+          ? `Sistema fora do horário de funcionamento. Disponível das ${info.opensAt} às ${info.closesAt}.`
+          : "Não foi possível confirmar o horário de funcionamento. Tente novamente em instantes."
+      );
       return;
     }
     
@@ -119,20 +141,38 @@ export default function RedacaoPage() {
 
   // Verificar o horário de funcionamento a cada minuto
   useEffect(() => {
-    const checkAvailability = () => {
-      setIsSystemAvailable(isWithinOperatingHours());
-      setOperatingInfo(getOperatingHoursInfo());
+    let cancelled = false;
+
+    const updateInfo = async () => {
+      const info = await fetchOperatingInfo();
+      if (!cancelled) {
+        applyOperatingInfo(info);
+      }
     };
-    
-    const timer = setInterval(checkAvailability, 60000); // 60 segundos
-    
-    return () => clearInterval(timer);
-  }, []);
+
+    void updateInfo();
+
+    const timer = setInterval(() => {
+      void updateInfo();
+    }, 60000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [applyOperatingInfo, fetchOperatingInfo]);
   
   // Função para gerar um tema automaticamente
   const handleGenerateTheme = async () => {
-    if (!isSystemAvailable) {
-      setError(`Sistema fora do horário de funcionamento. Disponível das ${operatingInfo.opensAt} às ${operatingInfo.closesAt}.`);
+  const info = operatingInfo ?? (await fetchOperatingInfo());
+  applyOperatingInfo(info);
+
+    if (!info?.isOpen) {
+      setError(
+        info
+          ? `Sistema fora do horário de funcionamento. Disponível das ${info.opensAt} às ${info.closesAt}.`
+          : "Não foi possível confirmar o horário de funcionamento. Tente novamente em instantes."
+      );
       return;
     }
     
@@ -402,7 +442,11 @@ export default function RedacaoPage() {
               onClick={handleSubmit}
               disabled={isSubmitting || !isSystemAvailable}
               className={`${isSubmitting || !isSystemAvailable ? "bg-gray-400" : ""} theme-btn btn`}
-              title={!isSystemAvailable ? `Sistema disponível apenas das ${operatingInfo.opensAt} às ${operatingInfo.closesAt}` : ""}
+              title={
+                !isSystemAvailable && operatingInfo
+                  ? `Sistema disponível apenas das ${operatingInfo.opensAt} às ${operatingInfo.closesAt}`
+                  : ""
+              }
             >
               {isSubmitting ? (
                 <>

@@ -7,7 +7,7 @@ import OperatingHoursIndicator from "../components/OperatingHoursIndicator";
 import QuestionCard from "../components/QuestionCard";
 import QuizResults from "../components/QuizResults";
 import { Question, QuizResult } from "@/types";
-import { isWithinOperatingHours, getOperatingHoursInfo } from "@/lib/schedule";
+import { getOperatingHoursInfo } from "@/lib/schedule";
 import { supabase } from "@/lib/supabase";
 
 const QUESTIONS_PER_DISCIPLINE = 3;
@@ -16,7 +16,7 @@ export default function QuestoesPage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isSystemAvailable, setIsSystemAvailable] = useState(isWithinOperatingHours());
+  const [isSystemAvailable, setIsSystemAvailable] = useState<boolean | null>(null);
   
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [showResults, setShowResults] = useState(false);
@@ -31,13 +31,29 @@ export default function QuestoesPage() {
   
   // Verificar horário de funcionamento a cada minuto
   useEffect(() => {
-    const checkAvailability = () => {
-      setIsSystemAvailable(isWithinOperatingHours());
+    let cancelled = false;
+
+    const refreshAvailability = async () => {
+      try {
+        const info = await getOperatingHoursInfo();
+        if (!cancelled) {
+          setIsSystemAvailable(info.isOpen);
+        }
+      } catch (error) {
+        console.error("Erro ao atualizar o horário de funcionamento:", error);
+      }
     };
-    
-    const timer = setInterval(checkAvailability, 60000); // 60 segundos
-    
-    return () => clearInterval(timer);
+
+    void refreshAvailability();
+
+    const timer = setInterval(() => {
+      void refreshAvailability();
+    }, 60000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
   }, []);
   
   // Função para alternar seleção de disciplina
@@ -61,10 +77,13 @@ export default function QuestoesPage() {
       setHasStarted(true);
       setSaveStatusMessage(null);
       
-      if (!isSystemAvailable) {
-        const { opensAt, closesAt } = getOperatingHoursInfo();
-        setError(`O sistema está fora do horário de funcionamento (${opensAt} às ${closesAt}).`);
+  const info = await getOperatingHoursInfo();
+  setIsSystemAvailable(info.isOpen);
+
+      if (!info.isOpen) {
+        setError(`O sistema está fora do horário de funcionamento (${info.opensAt} às ${info.closesAt}).`);
         setLoading(false);
+        setHasStarted(false);
         return;
       }
       

@@ -3,12 +3,10 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/app/contexts/AuthContext";
-import AuthModal from "./AuthModal";
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const { user, profile, signOut } = useAuth();
 
@@ -159,20 +157,30 @@ export default function Header() {
                     )}
                   </div>
                 ) : (
-                  <button
-                    onClick={() => setShowAuthModal(true)}
-                    className={`flex items-center bg-white text-blue-700 hover:bg-blue-50 rounded-lg transition-all font-medium ${
-                      isScrolled 
-                        ? 'p-2 justify-center' 
-                        : 'px-4 py-2 space-x-1'
-                    }`}
-                    title={isScrolled ? "Entrar / Criar Conta" : ""}
-                  >
-                    <svg className={`transition-all ${isScrolled ? 'w-5 h-5' : 'w-4 h-4'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    <span className={`transition-all text-sm ${isScrolled ? 'hidden' : 'inline'}`}>Entrar</span>
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <Link
+                      href="/auth/login"
+                      className={`flex items-center bg-white text-blue-700 hover:bg-blue-50 rounded-lg transition-all font-medium ${
+                        isScrolled 
+                          ? 'p-2 justify-center' 
+                          : 'px-4 py-2'
+                      } ${isScrolled ? '' : 'gap-1'}`}
+                      title={isScrolled ? "Entrar" : ""}
+                    >
+                      <svg className={`transition-all ${isScrolled ? 'w-5 h-5' : 'w-4 h-4'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      {!isScrolled && <span className="text-sm">Entrar</span>}
+                    </Link>
+                    {!isScrolled && (
+                      <Link
+                        href="/auth/register"
+                        className="text-sm font-medium text-white/90 hover:text-white underline-offset-4 hover:underline"
+                      >
+                        Criar conta
+                      </Link>
+                    )}
+                  </div>
                 )}
               </li>
             </ul>
@@ -278,29 +286,36 @@ export default function Header() {
                     </button>
                   </>
                 ) : (
-                  <button
-                    onClick={() => {
-                      setShowAuthModal(true);
-                      setMobileMenuOpen(false);
-                    }}
-                    className="flex items-center w-full bg-white text-blue-700 hover:bg-blue-50 py-2 px-3 rounded transition-colors font-medium"
-                  >
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    Entrar / Criar Conta
-                  </button>
+                  <div className="flex flex-col gap-3">
+                    <Link
+                      href="/auth/login"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center w-full bg-white text-blue-700 hover:bg-blue-50 py-2 px-3 rounded transition-colors font-medium"
+                    >
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      Entrar
+                    </Link>
+                    <Link
+                      href="/auth/register"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center w-full border border-white/60 text-white hover:bg-blue-800/60 py-2 px-3 rounded transition-colors font-medium"
+                    >
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c1.657 0 3-1.343 3-3S13.657 5 12 5s-3 1.343-3 3 1.343 3 3 3z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 19a6 6 0 1112 0H6z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11h2m-1-1v2" />
+                      </svg>
+                      Criar conta
+                    </Link>
+                  </div>
                 )}
               </li>
             </ul>
           </nav>
         )}
       </div>
-      
-      <AuthModal 
-        isOpen={showAuthModal} 
-        onClose={() => setShowAuthModal(false)} 
-      />
     </header>
   );
 }

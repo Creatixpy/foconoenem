@@ -26,8 +26,8 @@ type RawQuestion = {
 export async function GET(request: NextRequest) {
   try {
     // Verificar se o sistema está em horário de funcionamento
-    if (!isWithinOperatingHours()) {
-      const { message, opensAt, closesAt } = getOperatingHoursInfo();
+    if (!(await isWithinOperatingHours())) {
+      const { message, opensAt, closesAt } = await getOperatingHoursInfo();
       return NextResponse.json(
         { 
           error: "Sistema fora do horário de funcionamento", 
