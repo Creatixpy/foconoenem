@@ -7,6 +7,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { trackEvent } from "@/lib/analytics";
 import { Groq } from 'groq-sdk';
 import { supabase } from "@/lib/supabase";
+import { extractUserIdFromToken } from "@/lib/server-auth";
 
 const MAX_ESSAY_LENGTH = 5000;
 const MIN_ESSAY_LENGTH = 50;
@@ -93,13 +94,18 @@ export async function POST(request: NextRequest) {
     let userId: string | null = null;
     
     if (authHeader) {
-      try {
-        const token = authHeader.replace('Bearer ', '');
-        const { data: { user } } = await supabase.auth.getUser(token);
-        userId = user?.id || null;
-      } catch {
-        // Continuar sem autenticação se token inválido
-        console.log('Token inválido ou expirado');
+      const token = authHeader.replace('Bearer ', '').trim();
+
+      userId = extractUserIdFromToken(token);
+
+      if (!userId) {
+        try {
+          const { data: { user } } = await supabase.auth.getUser(token);
+          userId = user?.id || null;
+        } catch (error) {
+          console.log('Token inválido ou expirado');
+          console.error('Erro ao validar token do usuário:', error);
+        }
       }
     }
     

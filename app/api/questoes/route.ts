@@ -6,6 +6,7 @@ import { storeQuizResult } from "@/lib/store";
 import { supabase } from "@/lib/supabase";
 import { recalculateUserStatistics } from "@/lib/auth";
 import { Groq } from 'groq-sdk';
+import { extractUserIdFromToken } from "@/lib/server-auth";
 
 const QUESTIONS_PER_DISCIPLINE = 3;
 
@@ -298,13 +299,18 @@ export async function POST(request: NextRequest) {
     }
 
     let userId: string | null = null;
-    try {
-      const token = authHeader.replace("Bearer ", "");
-      const { data: { user } } = await supabase.auth.getUser(token);
-      userId = user?.id ?? null;
-    } catch (authError) {
-      console.error("Erro ao validar token do usuário para resultado do simulado:", authError);
-      return NextResponse.json({ success: true, saved: false, reason: "invalid_token" });
+    const token = authHeader.replace("Bearer ", "").trim();
+
+    userId = extractUserIdFromToken(token);
+
+    if (!userId) {
+      try {
+        const { data: { user } } = await supabase.auth.getUser(token);
+        userId = user?.id ?? null;
+      } catch (authError) {
+        console.error("Erro ao validar token do usuário para resultado do simulado:", authError);
+        return NextResponse.json({ success: true, saved: false, reason: "invalid_token" });
+      }
     }
 
     if (!userId) {
