@@ -130,7 +130,7 @@ export default function TermsOfServicePage() {
               Horário de Funcionamento
             </h2>
             <p className="mb-4 leading-relaxed opacity-90">
-              O serviço de simulado de redação está disponível apenas entre 7h e 22h (horário de Brasília).
+              O serviço de simulado de redação está disponível apenas entre 7h e 23h30 (horário de Brasília).
               Fora deste período, você poderá navegar pelo site, mas não conseguirá submeter redações para correção.
               Esta limitação existe para gerenciar os recursos de IA e garantir um serviço de qualidade.
             </p>

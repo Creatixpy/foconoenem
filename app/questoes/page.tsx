@@ -7,7 +7,7 @@ import OperatingHoursIndicator from "../components/OperatingHoursIndicator";
 import QuestionCard from "../components/QuestionCard";
 import QuizResults from "../components/QuizResults";
 import { Question, QuizResult } from "@/types";
-import { isWithinOperatingHours } from "@/lib/schedule";
+import { isWithinOperatingHours, getOperatingHoursInfo } from "@/lib/schedule";
 import { supabase } from "@/lib/supabase";
 
 const QUESTIONS_PER_DISCIPLINE = 3;
@@ -62,7 +62,8 @@ export default function QuestoesPage() {
       setSaveStatusMessage(null);
       
       if (!isSystemAvailable) {
-        setError("O sistema está fora do horário de funcionamento (7h às 22h).");
+        const { opensAt, closesAt } = getOperatingHoursInfo();
+        setError(`O sistema está fora do horário de funcionamento (${opensAt} às ${closesAt}).`);
         setLoading(false);
         return;
       }

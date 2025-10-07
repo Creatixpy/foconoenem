@@ -22,7 +22,7 @@ export default function OperatingHoursIndicator() {
         <span className="hidden sm:inline">{operatingInfo.message}</span>
         <span className="sm:hidden">
           {operatingInfo.isOpen 
-            ? `Aberto - Fecha às 22h` 
+            ? `Aberto - Fecha às ${operatingInfo.closesAt}` 
             : `Fechado - Abre às ${operatingInfo.opensAt}`}
         </span>
       </div>

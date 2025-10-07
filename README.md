@@ -95,7 +95,7 @@ Para mais detalhes sobre a estrutura e melhorias implementadas, consulte [MELHOR
 - Mensagens claras ao usuário
 
 ### Horário de Funcionamento
-- Sistema disponível das 7h às 22h
+- Sistema disponível das 7h às 23h30
 - Controle de custos de API
 - Mensagens informativas fora do horário
 

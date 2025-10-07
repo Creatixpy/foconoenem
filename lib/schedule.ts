@@ -3,13 +3,26 @@
  */
 
 /**
- * Verifica se o horário atual está dentro do período de funcionamento (7h às 22h)
+ * Verifica se o horário atual está dentro do período de funcionamento (7h às 23h30)
  */
 export function isWithinOperatingHours(): boolean {
   const now = new Date();
   const hour = now.getHours();
+  const minute = now.getMinutes();
 
-  return hour >= 7 && hour < 22;
+  if (hour < 7) {
+    return false;
+  }
+
+  if (hour > 23) {
+    return false;
+  }
+
+  if (hour === 23 && minute >= 30) {
+    return false;
+  }
+
+  return true;
 }
 
 /**
@@ -24,6 +37,7 @@ export function getOperatingHoursInfo(): {
 } {
   const now = new Date();
   const hour = now.getHours();
+  const minute = now.getMinutes();
   const isOpen = isWithinOperatingHours();
   
   // Formatando a hora atual no formato brasileiro
@@ -34,16 +48,16 @@ export function getOperatingHoursInfo(): {
   
   // Próxima abertura
   const nextOpenDate = new Date();
-  if (hour >= 22) {
-    // Se já passou das 22h, a próxima abertura é às 7h do dia seguinte
+  if (hour > 23 || (hour === 23 && minute >= 30)) {
+    // Se já passou das 23h30, a próxima abertura é às 7h do dia seguinte
     nextOpenDate.setDate(nextOpenDate.getDate() + 1);
     nextOpenDate.setHours(7, 0, 0, 0);
   } else if (hour < 7) {
     // Se é antes das 7h, a próxima abertura é às 7h do mesmo dia
     nextOpenDate.setHours(7, 0, 0, 0);
   } else {
-    // Já estamos abertos, indicar fechamento às 22h do mesmo dia
-    nextOpenDate.setHours(22, 0, 0, 0);
+    // Já estamos abertos, indicar fechamento às 23h30 do mesmo dia
+    nextOpenDate.setHours(23, 30, 0, 0);
   }
   
   const nextOpenTime = nextOpenDate.toLocaleTimeString('pt-BR', { 
@@ -56,15 +70,15 @@ export function getOperatingHoursInfo(): {
   // Mensagem de status
   let message: string;
   if (isOpen) {
-    message = `Sistema disponível agora. Atendemos até às 22h · Hora atual: ${currentTime}`;
+    message = `Sistema disponível agora. Atendemos até às 23h30 · Hora atual: ${currentTime}`;
   } else {
-    message = `Sistema indisponível no momento · Funcionamos das 7h às 22h · Próxima abertura: ${nextOpenTime} · Hora atual: ${currentTime}`;
+    message = `Sistema indisponível no momento · Funcionamos das 7h às 23h30 · Próxima abertura: ${nextOpenTime} · Hora atual: ${currentTime}`;
   }
   
   return {
     isOpen,
     opensAt: "07:00",
-    closesAt: "22:00",
+    closesAt: "23:30",
     nextOpenTime,
     message
   };
