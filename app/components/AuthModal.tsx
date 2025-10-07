@@ -14,6 +14,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [nomeCompleto, setNomeCompleto] = useState('');
+  const [objetivo, setObjetivo] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -31,7 +32,13 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
         onClose();
         window.location.reload(); // Recarregar para atualizar o contexto
       } else {
-        await signUp(email, password, nomeCompleto);
+        if (!objetivo.trim()) {
+          setError('Informe seu objetivo de estudos.');
+          setLoading(false);
+          return;
+        }
+
+        await signUp(email, password, nomeCompleto, objetivo.trim());
         setSuccess(true);
       }
     } catch (err) {
@@ -46,7 +53,22 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
     setLoading(true);
 
     try {
-      await signInWithGoogle();
+      if (mode === 'register') {
+        if (!nomeCompleto.trim()) {
+          throw new Error('Informe seu nome completo antes de continuar com o Google.');
+        }
+
+        if (!objetivo.trim()) {
+          throw new Error('Informe seu objetivo de estudos antes de continuar com o Google.');
+        }
+
+        await signInWithGoogle({
+          nomeCompleto: nomeCompleto.trim(),
+          objetivo: objetivo.trim(),
+        });
+      } else {
+        await signInWithGoogle();
+      }
       // O redirecionamento será tratado automaticamente pelo Supabase
     } catch (err) {
       setError((err as Error).message || 'Erro ao autenticar com Google. Tente novamente.');
@@ -58,6 +80,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
     setMode(mode === 'login' ? 'register' : 'login');
     setError(null);
     setSuccess(false);
+    setObjetivo('');
   };
 
   if (success) {
@@ -137,6 +160,22 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
                 required
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Seu nome"
+              />
+            </div>
+          )}
+
+          {mode === 'register' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Qual é o seu objetivo principal?
+              </label>
+              <input
+                type="text"
+                value={objetivo}
+                onChange={(e) => setObjetivo(e.target.value)}
+                required
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Ex: Atingir 900 pontos na redação"
               />
             </div>
           )}

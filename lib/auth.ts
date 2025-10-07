@@ -76,13 +76,14 @@ export interface UserGoal {
 /**
  * Registra um novo usuário
  */
-export async function signUp(email: string, password: string, nomeCompleto?: string) {
+export async function signUp(email: string, password: string, nomeCompleto?: string, objetivo?: string) {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: {
         nome_completo: nomeCompleto,
+        objetivo,
       }
     }
   });
@@ -91,7 +92,7 @@ export async function signUp(email: string, password: string, nomeCompleto?: str
   
   // Criar perfil do usuário
   if (data.user) {
-    await createUserProfile(data.user.id, nomeCompleto);
+    await createUserProfile(data.user.id, nomeCompleto, objetivo);
   }
   
   return data;
@@ -113,11 +114,29 @@ export async function signIn(email: string, password: string) {
 /**
  * Faz login com Google OAuth
  */
-export async function signInWithGoogle() {
+type GoogleSignupExtras = {
+  nomeCompleto?: string;
+  objetivo?: string;
+};
+
+export async function signInWithGoogle(extras?: GoogleSignupExtras) {
   // Usa a URL de produção para evitar problemas de redirect_uri_mismatch
   const redirectTo = process.env.NODE_ENV === 'production'
     ? 'https://foconoenem.vercel.app/auth/callback'
     : `${window.location.origin}/auth/callback`;
+
+  if (extras?.nomeCompleto || extras?.objetivo) {
+    try {
+      const payload = {
+        nomeCompleto: extras?.nomeCompleto ?? null,
+        objetivo: extras?.objetivo ?? null,
+        timestamp: Date.now(),
+      };
+      sessionStorage.setItem('foconoenem_signup_context', JSON.stringify(payload));
+    } catch (error) {
+      console.error('Erro ao salvar dados temporários de cadastro:', error);
+    }
+  }
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
@@ -149,7 +168,8 @@ export async function handleOAuthCallback() {
       const nomeCompleto = data.session.user.user_metadata?.nome_completo ||
                           data.session.user.user_metadata?.full_name ||
                           data.session.user.email?.split('@')[0] || 'Usuário';
-      await createUserProfile(data.session.user.id, nomeCompleto);
+      const objetivo = data.session.user.user_metadata?.objetivo;
+      await createUserProfile(data.session.user.id, nomeCompleto, objetivo);
     }
   }
 
@@ -193,13 +213,17 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
 /**
  * Cria perfil do usuário
  */
-export async function createUserProfile(userId: string, nomeCompleto?: string) {
+export async function createUserProfile(userId: string, nomeCompleto?: string, objetivo?: string | null) {
   const { data, error } = await supabase
     .from('user_profiles')
-    .insert({
-      user_id: userId,
-      nome_completo: nomeCompleto || null,
-    })
+    .upsert(
+      {
+        user_id: userId,
+        nome_completo: nomeCompleto || null,
+        objetivo: objetivo ?? null,
+      },
+      { onConflict: 'user_id' }
+    )
     .select()
     .single();
   
@@ -211,9 +235,9 @@ export async function createUserProfile(userId: string, nomeCompleto?: string) {
   // Criar estatísticas iniciais
   await supabase
     .from('user_statistics')
-    .insert({
+    .upsert({
       user_id: userId,
-    });
+    }, { onConflict: 'user_id' });
   
   return data;
 }

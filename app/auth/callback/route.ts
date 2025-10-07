@@ -23,7 +23,8 @@ export async function GET(request: NextRequest) {
         const nomeCompleto = data.user.user_metadata?.nome_completo ||
                             data.user.user_metadata?.full_name ||
                             data.user.email?.split('@')[0] || 'Usuário';
-        await createUserProfile(data.user.id, nomeCompleto);
+        const objetivo = data.user.user_metadata?.objetivo;
+        await createUserProfile(data.user.id, nomeCompleto, objetivo);
       }
     }
 
