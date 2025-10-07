@@ -12,6 +12,7 @@
     "@stripe/stripe-js": "^8.0.0",
     "@supabase/supabase-js": "^2.58.0",
     "groq-sdk": "^0.33.0",
+    "luxon": "^3.5.0",
     "next": "^15.5.4",
     "next-sitemap": "^4.2.3",
     "react": "^19.2.0",
@@ -22,6 +23,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.14",
+    "@types/luxon": "^3.7.1",
     "@types/node": "^24.6.2",
     "@types/react": "19.2.0",
     "@types/react-dom": "^19.2.0",

@@ -1,24 +1,28 @@
-/**
- * Funções para gerenciar o horário de funcionamento do sistema
- */
+import { DateTime } from "luxon";
+
+const BRAZIL_TIMEZONE = "America/Sao_Paulo";
+const OPEN_HOUR = 7;
+const OPEN_MINUTE = 0;
+const CLOSE_HOUR = 23;
+const CLOSE_MINUTE = 30;
+
+function getBrazilianNow(): DateTime {
+  return DateTime.now().setZone(BRAZIL_TIMEZONE);
+}
 
 /**
- * Verifica se o horário atual está dentro do período de funcionamento (7h às 23h30)
+ * Verifica se o horário fornecido está dentro do período de funcionamento (7h às 23h30)
  */
-export function isWithinOperatingHours(): boolean {
-  const now = new Date();
-  const hour = now.getHours();
-  const minute = now.getMinutes();
-
-  if (hour < 7) {
+export function isWithinOperatingHours(dateTime: DateTime = getBrazilianNow()): boolean {
+  if (dateTime.hour < OPEN_HOUR) {
     return false;
   }
 
-  if (hour > 23) {
+  if (dateTime.hour > CLOSE_HOUR) {
     return false;
   }
 
-  if (hour === 23 && minute >= 30) {
+  if (dateTime.hour === CLOSE_HOUR && dateTime.minute >= CLOSE_MINUTE) {
     return false;
   }
 
@@ -35,46 +39,29 @@ export function getOperatingHoursInfo(): {
   nextOpenTime: string;
   message: string;
 } {
-  const now = new Date();
-  const hour = now.getHours();
-  const minute = now.getMinutes();
-  const isOpen = isWithinOperatingHours();
-  
-  // Formatando a hora atual no formato brasileiro
-  const currentTime = now.toLocaleTimeString('pt-BR', { 
-    hour: '2-digit', 
-    minute: '2-digit' 
-  });
-  
-  // Próxima abertura
-  const nextOpenDate = new Date();
-  if (hour > 23 || (hour === 23 && minute >= 30)) {
-    // Se já passou das 23h30, a próxima abertura é às 7h do dia seguinte
-    nextOpenDate.setDate(nextOpenDate.getDate() + 1);
-    nextOpenDate.setHours(7, 0, 0, 0);
-  } else if (hour < 7) {
-    // Se é antes das 7h, a próxima abertura é às 7h do mesmo dia
-    nextOpenDate.setHours(7, 0, 0, 0);
-  } else {
-    // Já estamos abertos, indicar fechamento às 23h30 do mesmo dia
-    nextOpenDate.setHours(23, 30, 0, 0);
-  }
-  
-  const nextOpenTime = nextOpenDate.toLocaleTimeString('pt-BR', { 
-    hour: '2-digit', 
-    minute: '2-digit',
-    day: '2-digit',
-    month: '2-digit'
-  });
-  
-  // Mensagem de status
-  let message: string;
+  const now = getBrazilianNow();
+  const isOpen = isWithinOperatingHours(now);
+
+  const openingTimeToday = now.set({ hour: OPEN_HOUR, minute: OPEN_MINUTE, second: 0, millisecond: 0 });
+  const closingTimeToday = now.set({ hour: CLOSE_HOUR, minute: CLOSE_MINUTE, second: 0, millisecond: 0 });
+
+  let referenceTime = openingTimeToday;
+
   if (isOpen) {
-    message = `Sistema disponível agora. Atendemos até às 23h30 · Hora atual: ${currentTime}`;
+    referenceTime = closingTimeToday;
+  } else if (now < openingTimeToday) {
+    referenceTime = openingTimeToday;
   } else {
-    message = `Sistema indisponível no momento · Funcionamos das 7h às 23h30 · Próxima abertura: ${nextOpenTime} · Hora atual: ${currentTime}`;
+    referenceTime = openingTimeToday.plus({ days: 1 });
   }
-  
+
+  const currentTime = now.toFormat("HH:mm");
+  const nextOpenTime = referenceTime.toFormat("dd/MM HH:mm");
+
+  const message = isOpen
+    ? `Sistema disponível agora. Atendemos até às 23h30 · Hora atual: ${currentTime}`
+    : `Sistema indisponível no momento · Funcionamos das 7h às 23h30 · Próxima abertura: ${nextOpenTime} · Hora atual: ${currentTime}`;
+
   return {
     isOpen,
     opensAt: "07:00",
