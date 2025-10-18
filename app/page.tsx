@@ -1,380 +1,387 @@
 import Link from "next/link";
-import Header from "./components/Header";
+import type { ReactNode } from "react";
 import Footer from "./components/Footer";
+import Header from "./components/Header";
+
+type Highlight = {
+  title: string;
+  description: string;
+  icon: ReactNode;
+};
+
+type Step = {
+  number: string;
+  title: string;
+  description: string;
+};
+
+type Testimonial = {
+  author: string;
+  role: string;
+  quote: string;
+};
+
+const heroStats = [
+  { value: "8,5k+", label: "Redações corrigidas" },
+  { value: "1,2k+", label: "Questões atualizadas" },
+  { value: "88%", label: "Aumento médio na nota" },
+];
+
+const highlights: Highlight[] = [
+  {
+    title: "Correção com inteligência artificial",
+    description:
+      "Aplique os 5 critérios oficiais do ENEM e receba comentários orientados para evoluir em cada competência.",
+    icon: (
+      <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={1.8}
+          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+      </svg>
+    ),
+  },
+  {
+    title: "Simulados dinâmicos por disciplina",
+    description:
+      "Monte sua prova personalizada escolhendo Matemática, Linguagens, Ciências da Natureza ou Humanas.",
+    icon: (
+      <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={1.8}
+          d="M9.75 17L9 20l-1 .75M14.25 17l.75 3 1 .75M7 4h10m-9 4h8m-9 4h5"
+        />
+      </svg>
+    ),
+  },
+  {
+    title: "Dashboard com evolução em tempo real",
+    description:
+      "Visualize notas, acertos por disciplina e recomendações de estudo sem sair da sua conta.",
+    icon: (
+      <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={1.8}
+          d="M11 3.055A9 9 0 1012 21v-7m0 0l4 4m-4-4l-4 4"
+        />
+      </svg>
+    ),
+  },
+  {
+    title: "Conteúdo curado e notícias do ENEM",
+    description:
+      "Receba alertas de prazos, mudanças no exame e dicas práticas selecionadas por especialistas.",
+    icon: (
+      <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={1.8}
+          d="M12 6l7 4.03-7 3.97-7-3.97L12 6zm0 8v6m-7-4v-6m14 6v-6"
+        />
+      </svg>
+    ),
+  },
+];
+
+const steps: Step[] = [
+  {
+    number: "01",
+    title: "Escolha seu desafio",
+    description:
+      "Redação, simulado ou questões específicas. Defina o tema, tempo e disciplinas que quer treinar hoje.",
+  },
+  {
+    number: "02",
+    title: "Pratique com foco",
+    description:
+      "Use editor otimizado, textos de apoio, questões geradas sob medida e feedback imediato para cada resposta.",
+  },
+  {
+    number: "03",
+    title: "Receba insights acionáveis",
+    description:
+      "Entenda onde perdeu pontos, conquiste metas semanais e acompanhe sua evolução em gráficos claros.",
+  },
+];
+
+const testimonials: Testimonial[] = [
+  {
+    author: "Gabriela Santos",
+    role: "Estudante aprovada em Medicina",
+    quote:
+      "Com o Foco no ENEM consegui transformar feedbacks em metas reais. Minha nota em redação saiu de 720 para 960 em 6 semanas.",
+  },
+  {
+    author: "Diego Moraes",
+    role: "Professor de cursinho pré-vestibular",
+    quote:
+      "Uso as estatísticas com meus alunos para priorizar revisões por competência. A clareza dos relatórios é impecável.",
+  },
+  {
+    author: "Larissa Monteiro",
+    role: "Estudante treineira",
+    quote:
+      "As notícias e alertas me mantêm atualizada sem perder tempo. Gosto muito da personalização dos simulados.",
+  },
+];
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-muted-bg">
+    <div className="flex min-h-screen flex-col bg-page-gradient text-foreground">
       <Header />
 
-      <main className="flex-grow container mx-auto p-4 md:p-8 max-w-7xl">
-        {/* Hero Section */}
-        <section className="card card-gradient p-8 md:p-12 mb-12 relative overflow-hidden animate-fadeIn">
-          <div className="absolute top-0 right-0 w-64 h-64 opacity-5 pointer-events-none">
-            <svg
-              fill="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-            </svg>
-          </div>
-          
-          <div className="relative z-10">
-            <h2 className="text-3xl md:text-5xl font-bold text-primary mb-4 leading-tight">
-              Prepare-se para o ENEM
-            </h2>
-            <p className="text-lg md:text-xl mb-8 max-w-3xl text-foreground opacity-90">
-              Escolha entre o simulado de redação para receber feedback detalhado
-              ou o simulado de questões objetivas para testar seus conhecimentos
-              nas diversas disciplinas do ENEM.
-            </p>
+      <main className="flex-grow">
+        <section className="relative overflow-hidden px-4 pb-24 pt-20 sm:px-6 lg:px-8 lg:pt-28">
+          <div className="hero-accent absolute inset-0 blur-3xl" aria-hidden />
+          <div className="container relative z-10 mx-auto grid max-w-7xl gap-16 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+            <div className="space-y-10">
+              <div className="hero-status shadow-glow">
+                <span className="h-2 w-2 rounded-full bg-success" />
+                Aberto agora · suporte inteligente 7h às 23h30
+              </div>
+              <div className="space-y-6">
+                <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl">
+                  Transforme estudo em resultado no ENEM.
+                </h1>
+                <p className="max-w-2xl text-lg leading-relaxed text-foreground/75 sm:text-xl">
+                  Receba correções precisas, simulados personalizados e recomendações em tempo real. Uma experiência fluida para
+                  quem busca nota alta com foco e organização.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+                <Link href="/redacao" className="btn btn-primary px-8 py-3 text-base">
+                  Começar pela redação
+                </Link>
+                <Link href="/questoes" className="btn btn-glass gap-2 px-8 py-3 text-base font-semibold text-primary">
+                  Explorar simulados
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </Link>
+              </div>
+              <dl className="grid gap-4 sm:grid-cols-3">
+                {heroStats.map((stat) => (
+                  <div key={stat.label} className="stat-card px-5 py-4">
+                    <dt className="text-sm uppercase tracking-wide text-foreground/70">{stat.label}</dt>
+                    <dd className="mt-2 text-2xl font-semibold">{stat.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
 
-            <div className="grid md:grid-cols-2 gap-6 md:gap-8">
-              <div className="card card-interactive border-2 border-primary/20 p-6 md:p-8 hover:border-primary/40 transition-all duration-300 bg-gradient-to-br from-card-bg to-muted-bg">
-                <div className="text-primary mb-6">
-                  <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center">
-                    <svg
-                      className="w-8 h-8"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                      />
-                    </svg>
+            <div className="relative isolate">
+              <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-accent/40 blur-3xl" aria-hidden />
+              <div className="glass-panel relative z-10 space-y-6">
+                <div className="surface-card p-6 text-foreground shadow-xl">
+                  <div className="flex items-center justify-between text-sm text-foreground/70">
+                    <span className="inline-flex items-center gap-2 font-medium">
+                      <span className="h-2 w-2 rounded-full bg-success" />
+                      Correção instantânea
+                    </span>
+                    <span>Atualizado em tempo real</span>
+                  </div>
+                  <div className="mt-6 space-y-4">
+                    <div className="rounded-2xl bg-success/10 p-4 text-foreground shadow-inner">
+                      <div className="flex items-center justify-between text-sm text-foreground/70">
+                        <span>Competência 1</span>
+                        <span className="font-semibold text-success">200 / 200</span>
+                      </div>
+                      <div className="mt-3 h-2 rounded-full bg-success/20">
+                        <div className="h-full rounded-full bg-success" style={{ width: "100%" }} />
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl bg-primary/10 p-4 text-foreground shadow-inner">
+                      <div className="flex items-center justify-between text-sm text-foreground/70">
+                        <span>Competência 2</span>
+                        <span className="font-semibold text-primary">180 / 200</span>
+                      </div>
+                      <div className="mt-3 h-2 rounded-full bg-primary/20">
+                        <div className="h-full rounded-full bg-primary" style={{ width: "90%" }} />
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl bg-accent/10 p-4 text-foreground shadow-inner">
+                      <div className="flex items-center justify-between text-sm text-foreground/70">
+                        <span>Competência 3</span>
+                        <span className="font-semibold text-accent">160 / 200</span>
+                      </div>
+                      <div className="mt-3 h-2 rounded-full bg-accent/20">
+                        <div className="h-full rounded-full bg-accent" style={{ width: "80%" }} />
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <h3 className="text-2xl font-bold mb-3 text-foreground">
-                  Simulado de Redação
-                </h3>
-                <p className="mb-6 text-foreground opacity-80 leading-relaxed">
-                  Escreva sua redação dissertativa e receba uma correção detalhada
-                  com nota e feedback para cada competência avaliada no ENEM.
+
+                <div className="surface-card p-6 text-foreground shadow-xl">
+                  <h3 className="text-lg font-semibold">Simulado rápido</h3>
+                  <p className="mt-2 text-sm text-foreground/70">
+                    Matemática · Linguagens · Ciências Humanas · Atualidades do ENEM 2024
+                  </p>
+                  <div className="mt-5 grid gap-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="inline-flex items-center gap-2 text-foreground/65">
+                        <span className="h-2 w-2 rounded-full bg-success" />
+                        Questões respondidas
+                      </span>
+                      <span className="font-semibold text-foreground">12/15</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="inline-flex items-center gap-2 text-foreground/65">
+                        <span className="h-2 w-2 rounded-full bg-warning" />
+                        Tempo restante
+                      </span>
+                      <span className="font-semibold text-foreground">08:46</span>
+                    </div>
+                    <Link
+                      href="/questoes"
+                      className="mt-4 inline-flex items-center justify-center gap-2 rounded-2xl bg-primary/10 px-4 py-3 text-sm font-semibold text-primary shadow-inner transition-colors hover:bg-primary/20"
+                    >
+                      Continuar simulado
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      </svg>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="relative px-4 pb-20 sm:px-6 lg:px-8">
+          <div className="container mx-auto max-w-6xl">
+            <div className="space-y-4 text-center">
+              <p className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1 text-sm font-semibold text-primary">
+                Recursos completos para estudar com confiança
+              </p>
+              <h2 className="text-3xl font-semibold text-foreground sm:text-4xl">
+                Tudo que você precisa em um só lugar
+              </h2>
+              <p className="mx-auto max-w-3xl text-base text-foreground/70">
+                Organizamos a sua preparação com ferramentas inteligentes, painéis intuitivos e uma experiência que parece feita
+                sob medida para o seu ritmo de estudos.
+              </p>
+            </div>
+
+            <div className="mt-14 grid gap-6 lg:grid-cols-2">
+              {highlights.map((highlight) => (
+                <article key={highlight.title} className="glass-card border border-border-color/60 bg-card-bg/70 p-6">
+                  <div className="flex items-start gap-4">
+                    <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-inner">
+                      {highlight.icon}
+                    </span>
+                    <div className="space-y-3">
+                      <h3 className="text-xl font-semibold text-foreground">{highlight.title}</h3>
+                      <p className="text-base text-foreground/70">{highlight.description}</p>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="relative px-4 py-20 sm:px-6 lg:px-8">
+          <div className="container mx-auto max-w-6xl">
+            <div className="grid gap-16 lg:grid-cols-[1fr_1.1fr] lg:items-center">
+              <div className="space-y-6">
+                <p className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-4 py-1 text-sm font-semibold text-accent">
+                  Metodologia em 3 etapas
+                </p>
+                <h2 className="text-3xl font-semibold text-foreground sm:text-4xl">
+                  Prepare-se com fluxo rápido e claro
+                </h2>
+                <p className="text-base text-foreground/70">
+                  Desenhamos uma jornada que equilibra a prática constante com relatórios acionáveis. Avance pelos passos e use o
+                  painel para transformar feedbacks em uma rotina que cabe na sua agenda.
                 </p>
                 <Link
-                  href="/redacao"
-                  className="btn btn-primary mt-auto group w-full justify-center text-base"
+                  href="/sobre"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary-dark"
                 >
-                  Praticar Redação
-                  <svg
-                    className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 7l5 5m0 0l-5 5m5-5H6"
-                    />
+                  Conheça os bastidores do projeto
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
                 </Link>
               </div>
 
-              <div className="card card-interactive border-2 border-accent/20 p-6 md:p-8 hover:border-accent/40 transition-all duration-300 bg-gradient-to-br from-card-bg to-muted-bg">
-                <div className="text-accent mb-6">
-                  <div className="w-14 h-14 bg-accent/10 rounded-2xl flex items-center justify-center">
-                    <svg
-                      className="w-8 h-8"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
-                      />
-                    </svg>
+              <div className="grid gap-4">
+                {steps.map((step) => (
+                  <div key={step.number} className="glass-card border border-border-color/60 bg-card-bg/80 p-6 sm:p-8">
+                    <span className="text-2xl font-semibold text-primary">{step.number}</span>
+                    <h3 className="mt-4 text-2xl font-semibold text-foreground">{step.title}</h3>
+                    <p className="mt-3 text-base text-foreground/70">{step.description}</p>
                   </div>
-                </div>
-                <h3 className="text-2xl font-bold mb-3 text-foreground">
-                  Simulado de Questões
-                </h3>
-                <p className="mb-6 text-foreground opacity-80 leading-relaxed">
-                  Teste seus conhecimentos com questões objetivas de Matemática,
-                  Português, Química, Física e Geografia para se preparar para o
-                  exame.
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="relative px-4 py-20 sm:px-6 lg:px-8">
+          <div className="container mx-auto max-w-6xl">
+            <div className="space-y-4 text-center">
+              <p className="inline-flex items-center gap-2 rounded-full border border-success/30 bg-success/10 px-4 py-1 text-sm font-semibold text-success">
+                Histórias reais de evolução
+              </p>
+              <h2 className="text-3xl font-semibold text-foreground sm:text-4xl">
+                Quem já está construindo resultados
+              </h2>
+            </div>
+
+            <div className="mt-12 grid gap-6 md:grid-cols-3">
+              {testimonials.map((testimonial) => (
+                <figure key={testimonial.author} className="testimonial-card glass-card border border-border-color/50 bg-card-bg/80 p-6">
+                  <blockquote className="text-base leading-relaxed text-foreground/80">
+                    “{testimonial.quote}”
+                  </blockquote>
+                  <figcaption className="mt-6 space-y-1">
+                    <p className="font-semibold text-foreground">{testimonial.author}</p>
+                    <p className="text-sm text-foreground/60">{testimonial.role}</p>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="relative px-4 pb-24 sm:px-6 lg:px-8">
+          <div className="container mx-auto max-w-5xl">
+            <div className="gradient-border cta-surface overflow-hidden rounded-[2.75rem] p-10 text-center shadow-2xl backdrop-blur">
+              <div className="space-y-6">
+                <h2 className="text-3xl font-semibold text-foreground sm:text-4xl">
+                  Vamos conquistar a redação mil juntos?
+                </h2>
+                <p className="mx-auto max-w-2xl text-base text-foreground/70">
+                  Teste gratuitamente, acompanhe sua evolução e descubra o plano ideal para chegar na nota que você merece.
+                  Estudar pode ser leve quando você enxerga cada avanço.
                 </p>
-                <Link
-                  href="/questoes"
-                  className="btn btn-outline mt-auto group w-full justify-center text-base border-accent text-accent hover:bg-accent hover:text-white"
-                >
-                  Resolver Questões
-                  <svg
-                    className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
+                <div className="flex flex-wrap justify-center gap-4">
+                  <Link href="/auth/register" className="btn btn-primary px-8 py-3 text-base">
+                    Criar minha conta
+                  </Link>
+                  <Link
+                    href="/noticias"
+                    className="btn btn-glass gap-2 px-8 py-3 text-base font-semibold text-primary"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
-                    />
-                  </svg>
-                </Link>
+                    Ver novidades do ENEM
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
-        </section>
-
-        {/* Features Section */}
-        <section className="grid md:grid-cols-3 gap-6 md:gap-8 mb-12 animate-stagger">
-          <div className="card card-gradient p-6 md:p-8 border border-border-color hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-            <div className="text-primary mb-4">
-              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
-                <svg
-                  className="w-7 h-7"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                  />
-                </svg>
-              </div>
-            </div>
-            <h3 className="text-xl font-bold mb-3 text-foreground">
-              Temas Variados
-            </h3>
-            <p className="text-foreground opacity-80 leading-relaxed">
-              Escolha entre o tema padrão, gere um tema automaticamente com nossa
-              IA, ou defina seu próprio tema personalizado para praticar suas
-              redações.
-            </p>
-          </div>
-          <div className="card card-gradient p-6 md:p-8 border border-border-color hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-            <div className="text-success mb-4">
-              <div className="w-12 h-12 bg-success/10 rounded-xl flex items-center justify-center">
-                <svg
-                  className="w-7 h-7"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-            </div>
-            <h3 className="text-xl font-bold mb-3 text-foreground">
-              Múltiplas Disciplinas
-            </h3>
-            <p className="text-foreground opacity-80 leading-relaxed">
-              Pratique com questões objetivas de cinco disciplinas fundamentais:
-              Matemática, Português, Química, Física e Geografia, cobrindo os
-              principais conteúdos do ENEM.
-            </p>
-          </div>
-          <div className="card card-gradient p-6 md:p-8 border border-border-color hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-            <div className="text-accent mb-4">
-              <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center">
-                <svg
-                  className="w-7 h-7"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-            </div>
-            <h3 className="text-xl font-bold mb-3 text-foreground">
-              Feedback Inteligente
-            </h3>
-            <p className="text-foreground opacity-80 leading-relaxed">
-              Receba análise completa sobre sua redação e entenda por que errou ou
-              acertou cada questão objetiva com explicações detalhadas geradas por
-              IA.
-            </p>
-          </div>
-        </section>
-
-        {/* How It Works - Essay Section */}
-        <section
-          className="card card-gradient p-8 md:p-12 border border-border-color animate-fadeIn mb-12 bg-gradient-to-br from-primary/5 to-accent/5"
-          style={{ animationDelay: "0.3s" }}
-        >
-          <h2 className="text-2xl md:text-3xl font-bold text-primary mb-8 flex items-center">
-            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mr-3">
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
-              </svg>
-            </div>
-            Como Funciona o Simulado de Redação
-          </h2>
-          <ol className="space-y-6">
-            <li className="flex items-start group">
-              <span className="step-number flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl border border-primary/40 bg-primary font-bold mr-4 text-lg shadow-md group-hover:scale-110 transition-transform">
-                1
-              </span>
-              <div className="flex-1">
-                <h3 className="font-bold text-lg mb-2 text-foreground">Escolha um tema</h3>
-                <p className="text-foreground opacity-80 leading-relaxed">
-                  Acesse a página do simulado e escolha entre usar o tema padrão,
-                  gerar um tema automaticamente com IA, ou definir seu próprio tema
-                  personalizado.
-                </p>
-              </div>
-            </li>
-            <li className="flex items-start group">
-              <span className="step-number flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl border border-primary/40 bg-primary font-bold mr-4 text-lg shadow-md group-hover:scale-110 transition-transform">
-                2
-              </span>
-              <div className="flex-1">
-                <h3 className="font-bold text-lg mb-2 text-foreground">Escreva sua redação</h3>
-                <p className="text-foreground opacity-80 leading-relaxed">
-                  Escreva sua redação dissertativa-argumentativa com no mínimo 7 e
-                  no máximo 30 linhas, seguindo as mesmas regras do ENEM.
-                </p>
-              </div>
-            </li>
-            <li className="flex items-start group">
-              <span className="step-number flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl border border-primary/40 bg-primary font-bold mr-4 text-lg shadow-md group-hover:scale-110 transition-transform">
-                3
-              </span>
-              <div className="flex-1">
-                <h3 className="font-bold text-lg mb-2 text-foreground">Submeta para correção</h3>
-                <p className="text-foreground opacity-80 leading-relaxed">
-                  Quando finalizar, clique em &ldquo;Concluir Redação&rdquo; para enviar seu
-                  texto para análise pela nossa inteligência artificial.
-                </p>
-              </div>
-            </li>
-            <li className="flex items-start group">
-              <span className="step-number flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl border border-primary/40 bg-primary font-bold mr-4 text-lg shadow-md group-hover:scale-110 transition-transform">
-                4
-              </span>
-              <div className="flex-1">
-                <h3 className="font-bold text-lg mb-2 text-foreground">Receba seu resultado</h3>
-                <p className="text-foreground opacity-80 leading-relaxed">
-                  Em poucos segundos, receba sua nota e feedback detalhado para
-                  entender como melhorar em cada uma das cinco competências
-                  avaliadas no ENEM.
-                </p>
-              </div>
-            </li>
-          </ol>
-        </section>
-
-        {/* How It Works - Questions Section */}
-        <section
-          className="card card-gradient p-8 md:p-12 border border-border-color animate-fadeIn bg-gradient-to-br from-accent/5 to-success/5"
-          style={{ animationDelay: "0.5s" }}
-        >
-          <h2 className="text-2xl md:text-3xl font-bold text-accent mb-8 flex items-center">
-            <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center mr-3">
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
-                />
-              </svg>
-            </div>
-            Como Funciona o Simulado de Questões
-          </h2>
-          <ol className="space-y-6">
-            <li className="flex items-start group">
-              <span className="step-number flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl border border-accent/40 bg-accent font-bold mr-4 text-lg shadow-md group-hover:scale-110 transition-transform">
-                1
-              </span>
-              <div className="flex-1">
-                <h3 className="font-bold text-lg mb-2 text-foreground">Inicie o simulado</h3>
-                <p className="text-foreground opacity-80 leading-relaxed">
-                  Acesse a página de simulado de questões e clique em &ldquo;Iniciar
-                  Simulado&rdquo; para gerar um conjunto de 10 questões objetivas de
-                  múltipla escolha.
-                </p>
-              </div>
-            </li>
-            <li className="flex items-start group">
-              <span className="step-number flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl border border-accent/40 bg-accent font-bold mr-4 text-lg shadow-md group-hover:scale-110 transition-transform">
-                2
-              </span>
-              <div className="flex-1">
-                <h3 className="font-bold text-lg mb-2 text-foreground">Resolva as questões</h3>
-                <p className="text-foreground opacity-80 leading-relaxed">
-                  Resolva as questões de múltipla escolha sobre Matemática,
-                  Português, Química, Física e Geografia. Escolha uma alternativa
-                  para cada questão.
-                </p>
-              </div>
-            </li>
-            <li className="flex items-start group">
-              <span className="step-number flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl border border-accent/40 bg-accent font-bold mr-4 text-lg shadow-md group-hover:scale-110 transition-transform">
-                3
-              </span>
-              <div className="flex-1">
-                <h3 className="font-bold text-lg mb-2 text-foreground">Finalize o simulado</h3>
-                <p className="text-foreground opacity-80 leading-relaxed">
-                  Quando terminar de responder todas as questões (ou quantas
-                  conseguir), clique em &ldquo;Finalizar e Ver Resultados&rdquo; para
-                  submeter suas respostas.
-                </p>
-              </div>
-            </li>
-            <li className="flex items-start group">
-              <span className="step-number flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl border border-accent/40 bg-accent font-bold mr-4 text-lg shadow-md group-hover:scale-110 transition-transform">
-                4
-              </span>
-              <div className="flex-1">
-                <h3 className="font-bold text-lg mb-2 text-foreground">Confira seu desempenho</h3>
-                <p className="text-foreground opacity-80 leading-relaxed">
-                  Receba imediatamente seu resultado com quantidade de acertos e
-                  erros, além de explicações detalhadas para cada questão,
-                  mostrando por que cada alternativa está correta ou incorreta.
-                </p>
-              </div>
-            </li>
-          </ol>
         </section>
       </main>
 

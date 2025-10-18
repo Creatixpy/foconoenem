@@ -8,6 +8,31 @@ import OperatingHoursIndicator from "../components/OperatingHoursIndicator";
 import { getOperatingHoursInfo, type OperatingHoursInfo } from "@/lib/schedule";
 import { supabase } from "@/lib/supabase";
 
+const heroStats = [
+  {
+    label: "Tempo sugerido",
+    value: "50 min",
+    detail: "planejamento, redação e revisão",
+  },
+  {
+    label: "Correção imediata",
+    value: "IA + critérios ENEM",
+    detail: "feedback por competência",
+  },
+  {
+    label: "Textos de apoio",
+    value: "2 fontes",
+    detail: "dados atuais para reforçar argumentos",
+  },
+];
+
+const guidanceSteps = [
+  "Leia o tema com atenção e identifique o problema central a ser resolvido.",
+  "Defina a tese e os argumentos principais antes de iniciar a escrita.",
+  "Construa cada parágrafo com repertórios confiáveis e conexões claras.",
+  "Finalize com uma proposta de intervenção completa, viável e humanizada.",
+];
+
 export default function RedacaoPage() {
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -22,7 +47,7 @@ export default function RedacaoPage() {
   const [isGeneratingTheme, setIsGeneratingTheme] = useState(false);
   const [isSystemAvailable, setIsSystemAvailable] = useState<boolean | null>(null);
   const [operatingInfo, setOperatingInfo] = useState<OperatingHoursInfo | null>(null);
-  
+
   const editorRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -59,51 +84,43 @@ export default function RedacaoPage() {
       );
       return;
     }
-    
+
     if (content.trim().length < 50) {
-      alert("Sua redação é muito curta. Por favor, desenvolva mais o texto.");
+      alert("Sua redação é muito curta. Desenvolva mais o texto antes de enviar.");
       return;
     }
 
     if (themeMode === "personalizado" && customTheme.trim().length < 5) {
-      alert("Por favor, informe um tema personalizado válido com pelo menos 5 caracteres.");
+      alert("Informe um tema personalizado válido (mínimo 5 caracteres).");
       return;
     }
 
     try {
       setIsSubmitting(true);
       setError(null);
-      
+
       const payload: {
         redacao: string;
         usarTemaPadrao?: boolean;
         tema?: string;
         textoApoio1?: string;
         textoApoio2?: string;
-      } = {
-        redacao: content
-      };
+      } = { redacao: content };
 
       if (themeMode === "padrao") {
         payload.usarTemaPadrao = true;
       } else if (themeMode === "personalizado") {
         payload.usarTemaPadrao = false;
         payload.tema = customTheme.trim();
-        
-        if (customText1.trim()) {
-          payload.textoApoio1 = customText1.trim();
-        }
-        
-        if (customText2.trim()) {
-          payload.textoApoio2 = customText2.trim();
-        }
+        if (customText1.trim()) payload.textoApoio1 = customText1.trim();
+        if (customText2.trim()) payload.textoApoio2 = customText2.trim();
       } else if (themeMode === "gerado") {
         payload.usarTemaPadrao = false;
         payload.tema = generatedTheme;
         payload.textoApoio1 = generatedText1;
         payload.textoApoio2 = generatedText2;
       }
-      
+
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData?.session?.access_token;
 
@@ -122,24 +139,21 @@ export default function RedacaoPage() {
       });
 
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || data.message || "Erro ao enviar redação");
       }
-      
-      // Salvar o ID da redação e redirecionar para a página de resultados
+
       localStorage.setItem("lastEssayId", data.id);
       router.push(`/resultados/${data.id}`);
-      
     } catch (error) {
       console.error("Erro:", error);
-      setError(error instanceof Error ? error.message : "Ocorreu um erro ao enviar sua redação. Por favor, tente novamente.");
+      setError(error instanceof Error ? error.message : "Ocorreu um erro ao enviar sua redação. Tente novamente.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Verificar o horário de funcionamento a cada minuto
   useEffect(() => {
     let cancelled = false;
 
@@ -161,11 +175,10 @@ export default function RedacaoPage() {
       clearInterval(timer);
     };
   }, [applyOperatingInfo, fetchOperatingInfo]);
-  
-  // Função para gerar um tema automaticamente
+
   const handleGenerateTheme = async () => {
-  const info = operatingInfo ?? (await fetchOperatingInfo());
-  applyOperatingInfo(info);
+    const info = operatingInfo ?? (await fetchOperatingInfo());
+    applyOperatingInfo(info);
 
     if (!info?.isOpen) {
       setError(
@@ -175,28 +188,23 @@ export default function RedacaoPage() {
       );
       return;
     }
-    
+
     try {
       setIsGeneratingTheme(true);
       setError(null);
-      
+
       const response = await fetch("/api/gerar-tema");
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || errorData.message || "Não foi possível gerar um tema. Tente novamente.");
       }
-      
+
       const data = await response.json();
-      
-      // Armazenar os dados gerados
       setGeneratedTheme(data.tema);
       setGeneratedText1(data.textoApoio1);
       setGeneratedText2(data.textoApoio2);
-      
-      // Mudar para o modo de tema gerado
       setThemeMode("gerado");
-      
     } catch (error) {
       console.error("Erro ao gerar tema:", error);
       setError(error instanceof Error ? error.message : "Ocorreu um erro ao gerar o tema. Por favor, tente novamente.");
@@ -205,270 +213,317 @@ export default function RedacaoPage() {
     }
   };
 
+  const renderThemeContent = () => {
+    if (themeMode === "personalizado") {
+      return (
+        <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-semibold text-foreground/80">
+              Tema personalizado
+              <input
+                type="text"
+                value={customTheme}
+                onChange={(event) => setCustomTheme(event.target.value)}
+                placeholder="Digite o tema da redação..."
+                className="mt-2 w-full rounded-2xl border border-border-color/70 bg-card-bg/80 px-4 py-3 text-base text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
+            </label>
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-foreground/80">Textos de apoio (opcional)</p>
+            <div className="mt-3 grid gap-4 md:grid-cols-2">
+              <label className="flex flex-col text-sm text-foreground/70">
+                TEXTO I
+                <textarea
+                  rows={4}
+                  value={customText1}
+                  onChange={(event) => setCustomText1(event.target.value)}
+                  placeholder="Cole dados, citações ou estudos que deseja usar como referência."
+                  className="mt-2 w-full rounded-2xl border border-border-color/70 bg-card-bg/80 px-4 py-3 text-base text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </label>
+              <label className="flex flex-col text-sm text-foreground/70">
+                TEXTO II
+                <textarea
+                  rows={4}
+                  value={customText2}
+                  onChange={(event) => setCustomText2(event.target.value)}
+                  placeholder="Adicione outro ponto de vista ou estatística relevante."
+                  className="mt-2 w-full rounded-2xl border border-border-color/70 bg-card-bg/80 px-4 py-3 text-base text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </label>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const themeTitle =
+      themeMode === "gerado"
+        ? generatedTheme || "Tema em geração..."
+        : "Os desafios da educação digital no Brasil contemporâneo";
+    const supportTexts =
+      themeMode === "gerado"
+        ? [
+            {
+              title: "Texto I",
+              content:
+                generatedText1 ||
+                "Gerando texto de apoio. Caso demore, clique novamente em gerar tema para tentar uma nova proposta.",
+            },
+            {
+              title: "Texto II",
+              content:
+                generatedText2 ||
+                "Gerando texto de apoio. Caso demore, clique novamente em gerar tema para tentar uma nova proposta.",
+            },
+          ]
+        : [
+            {
+              title: "Texto I",
+              content:
+                "Segundo dados do IBGE, em 2021, 85% dos domicílios brasileiros possuíam acesso à internet, porém com grandes disparidades regionais e socioeconômicas. Nas regiões Norte e Nordeste, e entre famílias de baixa renda, o acesso é significativamente menor.",
+            },
+            {
+              title: "Texto II",
+              content:
+                "A pandemia de COVID-19 evidenciou a necessidade de integração digital no ensino, mas também mostrou que muitos estudantes e professores não estão preparados para o uso efetivo das tecnologias educacionais.",
+            },
+          ];
+
+    return (
+      <div className="space-y-6">
+        <div className="surface-card p-5 shadow-sm">
+          <p className="text-xs uppercase tracking-[0.18em] text-primary">
+            {themeMode === "gerado" ? "Tema gerado automaticamente" : "Tema padrão"}
+          </p>
+          <p className="mt-3 text-xl font-semibold leading-relaxed text-foreground">&ldquo;{themeTitle}&rdquo;</p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          {supportTexts.map((support) => (
+            <div key={support.title} className="surface-card p-4 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary">{support.title}</p>
+              <p className="mt-2 text-sm leading-relaxed text-foreground/75">{support.content}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-muted-bg">
+    <div className="flex min-h-screen flex-col bg-page-gradient text-foreground">
       <Header />
       <OperatingHoursIndicator />
-      
-      <main className="flex-grow container mx-auto p-4 md:p-8 max-w-6xl">
-        <section className="card card-gradient p-6 md:p-10 mb-8 border border-border-color animate-fadeIn">
-          <h2 className="text-3xl md:text-4xl font-bold text-primary mb-8 flex items-center">
-            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mr-4">
-              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
+
+      <main className="flex-grow">
+        <section className="relative overflow-hidden px-4 pb-20 pt-16 sm:px-6 lg:px-8">
+          <div className="hero-accent absolute inset-0 blur-3xl" aria-hidden />
+          <div className="container relative z-10 mx-auto max-w-6xl">
+            <div className="grid gap-12 lg:grid-cols-[1.2fr_0.9fr]">
+              <div className="space-y-8">
+                <div className="hero-status shadow-glow">
+                  <span className="h-2 w-2 rounded-full bg-success" />
+                  Simulado de redação disponível
+                </div>
+                <div className="space-y-5">
+                  <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl">
+                    Domine o texto dissertativo com orientação inteligente.
+                  </h1>
+                  <p className="max-w-xl text-lg text-foreground/75">
+                    Escolha ou gere temas atuais, escreva com apoio de textos motivadores e receba correções alinhadas aos cinco
+                    critérios oficiais do ENEM.
+                  </p>
+                </div>
+                <dl className="grid gap-4 sm:grid-cols-3">
+                  {heroStats.map((stat) => (
+                    <div key={stat.label} className="stat-card px-5 py-4">
+                      <dt className="text-xs uppercase tracking-wide text-foreground/60">{stat.label}</dt>
+                      <dd className="mt-2 text-xl font-semibold text-primary">{stat.value}</dd>
+                      <p className="mt-1 text-xs text-foreground/60">{stat.detail}</p>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+
+              <div className="surface-card flex h-full flex-col gap-6 p-6 shadow-xl">
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">Como transformar prática em nota alta</h2>
+                  <ol className="mt-4 space-y-4 text-sm text-foreground/75">
+                    {guidanceSteps.map((step, index) => (
+                      <li key={step} className="flex gap-3">
+                        <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                          {String(index + 1).padStart(2, "0")}
+                        </span>
+                        <span>{step}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+                <div className="rounded-2xl border border-border-color/60 bg-card-bg/80 p-4 text-sm text-foreground/70 shadow-inner backdrop-blur">
+                  {operatingInfo ? (
+                    <div className="flex flex-col gap-2">
+                      <p className="font-semibold text-foreground">
+                        {isSystemAvailable ? "Estamos corrigindo redações agora." : "Correções indisponíveis no momento."}
+                      </p>
+                      <p>
+                        Horário de funcionamento: {operatingInfo.opensAt} às {operatingInfo.closesAt}. Envie seu texto e receba
+                        análise completa em poucos segundos.
+                      </p>
+                    </div>
+                  ) : (
+                    <p>Verificando disponibilidade do simulador...</p>
+                  )}
+                </div>
+              </div>
             </div>
-            Simulado de Redação do ENEM
-          </h2>
-          
-          <div className="mb-8">
-            <div className="flex flex-wrap items-center mb-4">
-              <h3 className="font-semibold text-lg mr-4 mb-2 flex items-center">
-                <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-                SELECIONE O TEMA:
-              </h3>
-              <div className="flex flex-wrap gap-4">
-                <label className="inline-flex items-center cursor-pointer rounded-full px-4 py-2 hover:bg-muted-bg transition-colors">
-                  <input
-                    type="radio"
-                    className="form-radio h-4 w-4 text-primary"
-                    checked={themeMode === "padrao"}
-                    onChange={() => setThemeMode("padrao")}
-                  />
-                  <span className="ml-2">Tema padrão</span>
-                </label>
-                <label className="inline-flex items-center cursor-pointer rounded-full px-4 py-2 hover:bg-muted-bg transition-colors">
-                  <input
-                    type="radio"
-                    className="form-radio h-4 w-4 text-primary"
-                    checked={themeMode === "personalizado"}
-                    onChange={() => setThemeMode("personalizado")}
-                  />
-                  <span className="ml-2">Definir tema personalizado</span>
-                </label>
+          </div>
+        </section>
+
+        <section className="px-4 pb-24 sm:px-6 lg:px-8">
+          <div className="container mx-auto max-w-6xl space-y-10">
+            <div className="surface-card space-y-6 p-6 shadow-xl md:p-8">
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.18em] text-primary">Selecione o tema</p>
+                  <h2 className="mt-2 text-2xl font-semibold text-foreground">Escolha como quer praticar hoje</h2>
+                  <p className="mt-2 text-sm text-foreground/70">
+                    Treine com o tema padrão, personalize sua proposta ou gere uma nova com inteligência artificial.
+                  </p>
+                </div>
                 <button
                   onClick={handleGenerateTheme}
                   disabled={isGeneratingTheme}
-                  className="theme-btn py-2 px-4 rounded-md text-sm flex items-center shadow-sm"
+                  className="btn btn-primary px-5 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   {isGeneratingTheme ? (
-                    <>
-                      <span className="inline-block w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                      Gerando...
-                    </>
+                    <span className="flex items-center gap-2">
+                      <span className="inline-block h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                      Gerando tema...
+                    </span>
                   ) : (
                     <>
-                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                      Gerar tema com IA
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                       </svg>
-                      Gerar Tema Automático
                     </>
                   )}
                 </button>
               </div>
-            </div>
-          </div>
-          
-          {/* Mostrar tema de acordo com o modo selecionado */}
-          {themeMode === "padrao" && (
-            <>
-              <div className="mb-6 theme-box">
-                <h3 className="font-semibold text-lg mb-2 text-foreground">TEMA:</h3>
-                <p className="theme-text">
-                  &ldquo;Os desafios da educação digital no Brasil contemporâneo&rdquo;
-                </p>
-              </div>
-              
-              <div className="mb-6">
-                <h3 className="font-semibold text-lg mb-2 text-foreground">TEXTOS DE APOIO:</h3>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="support-text-box">
-                    <p className="support-text-title">
-                      <strong>TEXTO I</strong>
-                    </p>
-                    <p className="support-text-content">
-                      Segundo dados do IBGE, em 2021, 85% dos domicílios brasileiros possuíam acesso à internet, 
-                      porém com grande disparidade regional e socioeconômica. Nas regiões Norte e Nordeste, 
-                      e em famílias de baixa renda, o acesso é significativamente menor.
-                    </p>
-                  </div>
-                  <div className="support-text-box">
-                    <p className="support-text-title">
-                      <strong>TEXTO II</strong>
-                    </p>
-                    <p className="support-text-content">
-                      A pandemia de COVID-19 evidenciou a necessidade de integração digital no ensino, 
-                      mas também mostrou que muitos estudantes e professores não estão preparados para 
-                      o uso efetivo das tecnologias educacionais.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
 
-          {themeMode === "gerado" && (
-            <>
-              <div className="mb-6 theme-box">
-                <h3 className="font-semibold text-lg mb-2 text-foreground">TEMA GERADO:</h3>
-                <p className="theme-text">
-                  &ldquo;{generatedTheme}&rdquo;
-                </p>
-              </div>
-              
-              <div className="mb-6">
-                <h3 className="font-semibold text-lg mb-2 text-foreground">TEXTOS DE APOIO:</h3>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="support-text-box">
-                    <p className="support-text-title">
-                      <strong>TEXTO I</strong>
-                    </p>
-                    <p className="support-text-content">{generatedText1}</p>
-                  </div>
-                  <div className="support-text-box">
-                    <p className="support-text-title">
-                      <strong>TEXTO II</strong>
-                    </p>
-                    <p className="support-text-content">{generatedText2}</p>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-          
-          {themeMode === "personalizado" && (
-            <>
-              <div className="mb-6">
-                <label className="block">
-                  <h3 className="font-semibold text-lg mb-2">TEMA PERSONALIZADO:</h3>
-                  <input 
-                    type="text"
-                    value={customTheme}
-                    onChange={(e) => setCustomTheme(e.target.value)}
-                    placeholder="Digite o tema da redação..."
-                    className="w-full p-3 border rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500 transition-colors"
+              <div className="flex flex-wrap gap-3">
+                <label className={`radio-pill ${themeMode === "padrao" ? "radio-pill--active" : ""}`}>
+                  <input
+                    type="radio"
+                    name="tema"
+                    value="padrao"
+                    checked={themeMode === "padrao"}
+                    onChange={() => setThemeMode("padrao")}
                   />
+                  <span>Tema padrão</span>
+                </label>
+                <label className={`radio-pill ${themeMode === "personalizado" ? "radio-pill--active" : ""}`}>
+                  <input
+                    type="radio"
+                    name="tema"
+                    value="personalizado"
+                    checked={themeMode === "personalizado"}
+                    onChange={() => setThemeMode("personalizado")}
+                  />
+                  <span>Definir tema personalizado</span>
+                </label>
+                <label className={`radio-pill ${themeMode === "gerado" ? "radio-pill--active" : ""}`}>
+                  <input
+                    type="radio"
+                    name="tema"
+                    value="gerado"
+                    checked={themeMode === "gerado"}
+                    onChange={() => setThemeMode("gerado")}
+                  />
+                  <span>Usar tema gerado automaticamente</span>
                 </label>
               </div>
-              
-              <div className="mb-6">
-                <h3 className="font-semibold text-lg mb-2">TEXTOS DE APOIO PERSONALIZADOS (OPCIONAL):</h3>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block mb-2">
-                      <span className="text-sm font-medium">TEXTO I</span>
-                      <textarea
-                        rows={4}
-                        value={customText1}
-                        onChange={(e) => setCustomText1(e.target.value)}
-                        placeholder="Digite o primeiro texto de apoio (opcional)..."
-                        className="w-full mt-1 p-3 border rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500 transition-colors"
-                      ></textarea>
-                    </label>
+
+              {renderThemeContent()}
+            </div>
+
+            <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
+              <div className="surface-card space-y-4 p-6 shadow-xl md:p-8">
+                <div className="flex items-center gap-2">
+                  <svg className="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <h3 className="text-lg font-semibold text-foreground">Checklist para uma redação nota mil</h3>
+                </div>
+                <ul className="space-y-3 text-sm text-foreground/75">
+                  <li>🧭 Apresente uma tese clara no primeiro parágrafo e retome-a na conclusão.</li>
+                  <li>🧠 Use repertórios legitimados para sustentar cada argumento (dados, autores, fatos históricos).</li>
+                  <li>🧩 Construa parágrafos coesos com conectivos, progressão lógica e análise crítica.</li>
+                  <li>🤝 Proponha intervenção completa: agente, ação, meio, finalidade e detalhamento.</li>
+                </ul>
+                {error && (
+                  <div className="rounded-2xl border border-danger/20 bg-danger-light/30 p-4 text-sm text-danger">
+                    <p className="font-semibold">Não conseguimos prosseguir:</p>
+                    <p className="mt-1">{error}</p>
                   </div>
-                  <div>
-                    <label className="block mb-2">
-                      <span className="text-sm font-medium">TEXTO II</span>
-                      <textarea
-                        rows={4}
-                        value={customText2}
-                        onChange={(e) => setCustomText2(e.target.value)}
-                        placeholder="Digite o segundo texto de apoio (opcional)..."
-                        className="w-full mt-1 p-3 border rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500 transition-colors"
-                      ></textarea>
-                    </label>
-                  </div>
+                )}
+              </div>
+
+              <div className="surface-card space-y-5 p-6 shadow-xl md:p-8">
+                <div className="flex items-center gap-2">
+                  <svg className="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                  <h3 className="text-lg font-semibold text-foreground">Sua redação</h3>
+                </div>
+                <div
+                  ref={editorRef}
+                  className="editor-container"
+                  contentEditable
+                  onInput={handleInput}
+                  data-placeholder="Organize seus argumentos, conecte as ideias e finalize com uma intervenção transformadora."
+                  aria-label="Editor de redação"
+                ></div>
+                <div className="char-counter">
+                  {content.length} caracteres · ~{Math.ceil(content.length / 80)} linhas
+                  {content.length >= 2500 && <span className="text-danger ml-2">(Limite de caracteres atingido)</span>}
+                </div>
+                <div className="flex justify-end">
+                  <button
+                    onClick={handleSubmit}
+                    disabled={isSubmitting || !isSystemAvailable}
+                    className="btn btn-primary px-6 py-3 text-base disabled:cursor-not-allowed disabled:opacity-60"
+                    title={
+                      !isSystemAvailable && operatingInfo
+                        ? `Sistema disponível apenas das ${operatingInfo.opensAt} às ${operatingInfo.closesAt}`
+                        : ""
+                    }
+                  >
+                    {isSubmitting ? (
+                      <span className="flex items-center gap-2">
+                        <span className="inline-block h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                        Enviando...
+                      </span>
+                    ) : !isSystemAvailable ? (
+                      <span className="flex items-center gap-2">
+                        Sistema indisponível
+                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        Concluir redação
+                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                        </svg>
+                      </span>
+                    )}
+                  </button>
                 </div>
               </div>
-            </>
-          )}
-          
-          <div className="mb-8 p-4 bg-primary-light rounded-lg border border-border-color">
-            <h3 className="font-semibold mb-4 flex items-center">
-              <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              INSTRUÇÕES:
-            </h3>
-            <ul className="list-disc pl-5 space-y-2 text-sm">
-              <li>A partir da leitura dos textos motivadores e com base nos conhecimentos construídos ao longo de sua formação, redija um texto dissertativo-argumentativo sobre o tema proposto.</li>
-              <li>Apresente proposta de intervenção que respeite os direitos humanos.</li>
-              <li>Dê um título à sua redação.</li>
-              <li>Seu texto deve ter entre 7 e 30 linhas.</li>
-            </ul>
-          </div>
-
-          {error && (
-            <div className="bg-danger-light text-danger p-4 rounded-lg mb-8 animate-fadeIn flex items-start">
-              <svg className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <div>
-                <p className="font-medium">Erro:</p>
-                <p>{error}</p>
-              </div>
             </div>
-          )}
-
-          <div className="mb-8">
-            <h3 className="font-semibold mb-4 flex items-center">
-              <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-              </svg>
-              SUA REDAÇÃO:
-            </h3>
-            <div
-              ref={editorRef}
-              className="editor-container"
-              contentEditable
-              onInput={handleInput}
-              data-placeholder="Digite seu texto aqui..."
-              aria-label="Editor de redação"
-            ></div>
-            <div className="char-counter">
-              {content.length} caracteres | Aproximadamente {Math.ceil(content.length / 80)} linhas
-              {content.length >= 2500 && 
-                <span className="text-danger ml-2">
-                  (Limite de caracteres atingido!)
-                </span>
-              }
-            </div>
-          </div>
-
-          <div className="flex justify-end">
-            <button
-              onClick={handleSubmit}
-              disabled={isSubmitting || !isSystemAvailable}
-              className={`${isSubmitting || !isSystemAvailable ? "bg-gray-400" : ""} theme-btn btn`}
-              title={
-                !isSystemAvailable && operatingInfo
-                  ? `Sistema disponível apenas das ${operatingInfo.opensAt} às ${operatingInfo.closesAt}`
-                  : ""
-              }
-            >
-              {isSubmitting ? (
-                <>
-                  <span className="inline-block w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                  Enviando...
-                </>
-              ) : !isSystemAvailable ? (
-                <>
-                  Sistema Indisponível
-                  <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </>
-              ) : (
-                <>
-                  Concluir Redação
-                  <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-                  </svg>
-                </>
-              )}
-            </button>
           </div>
         </section>
       </main>

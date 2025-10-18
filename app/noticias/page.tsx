@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import Header from "@/app/components/Header";
@@ -14,37 +14,32 @@ export default function NoticiasPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
-  const [buscaIA, setBuscaIA] = useState(""); // Nova state para busca com IA
+  const [buscaIA, setBuscaIA] = useState("");
   const [pagina, setPagina] = useState(1);
   const [temMaisNoticias, setTemMaisNoticias] = useState(true);
-  const [noticiasIA, setNoticiasIA] = useState<string | null>(null); // State para resultados da IA
+  const [noticiasIA, setNoticiasIA] = useState<string | null>(null);
   const limitePorPagina = 6;
 
-  // Carregar notícias
   useEffect(() => {
     const carregarNoticias = async () => {
       try {
         setIsLoading(true);
-        
-        // Carregar destaques apenas na primeira página
+
         if (pagina === 1) {
           const destaques = await getNoticiasDestaque();
           setNoticiasDestaque(destaques);
         }
-        
-        // Carregar notícias normais
+
         const offset = (pagina - 1) * limitePorPagina;
         const resultado = await getNoticias(limitePorPagina, offset);
-        
+
         if (pagina === 1) {
           setNoticias(resultado);
         } else {
-          setNoticias(prev => [...prev, ...resultado]);
+          setNoticias((previous) => [...previous, ...resultado]);
         }
-        
-        // Verificar se tem mais notícias para carregar
+
         setTemMaisNoticias(resultado.length === limitePorPagina);
-        
       } catch (erro) {
         console.error("Erro ao carregar notícias:", erro);
         setError("Não foi possível carregar as notícias. Tente novamente mais tarde.");
@@ -52,35 +47,30 @@ export default function NoticiasPage() {
         setIsLoading(false);
       }
     };
-    
-    carregarNoticias();
+
+    void carregarNoticias();
   }, [pagina]);
 
-  // Função para buscar notícias com IA
-  const buscarComIA = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const buscarComIA = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     if (!buscaIA.trim()) return;
-    
+
     try {
       setIsLoading(true);
       setError(null);
       setNoticiasIA(null);
-      
-      const response = await fetch('/api/noticias/gpt-busca', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+
+      const response = await fetch("/api/noticias/gpt-busca", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ termo: buscaIA }),
       });
-      
+
       const data = await response.json();
-      
       if (!response.ok) {
-        throw new Error(data.error || 'Erro ao buscar notícias com IA');
+        throw new Error(data.error || "Erro ao buscar notícias com IA");
       }
-      
+
       setNoticiasIA(data.noticias);
     } catch (erro) {
       console.error("Erro ao buscar notícias com IA:", erro);
@@ -90,233 +80,194 @@ export default function NoticiasPage() {
     }
   };
 
-  // Função para limpar a busca com IA
   const limparBuscaIA = () => {
     setBuscaIA("");
     setNoticiasIA(null);
     setError(null);
   };
 
-  // Formatar data para padrão brasileiro
   const formatarData = (dataString: string) => {
     const data = new Date(dataString);
-    return data.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric'
-    });
+    return data.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
   };
 
-  // Carregar mais notícias
-  const carregarMais = () => {
-    setPagina(prev => prev + 1);
-  };
+  const carregarMais = () => setPagina((previous) => previous + 1);
+
+  const termoBusca = busca.trim().toLowerCase();
+  const filtrando = termoBusca.length > 0;
+  const noticiasVisiveis = filtrando
+    ? noticias.filter(
+        (noticia) =>
+          noticia.titulo.toLowerCase().includes(termoBusca) ||
+          noticia.resumo.toLowerCase().includes(termoBusca) ||
+          noticia.tags?.some((tag) => tag.toLowerCase().includes(termoBusca))
+      )
+    : noticias;
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex min-h-screen flex-col bg-page-gradient text-foreground">
       <Header />
-      
-      <main className="flex-grow container mx-auto p-4 md:p-8">
-        <section className="mb-12">
-          <h1 className="text-3xl md:text-4xl font-bold text-primary mb-6 flex items-center">
-            <svg className="w-8 h-8 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-            </svg>
-            Notícias do ENEM
-          </h1>
-          
-          <div className="mb-8">
-            {/* Busca tradicional */}
-            <div className="relative mb-4">
-              <input
-                type="text"
-                value={busca}
-                onChange={(e) => setBusca(e.target.value)}
-                placeholder="Buscar notícias..."
-                className="w-full p-4 pl-12 pr-4 rounded-lg border border-border-color focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-              />
-              <svg
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </div>
-            
-            {/* Busca com IA */}
-            <div className="card border border-border-color p-4 rounded-lg">
-              <h3 className="font-bold text-lg mb-3 flex items-center">
-                <svg className="w-5 h-5 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
-                Busca Inteligente com IA
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                Utilize a inteligência artificial para buscar notícias atualizadas sobre o ENEM diretamente da web.
-              </p>
-              <form onSubmit={buscarComIA} className="flex">
-                <input
-                  type="text"
-                  value={buscaIA}
-                  onChange={(e) => setBuscaIA(e.target.value)}
-                  placeholder="Buscar notícias com IA (ex: inscrições ENEM 2024)..."
-                  className="flex-grow p-3 rounded-l-lg border border-border-color focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-                  disabled={isLoading}
-                />
-                <button
-                  type="submit"
-                  disabled={isLoading || !buscaIA.trim()}
-                  className="bg-primary hover:bg-primary-dark text-white p-3 rounded-r-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-                >
-                  {isLoading ? (
-                    <span className="inline-block w-4 h-4 mr-1 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
-                  ) : (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  )}
-                  <span className="ml-1">Buscar</span>
-                </button>
-              </form>
-              {noticiasIA && (
-                <div className="mt-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <h4 className="font-semibold">Resultados da Busca com IA:</h4>
-                    <button 
-                      onClick={limparBuscaIA}
-                      className="text-sm text-primary hover:underline"
-                    >
-                      Limpar
-                    </button>
-                  </div>
-                  <div className="bg-muted-bg p-4 rounded-lg max-h-96 overflow-y-auto">
-                    <pre className="whitespace-pre-wrap text-sm">{noticiasIA}</pre>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-2">
-                    * Estas informações foram buscadas em tempo real da web utilizando inteligência artificial.
+
+      <main className="flex-grow">
+        <section className="relative overflow-hidden px-4 pb-20 pt-16 sm:px-6 lg:px-8">
+          <div className="hero-accent absolute inset-0 blur-3xl" aria-hidden />
+          <div className="container relative z-10 mx-auto max-w-6xl">
+            <div className="grid gap-12 lg:grid-cols-[1.2fr_0.9fr]">
+              <div className="space-y-8">
+                <div className="hero-status shadow-glow">
+                  <span className="h-2 w-2 rounded-full bg-success" />
+                  Atualizado diariamente
+                </div>
+                <div className="space-y-5">
+                  <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl">
+                    Notícias e atualidades para a redação e questões do ENEM.
+                  </h1>
+                  <p className="max-w-xl text-lg text-foreground/75">
+                    Acompanhe mudanças no exame, prazos importantes, temas em alta e orientações exclusivas para construir
+                    repertório sociocultural com confiança.
                   </p>
                 </div>
-              )}
+                <dl className="grid gap-4 sm:grid-cols-3">
+                  <div className="stat-card px-5 py-4">
+                    <dt className="text-xs uppercase tracking-wide text-foreground/60">Cobertura</dt>
+                    <dd className="mt-2 text-xl font-semibold text-primary">ENEM & Educação</dd>
+                    <p className="mt-1 text-xs text-foreground/60">Atualizações oficiais, MEC/INEP e temas sociais</p>
+                  </div>
+                  <div className="stat-card px-5 py-4">
+                    <dt className="text-xs uppercase tracking-wide text-foreground/60">Curadoria</dt>
+                    <dd className="mt-2 text-xl font-semibold text-primary">Feita por quem estuda</dd>
+                    <p className="mt-1 text-xs text-foreground/60">Equipe que vive o vestibular diariamente</p>
+                  </div>
+                  <div className="stat-card px-5 py-4">
+                    <dt className="text-xs uppercase tracking-wide text-foreground/60">Busca inteligente</dt>
+                    <dd className="mt-2 text-xl font-semibold text-primary">IA integrada</dd>
+                    <p className="mt-1 text-xs text-foreground/60">Pesquise a web em tempo real sem sair da plataforma</p>
+                  </div>
+                </dl>
+              </div>
+
+              <div className="surface-card flex h-full flex-col gap-6 p-6 shadow-xl">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.18em] text-primary">Fique por dentro</p>
+                  <h2 className="mt-2 text-lg font-semibold text-foreground">Busque notícias rapidamente</h2>
+                </div>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={busca}
+                    onChange={(event) => setBusca(event.target.value)}
+                    placeholder="Pesquisar nas notícias publicadas aqui..."
+                    className="w-full rounded-2xl border border-border-color/60 bg-card-bg/80 py-3 pl-12 pr-4 text-base text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                  <svg
+                    className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-foreground/40"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <div className="rounded-2xl border border-border-color/60 bg-card-bg/80 p-4 shadow-inner backdrop-blur">
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">Busca inteligente com IA</p>
+                      <p className="text-xs text-foreground/60">
+                        Pesquise na web por novidades sobre o ENEM e receba um resumo contextualizado.
+                      </p>
+                    </div>
+                    <svg className="h-6 w-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                  </div>
+                  <form onSubmit={buscarComIA} className="mt-4 flex gap-2">
+                    <input
+                      type="text"
+                      value={buscaIA}
+                      onChange={(event) => setBuscaIA(event.target.value)}
+                      placeholder="Ex.: mudanças na redação ENEM 2024"
+                      className="flex-grow rounded-2xl border border-border-color/60 bg-card-bg/80 px-4 py-3 text-sm text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      disabled={isLoading}
+                    />
+                    <button
+                      type="submit"
+                      disabled={isLoading || !buscaIA.trim()}
+                      className="btn btn-primary px-4 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                      {isLoading ? (
+                        <span className="flex items-center gap-2">
+                          <span className="inline-block h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                          Buscando...
+                        </span>
+                      ) : (
+                        <>
+                          Buscar com IA
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                          </svg>
+                        </>
+                      )}
+                    </button>
+                  </form>
+                  {noticiasIA && (
+                    <div className="mt-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-semibold text-foreground">Resumo da web</p>
+                        <button onClick={limparBuscaIA} className="text-xs font-semibold text-primary hover:underline">
+                          Limpar
+                        </button>
+                      </div>
+                      <div className="max-h-72 overflow-y-auto rounded-2xl border border-border-color/60 bg-muted-bg/60 p-4 text-sm text-foreground/80">
+                        <pre className="whitespace-pre-wrap">{noticiasIA}</pre>
+                      </div>
+                      <p className="text-xs text-foreground/50">* Conteúdo sintetizado por IA com base em resultados da web.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
-          
-          {error && (
-            <div className="bg-danger-light text-danger p-4 rounded-lg mb-8 animate-fadeIn">
-              <p>{error}</p>
-            </div>
-          )}
-          
-          {/* Seção de Destaques - Carrossel */}
-          {noticiasDestaque.length > 0 && !error && (
-            <div className="mb-12">
-              <h2 className="text-2xl font-bold mb-6 flex items-center">
-                <svg className="w-6 h-6 mr-2 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                </svg>
-                Destaques
-              </h2>
-              
-              <div className="grid md:grid-cols-3 gap-6">
-                {noticiasDestaque.map((noticia) => (
-                  <Link
-                    key={noticia.id}
-                    href={`/noticias/${noticia.slug}`}
-                    className="card border border-border-color overflow-hidden hover:shadow-lg transition-all"
-                  >
-                    <div className="h-48 relative">
-                      {noticia.imagem_url ? (
-                        <Image
-                          src={noticia.imagem_url}
-                          alt={noticia.titulo}
-                          fill
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-primary-light flex items-center justify-center">
-                          <svg className="w-16 h-16 text-primary opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-                          </svg>
-                        </div>
-                      )}
-                      <div className="absolute top-2 left-2">
-                        <span className="badge badge-primary">Destaque</span>
-                      </div>
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-bold text-lg mb-2 line-clamp-2">{noticia.titulo}</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-3 line-clamp-2">
-                        {noticia.resumo}
-                      </p>
-                      <div className="flex justify-between items-center text-xs text-gray-500">
-                        <span>{formatarData(noticia.data_publicacao)}</span>
-                        <span>Por {noticia.autor}</span>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
+        </section>
+
+        <section className="px-4 pb-24 sm:px-6 lg:px-8">
+          <div className="container mx-auto max-w-6xl space-y-12">
+            {error && (
+              <div className="rounded-2xl border border-danger/20 bg-danger-light/30 p-4 text-sm text-danger shadow-sm">
+                {error}
               </div>
-            </div>
-          )}
-          
-          {/* Lista de Notícias */}
-          <div>
-            <h2 className="text-2xl font-bold mb-6 flex items-center">
-              <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-              Últimas Notícias
-            </h2>
-            
-            {isLoading && pagina === 1 ? (
-              <div className="flex justify-center my-12">
-                <div className="loader"></div>
-              </div>
-            ) : noticias.length === 0 ? (
-              <div className="text-center py-12">
-                <svg className="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-                </svg>
-                <p className="text-gray-500">Nenhuma notícia encontrada</p>
-              </div>
-            ) : (
-              <>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                  {noticias.map((noticia) => (
+            )}
+
+            {noticiasDestaque.length > 0 && !error && (
+              <div className="space-y-6">
+                <div className="flex flex-col gap-2">
+                  <p className="text-xs uppercase tracking-[0.18em] text-primary">Em destaque</p>
+                  <h2 className="text-2xl font-semibold text-foreground">Principais notícias para ficar atento</h2>
+                </div>
+                <div className="grid gap-6 lg:grid-cols-3">
+                  {noticiasDestaque.map((noticia) => (
                     <Link
                       key={noticia.id}
                       href={`/noticias/${noticia.slug}`}
-                      className="card border border-border-color overflow-hidden hover:shadow-lg transition-all"
+                      className="surface-card group flex h-full flex-col overflow-hidden border border-primary/20 shadow-xl transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl"
                     >
-                      <div className="h-40 relative">
+                      <div className="relative h-56">
                         {noticia.imagem_url ? (
-                          <Image
-                            src={noticia.imagem_url}
-                            alt={noticia.titulo}
-                            fill
-                            className="object-cover"
-                          />
+                          <Image src={noticia.imagem_url} alt={noticia.titulo} fill className="object-cover" />
                         ) : (
-                          <div className="w-full h-full bg-muted-bg flex items-center justify-center">
-                            <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                          <div className="flex h-full w-full items-center justify-center bg-primary/10">
+                            <svg className="h-12 w-12 text-primary/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.4} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2M9 5V3m0 2h6m0 0V3m-6 6h6v4H9V9z" />
                             </svg>
                           </div>
                         )}
+                        <span className="hero-status absolute left-4 top-4 border border-white/60 bg-white/80 text-xs font-semibold text-primary shadow-glow">
+                          Destaque
+                        </span>
                       </div>
-                      <div className="p-4">
-                        <h3 className="font-bold text-lg mb-2 line-clamp-2">{noticia.titulo}</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-300 mb-3 line-clamp-2">
-                          {noticia.resumo}
-                        </p>
-                        <div className="flex justify-between items-center text-xs text-gray-500">
+                      <div className="flex flex-1 flex-col gap-3 p-5">
+                        <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">{noticia.titulo}</h3>
+                        <p className="line-clamp-3 text-sm text-foreground/70">{noticia.resumo}</p>
+                        <div className="mt-auto flex items-center justify-between text-xs text-foreground/60">
                           <span>{formatarData(noticia.data_publicacao)}</span>
                           <span>Por {noticia.autor}</span>
                         </div>
@@ -324,36 +275,96 @@ export default function NoticiasPage() {
                     </Link>
                   ))}
                 </div>
-                
-                {temMaisNoticias && (
-                  <div className="flex justify-center mt-8">
-                    <button
-                      onClick={carregarMais}
-                      disabled={isLoading}
-                      className="btn btn-outline flex items-center"
-                    >
-                      {isLoading ? (
-                        <>
-                          <span className="inline-block w-4 h-4 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
-                          Carregando...
-                        </>
-                      ) : (
-                        <>
-                          Carregar mais
-                          <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                )}
-              </>
+              </div>
             )}
+
+            <div className="space-y-6">
+              <div className="flex flex-col gap-2">
+                <p className="text-xs uppercase tracking-[0.18em] text-primary">Últimas atualizações</p>
+                <h2 className="text-2xl font-semibold text-foreground">Fique em dia com o ENEM</h2>
+              </div>
+
+              {isLoading && pagina === 1 ? (
+                <div className="flex justify-center py-12">
+                  <div className="loader" />
+                </div>
+              ) : noticiasVisiveis.length === 0 ? (
+                <div className="surface-card flex flex-col items-center gap-4 p-10 text-center shadow-xl">
+                  <svg className="h-12 w-12 text-foreground/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1M9 5V3m0 2h6m0 0V3m-6 6h6v4H9V9z" />
+                  </svg>
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold text-foreground">Nenhuma notícia encontrada</h3>
+                    <p className="text-sm text-foreground/60">Tente ajustar o termo de busca ou limpar os filtros.</p>
+                  </div>
+                  {filtrando && (
+                    <button onClick={() => setBusca("")} className="btn btn-outline px-4 py-2 text-sm">
+                      Limpar busca
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    {noticiasVisiveis.map((noticia) => (
+                      <Link
+                        key={noticia.id}
+                        href={`/noticias/${noticia.slug}`}
+                        className="surface-card flex h-full flex-col overflow-hidden border border-border-color/60 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                      >
+                        <div className="relative h-44">
+                          {noticia.imagem_url ? (
+                            <Image src={noticia.imagem_url} alt={noticia.titulo} fill className="object-cover" />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center bg-muted-bg">
+                              <svg className="h-10 w-10 text-foreground/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1M9 5V3m0 2h6m0 0V3m-6 6h6v4H9V9z" />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex flex-1 flex-col gap-3 p-5">
+                          <h3 className="text-lg font-semibold text-foreground line-clamp-2">{noticia.titulo}</h3>
+                          <p className="text-sm text-foreground/70 line-clamp-3">{noticia.resumo}</p>
+                          <div className="mt-auto flex items-center justify-between text-xs text-foreground/60">
+                            <span>{formatarData(noticia.data_publicacao)}</span>
+                            <span>Por {noticia.autor}</span>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+
+                  {!filtrando && temMaisNoticias && (
+                    <div className="flex justify-center">
+                      <button
+                        onClick={carregarMais}
+                        disabled={isLoading}
+                        className="btn btn-outline px-5 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-70"
+                      >
+                        {isLoading ? (
+                          <span className="flex items-center gap-2">
+                            <span className="inline-block h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                            Carregando...
+                          </span>
+                        ) : (
+                          <>
+                            Carregar mais notícias
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         </section>
       </main>
-      
+
       <Footer />
     </div>
   );
