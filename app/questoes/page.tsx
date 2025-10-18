@@ -425,14 +425,7 @@ export default function QuestoesPage() {
                   </div>
                   {saveStatusMessage && <p className="text-sm text-foreground/70">{saveStatusMessage}</p>}
                 </div>
-                <QuizResults
-                  result={quizResult}
-                  onRetake={handleRetakeQuiz}
-                  onNewQuiz={handleRetakeQuiz}
-                  saveStatusMessage={saveStatusMessage ?? undefined}
-                  disciplines={Array.from(selectedDisciplines)}
-                  questions={questions}
-                />
+                <QuizResults result={quizResult} onRetakeQuiz={handleRetakeQuiz} />
               </div>
             ) : !hasStarted ? (
               <div className="surface-card space-y-8 p-6 shadow-xl md:p-8">
