@@ -139,20 +139,31 @@ async function fetchFromInternalEndpoint(): Promise<TimeResult | null> {
     }
 
     if (!response.ok) {
-      throw new Error(`Endpoint interno respondeu com status ${response.status}`);
+      console.warn(`Endpoint interno respondeu com status ${response.status}`);
+      return null;
     }
 
-    const payload = await response.json();
+    const payload = await response.json().catch((error) => {
+      console.warn("Não foi possível interpretar a resposta do endpoint interno:", error);
+      return null;
+    });
+
+    if (!payload) {
+      return null;
+    }
+
     const isoString = typeof payload?.datetime === "string" ? payload.datetime : null;
 
     if (!isoString) {
-      throw new Error("Endpoint interno não retornou o campo 'datetime'.");
+      console.warn("Endpoint interno não retornou o campo 'datetime'.");
+      return null;
     }
 
     const dateTime = DateTime.fromISO(isoString, { zone: BRAZIL_TIMEZONE });
 
     if (!dateTime.isValid) {
-      throw new Error(`Horário inválido recebido do endpoint interno: ${isoString}`);
+      console.warn(`Horário inválido recebido do endpoint interno: ${isoString}`);
+      return null;
     }
 
     return {
