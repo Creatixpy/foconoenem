@@ -5,5 +5,10 @@ declare global {
     env: {
       get(key: string): string | undefined;
     };
+    serve(
+      handler:
+        | ((request: Request) => Response | Promise<Response>)
+        | { fetch(request: Request): Response | Promise<Response> }
+    ): void;
   };
 }
