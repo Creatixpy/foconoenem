@@ -39,7 +39,14 @@ function buildHeaders(request: NextRequest): Headers {
   return headers;
 }
 
-export async function GET(request: NextRequest, context: { params: { id: string } }) {
+type ResultRouteParams = {
+  id?: string | string[];
+};
+
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<ResultRouteParams> }
+) {
   if (!baseFunctionUrl) {
     return NextResponse.json(
       { error: "NEXT_PUBLIC_SUPABASE_URL não configurada." },
@@ -47,13 +54,19 @@ export async function GET(request: NextRequest, context: { params: { id: string 
     );
   }
 
-  const id = context.params.id;
+  const params = await context.params;
+  const id = params.id;
   if (!id) {
     return NextResponse.json({ error: "ID não fornecido" }, { status: 400 });
   }
 
+  const normalizedId = Array.isArray(id) ? id[0] : id;
+  if (!normalizedId) {
+    return NextResponse.json({ error: "ID inválido" }, { status: 400 });
+  }
+
   const url = new URL(baseFunctionUrl);
-  url.searchParams.set("id", id);
+  url.searchParams.set("id", normalizedId);
 
   const response = await fetch(url.toString(), {
     method: "GET",
