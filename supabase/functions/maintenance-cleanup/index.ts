@@ -134,14 +134,24 @@ Deno.serve(async (request) => {
       cleanupAnalytics().catch((error) => ({ error })),
     ]);
 
-    const result: Record<string, unknown> = {
+    type CleanupSummary = {
+      status: "completed";
+      deleted: {
+        cached_themes: number;
+        rate_limits: number;
+        analytics_events: number;
+      };
+      errors: string[];
+    };
+
+    const result: CleanupSummary = {
       status: "completed",
       deleted: {
         cached_themes: typeof themes === "number" ? themes : 0,
         rate_limits: typeof rateLimits === "number" ? rateLimits : 0,
         analytics_events: typeof analytics === "number" ? analytics : 0,
       },
-      errors: [] as string[],
+      errors: [],
     };
 
     if (typeof themes !== "number" && themes?.error) {
