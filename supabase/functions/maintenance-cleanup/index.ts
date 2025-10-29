@@ -77,47 +77,44 @@ function jsonResponse(body: unknown, init?: ResponseInit) {
 
 async function cleanupCachedThemes() {
   const threshold = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-  const { data, error } = await supabase
+  const { error, count } = await supabase
     .from("cached_themes")
-    .delete()
-    .lt("created_at", threshold)
-    .select("id", { count: "exact" });
+    .delete({ count: "exact" })
+    .lt("created_at", threshold);
 
   if (error) {
     throw new Error(`Erro ao limpar cached_themes: ${error.message}`);
   }
 
-  return data?.length ?? 0;
+  return count ?? 0;
 }
 
 async function cleanupRateLimits() {
   const threshold = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-  const { data, error } = await supabase
+  const { error, count } = await supabase
     .from("rate_limits")
-    .delete()
-    .lt("window_start", threshold)
-    .select("id", { count: "exact" });
+    .delete({ count: "exact" })
+    .lt("window_start", threshold);
 
   if (error) {
     throw new Error(`Erro ao limpar rate_limits: ${error.message}`);
   }
 
-  return data?.length ?? 0;
+  return count ?? 0;
 }
 
 async function cleanupAnalytics() {
   const threshold = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
-  const { data, error } = await supabase
+  const { error, count } = await supabase
     .from("analytics_events")
-    .delete()
-    .lt("created_at", threshold)
-    .select("id", { count: "exact" });
+    .delete({ count: "exact" })
+    .lt("created_at", threshold);
 
   if (error) {
     throw new Error(`Erro ao limpar analytics_events: ${error.message}`);
   }
 
-  return data?.length ?? 0;
+  return count ?? 0;
 }
 
 Deno.serve(async (request) => {
