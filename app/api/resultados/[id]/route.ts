@@ -16,6 +16,9 @@ function buildHeaders(request: NextRequest): Headers {
 
   if (anonKey) {
     headers.set("apikey", anonKey);
+    if (!authHeader) {
+      headers.set("authorization", `Bearer ${anonKey}`);
+    }
   }
 
   const forwardedFor = request.headers.get("x-forwarded-for");
