@@ -39,7 +39,7 @@ function buildHeaders(request: NextRequest): Headers {
   return headers;
 }
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, context: { params: { id: string } }) {
   if (!baseFunctionUrl) {
     return NextResponse.json(
       { error: "NEXT_PUBLIC_SUPABASE_URL não configurada." },
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     );
   }
 
-  const id = params.id;
+  const id = context.params.id;
   if (!id) {
     return NextResponse.json({ error: "ID não fornecido" }, { status: 400 });
   }
