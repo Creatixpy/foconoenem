@@ -7,6 +7,7 @@ import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 import { signUp, signInWithGoogle } from "@/lib/auth";
 import { useAuth } from "@/app/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
 
 const benefits = [
   {
@@ -34,12 +35,46 @@ export default function RegisterPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
     if (!loading && user) {
       router.replace("/conta");
     }
   }, [loading, user, router]);
+
+  useEffect(() => {
+    if (!success) {
+      return;
+    }
+
+    let active = true;
+
+    const redirectToDashboard = () => {
+      if (!active) return;
+      setRedirecting(true);
+      router.replace("/conta");
+    };
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (!active) return;
+      if (data.session?.user) {
+        redirectToDashboard();
+      }
+    });
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!active) return;
+      if (session?.user) {
+        redirectToDashboard();
+      }
+    });
+
+    return () => {
+      active = false;
+      listener?.subscription.unsubscribe();
+    };
+  }, [success, router]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -137,15 +172,22 @@ export default function RegisterPage() {
                   <div className="space-y-3">
                     <h2 className="text-2xl font-semibold text-foreground">Conta criada com sucesso!</h2>
                     <p className="text-sm text-foreground/70">
-                      Enviamos um email de confirmação. Verifique sua caixa de entrada e confirme em poucos instantes para começar
-                      a usar a plataforma.
+                      {redirecting
+                        ? "Conta confirmada! Redirecionando você para a área do aluno..."
+                        : "Enviamos um email de confirmação. Assim que você confirmar, vamos liberar o acesso automaticamente."}
                     </p>
                   </div>
                   <div className="flex flex-wrap justify-center gap-3">
                     <button onClick={() => router.push("/auth/login")} className="btn btn-primary px-5 py-3 text-sm">
                       Ir para o login
                     </button>
-                    <button onClick={() => setSuccess(false)} className="btn btn-outline px-5 py-3 text-sm">
+                    <button
+                      onClick={() => {
+                        setSuccess(false);
+                        setRedirecting(false);
+                      }}
+                      className="btn btn-outline px-5 py-3 text-sm"
+                    >
                       Voltar ao formulário
                     </button>
                   </div>

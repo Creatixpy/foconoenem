@@ -1,34 +1,52 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+
+const functionBaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/remove-highlight`
+  : null;
+
+const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const cronSecret = process.env.ADMIN_CRON_SECRET;
 
 export async function POST(request: NextRequest) {
-  try {
-    // Obter o ID da notícia a ser removida do destaque
-    const { id } = await request.json();
-    
-    if (!id) {
-      return NextResponse.json({ error: "ID não fornecido" }, { status: 400 });
-    }
-    
-    // Atualizar o registro no Supabase (remover destaque)
-    const { error } = await supabase
-      .from('noticias')
-      .update({ destaque: false })
-      .eq('id', id);
-    
-    if (error) {
-      console.error('Erro ao remover destaque:', error);
-      return NextResponse.json({ error: 'Erro ao remover destaque' }, { status: 500 });
-    }
-    
-    // Retornar confirmação de sucesso
-    return NextResponse.json({ success: true, message: 'Destaque removido com sucesso' });
-    
-  } catch (error) {
-    console.error('Erro no endpoint de remoção de destaque:', error);
+  if (!functionBaseUrl) {
     return NextResponse.json(
-      { error: 'Erro interno do servidor' },
+      { error: "NEXT_PUBLIC_SUPABASE_URL não configurada." },
       { status: 500 }
     );
   }
+
+  const headers = new Headers();
+  const authHeader = request.headers.get("authorization");
+  if (authHeader) {
+    headers.set("authorization", authHeader);
+  } else if (anonKey) {
+    headers.set("authorization", `Bearer ${anonKey}`);
+  }
+
+  const incomingCronSecret = request.headers.get("x-cron-secret");
+  if (incomingCronSecret) {
+    headers.set("x-cron-secret", incomingCronSecret);
+  } else if (cronSecret) {
+    headers.set("x-cron-secret", cronSecret);
+  }
+
+  const body = await request.text();
+  if (!headers.has("content-type")) {
+    headers.set("content-type", request.headers.get("content-type") ?? "application/json");
+  }
+
+  const response = await fetch(functionBaseUrl, {
+    method: "POST",
+    headers,
+    body,
+  });
+
+  const responseBody = await response.text();
+
+  return new NextResponse(responseBody, {
+    status: response.status,
+    headers: {
+      "content-type": response.headers.get("content-type") ?? "application/json; charset=utf-8",
+    },
+  });
 }

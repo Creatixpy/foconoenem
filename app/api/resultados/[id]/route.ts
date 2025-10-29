@@ -1,36 +1,68 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getResult } from "@/lib/store";
-import { EssayResultResponse } from "@/types";
 
-export async function GET(request: NextRequest) {
-  try {
-    const url = new URL(request.url);
-    const segments = url.pathname.split("/");
-    const id = segments.pop() || "";
+const baseFunctionUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/correct-essay`
+  : null;
 
-    if (!id) {
-      return NextResponse.json(
-        { error: "ID não fornecido" },
-        { status: 400 }
-      );
-    }
+const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    const result = await getResult(id);
+function buildHeaders(request: NextRequest): Headers {
+  const headers = new Headers();
 
-    if (!result) {
-      return NextResponse.json(
-        { error: "Resultado não encontrado" },
-        { status: 404 }
-      );
-    }
+  const authHeader = request.headers.get("authorization");
+  if (authHeader) {
+    headers.set("authorization", authHeader);
+  }
 
-    const response: EssayResultResponse = { id, result };
-    return NextResponse.json(response);
-  } catch (error) {
-    console.error("Erro ao buscar resultado:", error);
+  if (anonKey) {
+    headers.set("apikey", anonKey);
+  }
+
+  const forwardedFor = request.headers.get("x-forwarded-for");
+  if (forwardedFor) {
+    headers.set("x-forwarded-for", forwardedFor);
+  }
+
+  const realIp = request.headers.get("x-real-ip");
+  if (realIp) {
+    headers.set("x-real-ip", realIp);
+  }
+
+  const userAgent = request.headers.get("user-agent");
+  if (userAgent) {
+    headers.set("user-agent", userAgent);
+  }
+
+  return headers;
+}
+
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+  if (!baseFunctionUrl) {
     return NextResponse.json(
-      { error: "Erro interno ao buscar resultado" },
+      { error: "NEXT_PUBLIC_SUPABASE_URL não configurada." },
       { status: 500 }
     );
   }
+
+  const id = params.id;
+  if (!id) {
+    return NextResponse.json({ error: "ID não fornecido" }, { status: 400 });
+  }
+
+  const url = new URL(baseFunctionUrl);
+  url.searchParams.set("id", id);
+
+  const response = await fetch(url.toString(), {
+    method: "GET",
+    headers: buildHeaders(request),
+  });
+
+  const body = await response.text();
+
+  return new NextResponse(body, {
+    status: response.status,
+    headers: {
+      "content-type": response.headers.get("content-type") ?? "application/json; charset=utf-8",
+    },
+  });
 }
