@@ -90,9 +90,13 @@ export async function signUp(email: string, password: string, nomeCompleto?: str
   
   if (error) throw error;
   
-  // Criar perfil do usuário
-  if (data.user) {
-    await createUserProfile(data.user.id, nomeCompleto, objetivo);
+  // Criar perfil do usuário (apenas se já houver sessão ativa)
+  if (data.session?.user) {
+    try {
+      await createUserProfile(data.session.user.id, nomeCompleto, objetivo);
+    } catch (profileError) {
+      console.warn('Não foi possível criar o perfil imediatamente após o cadastro. Ele será criado ao confirmar o login.', profileError);
+    }
   }
   
   return data;
@@ -272,7 +276,53 @@ export async function getUserStatistics(userId: string): Promise<UserStatistics 
     return null;
   }
   
-  return data;
+  if (!data) {
+    return null;
+  }
+
+  const parseNumeric = (value: unknown): number | null => {
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    if (typeof value === 'number') {
+      return Number.isFinite(value) ? value : null;
+    }
+
+    if (typeof value === 'string') {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+
+    return null;
+  };
+
+  const numericFields: Array<keyof Pick<
+    UserStatistics,
+    | 'media_nota_redacao'
+    | 'media_competencia1'
+    | 'media_competencia2'
+    | 'media_competencia3'
+    | 'media_competencia4'
+    | 'media_competencia5'
+    | 'taxa_acerto'
+  >> = [
+    'media_nota_redacao',
+    'media_competencia1',
+    'media_competencia2',
+    'media_competencia3',
+    'media_competencia4',
+    'media_competencia5',
+    'taxa_acerto',
+  ];
+
+  const normalized = { ...data } as Record<string, unknown>;
+
+  for (const field of numericFields) {
+    normalized[field] = parseNumeric(normalized[field]);
+  }
+
+  return normalized as UserStatistics;
 }
 
 /**

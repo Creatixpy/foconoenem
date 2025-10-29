@@ -1,343 +1,94 @@
 import { NextRequest, NextResponse } from "next/server";
-import { v4 as uuidv4 } from "uuid";
-import { Question } from "@/types";
-import { isWithinOperatingHours, getOperatingHoursInfo } from "@/lib/schedule";
-import { storeQuizResult } from "@/lib/store";
-import { supabase } from "@/lib/supabase";
-import { recalculateUserStatistics } from "@/lib/auth";
-import { Groq } from 'groq-sdk';
-import { extractUserIdFromToken } from "@/lib/server-auth";
 
-const QUESTIONS_PER_DISCIPLINE = 3;
+const functionUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/quiz-handler`
+  : null;
 
-type RawAlternative = {
-  id?: string;
-  text?: string;
-  isCorrect?: boolean;
-};
+const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-type RawQuestion = {
-  discipline?: string;
-  text?: string;
-  explanation?: string;
-  alternatives?: RawAlternative[];
-};
+function buildHeaders(request: NextRequest): Headers {
+  const headers = new Headers();
+
+  const authHeader = request.headers.get("authorization");
+  if (authHeader) {
+    headers.set("authorization", authHeader);
+  }
+
+  if (anonKey) {
+    headers.set("apikey", anonKey);
+  }
+
+  const forwardedFor = request.headers.get("x-forwarded-for");
+  if (forwardedFor) {
+    headers.set("x-forwarded-for", forwardedFor);
+  }
+
+  const realIp = request.headers.get("x-real-ip");
+  if (realIp) {
+    headers.set("x-real-ip", realIp);
+  }
+
+  const userAgent = request.headers.get("user-agent");
+  if (userAgent) {
+    headers.set("user-agent", userAgent);
+  }
+
+  return headers;
+}
 
 export async function GET(request: NextRequest) {
-  try {
-    // Verificar se o sistema está em horário de funcionamento
-    if (!(await isWithinOperatingHours())) {
-      const { message, opensAt, closesAt } = await getOperatingHoursInfo();
-      return NextResponse.json(
-        { 
-          error: "Sistema fora do horário de funcionamento", 
-          message: message,
-          horarioFuncionamento: `${opensAt} - ${closesAt}`
-        },
-        { status: 403 } // Forbidden
-      );
-    }
-
-    // Inicializar o cliente Groq com a API key
-    const groqApiKey = process.env.GROQ_API_KEY;
-    
-    if (!groqApiKey) {
-      console.error("Groq API key not found");
-      return NextResponse.json(
-        { error: "Serviço de geração de questões indisponível. Configure a API key." },
-        { status: 503 }
-      );
-    }
-    
-    console.log("Calling Groq API to generate questions...");
-    
-    // Obter disciplinas selecionadas do query parameter
-    const { searchParams } = new URL(request.url);
-    const disciplinesParam = searchParams.get('disciplines');
-    
-    // Se nenhuma disciplina foi especificada, usar todas
-    const allDisciplines = ['Matemática', 'Português', 'Química', 'Física', 'Geografia'];
-    const disciplines = disciplinesParam 
-      ? disciplinesParam.split(',').filter(d => allDisciplines.includes(d))
-      : allDisciplines;
-    
-    // Validar se pelo menos uma disciplina foi selecionada
-    if (disciplines.length === 0) {
-      return NextResponse.json(
-        { error: "Pelo menos uma disciplina deve ser selecionada" },
-        { status: 400 }
-      );
-    }
-    
-    console.log("Generating questions for disciplines:", disciplines);
-  const allQuestions: Question[] = [];
-    
-    for (const discipline of disciplines) {
-      const prompt = `
-      Crie ${QUESTIONS_PER_DISCIPLINE} questões de múltipla escolha sobre ${discipline} de nível ENEM para estudantes do ensino médio.
-      
-      Cada questão deve ter:
-      1. Um enunciado claro
-      2. Quatro alternativas (A, B, C, D)
-      3. Apenas uma alternativa correta
-      4. Uma breve explicação da resposta correta
-      
-      Responda no seguinte formato JSON:
-      {
-        "questions": [
-          {
-            "discipline": "${discipline}",
-            "text": "Enunciado da questão",
-            "alternatives": [
-              {"id": "A", "text": "Alternativa A", "isCorrect": false},
-              {"id": "B", "text": "Alternativa B", "isCorrect": false},
-              {"id": "C", "text": "Alternativa C", "isCorrect": true},
-              {"id": "D", "text": "Alternativa D", "isCorrect": false}
-            ],
-            "explanation": "Explicação da resposta correta"
-          }
-        ]
-      }
-      
-      Certifique-se de gerar exatamente ${QUESTIONS_PER_DISCIPLINE} questões distintas no array "questions".`;
-      
-      try {
-        // Usar o SDK da Groq para chamadas mais robustas
-        const groq = new Groq({ apiKey: groqApiKey });
-        
-        console.log("Calling Groq API to generate questions with SDK...");
-        
-        const response = await groq.chat.completions.create({
-          messages: [
-            { role: "user", content: prompt }
-          ],
-          model: "openai/gpt-oss-120b",
-          temperature: 0.7,
-          max_completion_tokens: 8050, // Limite ajustado para 8050 tokens
-          top_p: 1,
-          stream: false,
-          response_format: { type: "json_object" } // Forçar resposta em formato JSON
-        });
-
-        // Extrair o conteúdo da resposta
-        const aiContent = response.choices?.[0]?.message?.content || "";
-        console.log(`AI response for ${discipline}:`, aiContent.substring(0, 100) + "...");
-        
-        // Parsear o JSON da resposta
-  let questionsData: RawQuestion[] = [];
-        
-        try {
-          // Primeiro, tenta parsear diretamente
-          const parsedContent = JSON.parse(aiContent);
-          
-          // Verificar se a resposta contém o array 'questions'
-          if (parsedContent.questions && Array.isArray(parsedContent.questions)) {
-            questionsData = parsedContent.questions;
-          } 
-          // Ou se a própria resposta é um array
-          else if (Array.isArray(parsedContent)) {
-            questionsData = parsedContent;
-          }
-          // Ou se a resposta tem o campo 'data' contendo questões
-          else if (parsedContent.data && Array.isArray(parsedContent.data)) {
-            questionsData = parsedContent.data;
-          }
-          // Se não encontrar em nenhum formato conhecido, lança erro
-          else {
-            throw new Error(`JSON response for ${discipline} doesn't contain expected structure`);
-          }
-          
-          console.log(`Successfully parsed JSON for ${discipline}, found ${questionsData.length} questions`);
-        } catch (parseError) {
-          console.error(`Failed direct JSON parse for ${discipline}, trying to extract JSON from text:`, parseError);
-          
-          // Se falhar, tenta extrair o JSON do texto e procurar pelo array de questões
-          try {
-            const jsonMatch = aiContent.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/) || 
-                            aiContent.match(/(\{[\s\S]*\})/);
-            
-            if (!jsonMatch || !jsonMatch[1]) {
-              throw new Error(`Could not extract JSON pattern from response for ${discipline}`);
-            }
-            
-            const jsonContent = jsonMatch[1].trim();
-            console.log(`Extracted JSON for ${discipline}:`, jsonContent.substring(0, 100) + "...");
-            
-            const extractedObject = JSON.parse(jsonContent);
-            
-            // Tentar encontrar o array de questões no objeto extraído
-            if (extractedObject.questions && Array.isArray(extractedObject.questions)) {
-              questionsData = extractedObject.questions;
-            } else if (Array.isArray(extractedObject)) {
-              questionsData = extractedObject;
-            } else if (extractedObject.data && Array.isArray(extractedObject.data)) {
-              questionsData = extractedObject.data;
-            } else {
-              throw new Error(`Extracted JSON for ${discipline} doesn't contain expected structure`);
-            }
-          } catch (extractError) {
-            console.error(`Failed extraction attempt for ${discipline}:`, extractError);
-            
-            // Última tentativa: procurar por um array JSON diretamente
-            const arrayMatch = aiContent.match(/```(?:json)?\s*(\[[\s\S]*?\])\s*```/) || 
-                              aiContent.match(/(\[[\s\S]*\])/);
-                              
-            if (!arrayMatch || !arrayMatch[1]) {
-              throw new Error(`Could not extract array pattern from response for ${discipline}`);
-            }
-            
-            const arrayContent = arrayMatch[1].trim();
-            console.log(`Extracted array for ${discipline}:`, arrayContent.substring(0, 100) + "...");
-            questionsData = JSON.parse(arrayContent);
-          }
-        }
-        
-        // Verificação adicional para garantir que temos dados válidos
-        if (!questionsData || !Array.isArray(questionsData) || questionsData.length === 0) {
-          throw new Error(`No valid questions found in response for ${discipline}`);
-        }
-        
-        // Adicionar IDs únicos e adicionar à lista geral
-        const normalizedQuestions: Question[] = [];
-
-        for (const q of questionsData) {
-          if (!q.text || !Array.isArray(q.alternatives) || q.alternatives.length < 4) {
-            console.warn(`Skipping invalid question in ${discipline}:`, q);
-            continue;
-          }
-
-          const normalizedAlternatives: Question['alternatives'] = q.alternatives.map((alt, index) => {
-            const letter = String.fromCharCode(65 + index);
-            return {
-              id: alt?.id ?? letter,
-              text: alt?.text ?? `Alternativa ${letter}`,
-              isCorrect: Boolean(alt?.isCorrect)
-            };
-          });
-
-          if (!normalizedAlternatives.some(alt => alt.isCorrect)) {
-            console.warn(`Question without correct alternative in ${discipline}, setting first as correct:`, q);
-            normalizedAlternatives[0].isCorrect = true;
-          }
-
-          const normalizedQuestion: Question = {
-            id: uuidv4(),
-            discipline: discipline as Question['discipline'],
-            text: q.text,
-            explanation: q.explanation ?? "Sem explicação disponível.",
-            alternatives: normalizedAlternatives
-          };
-
-          normalizedQuestions.push(normalizedQuestion);
-        }
-
-        allQuestions.push(...normalizedQuestions);
-
-        console.log(`Added ${normalizedQuestions.length} questions for ${discipline}`);
-        
-      } catch (disciplineError) {
-        // Registrar erro para esta disciplina, mas continuar com as outras
-        console.error(`Error generating questions for ${discipline}:`, disciplineError);
-        // Não falhar completamente, continuar para a próxima disciplina
-      }
-    }
-    
-    // Verificar se temos questões suficientes
-    if (allQuestions.length === 0) {
-      return NextResponse.json(
-        { error: "Não foi possível gerar nenhuma questão válida" },
-        { status: 500 }
-      );
-    }
-    
-    const balancedQuestions = disciplines.flatMap(disc => {
-      const discQuestions = allQuestions.filter(q => q.discipline === disc);
-      return discQuestions.slice(0, QUESTIONS_PER_DISCIPLINE);
-    });
-
-    const limitedQuestions = balancedQuestions.length ? balancedQuestions : allQuestions;
-
-    const disciplineCounts = disciplines.map(disc => ({
-      discipline: disc,
-      count: limitedQuestions.filter(q => q.discipline === disc).length
-    }));
-
-    console.log("Questions by discipline:", disciplineCounts);
-
-    const shuffledQuestions = [...limitedQuestions].sort(() => Math.random() - 0.5);
-    
-    return NextResponse.json({
-      questions: shuffledQuestions,
-      totalQuestions: shuffledQuestions.length,
-      disciplineCounts: disciplineCounts
-    });
-    
-  } catch (error) {
-    console.error("Error in /api/questoes:", error);
+  if (!functionUrl) {
     return NextResponse.json(
-      { error: "Erro ao gerar questões", message: (error as Error).message },
+      { error: "NEXT_PUBLIC_SUPABASE_URL não configurada." },
       { status: 500 }
     );
   }
+
+  const url = new URL(functionUrl);
+  request.nextUrl.searchParams.forEach((value, key) => {
+    url.searchParams.set(key, value);
+  });
+
+  const response = await fetch(url.toString(), {
+    method: "GET",
+    headers: buildHeaders(request),
+  });
+
+  const body = await response.text();
+
+  return new NextResponse(body, {
+    status: response.status,
+    headers: {
+      "content-type": response.headers.get("content-type") ?? "application/json; charset=utf-8",
+    },
+  });
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { result, selectedAnswers, questions, disciplines } = body ?? {};
-
-    if (!result || !Array.isArray(questions) || typeof selectedAnswers !== "object" || selectedAnswers === null) {
-      return NextResponse.json(
-        { error: "Dados do resultado inválidos" },
-        { status: 400 }
-      );
-    }
-
-    const authHeader = request.headers.get("authorization");
-    if (!authHeader) {
-      return NextResponse.json({ success: true, saved: false, reason: "not_authenticated" });
-    }
-
-    let userId: string | null = null;
-    const token = authHeader.replace("Bearer ", "").trim();
-
-    userId = extractUserIdFromToken(token);
-
-    if (!userId) {
-      try {
-        const { data: { user } } = await supabase.auth.getUser(token);
-        userId = user?.id ?? null;
-      } catch (authError) {
-        console.error("Erro ao validar token do usuário para resultado do simulado:", authError);
-        return NextResponse.json({ success: true, saved: false, reason: "invalid_token" });
-      }
-    }
-
-    if (!userId) {
-      return NextResponse.json({ success: true, saved: false, reason: "user_not_found" });
-    }
-
-    await storeQuizResult({
-      user_id: userId,
-      total_questions: Number(result.totalQuestions) || questions.length,
-      correct_answers: Number(result.correctAnswers) || 0,
-      wrong_answers: Number(result.wrongAnswers) || 0,
-      unanswered_questions: Number(result.unansweredQuestions) || 0,
-      score: Number(result.score) || 0,
-      questions,
-      answers: selectedAnswers,
-      disciplines: Array.isArray(disciplines) ? disciplines : [],
-      created_at: new Date().toISOString()
-    });
-
-    await recalculateUserStatistics(userId);
-
-    return NextResponse.json({ success: true, saved: true });
-  } catch (error) {
-    console.error("Erro ao salvar resultado do simulado:", error);
+  if (!functionUrl) {
     return NextResponse.json(
-      { error: "Erro ao salvar resultado do simulado" },
+      { error: "NEXT_PUBLIC_SUPABASE_URL não configurada." },
       { status: 500 }
     );
   }
+
+  const headers = buildHeaders(request);
+  headers.set("content-type", request.headers.get("content-type") ?? "application/json");
+
+  const body = await request.text();
+
+  const response = await fetch(functionUrl, {
+    method: "POST",
+    headers,
+    body,
+  });
+
+  const responseBody = await response.text();
+
+  return new NextResponse(responseBody, {
+    status: response.status,
+    headers: {
+      "content-type": response.headers.get("content-type") ?? "application/json; charset=utf-8",
+    },
+  });
 }

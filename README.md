@@ -21,6 +21,14 @@ GROQ_API_KEY=sua-api-key-aqui
 # Supabase (banco de dados)
 NEXT_PUBLIC_SUPABASE_URL=https://seu-projeto.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=sua-chave-anonima-aqui
+
+# Administração de destaques
+ADMIN_ALLOWED_EMAILS=email1@example.com,email2@example.com
+# Opcional: segredo para execuções automáticas (cron jobs)
+ADMIN_CRON_SECRET=segredo-unico-para-requests-automaticas
+
+# Edge Functions (configurar nas variáveis do Supabase, NÃO no cliente)
+SUPABASE_SERVICE_ROLE_KEY=chave-service-role
 ```
 
 ## Primeiros Passos
@@ -103,6 +111,13 @@ Para mais detalhes sobre a estrutura e melhorias implementadas, consulte [MELHOR
 - Rastreamento de eventos importantes
 - Métricas de uso e performance
 - Suporte a decisões baseadas em dados
+
+### Edge Functions Ativas
+- `generate-theme`: gera e cacheia temas de redação com a Groq API.
+- `correct-essay`: corrige redações, grava resultados e expõe consulta por ID.
+- `quiz-handler`: cria simulados por disciplina e salva desempenho com atualização de estatísticas.
+- `update-highlights`, `remove-highlight`: administração dos destaques de notícias.
+- `maintenance-cleanup`: rotina de limpeza de caches, rate limits e analytics.
 
 ## Aprender Mais
 

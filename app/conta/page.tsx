@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Header from "../components/Header";
@@ -44,6 +44,16 @@ export default function ContaPage() {
     }
   }, [user, authLoading, router]);
 
+  const fetchLatestStatistics = useCallback(async () => {
+    if (!user) return;
+    try {
+      const stats = await getUserStatistics(user.id);
+      setStatistics(stats);
+    } catch (error) {
+      console.error("Erro ao atualizar estatísticas:", error);
+    }
+  }, [user]);
+
   useEffect(() => {
     const loadData = async () => {
       if (!user) return;
@@ -51,11 +61,8 @@ export default function ContaPage() {
       setLoading(true);
       
       try {
-        // Carregar estatísticas
-        const stats = await getUserStatistics(user.id);
-        setStatistics(stats);
-        
-        // Carregar redações
+        await fetchLatestStatistics();
+
         const { data: essaysData } = await supabase
           .from('essay_results')
           .select('id, nota, created_at')
@@ -74,7 +81,63 @@ export default function ContaPage() {
     if (user) {
       loadData();
     }
-  }, [user]);
+  }, [user, fetchLatestStatistics]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel(`account-updates-${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'user_statistics', filter: `user_id=eq.${user.id}` },
+        () => {
+          void fetchLatestStatistics();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'essay_results', filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          const newEssay = payload.new as { id: string; nota: number; created_at: string };
+          setEssays((previous) => {
+            const filtered = previous.filter((essay) => essay.id !== newEssay.id);
+            return [{ id: newEssay.id, nota: newEssay.nota, created_at: newEssay.created_at }, ...filtered].slice(0, 10);
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'essay_results', filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          const updatedEssay = payload.new as { id: string; nota: number; created_at: string };
+          setEssays((previous) => {
+            const filtered = previous.filter((essay) => essay.id !== updatedEssay.id);
+            return [{ id: updatedEssay.id, nota: updatedEssay.nota, created_at: updatedEssay.created_at }, ...filtered].slice(0, 10);
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'essay_results', filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          const removedEssay = payload.old as { id: string };
+          setEssays((previous) => previous.filter((essay) => essay.id !== removedEssay.id));
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'quiz_results', filter: `user_id=eq.${user.id}` },
+        () => {
+          void fetchLatestStatistics();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, fetchLatestStatistics]);
 
   const handleRecalculate = async () => {
     if (!user) return;
@@ -83,8 +146,7 @@ export default function ContaPage() {
     try {
       await recalculateUserStatistics(user.id);
       // Recarregar estatísticas
-      const stats = await getUserStatistics(user.id);
-      setStatistics(stats);
+      await fetchLatestStatistics();
     } catch (error) {
       console.error('Erro ao recalcular:', error);
     } finally {
