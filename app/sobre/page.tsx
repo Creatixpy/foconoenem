@@ -1,5 +1,6 @@
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import AccountLinkButton from "../components/AccountLinkButton";
 import Link from "next/link";
 
 const timeline = [
@@ -100,9 +101,11 @@ export default function SobrePage() {
                 <Link href="/redacao" className="btn btn-primary px-6 py-3 text-sm">
                   Praticar redação agora
                 </Link>
-                <Link href="/conta" className="btn btn-outline px-6 py-3 text-sm">
-                  Criar uma conta gratuita
-                </Link>
+                <AccountLinkButton
+                  className="btn btn-outline px-6 py-3 text-sm"
+                  loggedOutLabel="Criar uma conta gratuita"
+                  loggedInLabel="Acessar minha conta"
+                />
               </div>
             </div>
 
@@ -164,9 +167,10 @@ export default function SobrePage() {
                   constantemente para apoiar sua jornada rumo ao ensino superior.
                 </p>
                 <div className="flex flex-wrap justify-center gap-3">
-                  <Link href="/auth/register" className="btn btn-primary px-6 py-3 text-sm">
-                    Criar minha conta
-                  </Link>
+                  <AccountLinkButton
+                    className="btn btn-primary px-6 py-3 text-sm"
+                    loggedInLabel="Acessar minha conta"
+                  />
                   <Link href="/noticias" className="btn btn-glass px-6 py-3 text-sm">
                     Ver novidades do ENEM
                   </Link>
