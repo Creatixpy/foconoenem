@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import AccountLinkButton from "./components/AccountLinkButton";
 import Footer from "./components/Footer";
 import Header from "./components/Header";
 
@@ -366,9 +367,10 @@ export default function Home() {
                   Estudar pode ser leve quando você enxerga cada avanço.
                 </p>
                 <div className="flex flex-wrap justify-center gap-4">
-                  <Link href="/auth/register" className="btn btn-primary px-8 py-3 text-base">
-                    Criar minha conta
-                  </Link>
+                  <AccountLinkButton
+                    className="btn btn-primary px-8 py-3 text-base"
+                    loggedInLabel="Acessar minha conta"
+                  />
                   <Link
                     href="/noticias"
                     className="btn btn-glass gap-2 px-8 py-3 text-base font-semibold text-primary"
