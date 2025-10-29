@@ -34,6 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const signupExtrasRef = useRef<SignupContext>(null);
+  const isMountedRef = useRef(true);
 
   if (typeof window !== 'undefined' && signupExtrasRef.current === null) {
     const raw = sessionStorage.getItem(SIGNUP_CONTEXT_KEY);
@@ -56,81 +57,100 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    // Verificar sessão atual
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        // Buscar ou criar perfil
-        getUserProfile(session.user.id).then(async (userProfile) => {
-          const email = session.user.email;
-          const metadataNome = session.user.user_metadata?.nome_completo || email?.split('@')[0];
-          const storedNome = signupExtrasRef.current?.nomeCompleto || metadataNome;
-          const storedObjetivo = signupExtrasRef.current?.objetivo || session.user.user_metadata?.objetivo || null;
+    isMountedRef.current = true;
 
-          if (!userProfile) {
-            await createUserProfile(session.user.id, storedNome ?? undefined, storedObjetivo ?? undefined);
-            const newProfile = await getUserProfile(session.user.id);
-            setProfile(newProfile);
-          } else {
-            let updatedProfile = userProfile;
-
-            if (!userProfile.objetivo && storedObjetivo) {
-              await updateUserProfile(session.user.id, { objetivo: storedObjetivo });
-              updatedProfile = (await getUserProfile(session.user.id)) ?? userProfile;
-            } else if (!userProfile.nome_completo && storedNome) {
-              await updateUserProfile(session.user.id, { nome_completo: storedNome });
-              updatedProfile = (await getUserProfile(session.user.id)) ?? userProfile;
-            }
-
-            setProfile(updatedProfile);
-          }
-
-          signupExtrasRef.current = null;
-        });
+    const resolveProfile = async (sessionUser: User | null) => {
+      if (!sessionUser) {
+        setProfile(null);
+        return;
       }
-      
-      setLoading(false);
-    });
 
-    // Escutar mudanças de autenticação
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        const email = session.user.email;
-        const metadataNome = session.user.user_metadata?.nome_completo || email?.split('@')[0];
-        const storedNome = signupExtrasRef.current?.nomeCompleto || metadataNome;
-        const storedObjetivo = signupExtrasRef.current?.objetivo || session.user.user_metadata?.objetivo || null;
+      const email = sessionUser.email;
+      const metadataNome = sessionUser.user_metadata?.nome_completo || email?.split('@')[0];
+      const storedNome = signupExtrasRef.current?.nomeCompleto || metadataNome;
+      const storedObjetivo = signupExtrasRef.current?.objetivo || sessionUser.user_metadata?.objetivo || null;
 
-        const userProfile = await getUserProfile(session.user.id);
-        if (!userProfile) {
-          await createUserProfile(session.user.id, storedNome ?? undefined, storedObjetivo ?? undefined);
-          const newProfile = await getUserProfile(session.user.id);
+      try {
+        const existingProfile = await getUserProfile(sessionUser.id);
+
+        if (!existingProfile) {
+          await createUserProfile(sessionUser.id, storedNome ?? undefined, storedObjetivo ?? undefined);
+          const newProfile = await getUserProfile(sessionUser.id);
           setProfile(newProfile);
         } else {
-          let updatedProfile = userProfile;
+          let updatedProfile = existingProfile;
 
-          if (!userProfile.objetivo && storedObjetivo) {
-            await updateUserProfile(session.user.id, { objetivo: storedObjetivo });
-            updatedProfile = (await getUserProfile(session.user.id)) ?? userProfile;
-          } else if ((!userProfile.nome_completo || userProfile.nome_completo === metadataNome) && storedNome) {
-            await updateUserProfile(session.user.id, { nome_completo: storedNome });
-            updatedProfile = (await getUserProfile(session.user.id)) ?? userProfile;
+          if (!existingProfile.objetivo && storedObjetivo) {
+            await updateUserProfile(sessionUser.id, { objetivo: storedObjetivo });
+            updatedProfile = (await getUserProfile(sessionUser.id)) ?? existingProfile;
+          } else if ((!existingProfile.nome_completo || existingProfile.nome_completo === metadataNome) && storedNome) {
+            await updateUserProfile(sessionUser.id, { nome_completo: storedNome });
+            updatedProfile = (await getUserProfile(sessionUser.id)) ?? existingProfile;
           }
 
           setProfile(updatedProfile);
         }
-
+      } catch (error) {
+        console.error('Erro ao sincronizar perfil do usuário:', error);
+      } finally {
         signupExtrasRef.current = null;
-      } else {
-        setProfile(null);
       }
-      
-      setLoading(false);
+    };
+
+    const bootstrapAuth = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          throw error;
+        }
+
+        if (!isMountedRef.current) {
+          return;
+        }
+
+        const sessionUser = data.session?.user ?? null;
+        setUser(sessionUser);
+        await resolveProfile(sessionUser);
+      } catch (error) {
+        console.error('Erro ao obter sessão atual:', error);
+        if (isMountedRef.current) {
+          setUser(null);
+          setProfile(null);
+        }
+      } finally {
+        if (isMountedRef.current) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void bootstrapAuth();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!isMountedRef.current) {
+        return;
+      }
+
+      const sessionUser = session?.user ?? null;
+      setUser(sessionUser);
+
+      try {
+        await resolveProfile(sessionUser);
+      } catch (error) {
+        console.error('Erro ao atualizar estado de autenticação:', error);
+      } finally {
+        if (isMountedRef.current) {
+          setLoading(false);
+        }
+      }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMountedRef.current = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signOutHandler = async () => {
@@ -159,4 +179,3 @@ export function useAuth() {
   }
   return context;
 }
-
