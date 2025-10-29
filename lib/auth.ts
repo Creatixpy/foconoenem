@@ -316,13 +316,13 @@ export async function getUserStatistics(userId: string): Promise<UserStatistics 
     'taxa_acerto',
   ];
 
-  const normalized = { ...data } as Record<string, unknown>;
+  const normalized = { ...data } as UserStatistics;
 
   for (const field of numericFields) {
-    normalized[field] = parseNumeric(normalized[field]);
+    normalized[field] = parseNumeric((data as Record<string, unknown>)[field]);
   }
 
-  return normalized as UserStatistics;
+  return normalized;
 }
 
 /**
