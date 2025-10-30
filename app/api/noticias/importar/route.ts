@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createHash } from 'node:crypto';
 import { authorizeAdmin } from '@/lib/admin-auth';
-import { supabaseAdmin } from '@/lib/supabase-admin';
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
 
 type NewsApiArticle = {
   title: string | null;
@@ -211,6 +211,16 @@ export async function POST(request: NextRequest) {
   const mappedRecords = payload.articles
     .map(mapArticleToRecord)
     .filter((record): record is NonNullable<ReturnType<typeof mapArticleToRecord>> => Boolean(record?.titulo && record?.slug));
+
+  const supabaseAdmin = getSupabaseAdmin();
+
+  if (!supabaseAdmin) {
+    console.error("Supabase service role client não configurado. Defina NEXT_PUBLIC_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY.");
+    return NextResponse.json(
+      { error: "Serviço indisponível para importação de notícias. Verifique as variáveis NEXT_PUBLIC_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY." },
+      { status: 500 }
+    );
+  }
 
   if (mappedRecords.length === 0) {
     return NextResponse.json({
