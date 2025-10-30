@@ -54,6 +54,12 @@ export default function Footer() {
             >
               Termos de Serviço
             </Link>
+            <Link
+              href="/doacao"
+              className="text-sm font-medium text-foreground/70 transition-colors hover:text-primary"
+            >
+              Doação
+            </Link>
           </div>
 
           <p className="mt-6 text-xs text-foreground/50">
