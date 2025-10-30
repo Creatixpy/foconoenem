@@ -22,6 +22,9 @@ GROQ_API_KEY=sua-api-key-aqui
 NEXT_PUBLIC_SUPABASE_URL=https://seu-projeto.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=sua-chave-anonima-aqui
 
+# NewsAPI (importação automática de notícias)
+NEWSAPI_API_KEY=sua-chave-newsapi
+
 # Administração de destaques
 ADMIN_ALLOWED_EMAILS=email1@example.com,email2@example.com
 # Opcional: segredo para execuções automáticas (cron jobs)
@@ -65,6 +68,7 @@ Abra [http://localhost:3000](http://localhost:3000) em seu navegador para ver o 
 - Correção automática baseada nos critérios do ENEM
 - Feedback detalhado por competência
 - Análise de pontos fortes e pontos a melhorar
+- Importação automática de notícias educacionais via NewsAPI (restrita ao painel administrativo)
 
 ## Tecnologias Utilizadas
 

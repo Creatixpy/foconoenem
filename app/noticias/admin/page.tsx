@@ -27,6 +27,15 @@ type DestaquesStatus = {
   status: string;
 };
 
+type ImportSummary = {
+  imported: number;
+  skipped: number;
+  totalConsulta: number;
+  details?: {
+    mode?: string;
+  };
+};
+
 export default function AdminDestaques() {
   const { user, loading: authLoading } = useAuth();
 
@@ -41,6 +50,9 @@ export default function AdminDestaques() {
   const [noticiasDestaque, setNoticiasDestaque] = useState<Noticia[]>([]);
   const [loadingDestaques, setLoadingDestaques] = useState(false);
   const [removeLoading, setRemoveLoading] = useState<Record<string, boolean>>({});
+  const [importLoading, setImportLoading] = useState(false);
+  const [importResult, setImportResult] = useState<ImportSummary | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
 
   const carregarStatus = useCallback(async () => {
     try {
@@ -213,6 +225,52 @@ export default function AdminDestaques() {
       setIsLoading(false);
     }
   }, [authFetch, authorized, carregarNoticiasDestaque, carregarStatus]);
+
+  const handleImportarNoticias = useCallback(async () => {
+    if (!authorized) {
+      return;
+    }
+
+    try {
+      setImportLoading(true);
+      setImportError(null);
+      setImportResult(null);
+
+      if (!accessToken) {
+        throw new Error("Sessão expirada. Faça login novamente.");
+      }
+
+      const response = await fetch("/api/noticias/importar", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        const errorMessage = data?.error ?? data?.message ?? "Não foi possível importar notícias agora.";
+
+        if (response.status === 401 || response.status === 403) {
+          setAuthorized(false);
+          setAuthError(errorMessage);
+        }
+
+        throw new Error(errorMessage);
+      }
+
+      setImportResult(data as ImportSummary);
+      await carregarNoticiasDestaque();
+    } catch (error) {
+      console.error("Erro ao importar notícias:", error);
+      setImportError(
+        error instanceof Error ? error.message : "Falha ao importar notícias. Tente novamente mais tarde."
+      );
+    } finally {
+      setImportLoading(false);
+    }
+  }, [accessToken, authorized, carregarNoticiasDestaque]);
 
   const handleRemoverDestaque = useCallback(
     async (id: string) => {
@@ -444,6 +502,60 @@ export default function AdminDestaques() {
                         </div>
                       </div>
                     ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-muted-bg p-6 rounded-lg mb-6">
+                <h2 className="text-xl font-semibold mb-4">Importar notícias da NewsAPI</h2>
+                <p className="text-sm text-foreground/70 mb-4">
+                  Sincronize rapidamente as últimas pautas sobre educação, ENEM e vestibulares. Essa ação busca a
+                  NewsAPI e salva apenas as notícias inéditas na base.
+                </p>
+
+                <button
+                  onClick={() => void handleImportarNoticias()}
+                  disabled={importLoading}
+                  className="btn btn-outline flex items-center gap-2"
+                >
+                  {importLoading ? (
+                    <>
+                      <span className="loader loader--sm" aria-hidden />
+                      Importando...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.8}
+                          d="M9 17v-2a4 4 0 014-4h8m0 0l-3-3m3 3l-3 3"
+                        />
+                      </svg>
+                      Importar notícias agora
+                    </>
+                  )}
+                </button>
+
+                {importError && (
+                  <div className="mt-4 border border-danger text-danger rounded-lg p-4 text-sm">
+                    {importError}
+                  </div>
+                )}
+
+                {importResult && (
+                  <div className="mt-4 border border-success text-success rounded-lg p-4 text-sm space-y-1">
+                    <p>
+                      {importResult.imported} notícia(s) adicionada(s) ao banco.{" "}
+                      {importResult.skipped > 0
+                        ? `Itens ignorados por já existirem: ${importResult.skipped}.`
+                        : "Nenhum item foi ignorado."}
+                    </p>
+                    <p className="text-xs text-foreground/70">
+                      Resultado da consulta: {importResult.totalConsulta} artigos · origem:{" "}
+                      {importResult.details?.mode === "cron" ? "tarefa agendada" : "ação manual"}
+                    </p>
                   </div>
                 )}
               </div>
