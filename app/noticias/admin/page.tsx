@@ -2,13 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 import { verificarStatusDestaques, getNoticiasDestaque } from "@/lib/supabase";
 import { Noticia } from "@/types";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
+import NewsImage from "@/app/components/NewsImage";
 
 const FUNCTION_BASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
   ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1`
@@ -435,7 +435,7 @@ export default function AdminDestaques() {
                       >
                         <div className="h-48 md:h-auto md:w-48 relative flex-shrink-0">
                           {noticia.imagem_url ? (
-                            <Image src={noticia.imagem_url} alt={noticia.titulo} fill className="object-cover" />
+                            <NewsImage src={noticia.imagem_url} alt={noticia.titulo} fill className="object-cover" />
                           ) : (
                             <div className="w-full h-full bg-primary-light flex items-center justify-center">
                               <svg

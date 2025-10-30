@@ -3,11 +3,11 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 import { Noticia } from "@/types";
 import { getNoticiaPorSlug, getNoticiasPorTag } from "@/lib/supabase";
+import NewsImage from "@/app/components/NewsImage";
 
 export default function NoticiaDetalhePage() {
   const [noticia, setNoticia] = useState<Noticia | null>(null);
@@ -140,12 +140,7 @@ export default function NoticiaDetalhePage() {
             {/* Imagem principal */}
             {noticia.imagem_url && (
               <div className="relative w-full h-[300px] md:h-[400px] rounded-lg overflow-hidden mb-6">
-                <Image
-                  src={noticia.imagem_url}
-                  alt={noticia.titulo}
-                  fill
-                  className="object-cover"
-                />
+                <NewsImage src={noticia.imagem_url} alt={noticia.titulo} fill className="object-cover" />
               </div>
             )}
             
@@ -237,12 +232,7 @@ export default function NoticiaDetalhePage() {
                 >
                   <div className="h-40 relative">
                     {noticia.imagem_url ? (
-                      <Image
-                        src={noticia.imagem_url}
-                        alt={noticia.titulo}
-                        fill
-                        className="object-cover"
-                      />
+                      <NewsImage src={noticia.imagem_url} alt={noticia.titulo} fill className="object-cover" />
                     ) : (
                       <div className="w-full h-full bg-muted-bg flex items-center justify-center">
                         <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

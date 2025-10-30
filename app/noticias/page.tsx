@@ -2,9 +2,9 @@
 
 import { useState, useEffect, FormEvent } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
+import NewsImage from "@/app/components/NewsImage";
 import { Noticia } from "@/types";
 import { getNoticias, getNoticiasDestaque } from "@/lib/supabase";
 
@@ -252,7 +252,7 @@ export default function NoticiasPage() {
                     >
                       <div className="relative h-56">
                         {noticia.imagem_url ? (
-                          <Image src={noticia.imagem_url} alt={noticia.titulo} fill className="object-cover" />
+                          <NewsImage src={noticia.imagem_url} alt={noticia.titulo} fill className="object-cover" />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center bg-primary/10">
                             <svg className="h-12 w-12 text-primary/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -314,7 +314,7 @@ export default function NoticiasPage() {
                       >
                         <div className="relative h-44">
                           {noticia.imagem_url ? (
-                            <Image src={noticia.imagem_url} alt={noticia.titulo} fill className="object-cover" />
+                            <NewsImage src={noticia.imagem_url} alt={noticia.titulo} fill className="object-cover" />
                           ) : (
                             <div className="flex h-full w-full items-center justify-center bg-muted-bg">
                               <svg className="h-10 w-10 text-foreground/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
