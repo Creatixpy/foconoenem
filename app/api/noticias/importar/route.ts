@@ -143,6 +143,7 @@ function mapArticleToRecord(article: NewsApiArticle) {
     data_publicacao: new Date(article.publishedAt).toISOString(),
     tags: buildTags(article),
     destaque: false,
+    fonte_url: article.url ?? null,
   };
 }
 

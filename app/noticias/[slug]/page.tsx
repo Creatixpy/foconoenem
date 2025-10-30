@@ -170,7 +170,23 @@ export default function NoticiaDetalhePage() {
             className="prose dark:prose-invert max-w-none" 
             dangerouslySetInnerHTML={renderizarConteudo(noticia.conteudo)}
           />
-          
+
+          {noticia.fonte_url && (
+            <div className="mt-8 rounded-lg border border-border-color bg-muted-bg p-4">
+              <p className="text-sm text-foreground/80">
+                Leia a notícia completa em:{' '}
+                <a
+                  href={noticia.fonte_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary underline underline-offset-4 hover:text-primary/80 break-all"
+                >
+                  {noticia.fonte_url}
+                </a>
+              </p>
+            </div>
+          )}
+
           {/* Rodapé do artigo */}
           <footer className="mt-10 pt-6 border-t border-border-color">
             <p className="text-sm text-gray-600 dark:text-gray-300">
