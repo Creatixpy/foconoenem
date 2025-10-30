@@ -212,7 +212,7 @@ export async function POST(request: NextRequest) {
     .map(mapArticleToRecord)
     .filter((record): record is NonNullable<ReturnType<typeof mapArticleToRecord>> => Boolean(record?.titulo && record?.slug));
 
-  const supabaseAdmin = getSupabaseAdmin();
+  const supabaseAdmin = await getSupabaseAdmin();
 
   if (!supabaseAdmin) {
     console.error("Supabase service role client não configurado. Defina NEXT_PUBLIC_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY.");
