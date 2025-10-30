@@ -12,6 +12,17 @@ const ADMIN_ALLOWED_EMAILS = (Deno.env.get("ADMIN_ALLOWED_EMAILS") ?? "")
   .map((email) => email.trim().toLowerCase())
   .filter(Boolean);
 const ADMIN_CRON_SECRET = Deno.env.get("ADMIN_CRON_SECRET") ?? "";
+const ADMIN_ALLOWED_ORIGINS = (Deno.env.get("ADMIN_ALLOWED_ORIGINS") ?? "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const corsHeaders: Record<string, string> = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, content-type, x-cron-secret",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Max-Age": "86400",
+};
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   throw new Error("SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY devem estar definidos.");
@@ -70,12 +81,40 @@ function jsonResponse(body: unknown, init?: ResponseInit) {
   return new Response(JSON.stringify(body), {
     headers: {
       "content-type": "application/json; charset=utf-8",
+      ...corsHeaders,
     },
     ...init,
   });
 }
 
+function resolveOrigin(request: Request) {
+  const origin = request.headers.get("origin");
+  if (!origin) {
+    return "*";
+  }
+
+  if (ADMIN_ALLOWED_ORIGINS.length === 0) {
+    return origin;
+  }
+
+  if (ADMIN_ALLOWED_ORIGINS.includes(origin)) {
+    return origin;
+  }
+
+  return ADMIN_ALLOWED_ORIGINS[0];
+}
+
 Deno.serve(async (request) => {
+  const origin = resolveOrigin(request);
+  corsHeaders["Access-Control-Allow-Origin"] = origin;
+
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: corsHeaders,
+    });
+  }
+
   if (request.method !== "POST") {
     return jsonResponse({ error: "Método não permitido." }, { status: 405 });
   }
