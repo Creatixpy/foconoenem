@@ -222,7 +222,17 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (mappedRecords.length === 0) {
+  const uniqueRecords: typeof mappedRecords = [];
+  const seenSlugs = new Set<string>();
+
+  for (const record of mappedRecords) {
+    if (!seenSlugs.has(record.slug)) {
+      seenSlugs.add(record.slug);
+      uniqueRecords.push(record);
+    }
+  }
+
+  if (uniqueRecords.length === 0) {
     return NextResponse.json({
       imported: 0,
       skipped: payload.articles.length,
@@ -230,7 +240,13 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const slugs = mappedRecords.map((record) => record.slug);
+  if (uniqueRecords.length < mappedRecords.length) {
+    console.info(
+      `Importação de notícias: ${mappedRecords.length - uniqueRecords.length} itens descartados por slug duplicado dentro da mesma consulta.`
+    );
+  }
+
+  const slugs = uniqueRecords.map((record) => record.slug);
 
   const { data: existing, error: existingError } = await supabaseAdmin
     .from('noticias')
@@ -243,12 +259,12 @@ export async function POST(request: NextRequest) {
   }
 
   const existingSlugs = new Set(existing?.map((item) => item.slug) ?? []);
-  const freshRecords = mappedRecords.filter((record) => !existingSlugs.has(record.slug));
+  const freshRecords = uniqueRecords.filter((record) => !existingSlugs.has(record.slug));
 
   if (freshRecords.length === 0) {
     return NextResponse.json({
       imported: 0,
-      skipped: mappedRecords.length,
+      skipped: uniqueRecords.length,
       message: 'Todas as notícias retornadas já estão cadastradas.',
     });
   }
@@ -260,12 +276,18 @@ export async function POST(request: NextRequest) {
 
   if (insertError) {
     console.error('Erro ao inserir notícias:', insertError);
-    return NextResponse.json({ error: 'Falha ao salvar notícias no banco de dados.' }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Falha ao salvar notícias no banco de dados.',
+        details: insertError.message ?? insertError.code ?? null,
+      },
+      { status: 500 }
+    );
   }
 
   return NextResponse.json({
     imported: inserted?.length ?? 0,
-    skipped: mappedRecords.length - freshRecords.length,
+    skipped: uniqueRecords.length - freshRecords.length,
     totalConsulta: payload.articles.length,
     details: {
       mode: authResult.mode,
