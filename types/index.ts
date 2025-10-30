@@ -57,6 +57,7 @@ export interface Noticia {
   tags: string[];
   destaque: boolean;
   created_at: string;
+  fonte_url?: string | null;
 }
 
 // Interfaces para questões de múltipla escolha
