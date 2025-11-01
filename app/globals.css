@@ -248,12 +248,23 @@ body {
   box-shadow: var(--shadow-sm);
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
   font-size: 1rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-wrap: break-word;
+  word-break: break-all;
 }
 
 .editor-container:focus-within {
   outline: none;
   border-color: var(--primary);
   box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.editor-container * {
+  white-space: inherit;
+  overflow-wrap: inherit;
+  word-wrap: inherit;
+  word-break: inherit;
 }
 
 .editor-container:empty:before {
