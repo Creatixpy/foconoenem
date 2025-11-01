@@ -124,19 +124,18 @@ async function fetchFromInternalEndpoint(): Promise<TimeResult | null> {
     return null;
   }
 
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+  let controller: AbortController | undefined;
+
   try {
-    const controller = typeof AbortController !== "undefined" ? new AbortController() : undefined;
-    const timeout = controller ? setTimeout(() => controller.abort(), 4000) : null;
+    controller = typeof AbortController !== "undefined" ? new AbortController() : undefined;
+    timeout = controller ? setTimeout(() => controller.abort("timeout"), 4000) : null;
 
     const response = await fetch(INTERNAL_TIME_ENDPOINT, {
       method: "GET",
       cache: "no-store",
       signal: controller?.signal,
     });
-
-    if (timeout) {
-      clearTimeout(timeout);
-    }
 
     if (!response.ok) {
       console.warn(`Endpoint interno respondeu com status ${response.status}`);
@@ -171,8 +170,16 @@ async function fetchFromInternalEndpoint(): Promise<TimeResult | null> {
       usedFallback: Boolean(payload?.fallback),
     };
   } catch (error) {
-    console.error("Erro ao consultar o endpoint interno de horário:", error);
+    if (error instanceof DOMException && error.name === "AbortError") {
+      console.warn("Consulta ao endpoint interno de horário expirou antes da resposta.");
+    } else {
+      console.error("Erro ao consultar o endpoint interno de horário:", error);
+    }
     return null;
+  } finally {
+    if (timeout) {
+      clearTimeout(timeout);
+    }
   }
 }
 
