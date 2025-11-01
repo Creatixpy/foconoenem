@@ -129,7 +129,13 @@ async function fetchFromInternalEndpoint(): Promise<TimeResult | null> {
 
   try {
     controller = typeof AbortController !== "undefined" ? new AbortController() : undefined;
-    timeout = controller ? setTimeout(() => controller.abort("timeout"), 4000) : null;
+
+    if (controller) {
+      const abortController = controller;
+      timeout = setTimeout(() => abortController.abort("timeout"), 4000);
+    } else {
+      timeout = null;
+    }
 
     const response = await fetch(INTERNAL_TIME_ENDPOINT, {
       method: "GET",
