@@ -89,8 +89,12 @@ O projeto utiliza as seguintes tabelas no Supabase:
 2. **cached_themes** - Cache de temas gerados
 3. **rate_limits** - Controle de rate limiting
 4. **analytics_events** - Eventos de analytics
-5. **quiz_results** - Resultados de simulados de questões
-6. **noticias** - Sistema de notícias educacionais
+5. **configuracoes** - Preferências administrativas e marcação de atualizações
+6. **user_profiles** - Perfil público e dados básicos dos usuários
+7. **user_statistics** - Indicadores agregados de desempenho do usuário
+8. **user_goals** - Metas personalizadas definidas pelos usuários
+9. **quiz_results** - Resultados de simulados de questões
+10. **noticias** - Sistema de notícias educacionais
 
 Para mais detalhes sobre a estrutura e melhorias implementadas, consulte [MELHORIAS.md](./MELHORIAS.md).
 
