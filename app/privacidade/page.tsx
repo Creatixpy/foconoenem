@@ -128,32 +128,38 @@ export default function PrivacyPolicyPage() {
               </ul>
             </div>
 
-            <div className="space-y-8">
+            <div className="space-y-4">
               {policySections.map((section, index) => (
-                <article key={section.id} id={section.id} className="surface-card space-y-4 border border-border-color/60 p-6 shadow-sm md:p-8">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                <details
+                  key={section.id}
+                  id={section.id}
+                  className="surface-card border border-border-color/60 p-0 shadow-sm"
+                  open={index === 0}
+                >
+                  <summary className="flex cursor-pointer items-center gap-3 px-6 py-4 text-left">
+                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
                       {String(index + 1).padStart(2, "0")}
                     </span>
-                    <h2 className="text-xl font-semibold text-foreground">{section.title}</h2>
-                  </div>
-                  {section.alert && (
-                    <div className="rounded-2xl border border-success/40 bg-success/10 p-4 text-sm text-success">{section.alert}</div>
-                  )}
-                  {section.paragraphs &&
-                    section.paragraphs.map((paragraph) => (
-                      <p key={paragraph} className="text-sm text-foreground/75 leading-relaxed">
+                    <span className="text-base font-semibold text-foreground">{section.title}</span>
+                  </summary>
+                  <div className="space-y-4 border-t border-border-color/60 px-6 py-5 text-sm text-foreground/75">
+                    {section.alert && (
+                      <div className="rounded-2xl border border-success/40 bg-success/10 p-4 text-sm text-success">{section.alert}</div>
+                    )}
+                    {section.paragraphs?.map((paragraph) => (
+                      <p key={paragraph} className="leading-relaxed">
                         {paragraph}
                       </p>
                     ))}
-                  {section.list && (
-                    <ul className="list-disc space-y-2 pl-6 text-sm text-foreground/70">
-                      {section.list.map((item) => (
-                        <li key={item}>{item}</li>
-                      ))}
-                    </ul>
-                  )}
-                </article>
+                    {section.list && (
+                      <ul className="list-disc space-y-2 pl-6 text-foreground/70">
+                        {section.list.map((item) => (
+                          <li key={item}>{item}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </details>
               ))}
             </div>
 

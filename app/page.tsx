@@ -29,8 +29,7 @@ const heroStats = [
 const highlights: Highlight[] = [
   {
     title: "Correção com inteligência artificial",
-    description:
-      "Aplique os 5 critérios oficiais do ENEM e receba comentários orientados para evoluir em cada competência.",
+    description: "Aplicamos os 5 critérios oficiais e resumimos o que fazer a seguir.",
     icon: (
       <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -44,8 +43,7 @@ const highlights: Highlight[] = [
   },
   {
     title: "Simulados dinâmicos por disciplina",
-    description:
-      "Monte sua prova personalizada escolhendo Matemática, Linguagens, Ciências da Natureza ou Humanas.",
+    description: "Monte blocos rápidos com as matérias que mais precisa revisar.",
     icon: (
       <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -59,8 +57,7 @@ const highlights: Highlight[] = [
   },
   {
     title: "Dashboard com evolução em tempo real",
-    description:
-      "Visualize notas, acertos por disciplina e recomendações de estudo sem sair da sua conta.",
+    description: "Notas, acertos por disciplina e alertas em um painel compacto.",
     icon: (
       <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -74,8 +71,7 @@ const highlights: Highlight[] = [
   },
   {
     title: "Conteúdo curado e notícias do ENEM",
-    description:
-      "Receba alertas de prazos, mudanças no exame e dicas práticas selecionadas por especialistas.",
+    description: "Alertas curtos sobre prazos, temas e mudanças oficiais.",
     icon: (
       <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -93,20 +89,17 @@ const steps: Step[] = [
   {
     number: "01",
     title: "Escolha seu desafio",
-    description:
-      "Redação, simulado ou questões específicas. Defina o tema, tempo e disciplinas que quer treinar hoje.",
+    description: "Selecione redação, simulado ou questões rápidas.",
   },
   {
     number: "02",
     title: "Pratique com foco",
-    description:
-      "Use editor otimizado, textos de apoio, questões geradas sob medida e feedback imediato para cada resposta.",
+    description: "Use editor limpo, textos de apoio e feedback imediato.",
   },
   {
     number: "03",
     title: "Receba insights acionáveis",
-    description:
-      "Entenda onde perdeu pontos, conquiste metas semanais e acompanhe sua evolução em gráficos claros.",
+    description: "Veja onde perdeu pontos e ajuste o próximo estudo.",
   },
 ];
 
@@ -114,20 +107,17 @@ const testimonials: Testimonial[] = [
   {
     author: "Gabriela Santos",
     role: "Estudante aprovada em Medicina",
-    quote:
-      "Com o Foco no ENEM consegui transformar feedbacks em metas reais. Minha nota em redação saiu de 720 para 960 em 6 semanas.",
+    quote: "Transformei feedbacks curtos em metas reais e subi de 720 para 960.",
   },
   {
     author: "Diego Moraes",
     role: "Professor de cursinho pré-vestibular",
-    quote:
-      "Uso as estatísticas com meus alunos para priorizar revisões por competência. A clareza dos relatórios é impecável.",
+    quote: "Uso as estatísticas para decidir rapidamente o que revisar em aula.",
   },
   {
     author: "Larissa Monteiro",
     role: "Estudante treineira",
-    quote:
-      "As notícias e alertas me mantêm atualizada sem perder tempo. Gosto muito da personalização dos simulados.",
+    quote: "As notificações curtas me deixam atualizada sem quebrar o foco.",
   },
 ];
 
@@ -140,15 +130,14 @@ export default function Home() {
             <div className="space-y-10">
               <div className="hero-status shadow-glow">
                 <span className="h-2 w-2 rounded-full bg-success" />
-                Aberto agora · suporte inteligente 7h às 23h30
+                Aberto 7h — 23h30 (BRT)
               </div>
               <div className="space-y-6">
                 <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl">
                   Transforme estudo em resultado no ENEM.
                 </h1>
                 <p className="max-w-2xl text-lg leading-relaxed text-foreground/75 sm:text-xl">
-                  Receba correções precisas, simulados personalizados e recomendações em tempo real. Uma experiência fluida para
-                  quem busca nota alta com foco e organização.
+                  Correção rápida, simulados sob medida e alertas curtos para estudar só o que importa.
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-4 sm:gap-6">

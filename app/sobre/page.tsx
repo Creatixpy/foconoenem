@@ -82,15 +82,13 @@ export default function SobrePage() {
           <div className="container relative z-10 mx-auto max-w-5xl space-y-12">
             <div className="surface-card space-y-5 p-8 text-center shadow-xl md:p-12">
               <span className="hero-status shadow-glow justify-center text-sm">
-                💙 Criado por alunos, para alunos
+                💙 Feito por alunos para alunos
               </span>
               <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
-                Tornamos a preparação para o ENEM mais acessível, moderna e humana.
+                Preparação para o ENEM sem excesso de texto.
               </h1>
-              <p className="mx-auto max-w-3xl text-lg text-foreground/75">
-                O Foco no ENEM nasceu para democratizar ferramentas de estudo de alta qualidade. Unimos tecnologia, repertório
-                atualizado e uma comunidade disposta a compartilhar aprendizados para que cada estudante construa o próprio
-                caminho até a aprovação.
+              <p className="mx-auto max-w-2xl text-base text-foreground/75">
+                Criamos correção, simulados e notícias curtas para democratizar ferramentas de qualidade.
               </p>
               <div className="flex flex-wrap justify-center gap-3">
                 <Link href="/redacao" className="btn btn-primary px-6 py-3 text-sm">

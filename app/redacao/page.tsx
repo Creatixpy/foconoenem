@@ -6,10 +6,10 @@ import { getOperatingHoursInfo, type OperatingHoursInfo } from "@/lib/schedule";
 import { supabase } from "@/lib/supabase";
 
 const guidanceSteps = [
-  "Leia o tema com atenção e identifique o problema central a ser resolvido.",
-  "Defina a tese e os argumentos principais antes de iniciar a escrita.",
-  "Construa cada parágrafo com repertórios confiáveis e conexões claras.",
-  "Finalize com uma proposta de intervenção completa, viável e humanizada.",
+  "Leia o tema e destaque o problema central.",
+  "Defina tese e dois argumentos antes de escrever.",
+  "Use repertórios curtos e conectivos claros.",
+  "Feche com proposta completa e viável.",
 ];
 
 const MIN_CHARACTERS = 50;
@@ -766,31 +766,34 @@ export default function RedacaoPage() {
               {!isFocusMode && (
                 <aside className="space-y-6">
                   <div className="surface-card space-y-4 p-6 shadow-xl">
-                    <h3 className="text-lg font-semibold text-foreground">Checklist rápido</h3>
-                    <ul className="space-y-3 text-sm text-foreground/75">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-foreground">Dicas rápidas</h3>
+                      <span className="text-xs uppercase tracking-[0.2em] text-foreground/50">Modo minimal</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
                       {guidanceSteps.map((step, index) => (
-                        <li key={step} className="flex gap-3">
-                          <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                            {String(index + 1).padStart(2, "0")}
-                          </span>
-                          <span>{step}</span>
-                        </li>
+                        <span
+                          key={step}
+                          className="rounded-full border border-border-color/70 px-3 py-1 text-xs text-foreground/70"
+                        >
+                          {String(index + 1).padStart(2, "0")}. {step}
+                        </span>
                       ))}
-                    </ul>
-                  </div>
-                  <div className="surface-card space-y-3 p-6 shadow-sm">
-                    <h3 className="text-lg font-semibold text-foreground">Gerencie seu tempo</h3>
-                    <ul className="space-y-2 text-sm text-foreground/70">
-                      <li>
-                        <strong className="text-foreground">Planeje (10 min)</strong>: anote tese, argumentos e repertórios principais.
-                      </li>
-                      <li>
-                        <strong className="text-foreground">Redija (30 min)</strong>: desenvolva os parágrafos com coerência e dados confiáveis.
-                      </li>
-                      <li>
-                        <strong className="text-foreground">Revise (10 min)</strong>: ajuste conectivos, ortografia e a proposta de intervenção.
-                      </li>
-                    </ul>
+                    </div>
+                    <details className="rounded-2xl border border-border-color/60 bg-card-bg/70 p-4 text-sm text-foreground/75">
+                      <summary className="cursor-pointer font-semibold text-foreground">Ver checklist completo</summary>
+                      <ul className="mt-3 space-y-2 text-sm text-foreground/70">
+                        <li>
+                          <strong className="text-foreground">Planeje (10 min)</strong> · rascunhe tese, argumentos e repertórios.
+                        </li>
+                        <li>
+                          <strong className="text-foreground">Redija (30 min)</strong> · desenvolva parágrafos com dados confiáveis.
+                        </li>
+                        <li>
+                          <strong className="text-foreground">Revise (10 min)</strong> · ajuste conectivos, ortografia e intervenção.
+                        </li>
+                      </ul>
+                    </details>
                   </div>
                 </aside>
               )}

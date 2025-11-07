@@ -80,26 +80,25 @@
        <section className="relative overflow-hidden px-4 pb-20 pt-16 sm:px-6 lg:px-8">
            <div className="hero-accent absolute inset-0 blur-3xl" aria-hidden />
            <div className="container relative z-10 mx-auto max-w-5xl space-y-12">
-             <div className="surface-card space-y-5 p-8 text-center shadow-xl md:p-12">
-               <span className="hero-status shadow-glow justify-center text-sm">
-                 ❤️ Projeto mantido 100% pela comunidade
-               </span>
-               <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
-                 Cada doação mantém o Foco no ENEM gratuito para todos.
-               </h1>
-               <p className="mx-auto max-w-3xl text-lg text-foreground/75">
-                 Usamos sua contribuição para cobrir APIs de IA, servidores, manutenção e novas funcionalidades. Doe o quanto
-                 puder — qualquer valor faz diferença na jornada de milhares de estudantes.
-               </p>
-               <div className="flex flex-wrap justify-center gap-3">
-                 <Link href="/sobre" className="btn btn-outline px-6 py-3 text-sm">
-                   Conheça o projeto
-                 </Link>
-                 <Link href="/noticias" className="btn btn-glass px-6 py-3 text-sm">
-                   Veja o impacto semanal
-                 </Link>
-               </div>
-             </div>
+            <div className="surface-card space-y-5 p-8 text-center shadow-xl md:p-12">
+              <span className="hero-status shadow-glow justify-center text-sm">
+                ❤️ 100% financiado pela comunidade
+              </span>
+              <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
+                Doe para manter tudo gratuito e simples.
+              </h1>
+              <p className="mx-auto max-w-2xl text-base text-foreground/75">
+                Pagamos APIs de IA, servidores e melhorias com pequenas contribuições. Qualquer valor mantém milhares de estudantes praticando.
+              </p>
+              <div className="flex flex-wrap justify-center gap-3">
+                <Link href="/sobre" className="btn btn-outline px-6 py-3 text-sm">
+                  Conheça o projeto
+                </Link>
+                <Link href="/noticias" className="btn btn-glass px-6 py-3 text-sm">
+                  Ver impacto
+                </Link>
+              </div>
+            </div>
  
              <div className="surface-card space-y-8 p-8 shadow-xl md:p-10">
                <div className="flex flex-col gap-4 text-center">

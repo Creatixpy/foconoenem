@@ -120,41 +120,48 @@ export default function TermsOfServicePage() {
               </ul>
             </div>
 
-            <div className="space-y-8">
+            <div className="space-y-4">
               {sections.map((section, index) => (
-                <article key={section.id} id={section.id} className="surface-card space-y-4 border border-border-color/60 p-6 shadow-sm md:p-8">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                <details
+                  key={section.id}
+                  id={section.id}
+                  className="surface-card border border-border-color/60 p-0 shadow-sm"
+                  open={index === 0}
+                >
+                  <summary className="flex cursor-pointer items-center gap-3 px-6 py-4 text-left">
+                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
                       {String(index + 1).padStart(2, "0")}
                     </span>
-                    <h2 className="text-xl font-semibold text-foreground">{section.title}</h2>
+                    <span className="text-base font-semibold text-foreground">{section.title}</span>
+                  </summary>
+                  <div className="space-y-4 border-t border-border-color/60 px-6 py-5 text-sm text-foreground/75">
+                    <p className="leading-relaxed">{section.content}</p>
+                    {section.list && (
+                      <ul className="list-disc space-y-2 pl-6 text-foreground/70">
+                        {section.list.map((item) => (
+                          <li key={item}>{item}</li>
+                        ))}
+                      </ul>
+                    )}
+                    {section.subsections && (
+                      <div className="space-y-4">
+                        {section.subsections.map((subsection) => (
+                          <div key={subsection.subtitle} className="rounded-2xl border border-border-color/50 bg-card-bg/80 p-5">
+                            <p className="text-sm font-semibold text-foreground">{subsection.subtitle}</p>
+                            <p className="mt-2 text-sm text-foreground/70">{subsection.description}</p>
+                            {subsection.list && (
+                              <ul className="mt-3 list-disc space-y-2 pl-5 text-foreground/70">
+                                {subsection.list.map((item) => (
+                                  <li key={item}>{item}</li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <p className="text-sm text-foreground/75 leading-relaxed">{section.content}</p>
-                  {section.list && (
-                    <ul className="list-disc space-y-2 pl-6 text-sm text-foreground/70">
-                      {section.list.map((item) => (
-                        <li key={item}>{item}</li>
-                      ))}
-                    </ul>
-                  )}
-                  {section.subsections && (
-                    <div className="space-y-6">
-                      {section.subsections.map((subsection) => (
-                        <div key={subsection.subtitle} className="rounded-2xl border border-border-color/50 bg-card-bg/80 p-5">
-                          <p className="text-sm font-semibold text-foreground">{subsection.subtitle}</p>
-                          <p className="mt-2 text-sm text-foreground/70">{subsection.description}</p>
-                          {subsection.list && (
-                            <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-foreground/70">
-                              {subsection.list.map((item) => (
-                                <li key={item}>{item}</li>
-                              ))}
-                            </ul>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </article>
+                </details>
               ))}
             </div>
 

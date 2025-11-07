@@ -66,23 +66,19 @@ function PesquisaContent() {
 
   return (
     <>
-      <div className="mb-6">
-        <Link href="/noticias" className="text-primary hover:underline flex items-center">
-          <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <Link href="/noticias" className="text-primary hover:underline flex items-center gap-1 text-sm font-semibold">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          Voltar para notícias
+          Voltar
         </Link>
+        <span className="text-xs uppercase tracking-[0.2em] text-foreground/60">Busca enxuta</span>
       </div>
 
-      <h1 className="text-3xl font-bold mb-6 flex items-center">
-        <svg className="w-7 h-7 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-        Resultados da pesquisa
-      </h1>
+      <h1 className="text-3xl font-bold mb-4">Pesquise em segundos</h1>
 
-      <form onSubmit={handlePesquisar} className="mb-8">
+      <form onSubmit={handlePesquisar} className="mb-6">
         <div className="flex">
           <input
             type="text"
@@ -105,14 +101,8 @@ function PesquisaContent() {
       </form>
 
       {termo && (
-        <p className="mb-6 text-lg">
-          {isLoading ? (
-            "Buscando..."
-          ) : (
-            <>
-              Encontrados {noticias.length} resultados para &ldquo;{termo}&rdquo;
-            </>
-          )}
+        <p className="mb-4 text-sm text-foreground/70">
+          {isLoading ? "Buscando..." : `${noticias.length} resultado(s) para “${termo}”`}
         </p>
       )}
 
@@ -131,9 +121,9 @@ function PesquisaContent() {
           <svg className="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
           </svg>
-          <p className="text-gray-500 mb-4">Nenhuma notícia encontrada para &ldquo;{termo}&rdquo;</p>
-          <Link href="/noticias" className="btn btn-primary inline-flex">
-            Ver todas as notícias
+          <p className="text-gray-500 mb-3 text-sm">Nada apareceu para “{termo}”. Tente outro termo curto.</p>
+          <Link href="/noticias" className="btn btn-glass inline-flex text-sm">
+            Ver todas
           </Link>
         </div>
       ) : (
