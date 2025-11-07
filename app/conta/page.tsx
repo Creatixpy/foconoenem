@@ -54,8 +54,11 @@ export default function ContaPage() {
 
   useEffect(() => {
     const loadData = async () => {
-      if (!user) return;
-      
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       
       try {
@@ -76,9 +79,7 @@ export default function ContaPage() {
       }
     };
 
-    if (user) {
-      loadData();
-    }
+    void loadData();
   }, [user, fetchLatestStatistics]);
 
   useEffect(() => {
