@@ -97,6 +97,7 @@ export default function AdminDestaques() {
       try {
         const { data: sessionData } = await supabase.auth.getSession();
         if (cancelled) {
+          setCheckingAccess(false);
           return;
         }
 
@@ -105,6 +106,7 @@ export default function AdminDestaques() {
           setAccessToken(null);
           setAuthorized(false);
           setAuthError("Sessão expirada. Faça login novamente.");
+          setCheckingAccess(false);
           return;
         }
 
