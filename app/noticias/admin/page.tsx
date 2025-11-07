@@ -34,6 +34,13 @@ type ImportSummary = {
   };
 };
 
+type ModerationSummary = {
+  reviewed: number;
+  removed: number;
+  kept: number;
+  removedIds?: string[];
+};
+
 export default function AdminDestaques() {
   const { user, loading: authLoading } = useAuth();
 
@@ -51,6 +58,9 @@ export default function AdminDestaques() {
   const [importLoading, setImportLoading] = useState(false);
   const [importResult, setImportResult] = useState<ImportSummary | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
+  const [moderationLoading, setModerationLoading] = useState(false);
+  const [moderationResult, setModerationResult] = useState<ModerationSummary | null>(null);
+  const [moderationError, setModerationError] = useState<string | null>(null);
 
   const carregarStatus = useCallback(async () => {
     try {
@@ -313,6 +323,53 @@ export default function AdminDestaques() {
     },
     [authFetch, authorized]
   );
+
+  const handleLimparNoticiasIrrelevantes = useCallback(async () => {
+    if (!authorized) {
+      return;
+    }
+
+    if (!accessToken) {
+      setModerationError("Sessão expirada. Faça login novamente.");
+      return;
+    }
+
+    try {
+      setModerationLoading(true);
+      setModerationError(null);
+      setModerationResult(null);
+
+      const response = await fetch("/api/noticias/admin/moderar", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        const errorMessage = data?.error ?? data?.message ?? "Falha ao remover notícias irrelevantes.";
+
+        if (response.status === 401 || response.status === 403) {
+          setAuthorized(false);
+          setAuthError(errorMessage);
+        }
+
+        throw new Error(errorMessage);
+      }
+
+      setModerationResult(data as ModerationSummary);
+      await carregarNoticiasDestaque();
+    } catch (error) {
+      console.error("Erro ao executar limpeza de notícias:", error);
+      setModerationError(
+        error instanceof Error ? error.message : "Não foi possível limpar notícias irrelevantes agora."
+      );
+    } finally {
+      setModerationLoading(false);
+    }
+  }, [accessToken, authorized, carregarNoticiasDestaque]);
 
   return (
     <main className="flex-grow">
@@ -608,6 +665,62 @@ export default function AdminDestaques() {
                         </p>
                       )}
                     </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-muted-bg p-6 rounded-lg space-y-4">
+                <div>
+                  <h2 className="text-xl font-semibold">Limpeza automática com IA</h2>
+                  <p className="text-sm text-foreground/70 mt-1">
+                    Analisa as últimas notícias cadastradas e remove automaticamente aquelas que fogem de educação,
+                    ENEM, vestibulares ou políticas educacionais.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => void handleLimparNoticiasIrrelevantes()}
+                  disabled={moderationLoading}
+                  className="btn btn-outline flex items-center gap-2"
+                >
+                  {moderationLoading ? (
+                    <>
+                      <span className="loader loader--sm" aria-hidden />
+                      Limpando...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.6}
+                          d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h9a2 2 0 002-2v-5m-7 0l9-9h3v3l-9 9H8v-3z"
+                        />
+                      </svg>
+                      Remover notícias irrelevantes
+                    </>
+                  )}
+                </button>
+
+                {moderationError && (
+                  <div className="border border-danger text-danger rounded-lg p-4 text-sm">{moderationError}</div>
+                )}
+
+                {moderationResult && (
+                  <div className="border border-success text-success rounded-lg p-4 text-sm space-y-1">
+                    <p>
+                      Revisadas: {moderationResult.reviewed} · Removidas: {moderationResult.removed} · Mantidas:{" "}
+                      {moderationResult.kept}
+                    </p>
+                    {moderationResult.removedIds && moderationResult.removedIds.length > 0 && (
+                      <p className="text-xs text-foreground/70">
+                        IDs removidos:{" "}
+                        <span className="font-mono">
+                          {moderationResult.removedIds.join(", ")}
+                        </span>
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
