@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Header from "../../components/Header";
-import Footer from "../../components/Footer";
 import { useAuth } from "../../contexts/AuthContext";
 import { updateUserProfile, UserProfile } from "@/lib/auth";
 
@@ -64,13 +62,9 @@ export default function EditarPerfilPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-muted-bg">
-        <Header />
-        <main className="flex-grow container mx-auto p-4 md:p-8 max-w-7xl flex items-center justify-center">
-          <div className="loader"></div>
-        </main>
-        <Footer />
-      </div>
+      <main className="flex min-h-[60vh] items-center justify-center px-4 py-12">
+        <div className="loader" />
+      </main>
     );
   }
 
@@ -79,10 +73,8 @@ export default function EditarPerfilPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-muted-bg">
-      <Header />
-      
-      <main className="flex-grow container mx-auto p-4 md:p-8 max-w-3xl">
+    <main className="flex-grow bg-gradient-to-br from-background via-background to-muted-bg">
+      <div className="container mx-auto max-w-3xl p-4 md:p-8">
         <div className="card card-gradient p-6 md:p-8 animate-fadeIn">
           <div className="flex items-center mb-6">
             <button
@@ -214,9 +206,7 @@ export default function EditarPerfilPage() {
             </div>
           </div>
         </div>
-      </main>
-
-      <Footer />
-    </div>
+      </div>
+    </main>
   );
 }

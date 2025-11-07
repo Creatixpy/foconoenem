@@ -3,8 +3,6 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { EssayResult } from "@/types";
-import Header from "../../components/Header";
-import Footer from "../../components/Footer";
 import Link from "next/link";
 
 export default function ResultadosPage() {
@@ -87,10 +85,8 @@ export default function ResultadosPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-
-      <main className="flex-grow container mx-auto p-4 md:p-8">
+    <main className="flex-grow">
+      <div className="container mx-auto p-4 md:p-8">
         <section className="card p-6 md:p-8 mb-8 border border-border-color animate-fadeIn">
           <div className="flex flex-col md:flex-row md:justify-between md:items-start mb-6">
             <h2 className="text-2xl md:text-3xl font-bold text-primary mb-4 md:mb-0 flex items-center">
@@ -341,9 +337,7 @@ export default function ResultadosPage() {
             </Link>
           </div>
         </section>
-      </main>
-
-      <Footer />
-    </div>
+      </div>
+    </main>
   );
 }

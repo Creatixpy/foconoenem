@@ -1,35 +1,87 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTheme } from "@/app/contexts/ThemeContext";
 
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState<"light" | "dark" | "system">("system");
-  const [mounted, setMounted] = useState(false);
+  const { theme, toggleTheme } = useTheme();
+  const [prefersDark, setPrefersDark] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    const savedTheme = localStorage.getItem("theme") as "light" | "dark" | "system" | null;
-    if (savedTheme) {
-      setTheme(savedTheme);
+    if (typeof window === "undefined") {
+      return;
     }
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleChange = (event: MediaQueryListEvent) => {
+      setPrefersDark(event.matches);
+    };
+
+    setPrefersDark(mediaQuery.matches);
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", handleChange);
+      return () => {
+        mediaQuery.removeEventListener("change", handleChange);
+      };
+    }
+
+    mediaQuery.addListener(handleChange);
+    return () => {
+      mediaQuery.removeListener(handleChange);
+    };
   }, []);
 
-  useEffect(() => {
-    if (!mounted) return;
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("theme", theme);
-  }, [theme, mounted]);
-
-  if (!mounted) return null;
+  const resolvedTheme = theme === "system" ? (prefersDark ? "dark" : "light") : theme;
+  const isLight = resolvedTheme === "light";
 
   return (
-    <div className="fixed bottom-4 right-4 z-10">
-      <button 
-        onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-        className="p-2.5 bg-card-bg border border-border-color rounded-full shadow-md hover:bg-muted-bg transition-colors"
-        title={theme === "light" ? "Mudar para tema escuro" : "Mudar para tema claro"}
+    <div className="pointer-events-none fixed bottom-4 right-4 z-40">
+      <button
+        type="button"
+        onClick={toggleTheme}
+        aria-label={isLight ? "Ativar modo escuro" : "Ativar modo claro"}
+        className="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-border-color/70 bg-card-bg/90 px-4 py-2.5 text-sm font-semibold text-foreground shadow-xl backdrop-blur transition-all hover:-translate-y-0.5 hover:bg-card-bg"
       >
-        {theme === "light" ? "🌙" : "☀️"}
+        {isLight ? (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+          </svg>
+        ) : (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2v2" />
+            <path d="M12 20v2" />
+            <path d="m4.93 4.93 1.41 1.41" />
+            <path d="m17.66 17.66 1.41 1.41" />
+            <path d="M2 12h2" />
+            <path d="M20 12h2" />
+            <path d="m6.34 17.66-1.41 1.41" />
+            <path d="m19.07 4.93-1.41 1.41" />
+          </svg>
+        )}
+        <span className="hidden text-xs font-semibold uppercase tracking-wide text-foreground/70 sm:inline">
+          {isLight ? "Modo escuro" : "Modo claro"}
+        </span>
       </button>
     </div>
   );

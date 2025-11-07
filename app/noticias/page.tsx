@@ -2,8 +2,6 @@
 
 import { useState, useEffect, FormEvent } from "react";
 import Link from "next/link";
-import Header from "@/app/components/Header";
-import Footer from "@/app/components/Footer";
 import NewsImage from "@/app/components/NewsImage";
 import { Noticia } from "@/types";
 import { getNoticias, getNoticiasDestaque } from "@/lib/supabase";
@@ -105,11 +103,8 @@ export default function NoticiasPage() {
     : noticias;
 
   return (
-    <div className="flex min-h-screen flex-col bg-page-gradient text-foreground">
-      <Header />
-
-      <main className="flex-grow">
-        <section className="relative overflow-hidden px-4 pb-20 pt-16 sm:px-6 lg:px-8">
+    <main className="flex-grow">
+      <section className="relative overflow-hidden px-4 pb-20 pt-16 sm:px-6 lg:px-8">
           <div className="hero-accent absolute inset-0 blur-3xl" aria-hidden />
           <div className="container relative z-10 mx-auto max-w-6xl">
             <div className="grid gap-12 lg:grid-cols-[1.2fr_0.9fr]">
@@ -364,8 +359,5 @@ export default function NoticiasPage() {
           </div>
         </section>
       </main>
-
-      <Footer />
-    </div>
   );
 }

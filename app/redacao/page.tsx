@@ -2,8 +2,6 @@
 
 import { useState, useRef, useEffect, useCallback, useMemo, type ClipboardEvent } from "react";
 import { useRouter } from "next/navigation";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
 import { getOperatingHoursInfo, type OperatingHoursInfo } from "@/lib/schedule";
 import { supabase } from "@/lib/supabase";
 
@@ -524,10 +522,7 @@ export default function RedacaoPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-page-gradient text-foreground transition-colors duration-300">
-      <Header />
-
-      <main className="flex-grow">
+    <main className="flex-grow transition-colors duration-300">
         <section className="relative overflow-hidden px-4 pb-16 pt-12 sm:px-6 lg:px-8">
           <div className="hero-accent absolute inset-0 blur-3xl" aria-hidden />
           <div className="container relative z-10 mx-auto max-w-6xl space-y-10">
@@ -803,8 +798,5 @@ export default function RedacaoPage() {
           </div>
         </section>
       </main>
-
-      <Footer />
-    </div>
   );
 }

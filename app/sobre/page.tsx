@@ -1,5 +1,3 @@
-import Header from "../components/Header";
-import Footer from "../components/Footer";
 import AccountLinkButton from "../components/AccountLinkButton";
 import Link from "next/link";
 
@@ -78,11 +76,8 @@ export const metadata = {
 
 export default function SobrePage() {
   return (
-    <div className="flex min-h-screen flex-col bg-page-gradient text-foreground">
-      <Header />
-
-      <main className="flex-grow">
-        <section className="relative overflow-hidden px-4 pb-20 pt-16 sm:px-6 lg:px-8">
+    <main className="flex-grow">
+      <section className="relative overflow-hidden px-4 pb-20 pt-16 sm:px-6 lg:px-8">
           <div className="hero-accent absolute inset-0 blur-3xl" aria-hidden />
           <div className="container relative z-10 mx-auto max-w-5xl space-y-12">
             <div className="surface-card space-y-5 p-8 text-center shadow-xl md:p-12">
@@ -180,8 +175,5 @@ export default function SobrePage() {
           </div>
         </section>
       </main>
-
-      <Footer />
-    </div>
   );
 }

@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
 import OperatingHoursIndicator from "../components/OperatingHoursIndicator";
 import QuestionCard from "../components/QuestionCard";
 import QuizResults from "../components/QuizResults";
@@ -313,8 +311,7 @@ export default function QuestoesPage() {
   const unansweredCount = Math.max(questions.length - answeredCount, 0);
 
   return (
-    <div className="flex min-h-screen flex-col bg-page-gradient text-foreground">
-      <Header />
+    <>
       <OperatingHoursIndicator />
 
       <main className="flex-grow">
@@ -613,8 +610,6 @@ export default function QuestoesPage() {
           </div>
         </section>
       </main>
-
-      <Footer />
-    </div>
+    </>
   );
 }

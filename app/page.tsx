@@ -1,8 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import AccountLinkButton from "./components/AccountLinkButton";
-import Footer from "./components/Footer";
-import Header from "./components/Header";
 
 type Highlight = {
   title: string;
@@ -135,11 +133,8 @@ const testimonials: Testimonial[] = [
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen flex-col bg-page-gradient text-foreground">
-      <Header />
-
-      <main className="flex-grow">
-        <section className="relative overflow-hidden px-4 pb-24 pt-20 sm:px-6 lg:px-8 lg:pt-28">
+    <main className="flex-grow">
+      <section className="relative overflow-hidden px-4 pb-24 pt-20 sm:px-6 lg:px-8 lg:pt-28">
           <div className="hero-accent absolute inset-0 blur-3xl" aria-hidden />
           <div className="container relative z-10 mx-auto grid max-w-7xl gap-16 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
             <div className="space-y-10">
@@ -385,9 +380,6 @@ export default function Home() {
             </div>
           </div>
         </section>
-      </main>
-
-      <Footer />
-    </div>
+    </main>
   );
 }
