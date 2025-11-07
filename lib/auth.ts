@@ -326,102 +326,22 @@ export async function getUserStatistics(userId: string): Promise<UserStatistics 
 }
 
 /**
- * Recalcula e atualiza estatísticas do usuário
+ * Recalcula e atualiza estatísticas do usuário direto no banco.
  */
-export async function recalculateUserStatistics(userId: string) {
+export async function recalculateUserStatistics(userId: string): Promise<UserStatistics | null> {
   try {
-    // Buscar todas as redações do usuário
-    const { data: essays } = await supabase
-      .from('essay_results')
-      .select('*')
-      .eq('user_id', userId);
-    
-    // Buscar todos os quizzes do usuário
-    const { data: quizzes } = await supabase
-      .from('quiz_results')
-      .select('*')
-      .eq('user_id', userId);
-    
-    // Calcular estatísticas de redação
-    const essayStats = essays && essays.length > 0 ? {
-      total_redacoes: essays.length,
-      media_nota_redacao: essays.reduce((sum, e) => sum + e.nota, 0) / essays.length,
-      melhor_nota_redacao: Math.max(...essays.map(e => e.nota)),
-      pior_nota_redacao: Math.min(...essays.map(e => e.nota)),
-      media_competencia1: essays.reduce((sum, e) => sum + e.competencia1.nota, 0) / essays.length,
-      media_competencia2: essays.reduce((sum, e) => sum + e.competencia2.nota, 0) / essays.length,
-      media_competencia3: essays.reduce((sum, e) => sum + e.competencia3.nota, 0) / essays.length,
-      media_competencia4: essays.reduce((sum, e) => sum + e.competencia4.nota, 0) / essays.length,
-      media_competencia5: essays.reduce((sum, e) => sum + e.competencia5.nota, 0) / essays.length,
-    } : {};
-    
-    // Calcular estatísticas de questões
-    let quizStats = {};
-    if (quizzes && quizzes.length > 0) {
-      const totalQuestoes = quizzes.reduce((sum, q) => sum + q.total_questions, 0);
-      const totalAcertos = quizzes.reduce((sum, q) => sum + q.correct_answers, 0);
-      const totalErros = quizzes.reduce((sum, q) => sum + q.wrong_answers, 0);
-      
-      // Contar por disciplina
-      const disciplineStats: Record<string, { acertos: number; total: number }> = {
-        'Matemática': { acertos: 0, total: 0 },
-        'Português': { acertos: 0, total: 0 },
-        'Química': { acertos: 0, total: 0 },
-        'Física': { acertos: 0, total: 0 },
-        'Geografia': { acertos: 0, total: 0 },
-      };
-      
-      quizzes.forEach(quiz => {
-        const questions = quiz.questions_data || [];
-        const answers = quiz.answers_data || {};
-        
-        questions.forEach((q: { discipline: string; id: string; alternatives: Array<{id: string; isCorrect: boolean}> }) => {
-          if (disciplineStats[q.discipline]) {
-            disciplineStats[q.discipline].total++;
-            const userAnswer = answers[q.id];
-            const correctAnswer = q.alternatives.find(a => a.isCorrect);
-            if (userAnswer === correctAnswer?.id) {
-              disciplineStats[q.discipline].acertos++;
-            }
-          }
-        });
-      });
-      
-      quizStats = {
-        total_simulados: quizzes.length,
-        total_questoes_respondidas: totalQuestoes,
-        total_acertos: totalAcertos,
-        total_erros: totalErros,
-        taxa_acerto: totalQuestoes > 0 ? (totalAcertos / totalQuestoes) * 100 : 0,
-        acertos_matematica: disciplineStats['Matemática'].acertos,
-        total_matematica: disciplineStats['Matemática'].total,
-        acertos_portugues: disciplineStats['Português'].acertos,
-        total_portugues: disciplineStats['Português'].total,
-        acertos_quimica: disciplineStats['Química'].acertos,
-        total_quimica: disciplineStats['Química'].total,
-        acertos_fisica: disciplineStats['Física'].acertos,
-        total_fisica: disciplineStats['Física'].total,
-        acertos_geografia: disciplineStats['Geografia'].acertos,
-        total_geografia: disciplineStats['Geografia'].total,
-      };
+    const { data, error } = await supabase.rpc('recalculate_user_statistics', {
+      target_user_id: userId,
+    });
+
+    if (error) {
+      throw error;
     }
-    
-    // Atualizar estatísticas no banco
-    const { error } = await supabase
-      .from('user_statistics')
-      .upsert({
-        user_id: userId,
-        ...essayStats,
-        ...quizStats,
-        ultima_atualizacao: new Date().toISOString(),
-      });
-    
-    if (error) throw error;
-    
-    return true;
+
+    return (data as UserStatistics) ?? null;
   } catch (error) {
     console.error('Erro ao recalcular estatísticas:', error);
-    return false;
+    return null;
   }
 }
 

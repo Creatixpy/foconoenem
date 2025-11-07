@@ -1,14 +1,21 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY devem estar configuradas.');
+}
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+const NOTICIA_FIELDS =
+  'id,titulo,slug,resumo,conteudo,imagem_url,autor,data_publicacao,tags,destaque,created_at,fonte_url';
 
 export async function getNoticias(limit = 10, offset = 0) {
   const { data, error } = await supabase
     .from('noticias')
-    .select('*')
+    .select(NOTICIA_FIELDS)
     .order('data_publicacao', { ascending: false })
     .range(offset, offset + limit - 1);
   
@@ -23,7 +30,7 @@ export async function getNoticias(limit = 10, offset = 0) {
 export async function getNoticiasPorTag(tag: string, limit = 10) {
   const { data, error } = await supabase
     .from('noticias')
-    .select('*')
+    .select(NOTICIA_FIELDS)
     .contains('tags', [tag])
     .order('data_publicacao', { ascending: false })
     .limit(limit);
@@ -39,7 +46,7 @@ export async function getNoticiasPorTag(tag: string, limit = 10) {
 export async function getNoticiasDestaque(limit = 5) {
   const { data, error } = await supabase
     .from('noticias')
-    .select('*')
+    .select(NOTICIA_FIELDS)
     .eq('destaque', true)
     .order('data_publicacao', { ascending: false })
     .limit(limit);
@@ -55,7 +62,7 @@ export async function getNoticiasDestaque(limit = 5) {
 export async function getNoticiaPorSlug(slug: string) {
   const { data, error } = await supabase
     .from('noticias')
-    .select('*')
+    .select(NOTICIA_FIELDS)
     .eq('slug', slug)
     .single();
   
@@ -68,10 +75,18 @@ export async function getNoticiaPorSlug(slug: string) {
 }
 
 export async function getNoticiasPorPesquisa(termo: string, limit = 10) {
+  const sanitizedTerm = termo.trim();
+  if (!sanitizedTerm) {
+    return [];
+  }
+
   const { data, error } = await supabase
     .from('noticias')
-    .select('*')
-    .or(`titulo.ilike.%${termo}%,conteudo.ilike.%${termo}%,resumo.ilike.%${termo}%`)
+    .select(NOTICIA_FIELDS)
+    .textSearch('search_vector', sanitizedTerm, {
+      type: 'websearch',
+      config: 'portuguese',
+    })
     .order('data_publicacao', { ascending: false })
     .limit(limit);
   

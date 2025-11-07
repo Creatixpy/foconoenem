@@ -225,106 +225,17 @@ async function storeQuizResult(payload: QuizResultPayload) {
   }
 }
 
-async function recalculateUserStatistics(userId: string) {
-  try {
-    const { data: essays } = await supabase
-      .from("essay_results")
-      .select("*")
-      .eq("user_id", userId);
+async function recalculateUserStatistics(userId: string | null) {
+  if (!userId) {
+    return;
+  }
 
-    const { data: quizzes } = await supabase
-      .from("quiz_results")
-      .select("*")
-      .eq("user_id", userId);
+  const { error } = await supabase.rpc("recalculate_user_statistics", {
+    target_user_id: userId,
+  });
 
-    const essayStats =
-      essays && essays.length > 0
-        ? {
-            total_redacoes: essays.length,
-            media_nota_redacao:
-              essays.reduce((sum, e) => sum + (e as any).nota, 0) / essays.length,
-            melhor_nota_redacao: Math.max(...essays.map((e) => (e as any).nota)),
-            pior_nota_redacao: Math.min(...essays.map((e) => (e as any).nota)),
-            media_competencia1:
-              essays.reduce((sum, e) => sum + (e as any).competencia1.nota, 0) / essays.length,
-            media_competencia2:
-              essays.reduce((sum, e) => sum + (e as any).competencia2.nota, 0) / essays.length,
-            media_competencia3:
-              essays.reduce((sum, e) => sum + (e as any).competencia3.nota, 0) / essays.length,
-            media_competencia4:
-              essays.reduce((sum, e) => sum + (e as any).competencia4.nota, 0) / essays.length,
-            media_competencia5:
-              essays.reduce((sum, e) => sum + (e as any).competencia5.nota, 0) / essays.length,
-          }
-        : {};
-
-    let quizStats: Record<string, unknown> = {};
-
-    if (quizzes && quizzes.length > 0) {
-      const totalQuestoes = quizzes.reduce((sum, q) => sum + (q as any).total_questions, 0);
-      const totalAcertos = quizzes.reduce((sum, q) => sum + (q as any).correct_answers, 0);
-      const totalErros = quizzes.reduce((sum, q) => sum + (q as any).wrong_answers, 0);
-
-      const disciplineStats: Record<string, { acertos: number; total: number }> = {
-        Matemática: { acertos: 0, total: 0 },
-        Português: { acertos: 0, total: 0 },
-        Química: { acertos: 0, total: 0 },
-        Física: { acertos: 0, total: 0 },
-        Geografia: { acertos: 0, total: 0 },
-      };
-
-      quizzes.forEach((quiz) => {
-        const questions = ((quiz as any).questions_data ?? []) as Question[];
-        const answers = ((quiz as any).answers_data ?? {}) as Record<string, string>;
-
-        questions.forEach((question) => {
-          if (!disciplineStats[question.discipline]) {
-            return;
-          }
-          disciplineStats[question.discipline].total += 1;
-          const userAnswer = answers[question.id];
-          const correctAnswer = question.alternatives.find((alt) => alt.isCorrect);
-          if (userAnswer && correctAnswer && userAnswer === correctAnswer.id) {
-            disciplineStats[question.discipline].acertos += 1;
-          }
-        });
-      });
-
-      quizStats = {
-        total_simulados: quizzes.length,
-        total_questoes_respondidas: totalQuestoes,
-        total_acertos: totalAcertos,
-        total_erros: totalErros,
-        taxa_acerto: totalQuestoes > 0 ? (totalAcertos / totalQuestoes) * 100 : 0,
-        acertos_matematica: disciplineStats["Matemática"].acertos,
-        total_matematica: disciplineStats["Matemática"].total,
-        acertos_portugues: disciplineStats["Português"].acertos,
-        total_portugues: disciplineStats["Português"].total,
-        acertos_quimica: disciplineStats["Química"].acertos,
-        total_quimica: disciplineStats["Química"].total,
-        acertos_fisica: disciplineStats["Física"].acertos,
-        total_fisica: disciplineStats["Física"].total,
-        acertos_geografia: disciplineStats["Geografia"].acertos,
-        total_geografia: disciplineStats["Geografia"].total,
-      };
-    }
-
-    const payload = {
-      user_id: userId,
-      ultima_atualizacao: new Date().toISOString(),
-      ...essayStats,
-      ...quizStats,
-    };
-
-    const { error } = await supabase.from("user_statistics").upsert(payload, {
-      onConflict: "user_id",
-    });
-
-    if (error) {
-      console.error("Erro ao atualizar estatísticas:", error);
-    }
-  } catch (error) {
-    console.error("Erro inesperado ao recalcular estatísticas:", error);
+  if (error) {
+    console.error("Erro ao atualizar estatísticas do usuário:", error);
   }
 }
 
