@@ -111,47 +111,46 @@ export default function NoticiasPage() {
               <div className="space-y-8">
                 <div className="hero-status shadow-glow">
                   <span className="h-2 w-2 rounded-full bg-success" />
-                  Atualizado diariamente
+                  Atualizado em minutos
                 </div>
                 <div className="space-y-5">
                   <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl">
-                    Notícias e atualidades para a redação e questões do ENEM.
+                    Notícias do ENEM em formato curto.
                   </h1>
                   <p className="max-w-xl text-lg text-foreground/75">
-                    Acompanhe mudanças no exame, prazos importantes, temas em alta e orientações exclusivas para construir
-                    repertório sociocultural com confiança.
+                    Prazos, temas e comunicados oficiais resumidos para você voltar ao estudo rápido.
                   </p>
                 </div>
                 <dl className="grid gap-4 sm:grid-cols-3">
                   <div className="stat-card px-5 py-4">
                     <dt className="text-xs uppercase tracking-wide text-foreground/60">Cobertura</dt>
                     <dd className="mt-2 text-xl font-semibold text-primary">ENEM & Educação</dd>
-                    <p className="mt-1 text-xs text-foreground/60">Atualizações oficiais, MEC/INEP e temas sociais</p>
+                    <p className="mt-1 text-xs text-foreground/60">MEC, INEP e temas sociais em uma linha.</p>
                   </div>
                   <div className="stat-card px-5 py-4">
                     <dt className="text-xs uppercase tracking-wide text-foreground/60">Curadoria</dt>
                     <dd className="mt-2 text-xl font-semibold text-primary">Feita por quem estuda</dd>
-                    <p className="mt-1 text-xs text-foreground/60">Equipe que vive o vestibular diariamente</p>
+                    <p className="mt-1 text-xs text-foreground/60">Equipe que vive o vestibular diariamente.</p>
                   </div>
                   <div className="stat-card px-5 py-4">
                     <dt className="text-xs uppercase tracking-wide text-foreground/60">Busca inteligente</dt>
                     <dd className="mt-2 text-xl font-semibold text-primary">IA integrada</dd>
-                    <p className="mt-1 text-xs text-foreground/60">Pesquise a web em tempo real sem sair da plataforma</p>
+                    <p className="mt-1 text-xs text-foreground/60">Pesquise a web sem sair da página.</p>
                   </div>
                 </dl>
               </div>
 
               <div className="surface-card flex h-full flex-col gap-6 p-6 shadow-xl">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.18em] text-primary">Fique por dentro</p>
-                  <h2 className="mt-2 text-lg font-semibold text-foreground">Busque notícias rapidamente</h2>
+                  <p className="text-xs uppercase tracking-[0.18em] text-primary">Filtro rápido</p>
+                  <h2 className="mt-2 text-lg font-semibold text-foreground">Busque em poucas palavras</h2>
                 </div>
                 <div className="relative">
                   <input
                     type="text"
                     value={busca}
                     onChange={(event) => setBusca(event.target.value)}
-                    placeholder="Pesquisar nas notícias publicadas aqui..."
+                    placeholder="Tema, autor ou tag..."
                     className="w-full rounded-2xl border border-border-color/60 bg-card-bg/80 py-3 pl-12 pr-4 text-base text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
                   <svg
@@ -163,24 +162,20 @@ export default function NoticiasPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </div>
-                <div className="rounded-2xl border border-border-color/60 bg-card-bg/80 p-4 shadow-inner backdrop-blur">
-                  <div className="flex items-center justify-between gap-2">
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">Busca inteligente com IA</p>
-                      <p className="text-xs text-foreground/60">
-                        Pesquise na web por novidades sobre o ENEM e receba um resumo contextualizado.
-                      </p>
-                    </div>
-                    <svg className="h-6 w-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                <details className="rounded-2xl border border-border-color/60 bg-card-bg/80 p-4 shadow-inner backdrop-blur">
+                  <summary className="flex cursor-pointer items-center justify-between gap-2 text-sm font-semibold text-foreground">
+                    Busca com IA
+                    <svg className="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 5v14m7-7H5" />
                     </svg>
-                  </div>
-                  <form onSubmit={buscarComIA} className="mt-4 flex gap-2">
+                  </summary>
+                  <p className="mt-3 text-xs text-foreground/60">Resumos enxutos direto da web quando precisar de algo novo.</p>
+                  <form onSubmit={buscarComIA} className="mt-3 flex gap-2">
                     <input
                       type="text"
                       value={buscaIA}
                       onChange={(event) => setBuscaIA(event.target.value)}
-                      placeholder="Ex.: mudanças na redação ENEM 2024"
+                      placeholder="Ex.: cronograma ENEM 2025"
                       className="flex-grow rounded-2xl border border-border-color/60 bg-card-bg/80 px-4 py-3 text-sm text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                       disabled={isLoading}
                     />
@@ -189,19 +184,7 @@ export default function NoticiasPage() {
                       disabled={isLoading || !buscaIA.trim()}
                       className="btn btn-primary px-4 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-70"
                     >
-                      {isLoading ? (
-                        <span className="flex items-center gap-2">
-                          <span className="inline-block h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                          Buscando...
-                        </span>
-                      ) : (
-                        <>
-                          Buscar com IA
-                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                          </svg>
-                        </>
-                      )}
+                      {isLoading ? "Buscando..." : "Gerar"}
                     </button>
                   </form>
                   {noticiasIA && (
@@ -218,7 +201,7 @@ export default function NoticiasPage() {
                       <p className="text-xs text-foreground/50">* Conteúdo sintetizado por IA com base em resultados da web.</p>
                     </div>
                   )}
-                </div>
+                </details>
               </div>
             </div>
           </div>

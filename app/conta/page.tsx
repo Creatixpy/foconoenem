@@ -388,14 +388,16 @@ export default function ContaPage() {
                   </svg>
                   Análise do seu Desempenho
                 </h2>
-                <ul className="space-y-3">
+                <div className="flex flex-wrap gap-2">
                   {analises.map((analise, index) => (
-                    <li key={index} className="text-foreground flex items-start">
-                      <span className="mr-2">•</span>
-                      <span>{analise}</span>
-                    </li>
+                    <span
+                      key={`${analise}-${index}`}
+                      className="rounded-full border border-border-color/70 px-3 py-2 text-xs text-foreground/80"
+                    >
+                      {analise}
+                    </span>
                   ))}
-                </ul>
+                </div>
               </div>
             )}
 
@@ -407,16 +409,16 @@ export default function ContaPage() {
                   </svg>
                   Recomendações de Estudo
                 </h2>
-                <ul className="space-y-3">
+                <div className="flex flex-wrap gap-2">
                   {recomendacoes.map((rec, index) => (
-                    <li key={index} className="text-foreground flex items-start">
-                      <svg className="w-5 h-5 mr-2 text-accent flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                      </svg>
-                      <span>{rec}</span>
-                    </li>
+                    <span
+                      key={`${rec}-${index}`}
+                      className="rounded-full bg-primary/5 px-3 py-2 text-xs text-foreground/80"
+                    >
+                      {rec}
+                    </span>
                   ))}
-                </ul>
+                </div>
               </div>
             )}
           </div>

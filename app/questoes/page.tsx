@@ -23,7 +23,7 @@ const disciplineOptions = [
   },
   {
     name: "Português",
-    description: "Interpretação de textos e gramática",
+    description: "Texto e gramática em 3 questões",
     accent: "from-rose-500/10 to-red-600/10",
     icon: (
       <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -34,7 +34,7 @@ const disciplineOptions = [
   },
   {
     name: "Química",
-    description: "Reações, ligações e química orgânica",
+    description: "Reações e orgânica essenciais",
     accent: "from-emerald-500/10 to-emerald-700/10",
     icon: (
       <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -44,7 +44,7 @@ const disciplineOptions = [
   },
   {
     name: "Física",
-    description: "Movimentos, energia e eletricidade",
+    description: "Movimento, energia e eletricidade",
     accent: "from-purple-500/10 to-indigo-700/10",
     icon: (
       <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -54,7 +54,7 @@ const disciplineOptions = [
   },
   {
     name: "Geografia",
-    description: "Mapas, climatologia e globalização",
+    description: "Mapas, clima e globalização",
     accent: "from-amber-500/10 to-orange-600/10",
     icon: (
       <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -69,17 +69,17 @@ const heroHighlights = [
   {
     label: "Questões personalizadas",
     value: `${QUESTIONS_PER_DISCIPLINE} por disciplina`,
-    detail: "Geradas por IA na hora",
+    detail: "IA gera na hora",
   },
   {
     label: "Tempo sugerido",
     value: "20 min",
-    detail: "Para concluir o bloco completo",
+    detail: "Bloco completo",
   },
   {
     label: "Feedback imediato",
     value: "Explicações comentadas",
-    detail: "Veja acertos e lacunas em segundos",
+    detail: "Acertos e lacunas",
   },
 ];
 
