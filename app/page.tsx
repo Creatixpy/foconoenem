@@ -177,18 +177,15 @@ export default function Home() {
                     </a>
                   ))}
                 </div>
-                <button
-                  type="button"
+                <a
+                  href="#metodologia"
                   className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                  onClick={() => {
-                    document.querySelector("#metodologia")?.scrollIntoView({ behavior: "smooth" });
-                  }}
                 >
                   Rolagem rápida
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M19 9l-7 7-7-7" />
                   </svg>
-                </button>
+                </a>
               </nav>
               <dl className="grid gap-4 sm:grid-cols-3">
                 {heroStats.map((stat) => (
