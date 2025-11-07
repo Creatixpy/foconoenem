@@ -17,11 +17,11 @@ export default function ResultadosPage() {
       try {
         setLoading(true);
         const response = await fetch(`/api/resultados/${id}`);
-        
+
         if (!response.ok) {
           throw new Error("Resultado não encontrado");
         }
-        
+
         const data = await response.json();
         setResult(data.result);
       } catch (error) {
@@ -32,9 +32,13 @@ export default function ResultadosPage() {
       }
     };
 
-    if (id) {
-      fetchResult();
+    if (!id) {
+      setError("ID inválido.");
+      setLoading(false);
+      return;
     }
+
+    void fetchResult();
   }, [id]);
 
   const getGradeColor = (grade: number) => {
