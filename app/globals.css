@@ -101,6 +101,15 @@ body {
               color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+
 /* Personalização de botões */
 .btn {
   padding: 0.75rem 1.5rem;
@@ -897,9 +906,9 @@ footer p, footer a, footer div {
   gap: 0.5rem;
   border-radius: 9999px;
   padding: 0.35rem 1.1rem;
-  border: 1px solid rgba(37, 99, 235, 0.35);
+  border: 1px solid rgba(37, 99, 235, 0.45);
   background: rgba(255, 255, 255, 0.82);
-  color: var(--primary);
+  color: var(--foreground);
   font-size: 0.875rem;
   font-weight: 600;
   backdrop-filter: blur(14px);

@@ -51,7 +51,14 @@ export default function Header() {
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-3 transition-transform hover:scale-[1.01]">
           <span className={`brand-badge ${isScrolled ? "brand-badge--scrolled" : "brand-badge--top"}`}>
-            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="h-6 w-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              focusable="false"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -65,12 +72,12 @@ export default function Header() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-2 md:flex">
+        <nav className="hidden items-center gap-2 md:flex" aria-label="Navegação principal">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${linkTone}`}
+              className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${linkTone} focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary`}
             >
               {link.label}
             </Link>
@@ -84,6 +91,8 @@ export default function Header() {
                 type="button"
                 className={`user-chip ${isScrolled ? "user-chip--scrolled" : "user-chip--top"}`}
                 onClick={() => setShowUserMenu((previous) => !previous)}
+                aria-haspopup="true"
+                aria-expanded={showUserMenu}
               >
                 <span className="user-chip__avatar">{brandInitial}</span>
                 <span className="hidden sm:block text-foreground">
@@ -142,14 +151,16 @@ export default function Header() {
               isScrolled ? "border-border-color/70 text-foreground" : "border-border-color/40 text-foreground"
             }`}
             onClick={() => setMobileMenuOpen((previous) => !previous)}
-            aria-label="Abrir menu de navegação"
+            aria-label={mobileMenuOpen ? "Fechar menu de navegação" : "Abrir menu de navegação"}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-navigation"
           >
             {mobileMenuOpen ? (
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M6 18L18 6M6 6l12 12" />
               </svg>
             ) : (
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 6h16M4 12h16m-7 6h7" />
               </svg>
             )}
@@ -158,17 +169,17 @@ export default function Header() {
       </div>
 
       {mobileMenuOpen && (
-        <div className="border-t border-border-color/60 bg-card-bg/95 px-4 pb-6 pt-4 shadow-xl backdrop-blur md:hidden">
-          <nav className="space-y-1">
+        <div className="border-t border-border-color/60 bg-card-bg/95 px-4 pb-6 pt-4 shadow-xl backdrop-blur md:hidden" id="mobile-navigation">
+          <nav className="space-y-1" aria-label="Navegação mobile">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold text-foreground/80 transition-colors hover:bg-muted-bg"
+                className="flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted-bg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
                 {link.label}
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
               </Link>

@@ -6,6 +6,22 @@ import NewsImage from "@/app/components/NewsImage";
 import { Noticia } from "@/types";
 import { getNoticias, getNoticiasDestaque } from "@/lib/supabase";
 
+export function generateMetadata() {
+  return {
+    title: "Notícias e Atualizações ENEM – Foco no ENEM",
+    description:
+      "Resumos curtos sobre ENEM e educação para manter seu repertório atualizado. Prazos, temas e comunicados oficiais em um único lugar.",
+  };
+}
+
+export function generateMetadata() {
+  return {
+    title: "Notícias e Atualizações ENEM – Foco no ENEM",
+    description:
+      "Resumos curtos sobre ENEM e educação para manter seu repertório atualizado. Prazos, temas e comunicados oficiais em um único lugar.",
+  };
+}
+
 export default function NoticiasPage() {
   const [noticias, setNoticias] = useState<Noticia[]>([]);
   const [noticiasDestaque, setNoticiasDestaque] = useState<Noticia[]>([]);
@@ -140,7 +156,7 @@ export default function NoticiasPage() {
                 </dl>
               </div>
 
-              <div className="surface-card flex h-full flex-col gap-6 p-6 shadow-xl">
+                <div className="surface-card flex h-full flex-col gap-6 p-6 shadow-xl" role="complementary" aria-label="Filtros e busca de notícias">
                 <div>
                   <p className="text-xs uppercase tracking-[0.18em] text-primary">Filtro rápido</p>
                   <h2 className="mt-2 text-lg font-semibold text-foreground">Busque em poucas palavras</h2>

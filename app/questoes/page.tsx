@@ -83,6 +83,14 @@ const heroHighlights = [
   },
 ];
 
+export function generateMetadata() {
+  return {
+    title: "Simulado de Questões ENEM com IA – Foco no ENEM",
+    description:
+      "Crie blocos personalizados por disciplina e treine questões inéditas com explicações comentadas instantâneas.",
+  };
+}
+
 export default function QuestoesPage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(false);
