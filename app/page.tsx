@@ -121,6 +121,14 @@ const testimonials: Testimonial[] = [
   },
 ];
 
+export function generateMetadata() {
+  return {
+    title: "Foco no ENEM - Simulados personalizados e redações com IA",
+    description:
+      "Construa sua rotina de estudos com simulados adaptados, correção de redação e insights para cada competência do ENEM.",
+  };
+}
+
 export default function Home() {
   return (
     <main className="flex-grow">
@@ -151,6 +159,37 @@ export default function Home() {
                   </svg>
                 </Link>
               </div>
+              <nav className="space-y-3" aria-label="Atalhos da página">
+                <p className="text-sm font-semibold text-foreground/70">Acesse rápido:</p>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { href: "#recursos", label: "Recursos" },
+                    { href: "#metodologia", label: "Metodologia" },
+                    { href: "#historias", label: "Histórias" },
+                    { href: "#cta-final", label: "Convite final" },
+                  ].map((anchor) => (
+                    <a
+                      key={anchor.href}
+                      href={anchor.href}
+                      className="rounded-full border border-border-color/60 px-4 py-2 text-sm font-semibold text-foreground/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    >
+                      {anchor.label}
+                    </a>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  onClick={() => {
+                    document.querySelector("#metodologia")?.scrollIntoView({ behavior: "smooth" });
+                  }}
+                >
+                  Rolagem rápida
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              </nav>
               <dl className="grid gap-4 sm:grid-cols-3">
                 {heroStats.map((stat) => (
                   <div key={stat.label} className="stat-card px-5 py-4">
@@ -241,7 +280,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="relative px-4 pb-20 sm:px-6 lg:px-8">
+        <section id="recursos" className="relative px-4 pb-20 sm:px-6 lg:px-8">
           <div className="container mx-auto max-w-6xl">
             <div className="space-y-4 text-center">
               <p className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1 text-sm font-semibold text-primary">
@@ -274,7 +313,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="relative px-4 py-20 sm:px-6 lg:px-8">
+        <section id="metodologia" className="relative px-4 py-20 sm:px-6 lg:px-8">
           <div className="container mx-auto max-w-6xl">
             <div className="grid gap-16 lg:grid-cols-[1fr_1.1fr] lg:items-center">
               <div className="space-y-6">
@@ -312,7 +351,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="relative px-4 py-20 sm:px-6 lg:px-8">
+        <section id="historias" className="relative px-4 py-20 sm:px-6 lg:px-8">
           <div className="container mx-auto max-w-6xl">
             <div className="space-y-4 text-center">
               <p className="inline-flex items-center gap-2 rounded-full border border-success/30 bg-success/10 px-4 py-1 text-sm font-semibold text-success">
@@ -339,7 +378,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="relative px-4 pb-24 sm:px-6 lg:px-8">
+        <section id="cta-final" className="relative px-4 pb-24 sm:px-6 lg:px-8">
           <div className="container mx-auto max-w-5xl">
             <div className="gradient-border cta-surface overflow-hidden rounded-[2.75rem] p-10 text-center shadow-2xl backdrop-blur">
               <div className="space-y-6">

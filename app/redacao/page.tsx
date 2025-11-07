@@ -57,6 +57,14 @@ const getErrorMessage = (payload: unknown, fallback: string) => {
   return fallback;
 };
 
+export function generateMetadata() {
+  return {
+    title: "Simulado de Redação ENEM com IA – Foco no ENEM",
+    description:
+      "Envie sua redação, receba notas por competência e feedback imediato de inteligência artificial treinada no ENEM.",
+  };
+}
+
 export default function RedacaoPage() {
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
