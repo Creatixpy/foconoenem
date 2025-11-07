@@ -2,8 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import Header from "@/app/components/Header";
-import Footer from "@/app/components/Footer";
 import { verificarStatusDestaques, getNoticiasDestaque } from "@/lib/supabase";
 import { Noticia } from "@/types";
 import { useAuth } from "@/app/contexts/AuthContext";
@@ -315,10 +313,8 @@ export default function AdminDestaques() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-
-      <main className="flex-grow container mx-auto p-4 md:p-8">
+    <main className="flex-grow">
+      <div className="container mx-auto p-4 md:p-8">
         <div className="mb-6">
           <Link href="/noticias" className="text-primary hover:underline flex items-center">
             <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -616,9 +612,7 @@ export default function AdminDestaques() {
             </>
           )}
         </div>
-      </main>
-
-      <Footer />
-    </div>
+      </div>
+    </main>
   );
 }

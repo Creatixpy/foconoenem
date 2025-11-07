@@ -3,8 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
 import { useAuth } from "../contexts/AuthContext";
 import { 
   getUserStatistics, 
@@ -156,13 +154,9 @@ export default function ContaPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-muted-bg">
-        <Header />
-        <main className="flex-grow container mx-auto p-4 md:p-8 max-w-7xl flex items-center justify-center">
-          <div className="loader"></div>
-        </main>
-        <Footer />
-      </div>
+      <main className="flex min-h-[60vh] items-center justify-center px-4 py-12">
+        <div className="loader" />
+      </main>
     );
   }
 
@@ -283,10 +277,8 @@ export default function ContaPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-muted-bg">
-      <Header />
-      
-      <main className="flex-grow container mx-auto p-4 md:p-8 max-w-7xl">
+    <main className="flex-grow bg-gradient-to-br from-background via-background to-muted-bg">
+      <div className="container mx-auto max-w-7xl p-4 md:p-8">
         {/* Header da Conta */}
         <div className="card card-gradient p-6 md:p-8 mb-8 animate-fadeIn">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -530,9 +522,7 @@ export default function ContaPage() {
             </div>
           </div>
         )}
-      </main>
-
-      <Footer />
-    </div>
+      </div>
+    </main>
   );
 }

@@ -4,8 +4,6 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import Header from "@/app/components/Header";
-import Footer from "@/app/components/Footer";
 import { Noticia } from "@/types";
 import { getNoticiasPorPesquisa } from "@/lib/supabase";
 
@@ -182,14 +180,12 @@ function PesquisaContent() {
 
 export default function PesquisaPage() {
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <main className="flex-grow container mx-auto p-4 md:p-8">
+    <main className="flex-grow">
+      <div className="container mx-auto p-4 md:p-8">
         <Suspense fallback={<div className="loader my-12" />}>
           <PesquisaContent />
         </Suspense>
-      </main>
-      <Footer />
-    </div>
+      </div>
+    </main>
   );
 }

@@ -3,8 +3,6 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import Header from "@/app/components/Header";
-import Footer from "@/app/components/Footer";
 import { Noticia } from "@/types";
 import { getNoticiaPorSlug, getNoticiasPorTag } from "@/lib/supabase";
 import NewsImage from "@/app/components/NewsImage";
@@ -72,21 +70,16 @@ export default function NoticiaDetalhePage() {
   
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-grow container mx-auto p-4 md:p-8 flex justify-center items-center">
-          <div className="loader"></div>
-        </main>
-        <Footer />
-      </div>
+      <main className="flex min-h-[60vh] flex-col items-center justify-center px-4 py-12">
+        <div className="loader" />
+      </main>
     );
   }
   
   if (error || !noticia) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-grow container mx-auto p-4 md:p-8">
+      <main className="flex-grow">
+        <div className="container mx-auto max-w-3xl p-4 md:p-8">
           <div className="card p-8 text-center">
             <svg className="w-16 h-16 mx-auto text-danger mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -96,17 +89,14 @@ export default function NoticiaDetalhePage() {
               Voltar para notícias
             </Link>
           </div>
-        </main>
-        <Footer />
-      </div>
+        </div>
+      </main>
     );
   }
   
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      
-      <main className="flex-grow container mx-auto p-4 md:p-8">
+    <main className="flex-grow">
+      <div className="container mx-auto p-4 md:p-8">
         <div className="mb-6">
           <Link href="/noticias" className="text-primary hover:underline flex items-center">
             <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -272,9 +262,7 @@ export default function NoticiaDetalhePage() {
             </div>
           </section>
         )}
-      </main>
-      
-      <Footer />
-    </div>
+      </div>
+    </main>
   );
 }

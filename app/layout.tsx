@@ -1,6 +1,9 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Script from "next/script";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
+import ThemeToggle from "./components/ThemeToggle";
 import Providers from "./providers";
 export { metadata } from "./metadata";
 
@@ -34,7 +37,14 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Providers>{children}</Providers>
+        <Providers>
+          <div className="flex min-h-screen flex-col bg-page-gradient text-foreground">
+            <Header />
+            <div className="flex-1">{children}</div>
+            <Footer />
+          </div>
+          <ThemeToggle />
+        </Providers>
       </body>
     </html>
   );

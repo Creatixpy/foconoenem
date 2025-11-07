@@ -3,8 +3,6 @@
 import { useState, FormEvent, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import Header from "@/app/components/Header";
-import Footer from "@/app/components/Footer";
 import { signIn, signInWithGoogle } from "@/lib/auth";
 import { useAuth } from "@/app/contexts/AuthContext";
 
@@ -69,11 +67,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-page-gradient text-foreground">
-      <Header />
-
-      <main className="flex-grow">
-        <section className="relative overflow-hidden px-4 pb-20 pt-16 sm:px-6 lg:px-8">
+    <main className="flex-grow">
+      <section className="relative overflow-hidden px-4 pb-20 pt-16 sm:px-6 lg:px-8">
           <div className="hero-accent absolute inset-0 blur-3xl" aria-hidden />
           <div className="container relative z-10 mx-auto grid max-w-6xl gap-10 lg:grid-cols-[0.85fr_1fr]">
             <div className="space-y-8">
@@ -190,8 +185,5 @@ export default function LoginPage() {
           </div>
         </section>
       </main>
-
-      <Footer />
-    </div>
   );
 }
