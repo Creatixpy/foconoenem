@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/app/contexts/AuthContext";
@@ -52,21 +53,13 @@ export default function Header() {
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-3 transition-transform hover:scale-[1.01]">
           <span className={`brand-badge ${isScrolled ? "brand-badge--scrolled" : "brand-badge--top"}`}>
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-              focusable="false"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.8}
-                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-              />
-            </svg>
+            <Image
+              src="/foconoenemicon.png"
+              alt="Logotipo Foco no ENEM"
+              width={28}
+              height={28}
+              priority
+            />
           </span>
           <span className="hidden text-lg font-semibold tracking-tight text-foreground sm:inline">
             Foco no ENEM
