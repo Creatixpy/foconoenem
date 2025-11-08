@@ -405,9 +405,9 @@ export default function Home() {
               </div>
             </div>
             <div className="mt-8 flex justify-center">
-              <Link href="/conta" className="btn btn-primary">
-                Acessar fórum privado
-              </Link>
+                <Link href="/comunidade" className="btn btn-primary">
+                  Acessar fórum privado
+                </Link>
             </div>
           </section>
         )}

@@ -5,6 +5,7 @@ import Script from "next/script";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import ThemeToggle from "./components/ThemeToggle";
+import CookieConsent from "./components/CookieConsent";
 import Providers from "./providers";
 import StructuredData from "./structured-data";
 
@@ -78,6 +79,7 @@ export default function RootLayout({
             <Footer />
           </div>
           <ThemeToggle />
+          <CookieConsent />
           <StructuredData />
         </Providers>
       </body>
