@@ -11,6 +11,13 @@ export interface UserProfile {
   bio: string | null;
   objetivo: string | null;
   ano_enem: number | null;
+  community_tagline: string | null;
+  community_profile_theme: string | null;
+  community_show_statistics: boolean;
+  community_terms_version: string | null;
+  community_terms_accepted_at: string | null;
+  community_age_confirmed_at: string | null;
+  is_over_16: boolean | null;
   created_at: string;
   updated_at: string;
 }
@@ -72,6 +79,27 @@ export interface UserGoal {
   created_at: string;
   updated_at: string;
 }
+
+export interface Achievement {
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  icon: string | null;
+  criteria: Record<string, unknown> | null;
+  created_at: string;
+}
+
+export interface UserAchievement {
+  id: string;
+  user_id: string;
+  achievement_id: string;
+  earned_at: string;
+  metadata: Record<string, unknown> | null;
+  achievement?: Achievement;
+}
+
+export const COMMUNITY_TERMS_VERSION = '2024-07-community';
 
 /**
  * Registra um novo usuário
@@ -261,6 +289,54 @@ export async function updateUserProfile(userId: string, updates: Partial<UserPro
   return data;
 }
 
+export async function confirmCommunityAge(userId: string) {
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .update({
+      is_over_16: true,
+      community_age_confirmed_at: new Date().toISOString(),
+    })
+    .eq('user_id', userId)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+}
+
+export async function acceptCommunityTerms(userId: string, version: string = COMMUNITY_TERMS_VERSION) {
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .update({
+      community_terms_version: version,
+      community_terms_accepted_at: new Date().toISOString(),
+    })
+    .eq('user_id', userId)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+}
+
+type CommunitySettingsInput = {
+  community_tagline?: string | null;
+  community_profile_theme?: string | null;
+  community_show_statistics?: boolean;
+};
+
+export async function updateCommunitySettings(userId: string, payload: CommunitySettingsInput) {
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .update(payload)
+    .eq('user_id', userId)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+}
+
 /**
  * Obtém estatísticas do usuário
  */
@@ -406,4 +482,77 @@ export async function deleteUserGoal(goalId: string) {
   
   if (error) throw error;
   return true;
+}
+
+export async function getCommunityAchievements(): Promise<Achievement[]> {
+  const { data, error } = await supabase
+    .from('achievements')
+    .select('*')
+    .order('name', { ascending: true });
+  
+  if (error) {
+    console.error('Erro ao buscar conquistas:', error);
+    return [];
+  }
+  
+  return data ?? [];
+}
+
+export async function getUserAchievements(userId: string): Promise<UserAchievement[]> {
+  const { data, error } = await supabase
+    .from('user_achievements')
+    .select('*, achievement:achievements(*)')
+    .eq('user_id', userId)
+    .order('earned_at', { ascending: false });
+  
+  if (error) {
+    console.error('Erro ao buscar badges do usuário:', error);
+    return [];
+  }
+  
+  return (data as UserAchievement[]) ?? [];
+}
+
+export async function awardAchievementBySlug(userId: string, slug: string): Promise<UserAchievement | null> {
+  try {
+    const { data: achievement, error: achievementError } = await supabase
+      .from('achievements')
+      .select('*')
+      .eq('slug', slug)
+      .single();
+    
+    if (achievementError || !achievement) {
+      throw achievementError ?? new Error('Conquista não encontrada');
+    }
+    
+    const { data, error } = await supabase
+      .from('user_achievements')
+      .insert(
+        {
+          user_id: userId,
+          achievement_id: achievement.id,
+        },
+        { onConflict: 'user_id,achievement_id' }
+      )
+      .select('*, achievement:achievements(*)')
+      .single();
+    
+    if (error) {
+      if (error.code === '23505') {
+        const { data: existing } = await supabase
+          .from('user_achievements')
+          .select('*, achievement:achievements(*)')
+          .eq('user_id', userId)
+          .eq('achievement_id', achievement.id)
+          .single();
+        return (existing as UserAchievement) ?? null;
+      }
+      throw error;
+    }
+    
+    return (data as UserAchievement) ?? null;
+  } catch (error) {
+    console.error('Erro ao atribuir conquista:', error);
+    return null;
+  }
 }
