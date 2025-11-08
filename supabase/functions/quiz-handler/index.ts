@@ -57,6 +57,9 @@ type QuizResultPayload = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY") ?? "";
+const GROQ_MODEL = Deno.env.get("GROQ_MODEL") ?? "openai/gpt-oss-120b";
+const GROQ_FALLBACK_API_KEY = Deno.env.get("GROQ_FALLBACK_API_KEY") ?? "";
+const GROQ_FALLBACK_MODEL = Deno.env.get("GROQ_FALLBACK_MODEL") ?? "llama3-70b-8192";
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   throw new Error("SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY precisam estar configuradas.");
@@ -71,6 +74,13 @@ const OPEN_HOUR = 7;
 const CLOSE_HOUR = 23;
 const CLOSE_MINUTE = 30;
 const QUESTIONS_PER_DISCIPLINE = 3;
+const MAX_ATTEMPTS_PER_DISCIPLINE = 2;
+
+type GroqProvider = {
+  name: string;
+  client: Groq;
+  model: string;
+};
 
 const ALL_DISCIPLINES: Question["discipline"][] = [
   "Matemática",
@@ -184,11 +194,31 @@ async function getOperatingHoursInfo(): Promise<OperatingHoursInfo> {
   };
 }
 
-function ensureGroqClient(): Groq {
-  if (!GROQ_API_KEY) {
-    throw new Error("Groq API key não configurada.");
+function createGroqProvider(apiKey: string | null, model: string, name: string): GroqProvider | null {
+  if (!apiKey) {
+    return null;
   }
-  return new Groq({ apiKey: GROQ_API_KEY });
+  return {
+    name,
+    client: new Groq({ apiKey }),
+    model,
+  };
+}
+
+function isRateLimitError(error: unknown): boolean {
+  if (!error) return false;
+  if (typeof error === "object" && error && "status" in error && (error as { status?: number }).status === 429) {
+    return true;
+  }
+
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === "string"
+        ? error
+        : JSON.stringify(error);
+
+  return message.toLowerCase().includes("rate limit");
 }
 
 function extractUserIdFromToken(token: string | null | undefined): string | null {
@@ -241,14 +271,12 @@ async function recalculateUserStatistics(userId: string | null) {
 
 type GenerationDiagnostics = Record<Question["discipline"], string>;
 
-async function generateQuestionsWithDiagnostics(
-  disciplines: Question["discipline"][]
-): Promise<{ questions: Question[]; diagnostics: GenerationDiagnostics }> {
-  const groq = ensureGroqClient();
-  const questions: Question[] = [];
-  const diagnostics: GenerationDiagnostics = {} as GenerationDiagnostics;
+const MAX_ATTEMPTS_PER_DISCIPLINE = 2;
 
-  for (const discipline of disciplines) {
+async function requestQuestionsForDiscipline(
+  provider: GroqProvider,
+  discipline: Question["discipline"]
+): Promise<Question[]> {
     const prompt = `
       Crie ${QUESTIONS_PER_DISCIPLINE} questões de múltipla escolha sobre ${discipline} de nível ENEM para estudantes do ensino médio.
       
@@ -278,96 +306,159 @@ async function generateQuestionsWithDiagnostics(
       Certifique-se de gerar exatamente ${QUESTIONS_PER_DISCIPLINE} questões distintas no array "questions".
     `;
 
-    try {
-      const response = await groq.chat.completions.create({
-        messages: [{ role: "user", content: prompt }],
-        model: "openai/gpt-oss-120b",
-        temperature: 0.7,
-        max_completion_tokens: 8050,
-        top_p: 1,
-        stream: false,
-        response_format: { type: "json_object" },
-      });
+  const response = await provider.client.chat.completions.create({
+    messages: [{ role: "user", content: prompt }],
+    model: provider.model,
+    temperature: 0.7,
+    max_completion_tokens: 8050,
+    top_p: 1,
+    stream: false,
+    response_format: { type: "json_object" },
+  });
 
-      const aiContent = response.choices?.[0]?.message?.content ?? "";
-      let questionsData: RawQuestion[] = [];
+  const aiContent = response.choices?.[0]?.message?.content ?? "";
+  let questionsData: RawQuestion[] = [];
 
-      try {
-        const parsedContent = JSON.parse(aiContent);
-        if (parsedContent.questions && Array.isArray(parsedContent.questions)) {
-          questionsData = parsedContent.questions;
-        } else if (Array.isArray(parsedContent)) {
-          questionsData = parsedContent;
-        } else if (parsedContent.data && Array.isArray(parsedContent.data)) {
-          questionsData = parsedContent.data;
-        } else {
-          throw new Error("Estrutura inesperada");
-        }
-      } catch (parseError) {
-        console.error("Falha ao parsear JSON direto:", parseError);
-        const jsonMatch =
-          aiContent.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/) ||
-          aiContent.match(/(\{[\s\S]*\})/);
+  try {
+    const parsedContent = JSON.parse(aiContent);
+    if (parsedContent.questions && Array.isArray(parsedContent.questions)) {
+      questionsData = parsedContent.questions;
+    } else if (Array.isArray(parsedContent)) {
+      questionsData = parsedContent;
+    } else if (parsedContent.data && Array.isArray(parsedContent.data)) {
+      questionsData = parsedContent.data;
+    } else {
+      throw new Error("Estrutura inesperada");
+    }
+  } catch (parseError) {
+    console.error("Falha ao parsear JSON direto:", parseError);
+    const jsonMatch =
+      aiContent.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/) ||
+      aiContent.match(/(\{[\s\S]*\})/);
 
-        if (!jsonMatch || !jsonMatch[1]) {
-          const arrayMatch =
-            aiContent.match(/```(?:json)?\s*(\[[\s\S]*?\])\s*```/) ||
-            aiContent.match(/(\[[\s\S]*\])/);
-          if (!arrayMatch || !arrayMatch[1]) {
-            throw new Error("Não foi possível extrair JSON das questões.");
-          }
-          questionsData = JSON.parse(arrayMatch[1].trim());
-        } else {
-          const extracted = JSON.parse(jsonMatch[1].trim());
-          if (extracted.questions && Array.isArray(extracted.questions)) {
-            questionsData = extracted.questions;
-          } else if (Array.isArray(extracted)) {
-            questionsData = extracted;
-          } else if (extracted.data && Array.isArray(extracted.data)) {
-            questionsData = extracted.data;
-          } else {
-            throw new Error("Estrutura inesperada");
-          }
-        }
+    if (!jsonMatch || !jsonMatch[1]) {
+      const arrayMatch =
+        aiContent.match(/```(?:json)?\s*(\[[\s\S]*?\])\s*```/) ||
+        aiContent.match(/(\[[\s\S]*\])/);
+      if (!arrayMatch || !arrayMatch[1]) {
+        throw new Error("Não foi possível extrair JSON das questões.");
       }
-
-      for (const q of questionsData) {
-        if (!q.text || !Array.isArray(q.alternatives) || q.alternatives.length < 4) continue;
-
-        const normalizedAlternatives: QuestionAlternative[] = q.alternatives.map((alt, index) => {
-          const letter = String.fromCharCode(65 + index);
-          return {
-            id: alt?.id ?? letter,
-            text: alt?.text ?? `Alternativa ${letter}`,
-            isCorrect: Boolean(alt?.isCorrect),
-          };
-        });
-
-        if (!normalizedAlternatives.some((alt) => alt.isCorrect)) {
-          normalizedAlternatives[0].isCorrect = true;
-        }
-
-        questions.push({
-          id: crypto.randomUUID(),
-          discipline,
-          text: q.text,
-          explanation: q.explanation ?? "Sem explicação disponível.",
-          alternatives: normalizedAlternatives,
-        });
+      questionsData = JSON.parse(arrayMatch[1].trim());
+    } else {
+      const extracted = JSON.parse(jsonMatch[1].trim());
+      if (extracted.questions && Array.isArray(extracted.questions)) {
+        questionsData = extracted.questions;
+      } else if (Array.isArray(extracted)) {
+        questionsData = extracted;
+      } else if (extracted.data && Array.isArray(extracted.data)) {
+        questionsData = extracted.data;
+      } else {
+        throw new Error("Estrutura inesperada");
       }
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : typeof error === "string"
-            ? error
-            : "Falha desconhecida ao consultar o modelo";
-      console.error(`Erro ao gerar questões de ${discipline}:`, error);
-      diagnostics[discipline] = message;
     }
   }
 
-  return { questions, diagnostics };
+  const normalized: Question[] = [];
+  for (const q of questionsData) {
+    if (!q.text || !Array.isArray(q.alternatives) || q.alternatives.length < 4) continue;
+
+    const normalizedAlternatives: QuestionAlternative[] = q.alternatives.map((alt, index) => {
+      const letter = String.fromCharCode(65 + index);
+      return {
+        id: alt?.id ?? letter,
+        text: alt?.text ?? `Alternativa ${letter}`,
+        isCorrect: Boolean(alt?.isCorrect),
+      };
+    });
+
+    if (!normalizedAlternatives.some((alt) => alt.isCorrect)) {
+      normalizedAlternatives[0].isCorrect = true;
+    }
+
+    normalized.push({
+      id: crypto.randomUUID(),
+      discipline,
+      text: q.text,
+      explanation: q.explanation ?? "Sem explicação disponível.",
+      alternatives: normalizedAlternatives,
+    });
+  }
+
+  return normalized;
+}
+
+async function generateQuestionsWithDiagnostics(
+  disciplines: Question["discipline"][]
+): Promise<{
+  questions: Question[];
+  diagnostics: GenerationDiagnostics;
+  missing: Question["discipline"][];
+  providersUsed: Record<string, string>;
+}> {
+  const primaryProvider = createGroqProvider(GROQ_API_KEY, GROQ_MODEL, "primary");
+  if (!primaryProvider) {
+    throw new Error("GROQ_API_KEY não configurada");
+  }
+
+  const providerPool: GroqProvider[] = [primaryProvider];
+  const fallbackProvider = createGroqProvider(
+    GROQ_FALLBACK_API_KEY || null,
+    GROQ_FALLBACK_MODEL,
+    "fallback"
+  );
+
+  if (fallbackProvider) {
+    providerPool.push(fallbackProvider);
+  }
+
+  const questions: Question[] = [];
+  const diagnostics: GenerationDiagnostics = {} as GenerationDiagnostics;
+  const missing: Question["discipline"][] = [];
+  const providersUsed: Record<string, string> = {};
+
+  for (const discipline of disciplines) {
+    let disciplineQuestions: Question[] | null = null;
+    let lastError: string | null = null;
+
+    for (let providerIndex = 0; providerIndex < providerPool.length && !disciplineQuestions; providerIndex++) {
+      const provider = providerPool[providerIndex];
+      let attempts = 0;
+      while (attempts < MAX_ATTEMPTS_PER_DISCIPLINE && !disciplineQuestions) {
+        attempts++;
+        try {
+          const generated = await requestQuestionsForDiscipline(provider, discipline);
+          if (generated.length >= QUESTIONS_PER_DISCIPLINE) {
+            disciplineQuestions = generated.slice(0, QUESTIONS_PER_DISCIPLINE);
+            providersUsed[discipline] = provider.name;
+          } else {
+            lastError = `(${provider.name}) Recebemos ${generated.length} questão(ões)`;
+          }
+        } catch (error) {
+          const message =
+            error instanceof Error
+              ? error.message
+              : typeof error === "string"
+                ? error
+                : "Falha desconhecida ao consultar o modelo";
+          lastError = `(${provider.name}) ${message}`;
+          console.error(`Erro ao gerar questões de ${discipline} com ${provider.name} (tentativa ${attempts}):`, error);
+
+          if (isRateLimitError(error) && providerIndex < providerPool.length - 1) {
+            break;
+          }
+        }
+      }
+    }
+
+    if (disciplineQuestions) {
+      questions.push(...disciplineQuestions);
+    } else {
+      diagnostics[discipline] = lastError ?? "Falha ao gerar questões";
+      missing.push(discipline);
+    }
+  }
+
+  return { questions, diagnostics, missing, providersUsed };
 }
 
 Deno.serve(async (request) => {
@@ -413,16 +504,17 @@ Deno.serve(async (request) => {
         });
       }
 
-      const { questions: aiQuestions, diagnostics } = await generateQuestionsWithDiagnostics(disciplines);
+      const { questions: aiQuestions, diagnostics, missing, providersUsed } = await generateQuestionsWithDiagnostics(disciplines);
       let questionPool = [...aiQuestions];
 
-      if (questionPool.length === 0) {
+      if (missing.length > 0 || questionPool.length === 0) {
         return new Response(
           JSON.stringify({
-            error: "Não foi possível gerar nenhuma questão válida",
-            message: "Nossa IA não respondeu a tempo. Tente novamente em instantes.",
+            error: "Não foi possível gerar questões para todas as disciplinas",
+            message: "Nossa IA não respondeu a tempo para todas as áreas selecionadas. Tente novamente em instantes.",
             diagnostics,
-            disciplines,
+            missing_disciplines: missing,
+            providers_used: providersUsed,
           }),
           {
             headers: { "content-type": "application/json; charset=utf-8" },
@@ -453,6 +545,7 @@ Deno.serve(async (request) => {
           totalQuestions: shuffledQuestions.length,
           disciplineCounts,
           diagnostics,
+          providersUsed,
         }),
         {
           headers: { "content-type": "application/json; charset=utf-8" },
