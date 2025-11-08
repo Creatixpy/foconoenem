@@ -5,6 +5,7 @@ import Link from "next/link";
 import NewsImage from "@/app/components/NewsImage";
 import { Noticia } from "@/types";
 import { getNoticias, getNoticiasDestaque } from "@/lib/supabase";
+import { withTimeout } from "@/lib/with-timeout";
 
 export function generateMetadata() {
   return {
@@ -17,7 +18,8 @@ export function generateMetadata() {
 export default function NoticiasPageClient() {
   const [noticias, setNoticias] = useState<Noticia[]>([]);
   const [noticiasDestaque, setNoticiasDestaque] = useState<Noticia[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isFeedLoading, setIsFeedLoading] = useState(true);
+  const [isIaSearching, setIsIaSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
   const [buscaIA, setBuscaIA] = useState("");
@@ -29,15 +31,23 @@ export default function NoticiasPageClient() {
   useEffect(() => {
     const carregarNoticias = async () => {
       try {
-        setIsLoading(true);
+        setIsFeedLoading(true);
 
         if (pagina === 1) {
-          const destaques = await getNoticiasDestaque();
+          const destaques = await withTimeout(
+            getNoticiasDestaque(),
+            10000,
+            "Tempo limite ao buscar notícias em destaque."
+          );
           setNoticiasDestaque(destaques);
         }
 
         const offset = (pagina - 1) * limitePorPagina;
-        const resultado = await getNoticias(limitePorPagina, offset);
+        const resultado = await withTimeout(
+          getNoticias(limitePorPagina, offset),
+          10000,
+          "Tempo limite ao buscar notícias."
+        );
 
         if (pagina === 1) {
           setNoticias(resultado);
@@ -50,7 +60,7 @@ export default function NoticiasPageClient() {
         console.error("Erro ao carregar notícias:", erro);
         setError("Não foi possível carregar as notícias. Tente novamente mais tarde.");
       } finally {
-        setIsLoading(false);
+        setIsFeedLoading(false);
       }
     };
 
@@ -61,8 +71,11 @@ export default function NoticiasPageClient() {
     event.preventDefault();
     if (!buscaIA.trim()) return;
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
     try {
-      setIsLoading(true);
+      setIsIaSearching(true);
       setError(null);
       setNoticiasIA(null);
 
@@ -70,6 +83,7 @@ export default function NoticiasPageClient() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ termo: buscaIA }),
+        signal: controller.signal,
       });
 
       const data = await response.json();
@@ -80,9 +94,14 @@ export default function NoticiasPageClient() {
       setNoticiasIA(data.noticias);
     } catch (erro) {
       console.error("Erro ao buscar notícias com IA:", erro);
-      setError("Não foi possível buscar notícias com IA. Tente novamente mais tarde.");
+      if (erro instanceof DOMException && erro.name === "AbortError") {
+        setError("A busca com IA demorou demais. Tente novamente.");
+      } else {
+        setError("Não foi possível buscar notícias com IA. Tente novamente mais tarde.");
+      }
     } finally {
-      setIsLoading(false);
+      clearTimeout(timeoutId);
+      setIsIaSearching(false);
     }
   };
 
@@ -97,7 +116,10 @@ export default function NoticiasPageClient() {
     return data.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
   };
 
-  const carregarMais = () => setPagina((previous) => previous + 1);
+  const carregarMais = () => {
+    if (isFeedLoading) return;
+    setPagina((previous) => previous + 1);
+  };
 
   const termoBusca = busca.trim().toLowerCase();
   const filtrando = termoBusca.length > 0;
@@ -131,19 +153,19 @@ export default function NoticiasPageClient() {
                 </div>
                 <dl className="grid gap-4 sm:grid-cols-3">
                   <div className="stat-card px-5 py-4">
-                    <dt className="text-xs uppercase tracking-wide text-foreground/60">Cobertura</dt>
+                    <dt className="text-xs uppercase tracking-wide text-foreground/80">Cobertura</dt>
                     <dd className="mt-2 text-xl font-semibold text-primary">ENEM & Educação</dd>
-                    <p className="mt-1 text-xs text-foreground/60">MEC, INEP e temas sociais em uma linha.</p>
+                    <p className="mt-1 text-xs text-foreground/80">MEC, INEP e temas sociais em uma linha.</p>
                   </div>
                   <div className="stat-card px-5 py-4">
-                    <dt className="text-xs uppercase tracking-wide text-foreground/60">Curadoria</dt>
+                    <dt className="text-xs uppercase tracking-wide text-foreground/80">Curadoria</dt>
                     <dd className="mt-2 text-xl font-semibold text-primary">Feita por quem estuda</dd>
-                    <p className="mt-1 text-xs text-foreground/60">Equipe que vive o vestibular diariamente.</p>
+                    <p className="mt-1 text-xs text-foreground/80">Equipe que vive o vestibular diariamente.</p>
                   </div>
                   <div className="stat-card px-5 py-4">
-                    <dt className="text-xs uppercase tracking-wide text-foreground/60">Busca inteligente</dt>
+                    <dt className="text-xs uppercase tracking-wide text-foreground/80">Busca inteligente</dt>
                     <dd className="mt-2 text-xl font-semibold text-primary">IA integrada</dd>
-                    <p className="mt-1 text-xs text-foreground/60">Pesquise a web sem sair da página.</p>
+                    <p className="mt-1 text-xs text-foreground/80">Pesquise a web sem sair da página.</p>
                   </div>
                 </dl>
               </div>
@@ -162,7 +184,7 @@ export default function NoticiasPageClient() {
                     className="w-full rounded-2xl border border-border-color/60 bg-card-bg/80 py-3 pl-12 pr-4 text-base text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
                   <svg
-                    className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-foreground/40"
+                    className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-foreground/70"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -177,7 +199,7 @@ export default function NoticiasPageClient() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 5v14m7-7H5" />
                     </svg>
                   </summary>
-                  <p className="mt-3 text-xs text-foreground/60">Resumos enxutos direto da web quando precisar de algo novo.</p>
+                  <p className="mt-3 text-xs text-foreground/80">Resumos enxutos direto da web quando precisar de algo novo.</p>
                   <form onSubmit={buscarComIA} className="mt-3 flex gap-2">
                     <input
                       type="text"
@@ -185,14 +207,14 @@ export default function NoticiasPageClient() {
                       onChange={(event) => setBuscaIA(event.target.value)}
                       placeholder="Ex.: cronograma ENEM 2025"
                       className="flex-grow rounded-2xl border border-border-color/60 bg-card-bg/80 px-4 py-3 text-sm text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                      disabled={isLoading}
+                      disabled={isIaSearching}
                     />
                     <button
                       type="submit"
-                      disabled={isLoading || !buscaIA.trim()}
+                      disabled={isIaSearching || !buscaIA.trim()}
                       className="btn btn-primary px-4 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-70"
                     >
-                      {isLoading ? "Buscando..." : "Gerar"}
+                      {isIaSearching ? "Buscando..." : "Gerar"}
                     </button>
                   </form>
                   {noticiasIA && (
@@ -206,7 +228,7 @@ export default function NoticiasPageClient() {
                       <div className="max-h-72 overflow-y-auto rounded-2xl border border-border-color/60 bg-muted-bg/60 p-4 text-sm text-foreground/80">
                         <pre className="whitespace-pre-wrap">{noticiasIA}</pre>
                       </div>
-                      <p className="text-xs text-foreground/50">* Conteúdo sintetizado por IA com base em resultados da web.</p>
+                      <p className="text-xs text-foreground/75">* Conteúdo sintetizado por IA com base em resultados da web.</p>
                     </div>
                   )}
                 </details>
@@ -253,7 +275,7 @@ export default function NoticiasPageClient() {
                       <div className="flex flex-1 flex-col gap-3 p-5">
                         <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">{noticia.titulo}</h3>
                         <p className="line-clamp-3 text-sm text-foreground/70">{noticia.resumo}</p>
-                        <div className="mt-auto flex items-center justify-between text-xs text-foreground/60">
+                        <div className="mt-auto flex items-center justify-between text-xs text-foreground/80">
                           <span>{formatarData(noticia.data_publicacao)}</span>
                           <span>Por {noticia.autor}</span>
                         </div>
@@ -270,18 +292,18 @@ export default function NoticiasPageClient() {
                 <h2 className="text-2xl font-semibold text-foreground">Fique em dia com o ENEM</h2>
               </div>
 
-              {isLoading && pagina === 1 ? (
+              {isFeedLoading && pagina === 1 ? (
                 <div className="flex justify-center py-12">
                   <div className="loader" />
                 </div>
               ) : noticiasVisiveis.length === 0 ? (
                 <div className="surface-card flex flex-col items-center gap-4 p-10 text-center shadow-xl">
-                  <svg className="h-12 w-12 text-foreground/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-12 w-12 text-foreground/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1M9 5V3m0 2h6m0 0V3m-6 6h6v4H9V9z" />
                   </svg>
                   <div className="space-y-2">
                     <h3 className="text-lg font-semibold text-foreground">Nenhuma notícia encontrada</h3>
-                    <p className="text-sm text-foreground/60">Tente ajustar o termo de busca ou limpar os filtros.</p>
+                    <p className="text-sm text-foreground/80">Tente ajustar o termo de busca ou limpar os filtros.</p>
                   </div>
                   {filtrando && (
                     <button onClick={() => setBusca("")} className="btn btn-outline px-4 py-2 text-sm">
@@ -303,7 +325,7 @@ export default function NoticiasPageClient() {
                             <NewsImage src={noticia.imagem_url} alt={noticia.titulo} fill className="object-cover" />
                           ) : (
                             <div className="flex h-full w-full items-center justify-center bg-muted-bg">
-                              <svg className="h-10 w-10 text-foreground/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="h-10 w-10 text-foreground/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1M9 5V3m0 2h6m0 0V3m-6 6h6v4H9V9z" />
                               </svg>
                             </div>
@@ -312,7 +334,7 @@ export default function NoticiasPageClient() {
                         <div className="flex flex-1 flex-col gap-3 p-5">
                           <h3 className="text-lg font-semibold text-foreground line-clamp-2">{noticia.titulo}</h3>
                           <p className="text-sm text-foreground/70 line-clamp-3">{noticia.resumo}</p>
-                          <div className="mt-auto flex items-center justify-between text-xs text-foreground/60">
+                          <div className="mt-auto flex items-center justify-between text-xs text-foreground/80">
                             <span>{formatarData(noticia.data_publicacao)}</span>
                             <span>Por {noticia.autor}</span>
                           </div>
@@ -325,10 +347,10 @@ export default function NoticiasPageClient() {
                     <div className="flex justify-center">
                       <button
                         onClick={carregarMais}
-                        disabled={isLoading}
+                        disabled={isFeedLoading}
                         className="btn btn-outline px-5 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-70"
                       >
-                        {isLoading ? (
+                        {isFeedLoading ? (
                           <span className="flex items-center gap-2">
                             <span className="inline-block h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
                             Carregando...

@@ -27,6 +27,7 @@ import {
   ResponsiveContainer
 } from "recharts";
 import { supabase } from "@/lib/supabase";
+import { withTimeout } from "@/lib/with-timeout";
 
 export default function ContaPage() {
   const router = useRouter();
@@ -35,6 +36,7 @@ export default function ContaPage() {
   const [essays, setEssays] = useState<Array<{nota: number; created_at: string; id: string}>>([]);
   const [loading, setLoading] = useState(true);
   const [recalculating, setRecalculating] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -43,13 +45,16 @@ export default function ContaPage() {
   }, [user, authLoading, router]);
 
   const fetchLatestStatistics = useCallback(async () => {
-    if (!user) return;
-    try {
-      const stats = await getUserStatistics(user.id);
-      setStatistics(stats);
-    } catch (error) {
-      console.error("Erro ao atualizar estatísticas:", error);
-    }
+    if (!user) return null;
+
+    const stats = await withTimeout(
+      getUserStatistics(user.id),
+      10000,
+      "Tempo limite ao buscar estatísticas."
+    );
+
+    setStatistics(stats);
+    return stats;
   }, [user]);
 
   useEffect(() => {
@@ -60,20 +65,30 @@ export default function ContaPage() {
       }
 
       setLoading(true);
+      setErrorMessage(null);
       
       try {
         await fetchLatestStatistics();
 
-        const { data: essaysData } = await supabase
-          .from('essay_results')
-          .select('id, nota, created_at')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(10);
-        
+        const { data: essaysData, error: essaysError } = await withTimeout(
+          supabase
+            .from('essay_results')
+            .select('id, nota, created_at')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(10),
+          10000,
+          'Tempo limite ao carregar redações.'
+        );
+
+        if (essaysError) {
+          throw essaysError;
+        }
+
         setEssays(essaysData || []);
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
+        setErrorMessage('Não foi possível carregar seus dados agora. Tente novamente em instantes.');
       } finally {
         setLoading(false);
       }
@@ -91,7 +106,10 @@ export default function ContaPage() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'user_statistics', filter: `user_id=eq.${user.id}` },
         () => {
-          void fetchLatestStatistics();
+          void fetchLatestStatistics().catch((error) => {
+            console.error('Erro ao atualizar estatísticas em tempo real:', error);
+            setErrorMessage('Não foi possível atualizar suas estatísticas em tempo real.');
+          });
         }
       )
       .on(
@@ -128,7 +146,10 @@ export default function ContaPage() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'quiz_results', filter: `user_id=eq.${user.id}` },
         () => {
-          void fetchLatestStatistics();
+          void fetchLatestStatistics().catch((error) => {
+            console.error('Erro ao atualizar estatísticas após quiz:', error);
+            setErrorMessage('Não foi possível atualizar suas estatísticas em tempo real.');
+          });
         }
       )
       .subscribe();
@@ -142,12 +163,14 @@ export default function ContaPage() {
     if (!user) return;
     
     setRecalculating(true);
+    setErrorMessage(null);
     try {
       await recalculateUserStatistics(user.id);
       // Recarregar estatísticas
       await fetchLatestStatistics();
     } catch (error) {
       console.error('Erro ao recalcular:', error);
+      setErrorMessage('Não foi possível atualizar suas estatísticas agora. Tente novamente.');
     } finally {
       setRecalculating(false);
     }
@@ -312,8 +335,14 @@ export default function ContaPage() {
                 Editar Perfil
               </Link>
             </div>
-          </div>
         </div>
+      </div>
+
+        {errorMessage && (
+          <div className="mb-6 rounded-2xl border border-danger/20 bg-danger-light/30 p-4 text-sm text-danger shadow-sm">
+            {errorMessage}
+          </div>
+        )}
 
         {/* Cards de Estatísticas Principais */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 animate-stagger">
