@@ -1,12 +1,25 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import OperatingHoursIndicator from "../components/OperatingHoursIndicator";
+import dynamic from "next/dynamic";
 import QuestionCard from "../components/QuestionCard";
-import QuizResults from "../components/QuizResults";
 import { Question, QuizResult } from "@/types";
 import { getOperatingHoursInfo } from "@/lib/schedule";
 import { supabase } from "@/lib/supabase";
+
+const OperatingHoursIndicator = dynamic(() => import("../components/OperatingHoursIndicator"), {
+  ssr: false,
+  loading: () => null,
+});
+
+const LazyQuizResults = dynamic(() => import("../components/QuizResults"), {
+  ssr: false,
+  loading: () => (
+    <div className="surface-card border border-border-color/60 p-6 text-center shadow-sm">
+      <p className="text-sm font-semibold text-foreground/80">Calculando seu desempenho...</p>
+    </div>
+  ),
+});
 
 const QUESTIONS_PER_DISCIPLINE = 3;
 
@@ -87,6 +100,7 @@ export default function QuestoesPageClient() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [infoMessage, setInfoMessage] = useState<string | null>(null);
   const [isSystemAvailable, setIsSystemAvailable] = useState<boolean | null>(null);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [showResults, setShowResults] = useState(false);
@@ -141,6 +155,7 @@ export default function QuestoesPageClient() {
       setError(null);
       setHasStarted(true);
       setSaveStatusMessage(null);
+      setInfoMessage(null);
 
       const info = await getOperatingHoursInfo();
       setIsSystemAvailable(info.isOpen);
@@ -163,15 +178,37 @@ export default function QuestoesPageClient() {
       const response = await fetch(`/api/questoes?disciplines=${encodeURIComponent(disciplinesParam)}`);
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || errorData.message || "Erro ao carregar questões");
+        const errorData = await response.json().catch(() => null);
+        setHasStarted(false);
+        const diagnostics = errorData?.diagnostics as Record<string, string> | undefined;
+        const diagMessage = diagnostics
+          ? Object.entries(diagnostics)
+              .map(([disc, msg]) => `${disc}: ${msg}`)
+              .join(" | ")
+          : null;
+        throw new Error(
+          (errorData?.message || errorData?.error || "Erro ao carregar questões") +
+            (diagMessage ? ` (${diagMessage})` : "")
+        );
       }
 
       const data = await response.json();
       setQuestions(data.questions);
+
+      if (data.diagnostics && Object.keys(data.diagnostics).length > 0) {
+        const diagSummary = Object.entries(data.diagnostics as Record<string, string>)
+          .map(([disc, msg]) => `${disc}: ${msg}`)
+          .join(" | ");
+        setInfoMessage(
+          `Algumas disciplinas não responderam a tempo. Geramos questões apenas das disponíveis. Detalhes: ${diagSummary}`
+        );
+      } else {
+        setInfoMessage(null);
+      }
     } catch (error) {
       console.error("Erro ao carregar questões:", error);
       setError(error instanceof Error ? error.message : "Ocorreu um erro ao carregar as questões");
+      setInfoMessage(null);
     } finally {
       setLoading(false);
     }
@@ -243,6 +280,7 @@ export default function QuestoesPageClient() {
     setHasStarted(false);
     setQuestions([]);
     setSaveStatusMessage(null);
+    setInfoMessage(null);
   };
 
   const getQuestionResult = (questionId: string) => {
@@ -315,7 +353,11 @@ export default function QuestoesPageClient() {
       <OperatingHoursIndicator />
 
       <main className="flex-grow">
-        <section className="relative overflow-hidden px-4 pb-20 pt-16 sm:px-6 lg:px-8">
+        <section
+          id="questoes-hero"
+          className="relative overflow-hidden px-4 pb-20 pt-16 sm:px-6 lg:px-8"
+          aria-labelledby="questoes-hero-heading questoes-hero-description"
+        >
           <div className="hero-accent absolute inset-0 blur-3xl" aria-hidden />
           <div className="container relative z-10 mx-auto max-w-6xl">
             <div className="grid gap-12 lg:grid-cols-[1.2fr_0.9fr]">
@@ -325,10 +367,10 @@ export default function QuestoesPageClient() {
                   Simulado inteligente de questões
                 </div>
                 <div className="space-y-5">
-                  <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl">
+                  <h1 id="questoes-hero-heading" className="text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl">
                     Pratique questões inéditas e receba explicações na hora.
                   </h1>
-                  <p className="max-w-xl text-lg text-foreground/75">
+                  <p id="questoes-hero-description" className="max-w-xl text-lg text-foreground/75">
                     Monte o seu treino com disciplinas específicas, responda no seu ritmo e descubra imediatamente quais
                     conteúdos precisam de reforço.
                   </p>
@@ -336,9 +378,9 @@ export default function QuestoesPageClient() {
                 <dl className="grid gap-4 sm:grid-cols-3">
                   {heroHighlights.map((highlight) => (
                     <div key={highlight.label} className="stat-card px-5 py-4">
-                      <dt className="text-xs uppercase tracking-wide text-foreground/60">{highlight.label}</dt>
+                      <dt className="text-xs uppercase tracking-wide text-foreground/80">{highlight.label}</dt>
                       <dd className="mt-2 text-xl font-semibold text-primary">{highlight.value}</dd>
-                      <p className="mt-1 text-xs text-foreground/60">{highlight.detail}</p>
+                      <p className="mt-1 text-xs text-foreground/80">{highlight.detail}</p>
                     </div>
                   ))}
                 </dl>
@@ -402,6 +444,12 @@ export default function QuestoesPageClient() {
                 <p className="mt-1">{error}</p>
               </div>
             )}
+            {!error && infoMessage && (
+              <div className="rounded-2xl border border-warning/30 bg-warning/10 p-4 text-sm text-warning">
+                <p className="font-semibold">Atenção</p>
+                <p className="mt-1">{infoMessage}</p>
+              </div>
+            )}
 
             {showResults && quizResult ? (
               <div className="space-y-8">
@@ -422,7 +470,7 @@ export default function QuestoesPageClient() {
                   </div>
                   {saveStatusMessage && <p className="text-sm text-foreground/70">{saveStatusMessage}</p>}
                 </div>
-                <QuizResults result={quizResult} onRetakeQuiz={handleRetakeQuiz} />
+                <LazyQuizResults result={quizResult} onRetakeQuiz={handleRetakeQuiz} />
               </div>
             ) : !hasStarted ? (
               <div className="surface-card space-y-8 p-6 shadow-xl md:p-8">
@@ -452,7 +500,7 @@ export default function QuestoesPageClient() {
                         <span className="mt-2 text-sm text-foreground/70">{discipline.description}</span>
                         <span
                           className={`mt-4 inline-flex w-fit items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                            isSelected ? "border-primary/40 bg-primary/10 text-primary" : "border-border-color text-foreground/60"
+                            isSelected ? "border-primary/40 bg-primary/10 text-primary" : "border-border-color text-foreground/80"
                           }`}
                         >
                           {isSelected ? (
@@ -540,7 +588,7 @@ export default function QuestoesPageClient() {
                   </div>
                   <aside className="surface-card flex flex-col gap-4 rounded-3xl p-6 shadow-xl lg:sticky lg:top-28">
                     <div>
-                      <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground/60">Resumo rápido</h3>
+                      <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground/80">Resumo rápido</h3>
                       <p className="mt-2 text-sm text-foreground/75">
                         {answeredCount} de {questions.length} questões respondidas.
                         {unansweredCount > 0 && ` Restam ${unansweredCount}.`}

@@ -239,9 +239,14 @@ async function recalculateUserStatistics(userId: string | null) {
   }
 }
 
-async function generateQuestions(disciplines: Question["discipline"][]): Promise<Question[]> {
+type GenerationDiagnostics = Record<Question["discipline"], string>;
+
+async function generateQuestionsWithDiagnostics(
+  disciplines: Question["discipline"][]
+): Promise<{ questions: Question[]; diagnostics: GenerationDiagnostics }> {
   const groq = ensureGroqClient();
   const questions: Question[] = [];
+  const diagnostics: GenerationDiagnostics = {} as GenerationDiagnostics;
 
   for (const discipline of disciplines) {
     const prompt = `
@@ -351,11 +356,18 @@ async function generateQuestions(disciplines: Question["discipline"][]): Promise
         });
       }
     } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : typeof error === "string"
+            ? error
+            : "Falha desconhecida ao consultar o modelo";
       console.error(`Erro ao gerar questões de ${discipline}:`, error);
+      diagnostics[discipline] = message;
     }
   }
 
-  return questions;
+  return { questions, diagnostics };
 }
 
 Deno.serve(async (request) => {
@@ -401,23 +413,32 @@ Deno.serve(async (request) => {
         });
       }
 
-      const allQuestions = await generateQuestions(disciplines);
+      const { questions: aiQuestions, diagnostics } = await generateQuestionsWithDiagnostics(disciplines);
+      let questionPool = [...aiQuestions];
 
-      if (allQuestions.length === 0) {
-        return new Response(JSON.stringify({ error: "Não foi possível gerar nenhuma questão válida" }), {
-          headers: { "content-type": "application/json; charset=utf-8" },
-          status: 500,
-        });
+      if (questionPool.length === 0) {
+        return new Response(
+          JSON.stringify({
+            error: "Não foi possível gerar nenhuma questão válida",
+            message: "Nossa IA não respondeu a tempo. Tente novamente em instantes.",
+            diagnostics,
+            disciplines,
+          }),
+          {
+            headers: { "content-type": "application/json; charset=utf-8" },
+            status: 503,
+          }
+        );
       }
 
       const balancedQuestions = disciplines.flatMap((discipline) =>
-        allQuestions
+        questionPool
           .filter((question) => question.discipline === discipline)
           .slice(0, QUESTIONS_PER_DISCIPLINE)
       );
 
       const limitedQuestions =
-        balancedQuestions.length > 0 ? balancedQuestions : allQuestions.slice(0, QUESTIONS_PER_DISCIPLINE * disciplines.length);
+        balancedQuestions.length > 0 ? balancedQuestions : questionPool.slice(0, QUESTIONS_PER_DISCIPLINE * disciplines.length);
 
       const shuffledQuestions = [...limitedQuestions].sort(() => Math.random() - 0.5);
 
@@ -431,6 +452,7 @@ Deno.serve(async (request) => {
           questions: shuffledQuestions,
           totalQuestions: shuffledQuestions.length,
           disciplineCounts,
+          diagnostics,
         }),
         {
           headers: { "content-type": "application/json; charset=utf-8" },
