@@ -160,6 +160,7 @@ export default function CommunityPageClient() {
 
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
   const [commentLoading, setCommentLoading] = useState<Record<string, boolean>>({});
+  const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
 
   const [statistics, setStatistics] = useState<UserStatistics | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
@@ -486,6 +487,33 @@ export default function CommunityPageClient() {
 
     void evaluateGamification();
   }, [evaluateGamification, statistics, user, commentCount]);
+
+  const handleDeletePost = async (postId: string) => {
+    if (!user) return;
+    const target = threads.find((thread) => thread.id === postId);
+    if (!target || target.user_id !== user.id) {
+      return;
+    }
+
+    const shouldDelete = window.confirm("Tem certeza de que deseja remover este post? Esta ação não pode ser desfeita.");
+    if (!shouldDelete) {
+      return;
+    }
+
+    try {
+      setDeletingPostId(postId);
+      const { error } = await supabase.from("community_posts").delete().eq("id", postId).eq("user_id", user.id);
+      if (error) {
+        throw error;
+      }
+      setThreads((previous) => previous.filter((thread) => thread.id !== postId));
+    } catch (error) {
+      console.error("Erro ao remover post:", error);
+      setPostsError("Não foi possível excluir este post. Tente novamente em instantes.");
+    } finally {
+      setDeletingPostId(null);
+    }
+  };
 
   const handleCreatePost = async (event: FormEvent) => {
     event.preventDefault();
@@ -1044,6 +1072,21 @@ export default function CommunityPageClient() {
                         )}
                         {renderBadges(achievementCache[thread.user_id])}
                       </div>
+                      {thread.user_id === user?.id && (
+                        <div className="ml-auto">
+                          <button
+                            type="button"
+                            onClick={() => handleDeletePost(thread.id)}
+                            disabled={deletingPostId === thread.id}
+                            className="inline-flex items-center gap-2 rounded-full border border-border-color/60 px-3 py-1 text-xs font-semibold text-foreground/70 transition-colors hover:text-danger"
+                          >
+                            {deletingPostId === thread.id ? "Removendo..." : "Excluir post"}
+                            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V5a2 2 0 00-2-2h-2a2 2 0 00-2 2v2m-4 0h14" />
+                            </svg>
+                          </button>
+                        </div>
+                      )}
                     </header>
 
                     <div className="mt-4">
