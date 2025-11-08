@@ -17,6 +17,13 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://foconoenem.vercel.app"),
   title: siteTitle,
   description: siteDescription,
+  icons: {
+    icon: [
+      { url: "/foconoenemicon.png", type: "image/png", sizes: "512x512" },
+      { url: "/foconoenemicon.png", rel: "shortcut icon" },
+    ],
+    apple: "/foconoenemicon.png",
+  },
   openGraph: {
     title: siteTitle,
     description: siteDescription,
