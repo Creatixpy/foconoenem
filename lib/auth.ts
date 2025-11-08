@@ -484,20 +484,6 @@ export async function deleteUserGoal(goalId: string) {
   return true;
 }
 
-export async function getCommunityAchievements(): Promise<Achievement[]> {
-  const { data, error } = await supabase
-    .from('achievements')
-    .select('*')
-    .order('name', { ascending: true });
-  
-  if (error) {
-    console.error('Erro ao buscar conquistas:', error);
-    return [];
-  }
-  
-  return data ?? [];
-}
-
 export async function getUserAchievements(userId: string): Promise<UserAchievement[]> {
   const { data, error } = await supabase
     .from('user_achievements')
@@ -511,48 +497,4 @@ export async function getUserAchievements(userId: string): Promise<UserAchieveme
   }
   
   return (data as UserAchievement[]) ?? [];
-}
-
-export async function awardAchievementBySlug(userId: string, slug: string): Promise<UserAchievement | null> {
-  try {
-    const { data: achievement, error: achievementError } = await supabase
-      .from('achievements')
-      .select('*')
-      .eq('slug', slug)
-      .single();
-    
-    if (achievementError || !achievement) {
-      throw achievementError ?? new Error('Conquista não encontrada');
-    }
-    
-    const { data, error } = await supabase
-      .from('user_achievements')
-      .insert(
-        {
-          user_id: userId,
-          achievement_id: achievement.id,
-        },
-        { onConflict: 'user_id,achievement_id' }
-      )
-      .select('*, achievement:achievements(*)')
-      .single();
-    
-    if (error) {
-      if (error.code === '23505') {
-        const { data: existing } = await supabase
-          .from('user_achievements')
-          .select('*, achievement:achievements(*)')
-          .eq('user_id', userId)
-          .eq('achievement_id', achievement.id)
-          .single();
-        return (existing as UserAchievement) ?? null;
-      }
-      throw error;
-    }
-    
-    return (data as UserAchievement) ?? null;
-  } catch (error) {
-    console.error('Erro ao atribuir conquista:', error);
-    return null;
-  }
 }
