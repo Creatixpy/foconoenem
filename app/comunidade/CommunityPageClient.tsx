@@ -6,12 +6,9 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 import {
   COMMUNITY_TERMS_VERSION,
   acceptCommunityTerms,
-  awardAchievementBySlug,
   confirmCommunityAge,
-  getCommunityAchievements,
   getUserAchievements,
   getUserStatistics,
-  type Achievement,
   type UserAchievement,
   type UserStatistics,
   updateCommunitySettings,
@@ -55,6 +52,11 @@ type ProfilePreview = {
 
 type CommunityThread = CommunityPost & { comments: CommunityComment[] };
 
+type AwardResponse = {
+  achievements: UserAchievement[];
+  unlocked: string[];
+};
+
 const RELATIVE_TIME_DIVISIONS: Array<{ amount: number; unit: Intl.RelativeTimeFormatUnit }> = [
   { amount: 60, unit: "second" },
   { amount: 60, unit: "minute" },
@@ -92,7 +94,7 @@ const communityGuidelines = [
 ];
 
 const COMMUNITY_TERMS_SUMMARY =
-  "O código de conduta da comunidade reforça a LGPD, proíbe discurso de ódio e libera a remoção automática de conteúdos fora de educação.";
+  "O código de conduta exige que cada participante confirme ter 16 anos ou mais, respeite a LGPD, evite autopromoção ou discurso de ódio e aceita que conteúdos fora de educação sejam removidos automaticamente.";
 
 const COMMUNITY_BADGE_ORDER = ["nota_mil", "primeira_redacao", "maratona_questoes", "mentor_comunitario"];
 
@@ -163,7 +165,6 @@ export default function CommunityPageClient() {
   const [statsLoading, setStatsLoading] = useState(true);
   const [commentCount, setCommentCount] = useState(0);
 
-  const [achievementsCatalog, setAchievementsCatalog] = useState<Achievement[]>([]);
   const [userBadges, setUserBadges] = useState<UserAchievement[]>([]);
 
   const [taglineDraft, setTaglineDraft] = useState("");
@@ -195,27 +196,10 @@ export default function CommunityPageClient() {
       },
     }));
   }, [profile, user]);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (!authLoading && user) {
-      void loadTopics();
-      void loadStatistics();
-      void loadAchievements();
-      void loadUserBadges();
-      void loadCommentCount();
-    }
-  }, [authLoading, user, loadAchievements, loadCommentCount, loadStatistics, loadTopics, loadUserBadges]);
-
   useEffect(() => {
     if (!user) return;
     setAchievementCache((previous) => ({ ...previous, [user.id]: userBadges }));
   }, [user, userBadges]);
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (!user || !statistics) return;
-    void evaluateGamification();
-  }, [achievementsCatalog, commentCount, evaluateGamification, statistics, user]);
 
   useEffect(() => {
     if (!user || !selectedTopicId) {
@@ -342,7 +326,8 @@ export default function CommunityPageClient() {
 
       const grouped = data.reduce<Record<string, UserAchievement[]>>((accumulator, item) => {
         const list = accumulator[item.user_id] ?? [];
-        list.push(item as UserAchievement);
+        const typedItem = item as unknown as UserAchievement;
+        list.push(typedItem);
         accumulator[item.user_id] = list;
         return accumulator;
       }, {});
@@ -447,11 +432,6 @@ export default function CommunityPageClient() {
     }
   }, [user]);
 
-  const loadAchievements = useCallback(async () => {
-    const catalog = await getCommunityAchievements();
-    setAchievementsCatalog(catalog);
-  }, []);
-
   const loadUserBadges = useCallback(async () => {
     if (!user) return;
     const badges = await getUserAchievements(user.id);
@@ -459,42 +439,53 @@ export default function CommunityPageClient() {
   }, [user]);
 
   const evaluateGamification = useCallback(async () => {
-    if (!user || !statistics || achievementsCatalog.length === 0) return;
-    const ownedSlugs = new Set(userBadges.map((badge) => badge.achievement?.slug));
+    if (!user) return;
 
-    const requirements: Array<{ slug: string; satisfied: boolean }> = [
-      { slug: "primeira_redacao", satisfied: (statistics.total_redacoes ?? 0) >= 1 },
-      { slug: "maratona_questoes", satisfied: (statistics.total_questoes_respondidas ?? 0) >= 50 },
-      { slug: "nota_mil", satisfied: (statistics.media_nota_redacao ?? 0) >= 900 },
-      { slug: "mentor_comunitario", satisfied: commentCount >= 5 },
-    ];
+    try {
+      const { data, error } = await supabase.functions.invoke<AwardResponse>("award-achievements", {
+        body: {},
+      });
 
-    let unlocked = false;
-    for (const requirement of requirements) {
-      if (requirement.satisfied && !ownedSlugs.has(requirement.slug)) {
-        const earned = await awardAchievementBySlug(user.id, requirement.slug);
-        if (earned) {
-          unlocked = true;
-          setUserBadges((previous) => {
-            if (previous.some((badge) => badge.id === earned.id)) {
-              return previous;
-            }
-            return [earned, ...previous];
-          });
-        }
+      if (error) {
+        throw error;
       }
+
+      if (data?.achievements) {
+        setUserBadges(data.achievements);
+        setAchievementCache((previous) => ({
+          ...previous,
+          [user.id]: data.achievements,
+        }));
+      }
+    } catch (error) {
+      console.error("Erro ao sincronizar conquistas:", error);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (authLoading || !user) {
+      return;
     }
 
-    if (unlocked) {
-      await loadUserBadges();
-    }
-  }, [achievementsCatalog.length, commentCount, loadUserBadges, statistics, user, userBadges]);
+    void loadTopics();
+    void loadStatistics();
+    void loadUserBadges();
+    void loadCommentCount();
+  }, [authLoading, user, loadCommentCount, loadStatistics, loadTopics, loadUserBadges]);
 
   useEffect(() => {
     if (user && selectedTopicId) {
       void loadPosts(selectedTopicId);
     }
   }, [user, selectedTopicId, loadPosts]);
+
+  useEffect(() => {
+    if (!user || !statistics) {
+      return;
+    }
+
+    void evaluateGamification();
+  }, [evaluateGamification, statistics, user, commentCount]);
 
   const handleCreatePost = async (event: FormEvent) => {
     event.preventDefault();
