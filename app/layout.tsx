@@ -67,6 +67,10 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" data-theme="system">
       <head>
+        <meta
+          name="google-adsense-account"
+          content="ca-pub-8449266040565561"
+        />
         <link rel="icon" href="/foconoenemicon.png" type="image/png" sizes="any" />
         <link rel="apple-touch-icon" href="/foconoenemicon.png" />
       </head>
