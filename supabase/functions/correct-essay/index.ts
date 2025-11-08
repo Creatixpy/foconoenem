@@ -260,14 +260,17 @@ async function trackEvent(
   eventType: string,
   metadata: Record<string, unknown>,
   userIp?: string,
-  userAgent?: string
+  userAgent?: string,
+  userId?: string | null
 ) {
   try {
+    const mergedMetadata = userId ? { ...metadata, user_id: userId } : metadata;
     const { error } = await supabase.from("analytics_events").insert({
       event_type: eventType,
-      metadata,
+      metadata: mergedMetadata,
       user_ip: userIp,
       user_agent: userAgent,
+      user_id: userId ?? null,
     });
     if (error) {
       console.error("Erro ao registrar evento de analytics:", error);
@@ -614,13 +617,33 @@ Deno.serve(async (request) => {
       }
     }
 
-    const aiResult = await analyseEssay({
-      submission: { ...body, redacao: trimmedEssay },
-      temaFinal,
-      textoApoio1Final,
-      textoApoio2Final,
-      essayId,
-    });
+    let aiResult: Omit<EssayResult, "createdAt" | "origem">;
+    try {
+      aiResult = await analyseEssay({
+        submission: { ...body, redacao: trimmedEssay },
+        temaFinal,
+        textoApoio1Final,
+        textoApoio2Final,
+        essayId,
+      });
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      console.error("Erro ao analisar redação com IA:", error);
+      return new Response(
+        JSON.stringify({
+          error: "Erro ao gerar correção",
+          message: "Nossa IA demorou mais do que o esperado. Tente novamente em instantes.",
+          diagnostics: {
+            stage: "analyseEssay",
+            detail,
+          },
+        }),
+        {
+          headers: { "content-type": "application/json; charset=utf-8" },
+          status: 503,
+        }
+      );
+    }
 
     const result: EssayResult = {
       ...aiResult,
@@ -641,7 +664,8 @@ Deno.serve(async (request) => {
         tema: temaFinal,
       },
       ip,
-      userAgent
+      userAgent,
+      userId
     );
 
     return new Response(JSON.stringify({ id: essayId }), {

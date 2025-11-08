@@ -213,14 +213,17 @@ async function trackEvent(
   eventType: string,
   metadata: Record<string, unknown>,
   userIp?: string,
-  userAgent?: string
+  userAgent?: string,
+  userId?: string | null
 ) {
   try {
+    const mergedMetadata = userId ? { ...metadata, user_id: userId } : metadata;
     const { error } = await supabase.from("analytics_events").insert({
       event_type: eventType,
-      metadata,
+      metadata: mergedMetadata,
       user_ip: userIp,
       user_agent: userAgent,
+      user_id: userId ?? null,
     });
     if (error) {
       console.error("Erro ao registrar evento de analytics:", error);
@@ -421,7 +424,27 @@ Deno.serve(async (request) => {
       );
     }
 
-    const generated = await generateThemeWithGroq();
+    let generated: { tema: string; textoApoio1: string; textoApoio2: string };
+    try {
+      generated = await generateThemeWithGroq();
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      console.error("Erro ao gerar tema com IA:", error);
+      return new Response(
+        JSON.stringify({
+          error: "Erro ao gerar tema",
+          message: "Nossa IA não respondeu a tempo. Tente novamente em alguns instantes.",
+          diagnostics: {
+            stage: "generateThemeWithGroq",
+            detail,
+          },
+        }),
+        {
+          headers: { "content-type": "application/json; charset=utf-8" },
+          status: 503,
+        }
+      );
+    }
 
     await cacheTheme(generated.tema, generated.textoApoio1, generated.textoApoio2);
     await trackEvent("theme_generated", { tema: generated.tema }, ip, userAgent);
