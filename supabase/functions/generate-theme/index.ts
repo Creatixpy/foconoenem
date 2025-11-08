@@ -29,9 +29,20 @@ type CachedTheme = {
   created_at: string;
 };
 
+type GroqProvider = {
+  name: string;
+  client: Groq;
+  model: string;
+};
+
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY") ?? "";
+const GROQ_MODEL = Deno.env.get("GROQ_MODEL") ?? "openai/gpt-oss-120b";
+const GROQ_FALLBACK_API_KEY = Deno.env.get("GROQ_FALLBACK_API_KEY") ?? "";
+const GROQ_FALLBACK_MODEL = Deno.env.get("GROQ_FALLBACK_MODEL") ?? "llama3-70b-8192";
+const parsedAttempts = Number(Deno.env.get("GROQ_MAX_ATTEMPTS") ?? "2");
+const GROQ_MAX_ATTEMPTS = Number.isFinite(parsedAttempts) && parsedAttempts > 0 ? parsedAttempts : 2;
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   throw new Error("SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY precisam estar configuradas.");
@@ -279,19 +290,56 @@ async function cacheTheme(tema: string, textoApoio1: string, textoApoio2: string
   }
 }
 
-function ensureGroqClient(): Groq {
-  if (!GROQ_API_KEY) {
-    throw new Error("Groq API key não configurada.");
+function createGroqProvider(apiKey: string | null, model: string, name: string): GroqProvider | null {
+  if (!apiKey) {
+    return null;
   }
-  return new Groq({ apiKey: GROQ_API_KEY });
+  return {
+    name,
+    client: new Groq({ apiKey }),
+    model,
+  };
 }
 
-async function generateThemeWithGroq(): Promise<{
+function buildGroqProviders(): GroqProvider[] {
+  const providers: GroqProvider[] = [];
+  const primary = createGroqProvider(GROQ_API_KEY || null, GROQ_MODEL, "primary");
+  if (!primary) {
+    throw new Error("Groq API key não configurada.");
+  }
+  providers.push(primary);
+
+  const fallback = createGroqProvider(
+    GROQ_FALLBACK_API_KEY ? GROQ_FALLBACK_API_KEY : null,
+    GROQ_FALLBACK_MODEL,
+    "fallback"
+  );
+  if (fallback) {
+    providers.push(fallback);
+  }
+
+  return providers;
+}
+
+function isRateLimitError(error: unknown): boolean {
+  if (!error) return false;
+  if (typeof error === "object" && error && "status" in error && (error as { status?: number }).status === 429) {
+    return true;
+  }
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === "string"
+        ? error
+        : JSON.stringify(error);
+  return message.toLowerCase().includes("rate limit");
+}
+
+async function requestThemeFromProvider(provider: GroqProvider): Promise<{
   tema: string;
   textoApoio1: string;
   textoApoio2: string;
 }> {
-  const groq = ensureGroqClient();
 
   const prompt = `
     Gere um tema relevante para uma redação de estilo ENEM (Exame Nacional do Ensino Médio). 
@@ -311,9 +359,9 @@ async function generateThemeWithGroq(): Promise<{
       "textoApoio2": "Segundo texto de apoio com outro ponto de vista"
     }`;
 
-  const response = await groq.chat.completions.create({
+  const response = await provider.client.chat.completions.create({
     messages: [{ role: "user", content: prompt }],
-    model: "openai/gpt-oss-120b",
+    model: provider.model,
     temperature: 0.7,
     max_completion_tokens: 8050,
     top_p: 1,
@@ -353,6 +401,45 @@ async function generateThemeWithGroq(): Promise<{
     textoApoio1: parsed.textoApoio1,
     textoApoio2: parsed.textoApoio2,
   };
+}
+
+async function generateThemeWithGroq(): Promise<{
+  tema: string;
+  textoApoio1: string;
+  textoApoio2: string;
+  provider: string;
+}> {
+  const providers = buildGroqProviders();
+  const attemptsLog: string[] = [];
+
+  for (let providerIndex = 0; providerIndex < providers.length; providerIndex++) {
+    const provider = providers[providerIndex];
+    let attempt = 0;
+    while (attempt < GROQ_MAX_ATTEMPTS) {
+      attempt++;
+      try {
+        const theme = await requestThemeFromProvider(provider);
+        return { ...theme, provider: provider.name };
+      } catch (error) {
+        const detail =
+          error instanceof Error
+            ? error.message
+            : typeof error === "string"
+              ? error
+              : JSON.stringify(error);
+        attemptsLog.push(`(${provider.name}) tentativa ${attempt}: ${detail}`);
+        console.error(`Erro ao gerar tema com ${provider.name} (tentativa ${attempt}):`, error);
+
+        if (isRateLimitError(error) && providerIndex < providers.length - 1) {
+          break;
+        }
+      }
+    }
+  }
+
+  const finalError = new Error(attemptsLog.join(" | ") || "Falha ao gerar tema com IA");
+  (finalError as Error & { attemptsLog?: string[] }).attemptsLog = attemptsLog;
+  throw finalError;
 }
 
 Deno.serve(async (request) => {
@@ -424,11 +511,15 @@ Deno.serve(async (request) => {
       );
     }
 
-    let generated: { tema: string; textoApoio1: string; textoApoio2: string };
+    let generated: { tema: string; textoApoio1: string; textoApoio2: string; provider: string };
     try {
       generated = await generateThemeWithGroq();
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
+      const attempts =
+        error && typeof error === "object" && "attemptsLog" in error
+          ? ((error as { attemptsLog?: string[] }).attemptsLog ?? undefined)
+          : undefined;
       console.error("Erro ao gerar tema com IA:", error);
       return new Response(
         JSON.stringify({
@@ -437,6 +528,7 @@ Deno.serve(async (request) => {
           diagnostics: {
             stage: "generateThemeWithGroq",
             detail,
+            attempts,
           },
         }),
         {
@@ -447,7 +539,7 @@ Deno.serve(async (request) => {
     }
 
     await cacheTheme(generated.tema, generated.textoApoio1, generated.textoApoio2);
-    await trackEvent("theme_generated", { tema: generated.tema }, ip, userAgent);
+    await trackEvent("theme_generated", { tema: generated.tema, provider: generated.provider }, ip, userAgent);
 
     return new Response(
       JSON.stringify({

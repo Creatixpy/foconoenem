@@ -6,6 +6,12 @@ type Authorized =
   | { authorized: true; mode: "user" | "cron"; email?: string }
   | { authorized: false; status: number; message: string };
 
+type GroqProvider = {
+  name: string;
+  client: Groq;
+  model: string;
+};
+
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const ADMIN_ALLOWED_EMAILS = (Deno.env.get("ADMIN_ALLOWED_EMAILS") ?? "")
@@ -18,6 +24,11 @@ const ADMIN_ALLOWED_ORIGINS = (Deno.env.get("ADMIN_ALLOWED_ORIGINS") ?? "")
   .map((origin) => origin.trim())
   .filter(Boolean);
 const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY") ?? "";
+const GROQ_MODEL = Deno.env.get("GROQ_MODEL") ?? "openai/gpt-oss-120b";
+const GROQ_FALLBACK_API_KEY = Deno.env.get("GROQ_FALLBACK_API_KEY") ?? "";
+const GROQ_FALLBACK_MODEL = Deno.env.get("GROQ_FALLBACK_MODEL") ?? "llama3-70b-8192";
+const parsedAttempts = Number(Deno.env.get("GROQ_MAX_ATTEMPTS") ?? "2");
+const GROQ_MAX_ATTEMPTS = Number.isFinite(parsedAttempts) && parsedAttempts > 0 ? parsedAttempts : 2;
 
 const corsHeaders: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
@@ -32,6 +43,51 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
 
 if (!GROQ_API_KEY) {
   console.warn("A edge function update-highlights foi inicializada sem GROQ_API_KEY.");
+}
+
+function createGroqProvider(apiKey: string | null, model: string, name: string): GroqProvider | null {
+  if (!apiKey) {
+    return null;
+  }
+  return {
+    name,
+    client: new Groq({ apiKey }),
+    model,
+  };
+}
+
+function buildGroqProviders(): GroqProvider[] {
+  const providers: GroqProvider[] = [];
+  const primary = createGroqProvider(GROQ_API_KEY || null, GROQ_MODEL, "primary");
+  if (!primary) {
+    throw new Error("Groq API key não configurada.");
+  }
+  providers.push(primary);
+
+  const fallback = createGroqProvider(
+    GROQ_FALLBACK_API_KEY ? GROQ_FALLBACK_API_KEY : null,
+    GROQ_FALLBACK_MODEL,
+    "fallback"
+  );
+  if (fallback) {
+    providers.push(fallback);
+  }
+
+  return providers;
+}
+
+function isRateLimitError(error: unknown): boolean {
+  if (!error) return false;
+  if (typeof error === "object" && error && "status" in error && (error as { status?: number }).status === 429) {
+    return true;
+  }
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === "string"
+        ? error
+        : JSON.stringify(error);
+  return message.toLowerCase().includes("rate limit");
 }
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
@@ -180,11 +236,6 @@ async function processAutomaticUpdate() {
     };
   }
 
-  if (!GROQ_API_KEY) {
-    throw new Error("Groq API key não configurada.");
-  }
-
-  const groq = new Groq({ apiKey: GROQ_API_KEY });
   const noticiasSimpificadas = noticias.map((noticia) => ({
     id: noticia.id,
     titulo: noticia.titulo,
@@ -192,60 +243,7 @@ async function processAutomaticUpdate() {
     data: noticia.data_publicacao,
     tags: noticia.tags,
   }));
-
-  const prompt = `
-  Analise as seguintes notícias e selecione no máximo 5 para destaque na página inicial de um site educacional focado no ENEM.
-  Escolha notícias que sejam mais relevantes para estudantes que estão se preparando para o ENEM,
-  considerando atualidade, impacto educacional e interesse geral.
-
-  Notícias para análise:
-  ${JSON.stringify(noticiasSimpificadas)}
-
-  Responda APENAS em formato JSON com um array de IDs das notícias selecionadas (máximo 5):
-  {
-    "destaques": ["id1", "id2", "id3"]
-  }`;
-
-  const response = await groq.chat.completions.create({
-    messages: [{ role: "user", content: prompt }],
-    model: "openai/gpt-oss-120b",
-    temperature: 0.3,
-    max_tokens: 8050,
-    top_p: 1,
-    stream: false,
-    response_format: { type: "json_object" },
-  });
-
-  const aiContent = response.choices?.[0]?.message?.content ?? "";
-  let aiResult: unknown;
-
-  try {
-    aiResult = JSON.parse(aiContent);
-  } catch (parseError) {
-    console.error("Falha ao fazer parse direto do JSON:", parseError);
-    const jsonMatch =
-      aiContent.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/) ||
-      aiContent.match(/(\{[\s\S]*\})/);
-
-    if (!jsonMatch || !jsonMatch[1]) {
-      throw new Error("Formato de resposta inválido da API.");
-    }
-
-    aiResult = JSON.parse(jsonMatch[1].trim());
-  }
-
-  if (
-    !aiResult ||
-    typeof aiResult !== "object" ||
-    !Array.isArray((aiResult as { destaques?: unknown }).destaques)
-  ) {
-    throw new Error("Resposta da IA não contém array de destaques.");
-  }
-
-  const idsDestaque = (aiResult as { destaques: string[] }).destaques.slice(0, 5);
-  if (idsDestaque.length === 0) {
-    throw new Error("IA não selecionou nenhuma notícia para destaque.");
-  }
+  const { destaques: idsDestaque, provider } = await selectHighlightsWithGroq(noticiasSimpificadas);
 
   const { error: resetError } = await supabase
     .from("noticias")
@@ -271,7 +269,103 @@ async function processAutomaticUpdate() {
     status: "success" as const,
     message: "Destaques atualizados com sucesso",
     destaques: idsDestaque,
+    provider,
   };
+}
+
+async function selectHighlightsWithGroq(
+  noticiasSimpificadas: Array<{
+    id: string;
+    titulo: string;
+    resumo: string | null;
+    data: string | null;
+    tags: string[] | null;
+  }>
+): Promise<{ destaques: string[]; provider: string }> {
+  const providers = buildGroqProviders();
+  const attemptsLog: string[] = [];
+
+  const prompt = `
+  Analise as seguintes notícias e selecione no máximo 5 para destaque na página inicial de um site educacional focado no ENEM.
+  Escolha notícias que sejam mais relevantes para estudantes que estão se preparando para o ENEM,
+  considerando atualidade, impacto educacional e interesse geral.
+
+  Notícias para análise:
+  ${JSON.stringify(noticiasSimpificadas)}
+
+  Responda APENAS em formato JSON com um array de IDs das notícias selecionadas (máximo 5):
+  {
+    "destaques": ["id1", "id2", "id3"]
+  }`;
+
+  for (let providerIndex = 0; providerIndex < providers.length; providerIndex++) {
+    const provider = providers[providerIndex];
+    let attempt = 0;
+    while (attempt < GROQ_MAX_ATTEMPTS) {
+      attempt++;
+      try {
+        const response = await provider.client.chat.completions.create({
+          messages: [{ role: "user", content: prompt }],
+          model: provider.model,
+          temperature: 0.3,
+          max_tokens: 8050,
+          top_p: 1,
+          stream: false,
+          response_format: { type: "json_object" },
+        });
+
+        const aiContent = response.choices?.[0]?.message?.content ?? "";
+        let aiResult: unknown;
+
+        try {
+          aiResult = JSON.parse(aiContent);
+        } catch (parseError) {
+          console.error("Falha ao fazer parse direto do JSON:", parseError);
+          const jsonMatch =
+            aiContent.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/) ||
+            aiContent.match(/(\{[\s\S]*\})/);
+
+          if (!jsonMatch || !jsonMatch[1]) {
+            throw new Error("Formato de resposta inválido da API.");
+          }
+
+          aiResult = JSON.parse(jsonMatch[1].trim());
+        }
+
+        if (
+          !aiResult ||
+          typeof aiResult !== "object" ||
+          !Array.isArray((aiResult as { destaques?: unknown }).destaques)
+        ) {
+          throw new Error("Resposta da IA não contém array de destaques.");
+        }
+
+        const idsDestaque = (aiResult as { destaques: string[] }).destaques.slice(0, 5);
+        if (idsDestaque.length === 0) {
+          throw new Error("IA não selecionou nenhuma notícia para destaque.");
+        }
+
+        return { destaques: idsDestaque, provider: provider.name };
+      } catch (error) {
+        const detail =
+          error instanceof Error
+            ? error.message
+            : typeof error === "string"
+              ? error
+              : JSON.stringify(error);
+        attemptsLog.push(`(${provider.name}) tentativa ${attempt}: ${detail}`);
+        console.error(`Erro ao selecionar destaques com ${provider.name} (tentativa ${attempt}):`, error);
+
+        if (isRateLimitError(error) && providerIndex < providers.length - 1) {
+          break;
+        }
+      }
+    }
+  }
+
+  const finalError = new Error(attemptsLog.join(" | ") || "Falha ao selecionar destaques");
+  (finalError as Error & { attemptsLog?: string[] }).attemptsLog = attemptsLog;
+  throw finalError;
 }
 
 Deno.serve(async (request) => {
@@ -308,10 +402,15 @@ Deno.serve(async (request) => {
     return jsonResponse(resultado);
   } catch (error) {
     console.error("Erro na edge function update-highlights:", error);
+    const attempts =
+      error && typeof error === "object" && "attemptsLog" in error
+        ? ((error as { attemptsLog?: string[] }).attemptsLog ?? undefined)
+        : undefined;
     return jsonResponse(
       {
         error: "Erro ao atualizar destaques",
         message: error instanceof Error ? error.message : "Erro desconhecido",
+        diagnostics: attempts ? { stage: "processAutomaticUpdate", attempts } : undefined,
       },
       { status: 500 }
     );

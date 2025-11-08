@@ -92,7 +92,7 @@ export default function LoginPage() {
                   </div>
                 ))}
               </div>
-              <p className="text-sm text-foreground/60">
+              <p className="text-sm text-foreground/80">
                 Novo por aqui?{" "}
                 <Link href="/auth/register" className="text-primary font-semibold hover:underline">
                   Crie sua conta gratuita
@@ -104,7 +104,7 @@ export default function LoginPage() {
             <div className="surface-card h-fit space-y-6 p-6 shadow-xl md:p-8">
               <div className="space-y-2 text-center">
                 <h2 className="text-2xl font-semibold text-foreground">Entre com sua conta</h2>
-                <p className="text-sm text-foreground/60">Conecte-se para acompanhar sua jornada rumo à aprovação.</p>
+                <p className="text-sm text-foreground/80">Conecte-se para acompanhar sua jornada rumo à aprovação.</p>
               </div>
 
               {formError && (
@@ -161,7 +161,7 @@ export default function LoginPage() {
                   <span className="w-full border-t border-border-color/70" />
                 </div>
                 <div className="relative flex justify-center">
-                  <span className="bg-card-bg/90 px-3 text-xs font-semibold uppercase tracking-[0.25em] text-foreground/50">
+                  <span className="bg-card-bg/90 px-3 text-xs font-semibold uppercase tracking-[0.25em] text-foreground/75">
                     ou continue com
                   </span>
                 </div>

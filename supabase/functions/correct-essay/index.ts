@@ -72,9 +72,19 @@ type EssayRow = {
   user_id: string | null;
 };
 
+type GroqProvider = {
+  name: string;
+  client: Groq;
+  model: string;
+};
+
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY") ?? "";
+const GROQ_MODEL = Deno.env.get("GROQ_MODEL") ?? "openai/gpt-oss-120b";
+const GROQ_FALLBACK_API_KEY = Deno.env.get("GROQ_FALLBACK_API_KEY") ?? "";
+const GROQ_FALLBACK_MODEL = Deno.env.get("GROQ_FALLBACK_MODEL") ?? "llama3-70b-8192";
+const GROQ_MAX_ATTEMPTS = Number(Deno.env.get("GROQ_MAX_ATTEMPTS") ?? "2");
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   throw new Error("SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY precisam estar configuradas.");
@@ -362,14 +372,55 @@ async function getResult(id: string): Promise<EssayResult | null> {
   return normalizeEssayRow(data as EssayRow);
 }
 
-function ensureGroqClient(): Groq {
-  if (!GROQ_API_KEY) {
-    throw new Error("Groq API key não configurada.");
+function createGroqProvider(apiKey: string | null, model: string, name: string): GroqProvider | null {
+  if (!apiKey) {
+    return null;
   }
-  return new Groq({ apiKey: GROQ_API_KEY });
+  return {
+    name,
+    client: new Groq({ apiKey }),
+    model,
+  };
 }
 
-async function analyseEssay(input: {
+function buildGroqProviders(): GroqProvider[] {
+  const providers: GroqProvider[] = [];
+  const primary = createGroqProvider(GROQ_API_KEY || null, GROQ_MODEL, "primary");
+  if (!primary) {
+    throw new Error("Groq API key não configurada.");
+  }
+  providers.push(primary);
+
+  const fallback = createGroqProvider(
+    GROQ_FALLBACK_API_KEY ? GROQ_FALLBACK_API_KEY : null,
+    GROQ_FALLBACK_MODEL,
+    "fallback"
+  );
+
+  if (fallback) {
+    providers.push(fallback);
+  }
+
+  return providers;
+}
+
+function isRateLimitError(error: unknown): boolean {
+  if (!error) return false;
+  if (typeof error === "object" && error && "status" in error && (error as { status?: number }).status === 429) {
+    return true;
+  }
+
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === "string"
+        ? error
+        : JSON.stringify(error);
+
+  return message.toLowerCase().includes("rate limit");
+}
+
+async function requestEssayAnalysis(provider: GroqProvider, input: {
   submission: EssaySubmission;
   temaFinal: string;
   textoApoio1Final: string;
@@ -377,7 +428,6 @@ async function analyseEssay(input: {
   essayId: string;
 }): Promise<Omit<EssayResult, "createdAt" | "origem">> {
   const { submission, temaFinal, textoApoio1Final, textoApoio2Final, essayId } = input;
-  const groq = ensureGroqClient();
 
   let prompt = `
     Você é um corretor especialista em redações do ENEM. Analise a seguinte redação sobre o tema "${temaFinal}" seguindo os 5 critérios de avaliação do ENEM:
@@ -431,9 +481,9 @@ async function analyseEssay(input: {
     LEMBRE-SE: Sua resposta deve ser apenas o objeto JSON, sem qualquer outro texto.
   `;
 
-  const response = await groq.chat.completions.create({
+  const response = await provider.client.chat.completions.create({
     messages: [{ role: "user", content: prompt }],
-    model: "openai/gpt-oss-120b",
+    model: provider.model,
     temperature: 0.1,
     max_completion_tokens: 8050,
     top_p: 1,
@@ -479,6 +529,46 @@ async function analyseEssay(input: {
     textoApoio1: textoApoio1Final,
     textoApoio2: textoApoio2Final,
   };
+}
+
+async function analyseEssay(input: {
+  submission: EssaySubmission;
+  temaFinal: string;
+  textoApoio1Final: string;
+  textoApoio2Final: string;
+  essayId: string;
+}): Promise<{ analysis: Omit<EssayResult, "createdAt" | "origem">; provider: string }> {
+  const providers = buildGroqProviders();
+  const attemptsLog: string[] = [];
+
+  for (let providerIndex = 0; providerIndex < providers.length; providerIndex++) {
+    const provider = providers[providerIndex];
+    let attempt = 0;
+    while (attempt < GROQ_MAX_ATTEMPTS) {
+      attempt++;
+      try {
+        const analysis = await requestEssayAnalysis(provider, input);
+        return { analysis, provider: provider.name };
+      } catch (error) {
+        const detail =
+          error instanceof Error
+            ? error.message
+            : typeof error === "string"
+              ? error
+              : JSON.stringify(error);
+        attemptsLog.push(`(${provider.name}) tentativa ${attempt}: ${detail}`);
+        console.error(`Erro ao analisar redação com ${provider.name} (tentativa ${attempt}):`, error);
+
+        if (isRateLimitError(error) && providerIndex < providers.length - 1) {
+          break;
+        }
+      }
+    }
+  }
+
+  const finalError = new Error(attemptsLog.join(" | ") || "Falha ao analisar redação");
+  (finalError as Error & { attemptsLog?: string[] }).attemptsLog = attemptsLog;
+  throw finalError;
 }
 
 Deno.serve(async (request) => {
@@ -617,9 +707,14 @@ Deno.serve(async (request) => {
       }
     }
 
-    let aiResult: Omit<EssayResult, "createdAt" | "origem">;
+    let aiAnalysis:
+      | {
+          analysis: Omit<EssayResult, "createdAt" | "origem">;
+          provider: string;
+        }
+      | null = null;
     try {
-      aiResult = await analyseEssay({
+      aiAnalysis = await analyseEssay({
         submission: { ...body, redacao: trimmedEssay },
         temaFinal,
         textoApoio1Final,
@@ -628,6 +723,10 @@ Deno.serve(async (request) => {
       });
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
+      const attempts =
+        error && typeof error === "object" && "attemptsLog" in error
+          ? ((error as { attemptsLog?: string[] }).attemptsLog ?? undefined)
+          : undefined;
       console.error("Erro ao analisar redação com IA:", error);
       return new Response(
         JSON.stringify({
@@ -636,6 +735,7 @@ Deno.serve(async (request) => {
           diagnostics: {
             stage: "analyseEssay",
             detail,
+            attempts,
           },
         }),
         {
@@ -646,7 +746,7 @@ Deno.serve(async (request) => {
     }
 
     const result: EssayResult = {
-      ...aiResult,
+      ...aiAnalysis.analysis,
       id: essayId,
       redacaoOriginal: trimmedEssay,
       createdAt: new Date().toISOString(),
@@ -662,6 +762,7 @@ Deno.serve(async (request) => {
         essay_length: essayLength,
         score: result.nota,
         tema: temaFinal,
+        provider: aiAnalysis.provider,
       },
       ip,
       userAgent,

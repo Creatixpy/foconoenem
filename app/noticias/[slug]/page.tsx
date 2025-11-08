@@ -160,7 +160,7 @@ export default function NoticiaDetalhePage() {
 
           {noticia.fonte_url && (
             <div className="mt-8 rounded-lg border border-border-color bg-muted-bg p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-foreground/50">Fonte original</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-foreground/75">Fonte original</p>
               <a
                 href={noticia.fonte_url}
                 target="_blank"
@@ -180,7 +180,7 @@ export default function NoticiaDetalhePage() {
             
             {/* Compartilhamento */}
             <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-foreground/70">
-              <span className="uppercase tracking-[0.2em] text-foreground/50">Compartilhar</span>
+              <span className="uppercase tracking-[0.2em] text-foreground/75">Compartilhar</span>
               <button
                 className="btn btn-glass px-3 py-1"
                 onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, "_blank")}
