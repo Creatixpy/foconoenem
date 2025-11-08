@@ -71,8 +71,8 @@ export default function ContaPage() {
         await fetchLatestStatistics();
 
         const essaysResponse = await withTimeout(
-          () =>
-            supabase
+          async () =>
+            await supabase
               .from('essay_results')
               .select('id, nota, created_at')
               .eq('user_id', user.id)
