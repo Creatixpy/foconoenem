@@ -79,9 +79,6 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <a href="#conteudo-principal" className="skip-link">
-          Pular para o conteúdo principal
-        </a>
         <Providers>
           <div className="flex min-h-screen flex-col bg-page-gradient text-foreground">
             <Header />
