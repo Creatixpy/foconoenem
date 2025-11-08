@@ -1,11 +1,11 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import { Metadata } from "next";
 import "./globals.css";
-import Script from "next/script";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import ThemeToggle from "./components/ThemeToggle";
 import CookieConsent from "./components/CookieConsent";
+import AdSenseLoader from "./components/AdSenseLoader";
 import Providers from "./providers";
 import StructuredData from "./structured-data";
 
@@ -62,12 +62,6 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/foconoenemicon.png" type="image/png" sizes="any" />
         <link rel="apple-touch-icon" href="/foconoenemicon.png" />
-        <Script 
-          async 
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8449266040565561"
-          crossOrigin="anonymous"
-          strategy="afterInteractive"
-        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
@@ -81,6 +75,7 @@ export default function RootLayout({
           <ThemeToggle />
           <CookieConsent />
           <StructuredData />
+          <AdSenseLoader />
         </Providers>
       </body>
     </html>
