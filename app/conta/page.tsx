@@ -70,7 +70,7 @@ export default function ContaPage() {
       try {
         await fetchLatestStatistics();
 
-        const { data: essaysData, error: essaysError } = await withTimeout(
+        const essaysResponse = await withTimeout(
           () =>
             supabase
               .from('essay_results')
@@ -81,6 +81,8 @@ export default function ContaPage() {
           10000,
           'Tempo limite ao carregar redações.'
         );
+
+        const { data: essaysData, error: essaysError } = essaysResponse;
 
         if (essaysError) {
           throw essaysError;
