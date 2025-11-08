@@ -102,6 +102,7 @@ const profileFields =
   "user_id,nome_completo,avatar_url,community_tagline,community_show_statistics";
 
 const commentCountSelectOptions = { head: true, count: "exact" as const };
+const likeSelectOptions = "post_id,user_id";
 
 const COMMUNITY_TERMS_LINKS = [
   { href: "/termos", label: "Termos de uso" },
@@ -161,6 +162,9 @@ export default function CommunityPageClient() {
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
   const [commentLoading, setCommentLoading] = useState<Record<string, boolean>>({});
   const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
+  const [commentDeleting, setCommentDeleting] = useState<Record<string, boolean>>({});
+  const [postLikes, setPostLikes] = useState<Record<string, { count: number; liked: boolean }>>({});
+  const [likeLoading, setLikeLoading] = useState<Record<string, boolean>>({});
 
   const [statistics, setStatistics] = useState<UserStatistics | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
@@ -227,6 +231,10 @@ export default function CommunityPageClient() {
           });
           void hydrateProfiles([newPost.user_id]);
           void hydrateAchievements([newPost.user_id]);
+          setPostLikes((previous) => ({
+            ...previous,
+            [newPost.id]: { count: 0, liked: false },
+          }));
         }
       )
       .on(
@@ -339,6 +347,42 @@ export default function CommunityPageClient() {
     }
   }, []);
 
+  const hydrateLikes = useCallback(
+    async (postIds: string[]) => {
+      if (postIds.length === 0) return;
+      try {
+        const { data, error } = await supabase
+          .from("community_post_likes")
+          .select(likeSelectOptions)
+          .in("post_id", postIds);
+
+        if (error) {
+          throw error;
+        }
+
+        const map: Record<string, { count: number; liked: boolean }> = {};
+        (data ?? []).forEach((like) => {
+          map[like.post_id] = map[like.post_id] ?? { count: 0, liked: false };
+          map[like.post_id].count += 1;
+          if (like.user_id === user?.id) {
+            map[like.post_id].liked = true;
+          }
+        });
+
+        postIds.forEach((id) => {
+          if (!map[id]) {
+            map[id] = { count: 0, liked: false };
+          }
+        });
+
+        setPostLikes((previous) => ({ ...previous, ...map }));
+      } catch (error) {
+        console.error("Erro ao carregar curtidas:", error);
+      }
+    },
+    [user?.id]
+  );
+
   const loadPosts = useCallback(
     async (topicId: string) => {
       try {
@@ -394,6 +438,7 @@ export default function CommunityPageClient() {
 
         void hydrateProfiles(Array.from(userIds));
         void hydrateAchievements(Array.from(userIds));
+        void hydrateLikes(postIds);
       } catch (error) {
         console.error("Erro ao carregar posts:", error);
         setPostsError("Não foi possível carregar os posts deste tópico no momento.");
@@ -402,7 +447,7 @@ export default function CommunityPageClient() {
         setPostsLoading(false);
       }
     },
-    [hydrateAchievements, hydrateProfiles]
+    [hydrateAchievements, hydrateLikes, hydrateProfiles]
   );
 
   const loadStatistics = useCallback(async () => {
@@ -570,6 +615,46 @@ export default function CommunityPageClient() {
     }));
   };
 
+  const handleDeleteComment = async (commentId: string, postId: string) => {
+    if (!user) return;
+    const targetThread = threads.find((thread) => thread.id === postId);
+    const targetComment = targetThread?.comments.find((comment) => comment.id === commentId);
+    if (!targetComment || targetComment.user_id !== user.id) {
+      return;
+    }
+
+    const confirmed = window.confirm("Remover este comentário definitivamente?");
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setCommentDeleting((previous) => ({ ...previous, [commentId]: true }));
+      const { error } = await supabase.from("community_comments").delete().eq("id", commentId).eq("user_id", user.id);
+      if (error) {
+        throw error;
+      }
+      setThreads((previous) =>
+        previous.map((thread) => {
+          if (thread.id === postId) {
+            return { ...thread, comments: thread.comments.filter((comment) => comment.id !== commentId) };
+          }
+          return thread;
+        })
+      );
+      setCommentCount((previous) => Math.max(0, previous - 1));
+    } catch (error) {
+      console.error("Erro ao remover comentário:", error);
+      setPostsError("Não foi possível remover o comentário neste momento.");
+    } finally {
+      setCommentDeleting((previous) => {
+        const clone = { ...previous };
+        delete clone[commentId];
+        return clone;
+      });
+    }
+  };
+
   const handleSendComment = async (event: FormEvent, postId: string) => {
     event.preventDefault();
     if (!user) return;
@@ -617,6 +702,54 @@ export default function CommunityPageClient() {
       setPostsError("Não conseguimos enviar seu comentário. Tente novamente.");
     } finally {
       setCommentLoading((previous) => {
+        const updated = { ...previous };
+        delete updated[postId];
+        return updated;
+      });
+    }
+  };
+
+  const handleToggleLike = async (postId: string) => {
+    if (!user) return;
+
+    setLikeLoading((previous) => ({ ...previous, [postId]: true }));
+    const current = postLikes[postId] ?? { count: 0, liked: false };
+    const liked = current.liked;
+
+    try {
+      if (liked) {
+        const { error } = await supabase
+          .from("community_post_likes")
+          .delete()
+          .eq("post_id", postId)
+          .eq("user_id", user.id);
+        if (error) throw error;
+        setPostLikes((previous) => ({
+          ...previous,
+          [postId]: {
+            count: Math.max(0, current.count - 1),
+            liked: false,
+          },
+        }));
+      } else {
+        const { error } = await supabase.from("community_post_likes").insert({
+          post_id: postId,
+          user_id: user.id,
+        });
+        if (error) throw error;
+        setPostLikes((previous) => ({
+          ...previous,
+          [postId]: {
+            count: current.count + 1,
+            liked: true,
+          },
+        }));
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar curtida:", error);
+      setPostsError("Não conseguimos registrar sua reação agora.");
+    } finally {
+      setLikeLoading((previous) => {
         const updated = { ...previous };
         delete updated[postId];
         return updated;
@@ -1072,8 +1205,29 @@ export default function CommunityPageClient() {
                         )}
                         {renderBadges(achievementCache[thread.user_id])}
                       </div>
-                      {thread.user_id === user?.id && (
-                        <div className="ml-auto">
+                      <div className="ml-auto flex flex-wrap items-center gap-3">
+                        <button
+                          type="button"
+                          className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                            (postLikes[thread.id]?.liked ?? false)
+                              ? "border-primary/60 text-primary"
+                              : "border-border-color/60 text-foreground/70 hover:text-primary"
+                          }`}
+                          onClick={() => handleToggleLike(thread.id)}
+                          disabled={likeLoading[thread.id]}
+                          aria-pressed={postLikes[thread.id]?.liked ?? false}
+                        >
+                          <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={1.8}
+                              d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 20.364l-7.682-7.682a4.5 4.5 0 010-6.364z"
+                            />
+                          </svg>
+                          {postLikes[thread.id]?.count ?? 0}
+                        </button>
+                        {thread.user_id === user?.id && (
                           <button
                             type="button"
                             onClick={() => handleDeletePost(thread.id)}
@@ -1085,8 +1239,8 @@ export default function CommunityPageClient() {
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V5a2 2 0 00-2-2h-2a2 2 0 00-2 2v2m-4 0h14" />
                             </svg>
                           </button>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </header>
 
                     <div className="mt-4">
@@ -1110,6 +1264,16 @@ export default function CommunityPageClient() {
                                 <p className="font-semibold text-foreground">{getUserName(comment.user_id)}</p>
                                 <p>{formatRelativeTime(comment.created_at)}</p>
                               </div>
+                              {comment.user_id === user?.id && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteComment(comment.id, thread.id)}
+                                  disabled={commentDeleting[comment.id]}
+                                  className="ml-auto inline-flex items-center gap-1 text-[11px] font-semibold text-foreground/60 hover:text-danger"
+                                >
+                                  {commentDeleting[comment.id] ? "Removendo..." : "Excluir"}
+                                </button>
+                              )}
                             </div>
                             <p className="mt-2 text-sm text-foreground/80">{comment.content}</p>
                             {renderBadges(achievementCache[comment.user_id])}
