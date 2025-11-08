@@ -73,7 +73,7 @@ function PesquisaContent() {
           </svg>
           Voltar
         </Link>
-        <span className="text-xs uppercase tracking-[0.2em] text-foreground/60">Busca enxuta</span>
+        <span className="text-xs uppercase tracking-[0.2em] text-foreground/80">Busca enxuta</span>
       </div>
 
       <h1 className="text-3xl font-bold mb-4">Pesquise em segundos</h1>

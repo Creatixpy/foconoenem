@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Groq } from "groq-sdk";
 import { authorizeAdmin } from "@/lib/admin-auth";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { buildGroqProviders, GROQ_MAX_ATTEMPTS, GroqProvider, isRateLimitError } from "@/lib/ai/groq";
 
 const MAX_NEWS_TO_REVIEW = 25;
 
@@ -48,12 +48,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const groqApiKey = process.env.GROQ_API_KEY;
-  if (!groqApiKey) {
-    return NextResponse.json(
-      { error: "GROQ_API_KEY não configurada. A limpeza automática requer essa chave." },
-      { status: 500 }
-    );
+  let groqProviders: GroqProvider[];
+  try {
+    groqProviders = buildGroqProviders();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Configuração da Groq inválida.";
+    return NextResponse.json({ error: message }, { status: 503 });
   }
 
   const { data: noticias, error } = await supabaseAdmin
@@ -76,44 +76,27 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const groq = new Groq({ apiKey: groqApiKey });
   const idsParaRemover: string[] = [];
   const decisions: Array<{ id: string; decision: ModerationDecision }> = [];
+  const diagnostics: string[] = [];
+  const providerUsage: Record<string, number> = {};
 
   for (const noticia of noticias) {
     if (!noticia?.id || !noticia?.titulo) {
       continue;
     }
 
-    try {
-      const completion = await groq.chat.completions.create({
-        model: "openai/gpt-oss-120b",
-        temperature: 0,
-        max_completion_tokens: 64,
-        messages: [
-          {
-            role: "system",
-            content:
-              "Você é um moderador rígido. Responda exclusivamente com 'RELEVANTE' se a notícia fala sobre educação, ENEM, vestibulares, escolas, políticas educacionais ou orientações para estudantes. Responda 'IRRELEVANTE' para qualquer outro assunto.",
-          },
-          {
-            role: "user",
-            content: buildPrompt(noticia),
-          },
-        ],
-      });
+    const result = await moderateNoticiaWithProviders(noticia, groqProviders);
+    diagnostics.push(...result.attempts);
 
-      const answer = completion.choices?.[0]?.message?.content?.trim().toUpperCase() as ModerationDecision | undefined;
-      const decision: ModerationDecision = answer === "IRRELEVANTE" ? "IRRELEVANTE" : "RELEVANTE";
+    if (result.provider) {
+      providerUsage[result.provider] = (providerUsage[result.provider] ?? 0) + 1;
+    }
 
-      decisions.push({ id: noticia.id, decision });
+    decisions.push({ id: noticia.id, decision: result.decision });
 
-      if (decision === "IRRELEVANTE") {
-        idsParaRemover.push(noticia.id);
-      }
-    } catch (groqError) {
-      console.error("Erro ao analisar notícia com IA:", groqError);
-      decisions.push({ id: noticia.id, decision: "RELEVANTE" });
+    if (result.decision === "IRRELEVANTE") {
+      idsParaRemover.push(noticia.id);
     }
   }
 
@@ -138,5 +121,63 @@ export async function POST(request: NextRequest) {
     removed,
     kept,
     removedIds: idsParaRemover,
+    providersUsed: providerUsage,
+    diagnostics: diagnostics.length > 0 ? diagnostics : undefined,
   });
+}
+
+async function moderateNoticiaWithProviders(
+  noticia: {
+    id: string;
+    titulo: string;
+    resumo?: string | null;
+    conteudo?: string | null;
+    tags?: string[] | null;
+  },
+  providers: GroqProvider[]
+): Promise<{ decision: ModerationDecision; provider?: string; attempts: string[] }> {
+  const attempts: string[] = [];
+
+  for (let providerIndex = 0; providerIndex < providers.length; providerIndex++) {
+    const provider = providers[providerIndex];
+    let attempt = 0;
+
+    while (attempt < GROQ_MAX_ATTEMPTS) {
+      attempt++;
+      try {
+        const completion = await provider.client.chat.completions.create({
+          model: provider.model,
+          temperature: 0,
+          max_completion_tokens: 64,
+          messages: [
+            {
+              role: "system",
+              content:
+                "Você é um moderador rígido. Responda exclusivamente com 'RELEVANTE' se a notícia fala sobre educação, ENEM, vestibulares, escolas, políticas educacionais ou orientações para estudantes. Responda 'IRRELEVANTE' para qualquer outro assunto.",
+            },
+            {
+              role: "user",
+              content: buildPrompt(noticia),
+            },
+          ],
+        });
+
+        const answer = completion.choices?.[0]?.message?.content?.trim().toUpperCase() as ModerationDecision | undefined;
+        const decision: ModerationDecision = answer === "IRRELEVANTE" ? "IRRELEVANTE" : "RELEVANTE";
+
+        return { decision, provider: provider.name, attempts };
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : String(error);
+        const attemptLog = `[${noticia.id}] (${provider.name}) tentativa ${attempt}: ${detail}`;
+        attempts.push(attemptLog);
+        console.error(`Erro ao analisar notícia ${noticia.id} com ${provider.name} (tentativa ${attempt}):`, error);
+
+        if (isRateLimitError(error) && providerIndex < providers.length - 1) {
+          break;
+        }
+      }
+    }
+  }
+
+  return { decision: "RELEVANTE", attempts };
 }

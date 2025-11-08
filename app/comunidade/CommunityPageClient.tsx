@@ -1005,7 +1005,7 @@ export default function CommunityPageClient() {
                           onClick={() => setSelectedTopicId(topic.id)}
                         >
                           <p className="font-semibold">{topic.title}</p>
-                          {topic.description && <p className="mt-1 text-xs text-foreground/60">{topic.description}</p>}
+                          {topic.description && <p className="mt-1 text-xs text-foreground/80">{topic.description}</p>}
                         </button>
                       </li>
                     );
@@ -1039,7 +1039,7 @@ export default function CommunityPageClient() {
                   rows={2}
                   maxLength={140}
                   placeholder="Compartilhe seu objetivo ou frase preferida."
-                  className="mt-2 w-full rounded-2xl border border-border-color/60 bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-foreground/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  className="mt-2 w-full rounded-2xl border border-border-color/60 bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-foreground/75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 />
               </label>
               <label className="mt-4 flex items-center gap-3 text-sm text-foreground/80">
@@ -1060,7 +1060,7 @@ export default function CommunityPageClient() {
                 {preferencesSaving ? "Salvando..." : "Salvar preferências"}
               </button>
               {preferencesMessage && (
-                <p className="mt-3 text-center text-xs text-foreground/60">{preferencesMessage}</p>
+                <p className="mt-3 text-center text-xs text-foreground/80">{preferencesMessage}</p>
               )}
             </div>
           </aside>
@@ -1101,7 +1101,7 @@ export default function CommunityPageClient() {
                     onChange={(event) => setNewPostTitle(event.target.value)}
                     maxLength={120}
                     placeholder="Ex.: Estratégias para repertório sociocultural"
-                    className="mt-2 w-full rounded-2xl border border-border-color/60 bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-foreground/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    className="mt-2 w-full rounded-2xl border border-border-color/60 bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-foreground/75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                     disabled={!selectedTopicId || creatingPost}
                   />
                 </label>
@@ -1113,12 +1113,12 @@ export default function CommunityPageClient() {
                     rows={4}
                     maxLength={2000}
                     placeholder="Explique o contexto, cite fontes ou peça ajuda objetiva."
-                    className="mt-2 w-full rounded-2xl border border-border-color/60 bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-foreground/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    className="mt-2 w-full rounded-2xl border border-border-color/60 bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-foreground/75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                     disabled={!selectedTopicId || creatingPost}
                   />
                 </label>
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <span className="text-xs text-foreground/60">
+                  <span className="text-xs text-foreground/80">
                     Postagens passam por moderação automática quando detectamos termos fora de educação.
                   </span>
                   <button type="submit" className="btn btn-primary px-6 py-2" disabled={creatingPost || !selectedTopicId}>
@@ -1133,7 +1133,7 @@ export default function CommunityPageClient() {
                 <div>
                   <p className="text-sm font-semibold text-foreground/70">Painel público</p>
                   <h3 className="text-xl font-semibold text-foreground">Suas notas e conquistas</h3>
-                  <p className="text-sm text-foreground/60">
+                  <p className="text-sm text-foreground/80">
                     {showStatsToggle
                       ? "Os colegas verão estes dados quando interagir nos tópicos."
                       : "Estatísticas ocultas para outros estudantes."}
@@ -1149,21 +1149,21 @@ export default function CommunityPageClient() {
               ) : statistics && showStatsToggle ? (
                 <dl className="mt-6 grid gap-4 sm:grid-cols-3">
                   <div className="rounded-2xl border border-border-color/50 bg-muted-bg/20 p-4">
-                    <dt className="text-xs font-semibold uppercase tracking-wide text-foreground/60">Redações enviadas</dt>
+                    <dt className="text-xs font-semibold uppercase tracking-wide text-foreground/80">Redações enviadas</dt>
                     <dd className="mt-2 text-2xl font-semibold text-foreground">{statistics.total_redacoes ?? 0}</dd>
-                    <p className="text-xs text-foreground/60">Média: {Math.round(statistics.media_nota_redacao ?? 0)}</p>
+                    <p className="text-xs text-foreground/80">Média: {Math.round(statistics.media_nota_redacao ?? 0)}</p>
                   </div>
                   <div className="rounded-2xl border border-border-color/50 bg-muted-bg/20 p-4">
-                    <dt className="text-xs font-semibold uppercase tracking-wide text-foreground/60">Questões resolvidas</dt>
+                    <dt className="text-xs font-semibold uppercase tracking-wide text-foreground/80">Questões resolvidas</dt>
                     <dd className="mt-2 text-2xl font-semibold text-foreground">{statistics.total_questoes_respondidas ?? 0}</dd>
-                    <p className="text-xs text-foreground/60">
+                    <p className="text-xs text-foreground/80">
                       Taxa de acerto: {Math.round((statistics.taxa_acerto ?? 0) * 100)}%
                     </p>
                   </div>
                   <div className="rounded-2xl border border-border-color/50 bg-muted-bg/20 p-4">
-                    <dt className="text-xs font-semibold uppercase tracking-wide text-foreground/60">Comentários úteis</dt>
+                    <dt className="text-xs font-semibold uppercase tracking-wide text-foreground/80">Comentários úteis</dt>
                     <dd className="mt-2 text-2xl font-semibold text-foreground">{commentCount}</dd>
-                    <p className="text-xs text-foreground/60">Meta para mentor: 5 comentários</p>
+                    <p className="text-xs text-foreground/80">Meta para mentor: 5 comentários</p>
                   </div>
                 </dl>
               ) : (
@@ -1199,9 +1199,9 @@ export default function CommunityPageClient() {
                       </span>
                       <div>
                         <p className="text-sm font-semibold text-foreground">{getUserName(thread.user_id)}</p>
-                        <p className="text-xs text-foreground/60">{formatRelativeTime(thread.created_at)}</p>
+                        <p className="text-xs text-foreground/80">{formatRelativeTime(thread.created_at)}</p>
                         {profileCache[thread.user_id]?.community_tagline && (
-                          <p className="text-xs text-foreground/60">“{profileCache[thread.user_id].community_tagline}”</p>
+                          <p className="text-xs text-foreground/80">“{profileCache[thread.user_id].community_tagline}”</p>
                         )}
                         {renderBadges(achievementCache[thread.user_id])}
                       </div>
@@ -1249,7 +1249,7 @@ export default function CommunityPageClient() {
                     </div>
 
                     <footer className="mt-6 border-t border-border-color/50 pt-4">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-foreground/50">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-foreground/75">
                         {thread.comments.length} comentário{thread.comments.length === 1 ? "" : "s"}
                       </p>
 
@@ -1269,7 +1269,7 @@ export default function CommunityPageClient() {
                                   type="button"
                                   onClick={() => handleDeleteComment(comment.id, thread.id)}
                                   disabled={commentDeleting[comment.id]}
-                                  className="ml-auto inline-flex items-center gap-1 text-[11px] font-semibold text-foreground/60 hover:text-danger"
+                                  className="ml-auto inline-flex items-center gap-1 text-[11px] font-semibold text-foreground/80 hover:text-danger"
                                 >
                                   {commentDeleting[comment.id] ? "Removendo..." : "Excluir"}
                                 </button>
@@ -1288,7 +1288,7 @@ export default function CommunityPageClient() {
                           rows={2}
                           maxLength={500}
                           placeholder="Adicionar comentário..."
-                          className="w-full rounded-2xl border border-border-color/60 bg-transparent px-4 py-2 text-sm text-foreground placeholder:text-foreground/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                          className="w-full rounded-2xl border border-border-color/60 bg-transparent px-4 py-2 text-sm text-foreground placeholder:text-foreground/75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                         />
                         <div className="flex justify-end">
                           <button

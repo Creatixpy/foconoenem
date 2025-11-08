@@ -147,7 +147,7 @@ export default function RegisterPage() {
                   </div>
                 ))}
               </div>
-              <p className="text-sm text-foreground/60">
+              <p className="text-sm text-foreground/80">
                 Já possui uma conta?{" "}
                 <Link href="/auth/login" className="text-primary font-semibold hover:underline">
                   Entre por aqui
@@ -191,7 +191,7 @@ export default function RegisterPage() {
                 <>
                   <div className="space-y-2 text-center">
                     <h2 className="text-2xl font-semibold text-foreground">Crie sua conta gratuita</h2>
-                    <p className="text-sm text-foreground/60">Conte seu objetivo para personalizarmos sua experiência desde o início.</p>
+                    <p className="text-sm text-foreground/80">Conte seu objetivo para personalizarmos sua experiência desde o início.</p>
                   </div>
 
                   {formError && (
@@ -254,7 +254,7 @@ export default function RegisterPage() {
                         placeholder="Crie uma senha segura"
                         autoComplete="new-password"
                       />
-                      <span className="mt-1 block text-xs text-foreground/50">Use pelo menos 6 caracteres.</span>
+                      <span className="mt-1 block text-xs text-foreground/75">Use pelo menos 6 caracteres.</span>
                     </label>
 
                     <button
@@ -278,7 +278,7 @@ export default function RegisterPage() {
                       <span className="w-full border-t border-border-color/70" />
                     </div>
                     <div className="relative flex justify-center">
-                      <span className="bg-card-bg/90 px-3 text-xs font-semibold uppercase tracking-[0.25em] text-foreground/50">
+                      <span className="bg-card-bg/90 px-3 text-xs font-semibold uppercase tracking-[0.25em] text-foreground/75">
                         ou continue com
                       </span>
                     </div>

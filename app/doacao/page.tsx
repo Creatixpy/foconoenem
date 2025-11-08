@@ -198,7 +198,7 @@
                ))}
              </div>
 
-             <div className="text-center text-sm text-foreground/60">
+             <div className="text-center text-sm text-foreground/80">
                Quer doar por Pix ou boleto? Entre em contato pelo nosso{" "}
                <Link href="mailto:contato@foconoenem.com" className="text-primary font-semibold hover:underline">
                  email oficial

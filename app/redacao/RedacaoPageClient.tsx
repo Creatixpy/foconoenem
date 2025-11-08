@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback, useMemo, type ClipboardEvent } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo, useId, type ClipboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import { getOperatingHoursInfo, type OperatingHoursInfo } from "@/lib/schedule";
 import { supabase } from "@/lib/supabase";
@@ -82,6 +82,8 @@ export default function RedacaoPageClient() {
     if (!trimmed) return 0;
     return trimmed.split(/\s+/).length;
   }, [content]);
+  const editorHeadingId = useId();
+  const editorDescriptionId = useId();
 
   const handleInput = () => {
     if (!editorRef.current) return;
@@ -386,13 +388,13 @@ export default function RedacaoPageClient() {
                 className="mt-2 w-full rounded-2xl border border-border-color/70 bg-card-bg/80 px-4 py-3 text-base text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
             </label>
-            <p className="text-xs text-foreground/60">
+            <p className="text-xs text-foreground/80">
               Defina um tema claro, preferencialmente com recorte de problema e contexto social para facilitar sua tese.
             </p>
           </div>
           <div className="surface-card space-y-3 p-5 shadow-sm">
             <p className="text-sm font-semibold text-foreground">Textos de apoio (opcional)</p>
-            <p className="text-xs text-foreground/60">
+            <p className="text-xs text-foreground/80">
               Use estes campos para guardar repertórios, dados ou citações que deseja inserir ao longo da redação.
             </p>
             <div className="grid gap-4 md:grid-cols-2">
@@ -477,7 +479,7 @@ export default function RedacaoPageClient() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-foreground/90">Textos de apoio</p>
-              <p className="text-xs text-foreground/60">Abra quando precisar relembrar dados ou repertórios.</p>
+              <p className="text-xs text-foreground/80">Abra quando precisar relembrar dados ou repertórios.</p>
             </div>
             <button
               type="button"
@@ -514,7 +516,7 @@ export default function RedacaoPageClient() {
               ))}
             </div>
           ) : (
-            <p className="mt-4 text-sm text-foreground/60">Os textos estão ocultos para manter o foco.</p>
+            <p className="mt-4 text-sm text-foreground/80">Os textos estão ocultos para manter o foco.</p>
           )}
         </div>
       </div>
@@ -523,7 +525,11 @@ export default function RedacaoPageClient() {
 
   return (
     <main className="flex-grow transition-colors duration-300">
-        <section className="relative overflow-hidden px-4 pb-16 pt-12 sm:px-6 lg:px-8">
+        <section
+          id="redacao-hero"
+          className="relative overflow-hidden px-4 pb-16 pt-12 sm:px-6 lg:px-8"
+          aria-labelledby="redacao-hero-heading redacao-hero-description"
+        >
           <div className="hero-accent absolute inset-0 blur-3xl" aria-hidden />
           <div className="container relative z-10 mx-auto max-w-6xl space-y-10">
             <div className="rounded-3xl border border-border-color/40 bg-card-bg/60 p-6 shadow-xl backdrop-blur-md sm:p-8">
@@ -533,10 +539,10 @@ export default function RedacaoPageClient() {
                     Simulado de redação
                   </span>
                   <div className="space-y-3">
-                    <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+                    <h1 id="redacao-hero-heading" className="text-3xl font-semibold tracking-tight sm:text-4xl">
                       Um ambiente calmo para escrever sua redação.
                     </h1>
-                    <p className="max-w-2xl text-base text-foreground/70">
+                    <p id="redacao-hero-description" className="max-w-2xl text-base text-foreground/70">
                       Escolha ou gere um tema, estruture seus argumentos e escreva sem distrações. Ao enviar, você recebe a correção
                       completa com base nos critérios oficiais do ENEM.
                     </p>
@@ -581,7 +587,7 @@ export default function RedacaoPageClient() {
                         : `Correções das ${operatingInfo.opensAt} às ${operatingInfo.closesAt}`}
                     </div>
                   ) : (
-                    <div className="inline-flex items-center gap-2 rounded-full bg-card-bg/70 px-3 py-1 text-xs font-semibold text-foreground/60">
+                    <div className="inline-flex items-center gap-2 rounded-full bg-card-bg/70 px-3 py-1 text-xs font-semibold text-foreground/80">
                       <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-primary/60" />
                       Checando disponibilidade...
                     </div>
@@ -589,7 +595,7 @@ export default function RedacaoPageClient() {
                 </div>
               </div>
               {!isFocusMode && (
-                <p className="mt-6 text-sm text-foreground/60">
+                <p className="mt-6 text-sm text-foreground/80">
                   Dica rápida: reserve alguns minutos para rascunhar a tese e os argumentos antes de mergulhar na escrita definitiva.
                 </p>
               )}
@@ -682,9 +688,11 @@ export default function RedacaoPageClient() {
                       <svg className="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                       </svg>
-                      <h3 className="text-lg font-semibold text-foreground">Sua redação</h3>
+                      <h3 id={editorHeadingId} className="text-lg font-semibold text-foreground">
+                        Sua redação
+                      </h3>
                     </div>
-                    <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-foreground/60 sm:text-sm">
+                    <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-foreground/80 sm:text-sm">
                       <span>
                         {wordCount} {wordCount === 1 ? "palavra" : "palavras"}
                       </span>
@@ -700,12 +708,18 @@ export default function RedacaoPageClient() {
                     onInput={handleInput}
                     onPaste={handlePaste}
                     data-placeholder="Organize seus argumentos, conecte as ideias e finalize com uma intervenção transformadora."
+                    role="textbox"
                     aria-label="Editor de redação"
+                    aria-labelledby={editorHeadingId}
+                    aria-describedby={editorDescriptionId}
+                    aria-multiline="true"
+                    aria-invalid={validationMessage ? true : undefined}
                   ></div>
                   <div
-                    className={`char-counter flex flex-wrap items-center justify-end gap-4 text-xs text-foreground/60 sm:text-sm ${
+                    className={`char-counter flex flex-wrap items-center justify-end gap-4 text-xs text-foreground/80 sm:text-sm ${
                       content.length > MAX_CHARACTERS ? "text-danger" : ""
                     }`}
+                    id={editorDescriptionId}
                   >
                     <span>{content.length}/{MAX_CHARACTERS} caracteres</span>
                     <span>~{Math.ceil(content.length / 80)} linhas</span>
@@ -724,7 +738,7 @@ export default function RedacaoPageClient() {
                   )}
                   <div className="flex flex-wrap items-center justify-end gap-3 pt-1">
                     {!isSystemAvailable && operatingInfo && (
-                      <span className="text-xs font-semibold uppercase tracking-wide text-foreground/50">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-foreground/75">
                         Disponível das {operatingInfo.opensAt} às {operatingInfo.closesAt}
                       </span>
                     )}
@@ -768,7 +782,7 @@ export default function RedacaoPageClient() {
                   <div className="surface-card space-y-4 p-6 shadow-xl">
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg font-semibold text-foreground">Dicas rápidas</h3>
-                      <span className="text-xs uppercase tracking-[0.2em] text-foreground/50">Modo minimal</span>
+                      <span className="text-xs uppercase tracking-[0.2em] text-foreground/75">Modo minimal</span>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {guidanceSteps.map((step, index) => (

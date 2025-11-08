@@ -59,7 +59,7 @@ export default function QuestionCard({
       <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/60 via-accent/60 to-primary/60 opacity-70"></div>
       <header className="flex flex-col gap-3 border-b border-border-color bg-muted-bg/80 px-4 py-4 sm:px-6 sm:py-5 md:flex-row md:items-center md:justify-between">
         <div>
-          <h3 className="text-sm font-medium uppercase tracking-wide text-foreground/60">Questão {questionNumber}</h3>
+          <h3 className="text-sm font-medium uppercase tracking-wide text-foreground/80">Questão {questionNumber}</h3>
           <p className="mt-1 text-base font-semibold text-foreground sm:text-lg">{question.text}</p>
         </div>
         <div className="flex flex-col items-start gap-2 text-xs sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 md:flex-col md:items-end">
@@ -69,7 +69,7 @@ export default function QuestionCard({
             </svg>
             {question.discipline}
           </span>
-          <span className="rounded-full bg-card-bg px-2 py-1 text-foreground/50 shadow-sm">
+          <span className="rounded-full bg-card-bg px-2 py-1 text-foreground/75 shadow-sm">
             {answered ? `Selecionada: alternativa ${selectedId}` : `${totalAlternatives} alternativas disponíveis`}
           </span>
         </div>
@@ -109,7 +109,7 @@ export default function QuestionCard({
                   </span>
                   <span className="flex-1 pt-0 text-foreground sm:pt-1">{alternative.text}</span>
                 </div>
-                <span className="flex items-center gap-2 text-xs font-medium text-foreground/50 sm:ml-auto">
+                <span className="flex items-center gap-2 text-xs font-medium text-foreground/75 sm:ml-auto">
                   {showAsCorrect && (
                     <>
                       <svg className="h-4 w-4 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

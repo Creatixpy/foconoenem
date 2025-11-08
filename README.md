@@ -15,8 +15,14 @@ Este é um projeto [Next.js](https://nextjs.org) que oferece um simulado de reda
 Crie um arquivo `.env.local` na raiz do projeto com:
 
 ```bash
-# Groq API (para correção de redações e geração de questões)
+# Groq API (correção/redação/questões/notícias)
 GROQ_API_KEY=sua-api-key-aqui
+GROQ_MODEL=openai/gpt-oss-120b
+# (Opcional) chave/modelo secundário para fallback automático quando houver rate limit
+GROQ_FALLBACK_API_KEY=sua-chave-secundaria
+GROQ_FALLBACK_MODEL=llama3-70b-8192
+# Número máximo de tentativas por provedor antes de acionar o próximo
+GROQ_MAX_ATTEMPTS=2
 
 # Supabase (banco de dados)
 NEXT_PUBLIC_SUPABASE_URL=https://seu-projeto.supabase.co
@@ -126,6 +132,8 @@ Para mais detalhes sobre a estrutura e melhorias implementadas, consulte [MELHOR
 - `quiz-handler`: cria simulados por disciplina e salva desempenho com atualização de estatísticas.
 - `update-highlights`, `remove-highlight`: administração dos destaques de notícias.
 - `maintenance-cleanup`: rotina de limpeza de caches, rate limits e analytics.
+
+Todas as rotas e funções que dependem da IA utilizam um mecanismo automático de fallback: caso o provedor principal da Groq atinja limite de requisições, o sistema tenta novamente com a chave/modelo secundário antes de retornar erro para o usuário. Configure as variáveis `GROQ_FALLBACK_API_KEY` e `GROQ_FALLBACK_MODEL` para ativar esse comportamento.
 
 ## Aprender Mais
 

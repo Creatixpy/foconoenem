@@ -128,7 +128,11 @@ export default function HomePageClient() {
   const { user } = useAuth();
   return (
     <main className="flex-grow">
-      <section className="relative overflow-hidden px-4 pb-24 pt-20 sm:px-6 lg:px-8 lg:pt-28">
+      <section
+        id="home-hero"
+        className="relative overflow-hidden px-4 pb-24 pt-20 sm:px-6 lg:px-8 lg:pt-28"
+        aria-labelledby="home-hero-heading home-hero-description"
+      >
           <div className="hero-accent absolute inset-0 blur-3xl" aria-hidden />
           <div className="container relative z-10 mx-auto grid max-w-7xl gap-16 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
             <div className="space-y-10">
@@ -137,10 +141,16 @@ export default function HomePageClient() {
                 Aberto 7h — 23h30 (BRT)
               </div>
               <div className="space-y-6">
-                <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl">
+                <h1
+                  id="home-hero-heading"
+                  className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl"
+                >
                   Transforme estudo em resultado no ENEM.
                 </h1>
-                <p className="max-w-2xl text-lg leading-relaxed text-foreground/75 sm:text-xl">
+                <p
+                  id="home-hero-description"
+                  className="max-w-2xl text-lg leading-relaxed text-foreground/75 sm:text-xl"
+                >
                   Correção rápida, simulados sob medida e alertas curtos para estudar só o que importa.
                 </p>
               </div>
@@ -244,14 +254,14 @@ export default function HomePageClient() {
                   </p>
                   <div className="mt-5 grid gap-3">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="inline-flex items-center gap-2 text-foreground/65">
+                      <span className="inline-flex items-center gap-2 text-foreground/80">
                         <span className="h-2 w-2 rounded-full bg-success" />
                         Questões respondidas
                       </span>
                       <span className="font-semibold text-foreground">12/15</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="inline-flex items-center gap-2 text-foreground/65">
+                      <span className="inline-flex items-center gap-2 text-foreground/80">
                         <span className="h-2 w-2 rounded-full bg-warning" />
                         Tempo restante
                       </span>
@@ -273,13 +283,17 @@ export default function HomePageClient() {
           </div>
         </section>
 
-        <section id="recursos" className="relative px-4 pb-20 sm:px-6 lg:px-8">
+        <section
+          id="recursos"
+          className="relative px-4 pb-20 sm:px-6 lg:px-8"
+          aria-labelledby="home-recursos-heading"
+        >
           <div className="container mx-auto max-w-6xl">
             <div className="space-y-4 text-center">
               <p className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1 text-sm font-semibold text-primary">
                 Recursos completos para estudar com confiança
               </p>
-              <h2 className="text-3xl font-semibold text-foreground sm:text-4xl">
+              <h2 id="home-recursos-heading" className="text-3xl font-semibold text-foreground sm:text-4xl">
                 Tudo que você precisa em um só lugar
               </h2>
               <p className="mx-auto max-w-3xl text-base text-foreground/70">
@@ -306,14 +320,18 @@ export default function HomePageClient() {
           </div>
         </section>
 
-        <section id="metodologia" className="relative px-4 py-20 sm:px-6 lg:px-8">
+        <section
+          id="metodologia"
+          className="relative px-4 py-20 sm:px-6 lg:px-8"
+          aria-labelledby="home-metodologia-heading"
+        >
           <div className="container mx-auto max-w-6xl">
             <div className="grid gap-16 lg:grid-cols-[1fr_1.1fr] lg:items-center">
               <div className="space-y-6">
                 <p className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-4 py-1 text-sm font-semibold text-accent">
                   Metodologia em 3 etapas
                 </p>
-                <h2 className="text-3xl font-semibold text-foreground sm:text-4xl">
+                <h2 id="home-metodologia-heading" className="text-3xl font-semibold text-foreground sm:text-4xl">
                   Prepare-se com fluxo rápido e claro
                 </h2>
                 <p className="text-base text-foreground/70">
@@ -344,13 +362,17 @@ export default function HomePageClient() {
           </div>
         </section>
 
-        <section id="historias" className="relative px-4 py-20 sm:px-6 lg:px-8">
+        <section
+          id="historias"
+          className="relative px-4 py-20 sm:px-6 lg:px-8"
+          aria-labelledby="home-historias-heading"
+        >
           <div className="container mx-auto max-w-6xl">
             <div className="space-y-4 text-center">
               <p className="inline-flex items-center gap-2 rounded-full border border-success/30 bg-success/10 px-4 py-1 text-sm font-semibold text-success">
                 Histórias reais de evolução
               </p>
-              <h2 className="text-3xl font-semibold text-foreground sm:text-4xl">
+              <h2 id="home-historias-heading" className="text-3xl font-semibold text-foreground sm:text-4xl">
                 Quem já está construindo resultados
               </h2>
             </div>
@@ -363,7 +385,7 @@ export default function HomePageClient() {
                   </blockquote>
                   <figcaption className="mt-6 space-y-1">
                     <p className="font-semibold text-foreground">{testimonial.author}</p>
-                    <p className="text-sm text-foreground/60">{testimonial.role}</p>
+                    <p className="text-sm text-foreground/80">{testimonial.role}</p>
                   </figcaption>
                 </figure>
               ))}
@@ -372,12 +394,17 @@ export default function HomePageClient() {
         </section>
 
         {user && (
-          <section className="relative px-4 py-20 sm:px-6 lg:px-8">
+          <section
+            className="relative px-4 py-20 sm:px-6 lg:px-8"
+            aria-labelledby="home-comunidade-heading"
+          >
             <div className="container mx-auto max-w-5xl space-y-2 text-center">
               <p className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-4 py-1 text-sm font-semibold text-accent">
                 Comunidade exclusiva
               </p>
-              <h2 className="text-3xl font-semibold text-foreground sm:text-4xl">Converse com quem também está no ENEM</h2>
+              <h2 id="home-comunidade-heading" className="text-3xl font-semibold text-foreground sm:text-4xl">
+                Converse com quem também está no ENEM
+              </h2>
               <p className="mx-auto max-w-3xl text-base text-foreground/70">
                 Participe dos fóruns privados para trocar estratégias de redação, revisar simulados em grupo e manter a
                 motivação. Nossa equipe modera todos os tópicos para evitar plágios e garantir um ambiente colaborativo.
@@ -406,11 +433,15 @@ export default function HomePageClient() {
           </section>
         )}
 
-        <section id="cta-final" className="relative px-4 pb-24 sm:px-6 lg:px-8">
+        <section
+          id="cta-final"
+          className="relative px-4 pb-24 sm:px-6 lg:px-8"
+          aria-labelledby="home-cta-heading"
+        >
           <div className="container mx-auto max-w-5xl">
             <div className="gradient-border cta-surface overflow-hidden rounded-[2.75rem] p-10 text-center shadow-2xl backdrop-blur">
               <div className="space-y-6">
-                <h2 className="text-3xl font-semibold text-foreground sm:text-4xl">
+                <h2 id="home-cta-heading" className="text-3xl font-semibold text-foreground sm:text-4xl">
                   Vamos conquistar a redação mil juntos?
                 </h2>
                 <p className="mx-auto max-w-2xl text-base text-foreground/70">

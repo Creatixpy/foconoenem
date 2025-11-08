@@ -30,7 +30,7 @@ export default function Footer() {
             <p className="text-base font-semibold text-foreground/80">
               💙 Criado por alunos, para alunos
             </p>
-            <p className="text-sm text-foreground/60">
+            <p className="text-sm text-foreground/80">
               © {new Date().getFullYear()} Foco no ENEM — Todos os direitos reservados
             </p>
           </div>
@@ -62,7 +62,7 @@ export default function Footer() {
             </Link>
           </div>
 
-          <p className="mt-6 text-xs text-foreground/50">
+          <p className="mt-6 text-xs text-foreground/75">
             Ferramenta de auxílio para estudantes · Não é um site oficial do ENEM ou INEP
           </p>
         </div>
