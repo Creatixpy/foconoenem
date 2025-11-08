@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { useAuth } from "./contexts/AuthContext";
 import AccountLinkButton from "./components/AccountLinkButton";
 
 type Highlight = {
@@ -130,6 +131,7 @@ export function generateMetadata() {
 }
 
 export default function Home() {
+  const { user } = useAuth();
   return (
     <main className="flex-grow">
       <section className="relative overflow-hidden px-4 pb-24 pt-20 sm:px-6 lg:px-8 lg:pt-28">
@@ -374,6 +376,41 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        {user && (
+          <section className="relative px-4 py-20 sm:px-6 lg:px-8">
+            <div className="container mx-auto max-w-5xl space-y-2 text-center">
+              <p className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-4 py-1 text-sm font-semibold text-accent">
+                Comunidade exclusiva
+              </p>
+              <h2 className="text-3xl font-semibold text-foreground sm:text-4xl">Converse com quem também está no ENEM</h2>
+              <p className="mx-auto max-w-3xl text-base text-foreground/70">
+                Participe dos fóruns privados para trocar estratégias de redação, revisar simulados em grupo e manter a
+                motivação. Nossa equipe modera todos os tópicos para evitar plágios e garantir um ambiente colaborativo.
+              </p>
+            </div>
+            <div className="mt-10 grid gap-6 md:grid-cols-2">
+              <div className="glass-card border border-border-color/60 bg-card-bg/80 p-6">
+                <h3 className="text-xl font-semibold text-foreground">Fóruns por tema</h3>
+                <p className="mt-2 text-sm text-foreground/70">
+                  Discuta repertórios, compartilhe repertórios confiáveis e receba feedback em tópicos moderados por quem
+                  entende do ENEM.
+                </p>
+              </div>
+              <div className="glass-card border border-border-color/60 bg-card-bg/80 p-6">
+                <h3 className="text-xl font-semibold text-foreground">Eventos da comunidade</h3>
+                <p className="mt-2 text-sm text-foreground/70">
+                  Encontros semanais com dicas de planejamento, desafios de redação e mentorias rápidas para manter o foco.
+                </p>
+              </div>
+            </div>
+            <div className="mt-8 flex justify-center">
+              <Link href="/conta" className="btn btn-primary">
+                Acessar fórum privado
+              </Link>
+            </div>
+          </section>
+        )}
 
         <section id="cta-final" className="relative px-4 pb-24 sm:px-6 lg:px-8">
           <div className="container mx-auto max-w-5xl">
