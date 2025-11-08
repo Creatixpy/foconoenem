@@ -5,6 +5,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.58.0?target
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const ALLOWED_ORIGINS = (Deno.env.get("COMMUNITY_ALLOWED_ORIGINS") ?? "").split(",").map((item) => item.trim()).filter(Boolean);
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   throw new Error("SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY precisam estar configuradas.");
@@ -45,24 +46,55 @@ const checkConditions = (context: AwardContext): Record<AchievementSlug, boolean
   mentor_comunitario: context.comment_count >= 5,
 });
 
-const jsonResponse = (payload: unknown, status = 200) =>
+const resolveOrigin = (origin: string | null) => {
+  if (!origin) {
+    return ALLOWED_ORIGINS[0] ?? "*";
+  }
+  if (ALLOWED_ORIGINS.length === 0 || ALLOWED_ORIGINS.includes("*") || ALLOWED_ORIGINS.includes(origin)) {
+    return origin;
+  }
+  return ALLOWED_ORIGINS[0];
+};
+
+const buildCorsHeaders = (origin: string | null) => {
+  const allowedOrigin = resolveOrigin(origin);
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "authorization, content-type",
+    "Access-Control-Max-Age": "86400",
+    "Vary": "Origin",
+  };
+};
+
+const jsonResponse = (payload: unknown, status = 200, origin: string | null = null) =>
   new Response(JSON.stringify(payload), {
     status,
     headers: {
       "content-type": "application/json",
       "cache-control": "no-store",
+      ...buildCorsHeaders(origin),
     },
   });
 
 Deno.serve(async (request: Request) => {
+  const origin = request.headers.get("origin");
+
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: buildCorsHeaders(origin),
+    });
+  }
+
   if (request.method !== "POST") {
-    return jsonResponse({ error: "method_not_allowed" }, 405);
+    return jsonResponse({ error: "method_not_allowed" }, 405, origin);
   }
 
   const authHeader = request.headers.get("Authorization") ?? request.headers.get("authorization") ?? "";
   const token = authHeader.replace("Bearer ", "").trim();
   if (!token) {
-    return jsonResponse({ error: "missing_token" }, 401);
+    return jsonResponse({ error: "missing_token" }, 401, origin);
   }
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
@@ -71,7 +103,7 @@ Deno.serve(async (request: Request) => {
 
   const { data: userResult, error: userError } = await supabase.auth.getUser(token);
   if (userError || !userResult?.user) {
-    return jsonResponse({ error: "invalid_token", details: userError?.message }, 401);
+    return jsonResponse({ error: "invalid_token", details: userError?.message }, 401, origin);
   }
 
   const userId = userResult.user.id;
@@ -86,7 +118,7 @@ Deno.serve(async (request: Request) => {
   ]);
 
   if (statsError || commentsError) {
-    return jsonResponse({ error: "statistics_error", details: statsError?.message ?? commentsError?.message }, 500);
+    return jsonResponse({ error: "statistics_error", details: statsError?.message ?? commentsError?.message }, 500, origin);
   }
 
   const context: AwardContext = {
@@ -102,7 +134,7 @@ Deno.serve(async (request: Request) => {
     .eq("user_id", userId);
 
   if (existingError) {
-    return jsonResponse({ error: "load_achievements_failed", details: existingError.message }, 500);
+    return jsonResponse({ error: "load_achievements_failed", details: existingError.message }, 500, origin);
   }
 
   const existingRows = (existingAchievements ?? []) as unknown as OwnedAchievementRow[];
@@ -123,7 +155,7 @@ Deno.serve(async (request: Request) => {
       .in("slug", targetSlugs);
 
     if (catalogError) {
-      return jsonResponse({ error: "catalog_error", details: catalogError.message }, 500);
+      return jsonResponse({ error: "catalog_error", details: catalogError.message }, 500, origin);
     }
 
     const catalogRows = (achievementRows ?? []) as unknown as AchievementRow[];
@@ -147,7 +179,7 @@ Deno.serve(async (request: Request) => {
       });
 
       if (insertError) {
-        return jsonResponse({ error: "award_error", details: insertError.message }, 500);
+        return jsonResponse({ error: "award_error", details: insertError.message }, 500, origin);
       }
     }
   }
@@ -159,7 +191,7 @@ Deno.serve(async (request: Request) => {
     .order("earned_at", { ascending: false });
 
   if (refreshError) {
-    return jsonResponse({ error: "refresh_error", details: refreshError.message }, 500);
+    return jsonResponse({ error: "refresh_error", details: refreshError.message }, 500, origin);
   }
 
   const freshRows = (freshAchievements ?? []) as unknown as UserAchievementRecord[];
@@ -167,5 +199,5 @@ Deno.serve(async (request: Request) => {
   return jsonResponse({
     achievements: freshRows,
     unlocked: targetSlugs,
-  });
+  }, 200, origin);
 });
