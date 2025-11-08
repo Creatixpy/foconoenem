@@ -48,7 +48,7 @@ export default function ContaPage() {
     if (!user) return null;
 
     const stats = await withTimeout(
-      getUserStatistics(user.id),
+      () => getUserStatistics(user.id),
       10000,
       "Tempo limite ao buscar estatísticas."
     );
@@ -71,12 +71,13 @@ export default function ContaPage() {
         await fetchLatestStatistics();
 
         const { data: essaysData, error: essaysError } = await withTimeout(
-          supabase
-            .from('essay_results')
-            .select('id, nota, created_at')
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: false })
-            .limit(10),
+          () =>
+            supabase
+              .from('essay_results')
+              .select('id, nota, created_at')
+              .eq('user_id', user.id)
+              .order('created_at', { ascending: false })
+              .limit(10),
           10000,
           'Tempo limite ao carregar redações.'
         );

@@ -1,5 +1,5 @@
 export function withTimeout<T>(
-  promise: Promise<T>,
+  task: () => Promise<T>,
   ms = 10000,
   timeoutMessage = 'Tempo limite de operação excedido'
 ): Promise<T> {
@@ -8,7 +8,7 @@ export function withTimeout<T>(
       reject(new Error(timeoutMessage));
     }, ms);
 
-    promise
+    task()
       .then((value) => {
         clearTimeout(timer);
         resolve(value);

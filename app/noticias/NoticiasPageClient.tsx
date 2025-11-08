@@ -35,7 +35,7 @@ export default function NoticiasPageClient() {
 
         if (pagina === 1) {
           const destaques = await withTimeout(
-            getNoticiasDestaque(),
+            () => getNoticiasDestaque(),
             10000,
             "Tempo limite ao buscar notícias em destaque."
           );
@@ -44,7 +44,7 @@ export default function NoticiasPageClient() {
 
         const offset = (pagina - 1) * limitePorPagina;
         const resultado = await withTimeout(
-          getNoticias(limitePorPagina, offset),
+          () => getNoticias(limitePorPagina, offset),
           10000,
           "Tempo limite ao buscar notícias."
         );
