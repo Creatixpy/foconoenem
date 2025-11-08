@@ -8,6 +8,7 @@ import CookieConsent from "./components/CookieConsent";
 import AdSenseLoader from "./components/AdSenseLoader";
 import Providers from "./providers";
 import StructuredData from "./structured-data";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const siteTitle = "Foco no ENEM - Plataforma de Simulados e Redações";
 const siteDescription =
@@ -87,6 +88,7 @@ export default function RootLayout({
           <CookieConsent />
           <StructuredData />
           <AdSenseLoader />
+          <SpeedInsights />
         </Providers>
       </body>
     </html>
