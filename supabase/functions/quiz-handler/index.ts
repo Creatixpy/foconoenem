@@ -270,9 +270,6 @@ async function recalculateUserStatistics(userId: string | null) {
 }
 
 type GenerationDiagnostics = Record<Question["discipline"], string>;
-
-const MAX_ATTEMPTS_PER_DISCIPLINE = 2;
-
 async function requestQuestionsForDiscipline(
   provider: GroqProvider,
   discipline: Question["discipline"]
@@ -402,7 +399,7 @@ async function generateQuestionsWithDiagnostics(
 
   const providerPool: GroqProvider[] = [primaryProvider];
   const fallbackProvider = createGroqProvider(
-    GROQ_FALLBACK_API_KEY || null,
+    GROQ_FALLBACK_API_KEY ? GROQ_FALLBACK_API_KEY : null,
     GROQ_FALLBACK_MODEL,
     "fallback"
   );
