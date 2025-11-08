@@ -9,6 +9,7 @@ import AdSenseLoader from "./components/AdSenseLoader";
 import Providers from "./providers";
 import StructuredData from "./structured-data";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/next";
 
 const siteTitle = "Foco no ENEM - Plataforma de Simulados e Redações";
 const siteDescription =
@@ -78,10 +79,15 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <a href="#conteudo-principal" className="skip-link">
+          Pular para o conteúdo principal
+        </a>
         <Providers>
           <div className="flex min-h-screen flex-col bg-page-gradient text-foreground">
             <Header />
-            <div className="flex-1">{children}</div>
+            <div id="conteudo-principal" className="flex-1">
+              {children}
+            </div>
             <Footer />
           </div>
           <ThemeToggle />
@@ -89,6 +95,7 @@ export default function RootLayout({
           <StructuredData />
           <AdSenseLoader />
           <SpeedInsights />
+          <Analytics />
         </Providers>
       </body>
     </html>
