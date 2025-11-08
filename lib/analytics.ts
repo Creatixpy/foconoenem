@@ -27,16 +27,19 @@ export async function trackEvent(
   eventType: EventType,
   metadata?: EventMetadata,
   userIp?: string,
-  userAgent?: string
+  userAgent?: string,
+  userId?: string | null
 ): Promise<void> {
   try {
+    const mergedMetadata = userId ? { ...(metadata ?? {}), user_id: userId } : metadata;
     const { error } = await supabase
       .from('analytics_events')
       .insert({
         event_type: eventType,
-        metadata: metadata || {},
+        metadata: mergedMetadata || {},
         user_ip: userIp,
-        user_agent: userAgent
+        user_agent: userAgent,
+        user_id: userId ?? null,
       });
     
     if (error) {
