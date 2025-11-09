@@ -36,7 +36,7 @@ ADMIN_ALLOWED_EMAILS=email1@example.com,email2@example.com
 # Opcional: segredo para execuções automáticas (cron jobs)
 ADMIN_CRON_SECRET=segredo-unico-para-requests-automaticas
 
-# Edge Functions (configurar nas variáveis do Supabase, NÃO no cliente)
+# Supabase service role (usado pelas rotas internas do Next.js)
 SUPABASE_SERVICE_ROLE_KEY=chave-service-role
 ```
 
@@ -126,14 +126,15 @@ Para mais detalhes sobre a estrutura e melhorias implementadas, consulte [MELHOR
 - Métricas de uso e performance
 - Suporte a decisões baseadas em dados
 
-### Edge Functions Ativas
-- `generate-theme`: gera e cacheia temas de redação com a Groq API.
-- `correct-essay`: corrige redações, grava resultados e expõe consulta por ID.
-- `quiz-handler`: cria simulados por disciplina e salva desempenho com atualização de estatísticas.
-- `update-highlights`, `remove-highlight`: administração dos destaques de notícias.
-- `maintenance-cleanup`: rotina de limpeza de caches, rate limits e analytics.
+### Serviços internos
+- `/api/gerar-tema`: gera e cacheia temas de redação usando a Groq API.
+- `/api/corrigir` e `/api/resultados/[id]`: corrigem redações, salvam resultados e expõem consultas por ID.
+- `/api/questoes`: cria simulados equilibrados por disciplina e registra o desempenho do usuário.
+- `/api/atualizarDestaques` e `/api/destaques/remover`: administração completa dos destaques de notícias (suporta cron jobs e painel web).
+- `/api/conquistas`: sincroniza conquistas da comunidade e atualiza a gamificação.
+- `/api/admin/manutencao`: rotina de limpeza de caches, rate limits e eventos antigos.
 
-Todas as rotas e funções que dependem da IA utilizam um mecanismo automático de fallback: caso o provedor principal da Groq atinja limite de requisições, o sistema tenta novamente com a chave/modelo secundário antes de retornar erro para o usuário. Configure as variáveis `GROQ_FALLBACK_API_KEY` e `GROQ_FALLBACK_MODEL` para ativar esse comportamento.
+Todas as rotas que dependem da Groq utilizam fallback automático: caso o provedor principal atinja limite de requisições, o sistema tenta novamente com a chave/modelo secundário antes de retornar erro para o usuário. Configure as variáveis `GROQ_FALLBACK_API_KEY` e `GROQ_FALLBACK_MODEL` para ativar esse comportamento.
 
 ## Aprender Mais
 

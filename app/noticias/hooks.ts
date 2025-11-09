@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Noticia } from "@/types";
-import { getNoticias, getNoticiasDestaque } from "@/lib/supabase";
 import { withTimeout } from "@/lib/with-timeout";
 import { isAbortError } from "@/lib/errors";
 
@@ -56,7 +55,7 @@ export function useNoticiasFeed(page: number, limit: number): FeedState {
 
     try {
       const noticias = await withTimeout(
-        () => getNoticias(limit, offset),
+        () => fetchNoticiasFromApi(limit, offset),
         DEFAULT_TIMEOUT,
         "Tempo limite ao buscar notícias."
       );
@@ -148,7 +147,7 @@ export function useNoticiasHighlights(enabled: boolean): HighlightState {
       inFlightRef.current = true;
       try {
         const noticias = await withTimeout(
-          () => getNoticiasDestaque(),
+          () => fetchNoticiasDestaqueFromApi(),
           DEFAULT_TIMEOUT,
           "Tempo limite ao buscar notícias em destaque."
         );
@@ -182,4 +181,34 @@ export function useNoticiasHighlights(enabled: boolean): HighlightState {
   }, [enabled]);
 
   return state;
+}
+
+async function fetchNoticiasFromApi(limit: number, offset: number): Promise<Noticia[]> {
+  const params = new URLSearchParams({
+    limit: limit.toString(),
+    offset: offset.toString(),
+  });
+
+  const response = await fetch(`/api/noticias?${params.toString()}`, { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(`API de notícias respondeu ${response.status}`);
+  }
+
+  const payload = (await response.json()) as { noticias?: Noticia[] };
+  return payload.noticias ?? [];
+}
+
+async function fetchNoticiasDestaqueFromApi(limit = 5): Promise<Noticia[]> {
+  const params = new URLSearchParams({
+    limit: limit.toString(),
+    destaque: "true",
+  });
+
+  const response = await fetch(`/api/noticias?${params.toString()}`, { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(`API de destaques respondeu ${response.status}`);
+  }
+
+  const payload = (await response.json()) as { noticias?: Noticia[] };
+  return payload.noticias ?? [];
 }

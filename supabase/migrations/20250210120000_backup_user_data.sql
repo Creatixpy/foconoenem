@@ -8,84 +8,165 @@ create table backup_user_data.auth_users as
 select *
   from auth.users;
 
-drop table if exists backup_user_data.user_profiles cascade;
-create table backup_user_data.user_profiles as
-select *
-  from public.user_profiles;
+do $$
+begin
+  if exists (
+    select 1 from information_schema.tables
+    where table_schema = 'public' and table_name = 'user_profiles'
+  ) then
+    drop table if exists backup_user_data.user_profiles cascade;
+    create table backup_user_data.user_profiles as
+    select *
+      from public.user_profiles;
+  end if;
+end $$;
 
-drop table if exists backup_user_data.user_statistics cascade;
-create table backup_user_data.user_statistics as
-select *
-  from public.user_statistics;
+do $$
+begin
+  if exists (
+    select 1 from information_schema.tables
+    where table_schema = 'public' and table_name = 'user_statistics'
+  ) then
+    drop table if exists backup_user_data.user_statistics cascade;
+    create table backup_user_data.user_statistics as
+    select * from public.user_statistics;
+  end if;
+end $$;
 
-drop table if exists backup_user_data.user_goals cascade;
-create table backup_user_data.user_goals as
-select *
-  from public.user_goals;
+do $$
+begin
+  if exists (
+    select 1 from information_schema.tables
+    where table_schema = 'public' and table_name = 'user_goals'
+  ) then
+    drop table if exists backup_user_data.user_goals cascade;
+    create table backup_user_data.user_goals as
+    select * from public.user_goals;
+  end if;
+end $$;
 
-drop table if exists backup_user_data.achievements cascade;
-create table backup_user_data.achievements as
-select *
-  from public.achievements;
+do $$
+begin
+  if exists (
+    select 1 from information_schema.tables
+    where table_schema = 'public' and table_name = 'achievements'
+  ) then
+    drop table if exists backup_user_data.achievements cascade;
+    create table backup_user_data.achievements as
+    select * from public.achievements;
+  end if;
+end $$;
 
-drop table if exists backup_user_data.user_achievements cascade;
-create table backup_user_data.user_achievements as
-select *
-  from public.user_achievements;
+do $$
+begin
+  if exists (
+    select 1 from information_schema.tables
+    where table_schema = 'public' and table_name = 'user_achievements'
+  ) then
+    drop table if exists backup_user_data.user_achievements cascade;
+    create table backup_user_data.user_achievements as
+    select * from public.user_achievements;
+  end if;
+end $$;
 
-drop table if exists backup_user_data.essay_results cascade;
-create table backup_user_data.essay_results as
-select *
-  from public.essay_results;
+do $$
+begin
+  if exists (
+    select 1 from information_schema.tables
+    where table_schema = 'public' and table_name = 'essay_results'
+  ) then
+    drop table if exists backup_user_data.essay_results cascade;
+    create table backup_user_data.essay_results as
+    select * from public.essay_results;
+  end if;
+end $$;
 
-drop table if exists backup_user_data.quiz_results cascade;
-create table backup_user_data.quiz_results as
-select *
-  from public.quiz_results;
+do $$
+begin
+  if exists (
+    select 1 from information_schema.tables
+    where table_schema = 'public' and table_name = 'quiz_results'
+  ) then
+    drop table if exists backup_user_data.quiz_results cascade;
+    create table backup_user_data.quiz_results as
+    select * from public.quiz_results;
+  end if;
+end $$;
 
-drop table if exists backup_user_data.noticias cascade;
-create table backup_user_data.noticias as
-select *
-  from public.noticias;
+do $$
+begin
+  if exists (
+    select 1 from information_schema.tables
+    where table_schema = 'public' and table_name = 'noticias'
+  ) then
+    drop table if exists backup_user_data.noticias cascade;
+    create table backup_user_data.noticias as
+    select * from public.noticias;
+  end if;
+end $$;
 
-drop table if exists backup_user_data.community_topics cascade;
-create table backup_user_data.community_topics as
-select *
-  from public.community_topics;
+do $$
+begin
+  if exists (select 1 from information_schema.tables where table_schema = 'public' and table_name = 'community_topics') then
+    drop table if exists backup_user_data.community_topics cascade;
+    create table backup_user_data.community_topics as select * from public.community_topics;
+  end if;
+end $$;
 
-drop table if exists backup_user_data.community_posts cascade;
-create table backup_user_data.community_posts as
-select *
-  from public.community_posts;
+do $$
+begin
+  if exists (select 1 from information_schema.tables where table_schema = 'public' and table_name = 'community_posts') then
+    drop table if exists backup_user_data.community_posts cascade;
+    create table backup_user_data.community_posts as select * from public.community_posts;
+  end if;
+end $$;
 
-drop table if exists backup_user_data.community_comments cascade;
-create table backup_user_data.community_comments as
-select *
-  from public.community_comments;
+do $$
+begin
+  if exists (select 1 from information_schema.tables where table_schema = 'public' and table_name = 'community_comments') then
+    drop table if exists backup_user_data.community_comments cascade;
+    create table backup_user_data.community_comments as select * from public.community_comments;
+  end if;
+end $$;
 
-drop table if exists backup_user_data.community_post_likes cascade;
-create table backup_user_data.community_post_likes as
-select *
-  from public.community_post_likes;
+do $$
+begin
+  if exists (select 1 from information_schema.tables where table_schema = 'public' and table_name = 'community_post_likes') then
+    drop table if exists backup_user_data.community_post_likes cascade;
+    create table backup_user_data.community_post_likes as select * from public.community_post_likes;
+  end if;
+end $$;
 
-drop table if exists backup_user_data.analytics_events cascade;
-create table backup_user_data.analytics_events as
-select *
-  from public.analytics_events;
+do $$
+begin
+  if exists (select 1 from information_schema.tables where table_schema = 'public' and table_name = 'analytics_events') then
+    drop table if exists backup_user_data.analytics_events cascade;
+    create table backup_user_data.analytics_events as select * from public.analytics_events;
+  end if;
+end $$;
 
-drop table if exists backup_user_data.configuracoes cascade;
-create table backup_user_data.configuracoes as
-select *
-  from public.configuracoes;
+do $$
+begin
+  if exists (select 1 from information_schema.tables where table_schema = 'public' and table_name = 'configuracoes') then
+    drop table if exists backup_user_data.configuracoes cascade;
+    create table backup_user_data.configuracoes as select * from public.configuracoes;
+  end if;
+end $$;
 
-drop table if exists backup_user_data.cached_themes cascade;
-create table backup_user_data.cached_themes as
-select *
-  from public.cached_themes;
+do $$
+begin
+  if exists (select 1 from information_schema.tables where table_schema = 'public' and table_name = 'cached_themes') then
+    drop table if exists backup_user_data.cached_themes cascade;
+    create table backup_user_data.cached_themes as select * from public.cached_themes;
+  end if;
+end $$;
 
-drop table if exists backup_user_data.rate_limits cascade;
-create table backup_user_data.rate_limits as
-select *
-  from public.rate_limits;
+do $$
+begin
+  if exists (select 1 from information_schema.tables where table_schema = 'public' and table_name = 'rate_limits') then
+    drop table if exists backup_user_data.rate_limits cascade;
+    create table backup_user_data.rate_limits as select * from public.rate_limits;
+  end if;
+end $$;
 
 commit;

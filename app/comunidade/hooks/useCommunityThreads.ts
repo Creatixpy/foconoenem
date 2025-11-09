@@ -1,8 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { RealtimeChannel } from "@supabase/supabase-js";
-import { supabase, withSupabaseTimeout } from "@/lib/supabase";
 import { isAbortError } from "@/lib/errors";
 
 export type CommunityPost = {
@@ -41,7 +39,8 @@ export function useCommunityThreads(
   const [error, setError] = useState<string | null>(null);
   const [postLikes, setPostLikes] = useState<Record<string, { count: number; liked: boolean }>>({});
   const [commentCount, setCommentCount] = useState(0);
-  const channelRef = useRef<RealtimeChannel | null>(null);
+  const eventSourceRef = useRef<EventSource | null>(null);
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isFetchingRef = useRef(false);
   const onThreadsLoadedRef = useRef<UseCommunityThreadsOptions['onThreadsLoaded']>(options?.onThreadsLoaded);
   const onPostInsertedRef = useRef<UseCommunityThreadsOptions['onPostInserted']>(options?.onPostInserted);
@@ -68,55 +67,9 @@ export function useCommunityThreads(
       setLoading(true);
       setError(null);
 
-      const { data: postsData, error: postsError } = await withSupabaseTimeout(async (signal) => {
-        return await supabase
-          .from("community_posts")
-          .select("*")
-          .eq("topic_id", topicId)
-          .order("created_at", { ascending: false })
-          .limit(25)
-          .abortSignal(signal);
-      });
-
-      if (postsError) {
-        throw postsError;
-      }
-
-      const postsList = postsData ?? [];
-      const postIds = postsList.map((post) => post.id);
-
-      let comments: CommunityComment[] = [];
-      if (postIds.length > 0) {
-        const { data: commentsData, error: commentsError } = await withSupabaseTimeout(async (signal) => {
-          return await supabase
-            .from("community_comments")
-            .select("*")
-            .in("post_id", postIds)
-            .order("created_at", { ascending: true })
-            .abortSignal(signal);
-        });
-
-        if (commentsError) {
-          throw commentsError;
-        }
-
-        comments = commentsData ?? [];
-      }
-
-      const commentsByPost = comments.reduce<Record<string, CommunityComment[]>>((accumulator, comment) => {
-        accumulator[comment.post_id] = accumulator[comment.post_id]
-          ? [...accumulator[comment.post_id], comment]
-          : [comment];
-        return accumulator;
-      }, {});
-
-      const normalizedThreads = postsList.map((post) => ({
-        ...post,
-        comments: commentsByPost[post.id] ?? [],
-      }));
-
-      setThreads(normalizedThreads);
-      onThreadsLoadedRef.current?.(normalizedThreads);
+      const fetchedThreads = await fetchCommunityThreads(topicId, 25);
+      setThreads(fetchedThreads);
+      onThreadsLoadedRef.current?.(fetchedThreads);
     } catch (loadError) {
       if (isAbortError(loadError)) {
         console.warn("Requisição abortada ao carregar posts, aguardando nova tentativa.", loadError);
@@ -165,68 +118,109 @@ export function useCommunityThreads(
   }, [loadThreads]);
 
   useEffect(() => {
-    if (!topicId) {
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-      }
+    if (typeof window === "undefined") {
       return;
     }
 
-    const channel = supabase
-      .channel(`community-feed-${topicId}`)
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "community_posts" },
-        (payload) => {
-          const newPost = payload.new as CommunityPost;
-          if (newPost.topic_id !== topicId) return;
+    let disposed = false;
 
-          setThreads((previous) => {
-            if (previous.some((thread) => thread.id === newPost.id)) {
-              return previous;
-            }
-            return [{ ...newPost, comments: [] }, ...previous];
-          });
+    const closeEventSource = () => {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
+    };
 
-          setPostLikes((previous) => ({
-            ...previous,
-            [newPost.id]: previous[newPost.id] ?? { count: 0, liked: false },
-          }));
+    const handlePostInserted = (newPost: CommunityPost) => {
+      if (newPost.topic_id !== topicId) {
+        return;
+      }
 
-          onPostInsertedRef.current?.(newPost);
+      setThreads((previous) => {
+        if (previous.some((thread) => thread.id === newPost.id)) {
+          return previous;
         }
-      )
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "community_comments" },
-        (payload) => {
-          const newComment = payload.new as CommunityComment;
-          setThreads((previous) =>
-            previous.map((thread) => {
-              if (thread.id === newComment.post_id) {
-                return { ...thread, comments: [...thread.comments, newComment] };
-              }
-              return thread;
-            })
-          );
+        return [{ ...newPost, comments: [] }, ...previous];
+      });
 
-          if (newComment.user_id === userId) {
-            setCommentCount((prev) => prev + 1);
+      setPostLikes((previous) => ({
+        ...previous,
+        [newPost.id]: previous[newPost.id] ?? { count: 0, liked: false },
+      }));
+
+      onPostInsertedRef.current?.(newPost);
+    };
+
+    const handleCommentInserted = (newComment: CommunityComment) => {
+      setThreads((previous) =>
+        previous.map((thread) => {
+          if (thread.id === newComment.post_id) {
+            return { ...thread, comments: [...thread.comments, newComment] };
           }
+          return thread;
+        })
+      );
 
-          onCommentInsertedRef.current?.(newComment);
+      if (newComment.user_id === userId) {
+        setCommentCount((prev) => prev + 1);
+      }
+
+      onCommentInsertedRef.current?.(newComment);
+    };
+
+    const scheduleReconnect = () => {
+      if (disposed || reconnectTimeoutRef.current) {
+        return;
+      }
+      reconnectTimeoutRef.current = setTimeout(() => {
+        reconnectTimeoutRef.current = null;
+        connect();
+      }, 3000);
+    };
+
+    const connect = () => {
+      if (!topicId) {
+        closeEventSource();
+        return;
+      }
+
+      const params = new URLSearchParams({ topicId });
+      closeEventSource();
+      const source = new EventSource(`/api/realtime-proxy?${params.toString()}`);
+      eventSourceRef.current = source;
+
+      source.addEventListener("post_insert", (event) => {
+        const newPost = parseSseData<CommunityPost>(event);
+        if (newPost) {
+          handlePostInserted(newPost);
         }
-      )
-      .subscribe();
+      });
 
-    channelRef.current = channel;
+      source.addEventListener("comment_insert", (event) => {
+        const newComment = parseSseData<CommunityComment>(event);
+        if (newComment) {
+          handleCommentInserted(newComment);
+        }
+      });
+
+      const handleFailure = () => {
+        closeEventSource();
+        scheduleReconnect();
+      };
+
+      source.addEventListener("proxy_error", handleFailure);
+      source.onerror = handleFailure;
+    };
+
+    connect();
 
     return () => {
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
+      disposed = true;
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
       }
+      closeEventSource();
     };
   }, [topicId, userId]);
 
@@ -241,4 +235,31 @@ export function useCommunityThreads(
     commentCount,
     setCommentCount,
   };
+}
+
+function parseSseData<T>(event: Event): T | null {
+  const message = event as MessageEvent<string>;
+  try {
+    return JSON.parse(message.data) as T;
+  } catch (parseError) {
+    console.error("Falha ao interpretar evento SSE", parseError);
+    return null;
+  }
+}
+
+async function fetchCommunityThreads(topicId: string, limit: number): Promise<CommunityThread[]> {
+  const params = new URLSearchParams({
+    topicId,
+    limit: limit.toString(),
+  });
+
+  const response = await fetch(`/api/comunidade/threads?${params.toString()}`, {
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    throw new Error(`API de threads respondeu ${response.status}`);
+  }
+
+  const payload = (await response.json()) as { threads?: CommunityThread[] };
+  return payload.threads ?? [];
 }

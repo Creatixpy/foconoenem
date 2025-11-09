@@ -12,7 +12,7 @@ import {
   type UserStatistics,
   updateCommunitySettings,
 } from "@/lib/auth";
-import { supabase, withSupabaseTimeout } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 import { useAuth } from "../contexts/AuthContext";
 import {
   useCommunityThreads,
@@ -75,12 +75,6 @@ const COMMUNITY_TERMS_SUMMARY =
   "O código de conduta exige que cada participante confirme ter 16 anos ou mais, respeite a LGPD, evite autopromoção ou discurso de ódio e aceita que conteúdos fora de educação sejam removidos automaticamente.";
 
 const COMMUNITY_BADGE_ORDER = ["nota_mil", "primeira_redacao", "maratona_questoes", "mentor_comunitario"];
-
-const profileFields =
-  "user_id,nome_completo,avatar_url,community_tagline,community_show_statistics";
-
-const commentCountSelectOptions = { head: true, count: "exact" as const };
-const likeSelectOptions = "post_id,user_id";
 
 const COMMUNITY_TERMS_LINKS = [
   { href: "/termos", label: "Termos de uso" },
@@ -165,6 +159,57 @@ export default function CommunityPageClient() {
   } = useCommunityThreads(selectedTopicId, user?.id ?? null);
   const combinedPostsError = postsError ?? threadsError;
 
+  const fetchJson = useCallback(async (input: RequestInfo | URL, init: RequestInit = {}) => {
+    const response = await fetch(input, { cache: "no-store", ...init });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) {
+      const message =
+        (payload && typeof payload === "object" && "error" in payload
+          ? (payload.error as string | undefined)
+          : undefined) ?? "Falha ao consultar os dados.";
+      throw new Error(message);
+    }
+    return payload ?? {};
+  }, []);
+
+  const getAccessToken = useCallback(async () => {
+    const { data } = await supabase.auth.getSession();
+    return data.session?.access_token ?? null;
+  }, []);
+
+  const fetchAuthorizedJson = useCallback(
+    async (input: string, init: RequestInit = {}) => {
+      const token = await getAccessToken();
+      if (!token) {
+        throw new Error("Sua sessão expirou. Faça login novamente.");
+      }
+
+      const headers = new Headers(init.headers ?? {});
+      headers.set("Authorization", `Bearer ${token}`);
+      if (init.body && !headers.has("Content-Type")) {
+        headers.set("Content-Type", "application/json");
+      }
+
+      const response = await fetch(input, {
+        cache: "no-store",
+        ...init,
+        headers,
+      });
+
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        const message =
+          (payload && typeof payload === "object" && "error" in payload
+            ? (payload.error as string | undefined)
+            : undefined) ?? "Falha ao processar a ação.";
+        throw new Error(message);
+      }
+
+      return payload ?? {};
+    },
+    [getAccessToken]
+  );
+
   useEffect(() => {
     if (!selectedTopicId && topics.length > 0) {
       setSelectedTopicId(topics[0].id);
@@ -194,84 +239,75 @@ export default function CommunityPageClient() {
     setAchievementCache((previous) => ({ ...previous, [user.id]: userBadges }));
   }, [user, userBadges]);
 
-  const hydrateProfiles = useCallback(async (userIds: string[]) => {
-    if (userIds.length === 0) return;
-    try {
-      const { data, error } = await withSupabaseTimeout(async (signal) => {
-        const response = await supabase
-          .from("user_profiles")
-          .select(profileFields)
-          .in("user_id", userIds)
-          .abortSignal(signal);
-
-        return response;
-      });
-
-      if (error) throw error;
-      if (!data) return;
-
-      setProfileCache((previous) => {
-        const next = { ...previous };
-        data.forEach((item) => {
-          next[item.user_id] = item;
+  const hydrateProfiles = useCallback(
+    async (userIds: string[]) => {
+      if (userIds.length === 0) return;
+      try {
+        const payload = await fetchJson("/api/comunidade/profiles", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userIds }),
         });
-        return next;
-      });
-    } catch (error) {
-      console.error("Erro ao buscar perfis:", error);
-    }
-  }, []);
 
-  const hydrateAchievements = useCallback(async (userIds: string[]) => {
-    if (userIds.length === 0) return;
-    try {
-      const { data, error } = await withSupabaseTimeout(async (signal) => {
-        const response = await supabase
-          .from("user_achievements")
-          .select("user_id,id,achievement_id,earned_at,metadata,achievement:achievements(*)")
-          .in("user_id", userIds)
-          .abortSignal(signal);
+        const profiles = Array.isArray(payload.profiles) ? payload.profiles : [];
 
-        return response;
-      });
+        setProfileCache((previous) => {
+          const next = { ...previous };
+          profiles.forEach((item: ProfilePreview) => {
+            next[item.user_id] = item;
+          });
+          return next;
+        });
+      } catch (error) {
+        console.error("Erro ao buscar perfis:", error);
+      }
+    },
+    [fetchJson]
+  );
 
-      if (error) throw error;
-      if (!data) return;
+  const hydrateAchievements = useCallback(
+    async (userIds: string[]) => {
+      if (userIds.length === 0) return;
+      try {
+        const payload = await fetchJson("/api/comunidade/achievements", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userIds }),
+        });
 
-      const grouped = data.reduce<Record<string, UserAchievement[]>>((accumulator, item) => {
-        const list = accumulator[item.user_id] ?? [];
-        const typedItem = item as unknown as UserAchievement;
-        list.push(typedItem);
-        accumulator[item.user_id] = list;
-        return accumulator;
-      }, {});
+        const entries: UserAchievement[] = Array.isArray(payload.achievements)
+          ? (payload.achievements as UserAchievement[])
+          : [];
 
-      setAchievementCache((previous) => ({ ...previous, ...grouped }));
-    } catch (error) {
-      console.error("Erro ao buscar badges:", error);
-    }
-  }, []);
+        const grouped = entries.reduce((accumulator, typedItem) => {
+          const list = accumulator[typedItem.user_id] ?? [];
+          list.push(typedItem);
+          accumulator[typedItem.user_id] = list;
+          return accumulator;
+        }, {} as Record<string, UserAchievement[]>);
+
+        setAchievementCache((previous) => ({ ...previous, ...grouped }));
+      } catch (error) {
+        console.error("Erro ao buscar badges:", error);
+      }
+    },
+    [fetchJson]
+  );
 
   const hydrateLikes = useCallback(
     async (postIds: string[]) => {
       if (postIds.length === 0) return;
       try {
-        const { data, error } = await withSupabaseTimeout(async (signal) => {
-          const response = await supabase
-            .from("community_post_likes")
-            .select(likeSelectOptions)
-            .in("post_id", postIds)
-            .abortSignal(signal);
-
-          return response;
+        const payload = await fetchJson("/api/comunidade/likes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ postIds }),
         });
 
-        if (error) {
-          throw error;
-        }
+        const entries = Array.isArray(payload.likes) ? payload.likes : [];
 
         const map: Record<string, { count: number; liked: boolean }> = {};
-        (data ?? []).forEach((like) => {
+        entries.forEach((like: { post_id: string; user_id: string }) => {
           map[like.post_id] = map[like.post_id] ?? { count: 0, liked: false };
           map[like.post_id].count += 1;
           if (like.user_id === user?.id) {
@@ -290,7 +326,7 @@ export default function CommunityPageClient() {
         console.error("Erro ao carregar curtidas:", error);
       }
     },
-    [setPostLikes, user?.id]
+    [fetchJson, setPostLikes, user?.id]
   );
 
   useEffect(() => {
@@ -358,22 +394,12 @@ export default function CommunityPageClient() {
   const loadCommentCount = useCallback(async () => {
     if (!user) return;
     try {
-      const { count, error } = await withSupabaseTimeout(async (signal) => {
-        const response = await supabase
-          .from("community_comments")
-          .select("*", commentCountSelectOptions)
-          .eq("user_id", user.id)
-          .abortSignal(signal);
-
-        return response;
-      });
-
-      if (error) throw error;
-      setCommentCount(count ?? 0);
+      const payload = await fetchAuthorizedJson("/api/comunidade/comments/count");
+      setCommentCount(typeof payload.count === "number" ? payload.count : 0);
     } catch (error) {
       console.error("Erro ao contar comentários:", error);
     }
-  }, [setCommentCount, user]);
+  }, [fetchAuthorizedJson, setCommentCount, user]);
 
   const loadUserBadges = useCallback(async () => {
     if (!user) return;
@@ -385,23 +411,35 @@ export default function CommunityPageClient() {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase.functions.invoke<AwardResponse>("award-achievements", {
-        body: {},
-      });
-
-      if (error) {
-        throw error;
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) {
+        return;
       }
 
-      if (data?.achievements) {
-        setUserBadges(data.achievements);
+      const response = await fetch('/api/conquistas', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const payload = (await response.json().catch(() => null)) as AwardResponse | { error?: string } | null;
+
+      if (!response.ok) {
+        const errorMessage = payload && 'error' in payload ? payload.error : 'Falha ao atualizar conquistas.';
+        throw new Error(errorMessage ?? 'Falha ao atualizar conquistas.');
+      }
+
+      if (payload && 'achievements' in payload && payload.achievements) {
+        setUserBadges(payload.achievements);
         setAchievementCache((previous) => ({
           ...previous,
-          [user.id]: data.achievements,
+          [user.id]: payload.achievements,
         }));
       }
     } catch (error) {
-      console.error("Erro ao sincronizar conquistas:", error);
+      console.error('Erro ao sincronizar conquistas:', error);
     }
   }, [user]);
 
@@ -437,19 +475,11 @@ export default function CommunityPageClient() {
 
     try {
       setDeletingPostId(postId);
-      const { error } = await withSupabaseTimeout(async (signal) => {
-        const response = await supabase
-          .from("community_posts")
-          .delete()
-          .eq("id", postId)
-          .eq("user_id", user.id)
-          .abortSignal(signal);
 
-        return response;
+      await fetchAuthorizedJson(`/api/comunidade/posts/${postId}`, {
+        method: "DELETE",
       });
-      if (error) {
-        throw error;
-      }
+
       setThreads((previous) => previous.filter((thread) => thread.id !== postId));
     } catch (error) {
       console.error("Erro ao remover post:", error);
@@ -474,31 +504,19 @@ export default function CommunityPageClient() {
       setCreatingPost(true);
       setPostsError(null);
 
-      const { data, error } = await withSupabaseTimeout(async (signal) => {
-        const response = await supabase
-          .from("community_posts")
-          .insert({
-            title: trimmedTitle,
-            content: trimmedContent,
-            topic_id: selectedTopicId,
-            user_id: user.id,
-          })
-          .select()
-          .single()
-          .abortSignal(signal);
-
-        return response;
+      const payload = await fetchAuthorizedJson("/api/comunidade/posts", {
+        method: "POST",
+        body: JSON.stringify({
+          title: trimmedTitle,
+          content: trimmedContent,
+          topicId: selectedTopicId,
+        }),
       });
 
-      if (error) {
-        throw error;
-      }
+      const createdPost = payload.post as CommunityPost | undefined;
 
-      if (data) {
-        const newThread: CommunityThread = {
-          ...(data as CommunityPost),
-          comments: [],
-        };
+      if (createdPost) {
+        const newThread: CommunityThread = { ...createdPost, comments: [] };
         setThreads((previous) => [newThread, ...previous]);
       }
 
@@ -534,19 +552,11 @@ export default function CommunityPageClient() {
 
     try {
       setCommentDeleting((previous) => ({ ...previous, [commentId]: true }));
-      const { error } = await withSupabaseTimeout(async (signal) => {
-        const response = await supabase
-          .from("community_comments")
-          .delete()
-          .eq("id", commentId)
-          .eq("user_id", user.id)
-          .abortSignal(signal);
 
-        return response;
+      await fetchAuthorizedJson(`/api/comunidade/comments/${commentId}`, {
+        method: "DELETE",
       });
-      if (error) {
-        throw error;
-      }
+
       setThreads((previous) =>
         previous.map((thread) => {
           if (thread.id === postId) {
@@ -582,27 +592,17 @@ export default function CommunityPageClient() {
       setCommentLoading((previous) => ({ ...previous, [postId]: true }));
       setPostsError(null);
 
-      const { data, error } = await withSupabaseTimeout(async (signal) => {
-        const response = await supabase
-          .from("community_comments")
-          .insert({
-            content: rawContent,
-            post_id: postId,
-            user_id: user.id,
-          })
-          .select()
-          .single()
-          .abortSignal(signal);
-
-        return response;
+      const payload = await fetchAuthorizedJson("/api/comunidade/comments", {
+        method: "POST",
+        body: JSON.stringify({
+          content: rawContent,
+          postId,
+        }),
       });
 
-      if (error) {
-        throw error;
-      }
+      const insertedComment = payload.comment as CommunityComment | undefined;
 
-      if (data) {
-        const insertedComment = data as CommunityComment;
+      if (insertedComment) {
         setThreads((previous) =>
           previous.map((thread) => {
             if (thread.id === postId) {
@@ -632,49 +632,22 @@ export default function CommunityPageClient() {
 
     setLikeLoading((previous) => ({ ...previous, [postId]: true }));
     const current = postLikes[postId] ?? { count: 0, liked: false };
-    const liked = current.liked;
 
     try {
-      if (liked) {
-        const { error } = await withSupabaseTimeout(async (signal) => {
-          const response = await supabase
-            .from("community_post_likes")
-            .delete()
-            .eq("post_id", postId)
-            .eq("user_id", user.id)
-            .abortSignal(signal);
+      const endpoint = `/api/comunidade/posts/${postId}/likes`;
+      const payload = current.liked
+        ? await fetchAuthorizedJson(endpoint, { method: "DELETE" })
+        : await fetchAuthorizedJson(endpoint, { method: "POST" });
 
-          return response;
-        });
-        if (error) throw error;
-        setPostLikes((previous) => ({
-          ...previous,
-          [postId]: {
-            count: Math.max(0, current.count - 1),
-            liked: false,
-          },
-        }));
-      } else {
-        const { error } = await withSupabaseTimeout(async (signal) => {
-          const response = await supabase
-            .from("community_post_likes")
-            .insert({
-              post_id: postId,
-              user_id: user.id,
-            })
-            .abortSignal(signal);
+      const nextState = {
+        count: typeof payload.count === "number" ? payload.count : current.count,
+        liked: typeof payload.liked === "boolean" ? payload.liked : !current.liked,
+      };
 
-          return response;
-        });
-        if (error) throw error;
-        setPostLikes((previous) => ({
-          ...previous,
-          [postId]: {
-            count: current.count + 1,
-            liked: true,
-          },
-        }));
-      }
+      setPostLikes((previous) => ({
+        ...previous,
+        [postId]: nextState,
+      }));
     } catch (error) {
       console.error("Erro ao atualizar curtida:", error);
       setPostsError("Não conseguimos registrar sua reação agora.");

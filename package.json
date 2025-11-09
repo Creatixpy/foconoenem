@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build && next-sitemap",
+    "build": "npx next build && npx next-sitemap",
     "start": "next start",
     "lint": "next lint"
   },
@@ -30,8 +30,8 @@
     "@types/react": "19.2.0",
     "@types/react-dom": "^19.2.0",
     "@types/uuid": "^11.0.0",
-    "eslint": "9.37.0",
-    "eslint-config-next": "15.5.4",
+    "eslint": "^9.39.1",
+    "eslint-config-next": "^15.5.4",
     "supabase": "^2.54.11",
     "tailwindcss": "^4.1.14",
     "typescript": "5.9.3"

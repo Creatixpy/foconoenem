@@ -1,97 +1,471 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from 'next/server';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/supabase';
+import { randomUUID } from 'crypto';
+import { buildGroqProviders, GROQ_MAX_ATTEMPTS, GroqProvider, isRateLimitError } from '@/lib/ai/groq';
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { getOperatingHoursInfo } from '@/lib/server/operating-hours';
+import { checkRateLimit } from '@/lib/server/rate-limit';
+import { extractUserIdFromToken } from '@/lib/server/jwt';
+import { trackEvent } from '@/lib/server/analytics';
 
-const functionUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/correct-essay`
-  : null;
+type EssaySubmission = {
+  redacao: string;
+  usarTemaPadrao?: boolean;
+  tema?: string;
+  textoApoio1?: string;
+  textoApoio2?: string;
+};
 
-const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+type EssayCompetence = {
+  nota: number;
+  comentario: string;
+};
 
-function buildHeaders(request: NextRequest): Headers {
-  const headers = new Headers();
+type EssayResult = {
+  id: string;
+  nota: number;
+  competencia1: EssayCompetence;
+  competencia2: EssayCompetence;
+  competencia3: EssayCompetence;
+  competencia4: EssayCompetence;
+  competencia5: EssayCompetence;
+  feedbackGeral: string;
+  pontoFortes: string[];
+  pontosAMelhorar: string[];
+  redacaoOriginal: string;
+  createdAt: string;
+  origem: 'IA' | 'Simulação';
+  tema?: string;
+  textoApoio1?: string;
+  textoApoio2?: string;
+};
 
-  const authHeader = request.headers.get("authorization");
-  if (authHeader) {
-    headers.set("authorization", authHeader);
+type EssayRow = Database['public']['Tables']['essay_results']['Row'];
+
+const MAX_ESSAY_LENGTH = 5000;
+const MIN_ESSAY_LENGTH = 50;
+
+const DEFAULT_THEME = 'Os desafios da educação digital no Brasil contemporâneo';
+const DEFAULT_TEXT_1 =
+  'Segundo dados do IBGE, em 2021, 85% dos domicílios brasileiros possuíam acesso à internet, porém com grande disparidade regional e socioeconômica. Nas regiões Norte e Nordeste, e em famílias de baixa renda, o acesso é significativamente menor.';
+const DEFAULT_TEXT_2 =
+  'A pandemia de COVID-19 evidenciou a necessidade de integração digital no ensino, mas também mostrou que muitos estudantes e professores não estão preparados para o uso efetivo das tecnologias educacionais.';
+
+async function requireSupabaseAdmin(): Promise<SupabaseClient<Database>> {
+  const client = await getSupabaseAdmin();
+  if (!client) {
+    throw new Error('Supabase service role não configurado. Defina SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY.');
+  }
+  return client as SupabaseClient<Database>;
+}
+
+function normalizeEssayRow(row: EssayRow): EssayResult {
+  return {
+    id: row.id,
+    nota: row.nota,
+    competencia1: row.competencia1 as EssayCompetence,
+    competencia2: row.competencia2 as EssayCompetence,
+    competencia3: row.competencia3 as EssayCompetence,
+    competencia4: row.competencia4 as EssayCompetence,
+    competencia5: row.competencia5 as EssayCompetence,
+    feedbackGeral: row.feedback_geral,
+    pontoFortes: (row.ponto_fortes as string[] | null) ?? [],
+    pontosAMelhorar: (row.pontos_a_melhorar as string[] | null) ?? [],
+    redacaoOriginal: row.redacao_original,
+    createdAt: row.created_at,
+    origem: row.origem as EssayResult['origem'],
+    tema: row.tema ?? undefined,
+    textoApoio1: row.texto_apoio1 ?? undefined,
+    textoApoio2: row.texto_apoio2 ?? undefined,
+  };
+}
+
+async function getResultById(client: SupabaseClient<Database>, id: string): Promise<EssayResult | null> {
+  const { data, error } = await client.from('essay_results').select('*').eq('id', id).maybeSingle();
+
+  if (error) {
+    console.error('Erro ao buscar redação corrigida:', error);
+    return null;
   }
 
-  if (anonKey) {
-    headers.set("apikey", anonKey);
-    if (!authHeader) {
-      headers.set("authorization", `Bearer ${anonKey}`);
+  if (!data) {
+    return null;
+  }
+
+  return normalizeEssayRow(data as EssayRow);
+}
+
+async function storeResult(
+  client: SupabaseClient<Database>,
+  result: EssayResult,
+  userId: string | null
+): Promise<void> {
+  const payload: Database['public']['Tables']['essay_results']['Insert'] = {
+    id: result.id,
+    nota: result.nota,
+    competencia1: result.competencia1,
+    competencia2: result.competencia2,
+    competencia3: result.competencia3,
+    competencia4: result.competencia4,
+    competencia5: result.competencia5,
+    feedback_geral: result.feedbackGeral,
+    ponto_fortes: result.pontoFortes,
+    pontos_a_melhorar: result.pontosAMelhorar,
+    redacao_original: result.redacaoOriginal,
+    created_at: result.createdAt,
+    origem: result.origem,
+    tema: result.tema ?? null,
+    texto_apoio1: result.textoApoio1 ?? null,
+    texto_apoio2: result.textoApoio2 ?? null,
+    user_id: userId,
+  };
+
+  const { error } = await client.from('essay_results').insert(payload);
+  if (error) {
+    throw error;
+  }
+}
+
+async function resolveUserId(
+  client: SupabaseClient<Database>,
+  authorizationHeader: string | null
+): Promise<string | null> {
+  if (!authorizationHeader || !authorizationHeader.toLowerCase().startsWith('bearer ')) {
+    return null;
+  }
+
+  const token = authorizationHeader.slice('bearer '.length).trim();
+  if (!token) {
+    return null;
+  }
+
+  const decoded = extractUserIdFromToken(token);
+  if (decoded) {
+    return decoded;
+  }
+
+  try {
+    const { data, error } = await client.auth.getUser(token);
+    if (error) {
+      throw error;
+    }
+    return data?.user?.id ?? null;
+  } catch (error) {
+    console.error('Erro ao validar token do usuário:', error);
+    return null;
+  }
+}
+
+async function requestEssayAnalysis(
+  provider: GroqProvider,
+  input: {
+    submission: EssaySubmission;
+    temaFinal: string;
+    textoApoio1Final: string;
+    textoApoio2Final: string;
+    essayId: string;
+  }
+): Promise<Omit<EssayResult, 'createdAt' | 'origem'>> {
+  const { submission, temaFinal, textoApoio1Final, textoApoio2Final, essayId } = input;
+
+  let prompt = `
+    Você é um corretor especialista em redações do ENEM. Analise a seguinte redação sobre o tema "${temaFinal}" seguindo os 5 critérios de avaliação do ENEM:
+
+    Competência 1: Domínio da norma padrão da língua escrita (0-200 pontos)
+    Competência 2: Compreensão da proposta e aplicação de conceitos de várias áreas do conhecimento (0-200 pontos)
+    Competência 3: Capacidade de selecionar, relacionar, organizar e interpretar informações em defesa de um ponto de vista (0-200 pontos)
+    Competência 4: Conhecimento dos mecanismos linguísticos para construção da argumentação (0-200 pontos)
+    Competência 5: Elaboração de proposta de intervenção para o problema, respeitando os direitos humanos (0-200 pontos)
+  `;
+
+  if (textoApoio1Final) {
+    prompt += `\nTEXTO DE APOIO I:\n${textoApoio1Final}\n`;
+  }
+  if (textoApoio2Final) {
+    prompt += `\nTEXTO DE APOIO II:\n${textoApoio2Final}\n`;
+  }
+
+  prompt += `
+    REDAÇÃO DO ESTUDANTE:
+    ${submission.redacao}
+
+    Você deve responder APENAS com um objeto JSON válido, sem texto antes ou depois, com os seguintes campos, sem usar markdown:
+    {
+      "nota": número de 0 a 1000,
+      "competencia1": {
+        "nota": número de 0 a 200,
+        "comentario": "análise detalhada da competência 1"
+      },
+      "competencia2": {
+        "nota": número de 0 a 200,
+        "comentario": "análise detalhada da competência 2"
+      },
+      "competencia3": {
+        "nota": número de 0 a 200,
+        "comentario": "análise detalhada da competência 3"
+      },
+      "competencia4": {
+        "nota": número de 0 a 200,
+        "comentario": "análise detalhada da competência 4"
+      },
+      "competencia5": {
+        "nota": número de 0 a 200,
+        "comentario": "análise detalhada da competência 5"
+      },
+      "feedbackGeral": "feedback geral sobre a redação",
+      "pontoFortes": ["ponto forte 1", "ponto forte 2", "ponto forte 3"],
+      "pontosAMelhorar": ["ponto a melhorar 1", "ponto a melhorar 2", "ponto a melhorar 3"]
+    }
+    
+    LEMBRE-SE: Sua resposta deve ser apenas o objeto JSON, sem qualquer outro texto.
+  `;
+
+  const response = await provider.client.chat.completions.create({
+    messages: [{ role: 'user', content: prompt }],
+    model: provider.model,
+    temperature: 0.1,
+    max_completion_tokens: 8050,
+    top_p: 1,
+    stream: false,
+    response_format: { type: 'json_object' },
+  });
+
+  const aiContent = response.choices?.[0]?.message?.content ?? '';
+
+  let parsed: Partial<EssayResult>;
+  try {
+    parsed = JSON.parse(aiContent);
+  } catch (parseError) {
+    console.error('Falha ao parsear JSON diretamente:', parseError);
+    const jsonMatch =
+      aiContent.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/) ||
+      aiContent.match(/(\{[\s\S]*\})/);
+
+    if (!jsonMatch || !jsonMatch[1]) {
+      throw new Error('Formato de resposta inválido da API');
+    }
+
+    parsed = JSON.parse(jsonMatch[1].trim());
+  }
+
+  if (typeof parsed.nota !== 'number' || !parsed.feedbackGeral) {
+    throw new Error('A resposta da IA está incompleta.');
+  }
+
+  return {
+    id: essayId,
+    nota: parsed.nota,
+    competencia1: parsed.competencia1 ?? { nota: 0, comentario: 'Não foi possível avaliar' },
+    competencia2: parsed.competencia2 ?? { nota: 0, comentario: 'Não foi possível avaliar' },
+    competencia3: parsed.competencia3 ?? { nota: 0, comentario: 'Não foi possível avaliar' },
+    competencia4: parsed.competencia4 ?? { nota: 0, comentario: 'Não foi possível avaliar' },
+    competencia5: parsed.competencia5 ?? { nota: 0, comentario: 'Não foi possível avaliar' },
+    feedbackGeral: parsed.feedbackGeral ?? 'Não foi possível gerar feedback',
+    pontoFortes: parsed.pontoFortes ?? [],
+    pontosAMelhorar: parsed.pontosAMelhorar ?? [],
+    redacaoOriginal: submission.redacao,
+    tema: temaFinal,
+    textoApoio1: textoApoio1Final,
+    textoApoio2: textoApoio2Final,
+  };
+}
+
+async function analyseEssay(input: {
+  submission: EssaySubmission;
+  temaFinal: string;
+  textoApoio1Final: string;
+  textoApoio2Final: string;
+  essayId: string;
+}): Promise<{ analysis: Omit<EssayResult, 'createdAt' | 'origem'>; provider: string }> {
+  const providers = buildGroqProviders();
+  const attemptsLog: string[] = [];
+
+  for (let providerIndex = 0; providerIndex < providers.length; providerIndex++) {
+    const provider = providers[providerIndex];
+    let attempt = 0;
+
+    while (attempt < GROQ_MAX_ATTEMPTS) {
+      attempt++;
+      try {
+        const analysis = await requestEssayAnalysis(provider, input);
+        return { analysis, provider: provider.name };
+      } catch (error) {
+        const detail =
+          error instanceof Error
+            ? error.message
+            : typeof error === 'string'
+              ? error
+              : JSON.stringify(error);
+        attemptsLog.push(`(${provider.name}) tentativa ${attempt}: ${detail}`);
+        console.error(`Erro ao analisar redação com ${provider.name} (tentativa ${attempt}):`, error);
+
+        if (isRateLimitError(error) && providerIndex < providers.length - 1) {
+          break;
+        }
+      }
     }
   }
 
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  if (forwardedFor) {
-    headers.set("x-forwarded-for", forwardedFor);
-  }
-
-  const realIp = request.headers.get("x-real-ip");
-  if (realIp) {
-    headers.set("x-real-ip", realIp);
-  }
-
-  const userAgent = request.headers.get("user-agent");
-  if (userAgent) {
-    headers.set("user-agent", userAgent);
-  }
-
-  return headers;
+  const finalError = new Error(attemptsLog.join(' | ') || 'Falha ao analisar redação');
+  (finalError as Error & { attemptsLog?: string[] }).attemptsLog = attemptsLog;
+  throw finalError;
 }
 
 export async function GET(request: NextRequest) {
-  if (!functionUrl) {
-    return NextResponse.json(
-      { error: "NEXT_PUBLIC_SUPABASE_URL não configurada." },
-      { status: 500 }
-    );
+  const supabase = await requireSupabaseAdmin();
+  const id = request.nextUrl.searchParams.get('id');
+
+  if (!id) {
+    return NextResponse.json({ error: 'ID não fornecido' }, { status: 400 });
   }
 
-  const url = new URL(functionUrl);
-  request.nextUrl.searchParams.forEach((value, key) => {
-    url.searchParams.set(key, value);
+  const result = await getResultById(supabase, id);
+  if (!result) {
+    return NextResponse.json({ error: 'Resultado não encontrado' }, { status: 404 });
+  }
+
+  await trackEvent({
+    eventType: 'essay_viewed',
+    metadata: { essay_id: id },
+    userIp: request.headers.get('x-forwarded-for') ?? undefined,
+    userAgent: request.headers.get('user-agent') ?? undefined,
   });
 
-  const response = await fetch(url.toString(), {
-    method: "GET",
-    headers: buildHeaders(request),
-  });
-
-  const body = await response.text();
-
-  return new NextResponse(body, {
-    status: response.status,
-    headers: {
-      "content-type": response.headers.get("content-type") ?? "application/json; charset=utf-8",
-    },
-  });
+  return NextResponse.json({ result });
 }
 
 export async function POST(request: NextRequest) {
-  if (!functionUrl) {
+  const supabase = await requireSupabaseAdmin();
+  const forwardedFor = request.headers.get('x-forwarded-for');
+  const ip = forwardedFor?.split(',')[0].trim() ?? request.headers.get('x-real-ip') ?? 'unknown';
+  const userAgent = request.headers.get('user-agent') ?? 'unknown';
+
+  const rateResult = await checkRateLimit(ip, '/api/corrigir', 5, 1);
+  if (!rateResult.allowed) {
     return NextResponse.json(
-      { error: "NEXT_PUBLIC_SUPABASE_URL não configurada." },
+      {
+        error: 'Muitas requisições',
+        message: `Você atingiu o limite de requisições. Tente novamente após ${rateResult.resetAt.toISOString()}.`,
+        resetAt: rateResult.resetAt.toISOString(),
+      },
+      { status: 429 }
+    );
+  }
+
+  const operatingInfo = await getOperatingHoursInfo();
+  if (!operatingInfo.isOpen) {
+    return NextResponse.json(
+      {
+        error: 'Sistema fora do horário de funcionamento',
+        message: operatingInfo.message,
+        horarioFuncionamento: `${operatingInfo.opensAt} - ${operatingInfo.closesAt}`,
+      },
+      { status: 403 }
+    );
+  }
+
+  let submission: EssaySubmission;
+  try {
+    submission = (await request.json()) as EssaySubmission;
+  } catch {
+    return NextResponse.json({ error: 'JSON inválido' }, { status: 400 });
+  }
+
+  if (!submission.redacao || typeof submission.redacao !== 'string') {
+    return NextResponse.json({ error: 'Redação inválida' }, { status: 400 });
+  }
+
+  const trimmedEssay = submission.redacao.trim();
+  const essayLength = trimmedEssay.length;
+
+  if (essayLength < MIN_ESSAY_LENGTH) {
+    return NextResponse.json(
+      { error: `A redação deve ter no mínimo ${MIN_ESSAY_LENGTH} caracteres` },
+      { status: 400 }
+    );
+  }
+
+  if (essayLength > MAX_ESSAY_LENGTH) {
+    return NextResponse.json(
+      { error: `A redação não pode exceder ${MAX_ESSAY_LENGTH} caracteres` },
+      { status: 400 }
+    );
+  }
+
+  if (submission.usarTemaPadrao === false && (!submission.tema || submission.tema.trim().length < 5)) {
+    return NextResponse.json(
+      { error: 'É necessário fornecer um tema personalizado válido' },
+      { status: 400 }
+    );
+  }
+
+  const essayId = randomUUID();
+  const temaFinal = submission.usarTemaPadrao !== false ? DEFAULT_THEME : submission.tema ?? DEFAULT_THEME;
+  const textoApoio1Final = submission.usarTemaPadrao !== false ? DEFAULT_TEXT_1 : submission.textoApoio1 ?? '';
+  const textoApoio2Final = submission.usarTemaPadrao !== false ? DEFAULT_TEXT_2 : submission.textoApoio2 ?? '';
+
+  const authHeader = request.headers.get('authorization');
+  const userId = await resolveUserId(supabase, authHeader);
+
+  let aiAnalysis: { analysis: Omit<EssayResult, 'createdAt' | 'origem'>; provider: string } | null = null;
+  try {
+    aiAnalysis = await analyseEssay({
+      submission: { ...submission, redacao: trimmedEssay },
+      temaFinal,
+      textoApoio1Final,
+      textoApoio2Final,
+      essayId,
+    });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    const attempts =
+      error && typeof error === 'object' && 'attemptsLog' in error
+        ? ((error as { attemptsLog?: string[] }).attemptsLog ?? undefined)
+        : undefined;
+
+    console.error('Erro ao analisar redação com IA:', error);
+    return NextResponse.json(
+      {
+        error: 'Erro ao gerar correção',
+        message: 'Nossa IA demorou mais do que o esperado. Tente novamente em instantes.',
+        diagnostics: { stage: 'analyseEssay', detail, attempts },
+      },
+      { status: 503 }
+    );
+  }
+
+  const result: EssayResult = {
+    ...aiAnalysis.analysis,
+    id: essayId,
+    redacaoOriginal: trimmedEssay,
+    createdAt: new Date().toISOString(),
+    origem: 'IA',
+  };
+
+  try {
+    await storeResult(supabase, result, userId);
+  } catch (error) {
+    console.error('Erro ao salvar correção de redação:', error);
+    return NextResponse.json(
+      { error: 'Erro ao salvar o resultado desta redação.' },
       { status: 500 }
     );
   }
 
-  const headers = buildHeaders(request);
-  headers.set("content-type", request.headers.get("content-type") ?? "application/json");
-
-  const body = await request.text();
-
-  const response = await fetch(functionUrl, {
-    method: "POST",
-    headers,
-    body,
-  });
-
-  const responseBody = await response.text();
-
-  return new NextResponse(responseBody, {
-    status: response.status,
-    headers: {
-      "content-type": response.headers.get("content-type") ?? "application/json; charset=utf-8",
+  await trackEvent({
+    eventType: 'essay_submitted',
+    metadata: {
+      theme_type: submission.usarTemaPadrao !== false ? 'padrao' : submission.tema ? 'personalizado' : 'gerado',
+      essay_length: essayLength,
+      score: result.nota,
+      tema: temaFinal,
+      provider: aiAnalysis.provider,
     },
+    userIp: ip,
+    userAgent,
+    userId,
   });
+
+  return NextResponse.json({ id: essayId });
 }

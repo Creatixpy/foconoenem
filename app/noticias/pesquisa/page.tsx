@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Noticia } from "@/types";
-import { getNoticiasPorPesquisa } from "@/lib/supabase";
 
 // Componente separado para usar useSearchParams dentro do Suspense
 function PesquisaContent() {
@@ -39,7 +38,7 @@ function PesquisaContent() {
         setIsLoading(true);
         setError(null);
 
-        const resultado = await getNoticiasPorPesquisa(termo);
+        const resultado = await fetchNoticiasPorPesquisa(termo);
         setNoticias(resultado);
 
       } catch (erro) {
@@ -178,4 +177,21 @@ export default function PesquisaPage() {
       </div>
     </main>
   );
+}
+
+async function fetchNoticiasPorPesquisa(termo: string): Promise<Noticia[]> {
+  const params = new URLSearchParams({
+    q: termo,
+  });
+
+  const response = await fetch(`/api/noticias/busca?${params.toString()}`, {
+    cache: "no-store",
+  });
+
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(payload?.error ?? "Falha ao buscar notícias.");
+  }
+
+  return (payload?.noticias as Noticia[] | undefined) ?? [];
 }

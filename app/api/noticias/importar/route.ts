@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authorizeAdmin } from '@/lib/admin-auth';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
-import { withSupabaseTimeout } from '@/lib/supabase';
 import {
   fetchNewsApiArticles,
   mapArticleToRecord,
@@ -81,9 +80,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const existingSlugs = await withSupabaseTimeout((signal) =>
-    findExistingSlugs(supabaseAdmin, uniqueRecords.map((record) => record.slug), signal)
-  );
+  const existingSlugs = await findExistingSlugs(supabaseAdmin, uniqueRecords.map((record) => record.slug));
 
   const freshRecords = uniqueRecords.filter((record) => !existingSlugs.has(record.slug));
 
@@ -97,7 +94,7 @@ export async function POST(request: NextRequest) {
 
   let insertedCount = 0;
   try {
-    insertedCount = await withSupabaseTimeout((signal) => insertNewsRecords(supabaseAdmin, freshRecords, signal));
+    insertedCount = await insertNewsRecords(supabaseAdmin, freshRecords);
   } catch (insertError) {
     console.error('Erro ao inserir notícias:', insertError);
     return NextResponse.json(

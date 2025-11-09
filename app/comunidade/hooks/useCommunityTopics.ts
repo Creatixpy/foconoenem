@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { supabase, withSupabaseTimeout } from "@/lib/supabase";
 
 type CommunityTopic = {
   id: string;
@@ -21,16 +20,8 @@ export function useCommunityTopics() {
       setLoading(true);
       setError(null);
 
-      const { data, error } = await withSupabaseTimeout(async (signal) => {
-        return await supabase
-          .from("community_topics")
-          .select("*")
-          .order("title", { ascending: true })
-          .abortSignal(signal);
-      });
-
-      if (error) throw error;
-      setTopics(data ?? []);
+      const data = await fetchCommunityTopics();
+      setTopics(data);
     } catch (error) {
       console.error("Erro ao carregar tópicos:", error);
       setError("Não foi possível carregar os tópicos agora. Tente novamente em alguns minutos.");
@@ -45,4 +36,22 @@ export function useCommunityTopics() {
   }, [loadTopics]);
 
   return { topics, loading, error, reload: loadTopics };
+}
+
+async function fetchCommunityTopics(): Promise<CommunityTopic[]> {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
+  const response = await fetch("/api/comunidade/topics", {
+    method: "GET",
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error(`API de tópicos respondeu ${response.status}`);
+  }
+
+  const payload = (await response.json()) as { topics?: CommunityTopic[] };
+  return payload.topics ?? [];
 }

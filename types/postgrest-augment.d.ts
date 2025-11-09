@@ -1,7 +1,7 @@
 import '@supabase/postgrest-js';
 
 declare module '@supabase/postgrest-js' {
-  interface PostgrestBuilder<Row = any, Result = Row[], Relationships = Record<string, unknown>> {
+  interface PostgrestBuilder<Row = Record<string, unknown>, Result = Row[], Relationships = Record<string, unknown>> {
     abortSignal(signal: AbortSignal): PostgrestBuilder<Row, Result, Relationships>;
     single(): PostgrestBuilder<Row, Row, Relationships>;
     maybeSingle(): PostgrestBuilder<Row | null, Row | null, Relationships>;

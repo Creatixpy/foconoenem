@@ -1,20 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-09-30.clover',
-});
+let stripeClient: Stripe | null = null;
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+function getStripe() {
+  if (stripeClient) {
+    return stripeClient;
+  }
+
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+  if (!secretKey) {
+    throw new Error('STRIPE_SECRET_KEY não configurada.');
+  }
+
+  stripeClient = new Stripe(secretKey, {
+    apiVersion: '2025-09-30.clover',
+  });
+
+  return stripeClient;
+}
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.text();
     const signature = request.headers.get('stripe-signature');
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-    if (!signature) {
+    if (!signature || !webhookSecret) {
       return NextResponse.json(
-        { error: 'Assinatura do webhook não encontrada' },
+        { error: 'Assinatura ou segredo do webhook não encontrado' },
         { status: 400 }
       );
     }
@@ -22,6 +36,7 @@ export async function POST(request: NextRequest) {
     let event: Stripe.Event;
 
     try {
+      const stripe = getStripe();
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
