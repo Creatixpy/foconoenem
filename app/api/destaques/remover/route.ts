@@ -1,52 +1,42 @@
-import { NextRequest, NextResponse } from "next/server";
-
-const functionBaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/remove-highlight`
-  : null;
-
-const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const cronSecret = process.env.ADMIN_CRON_SECRET;
+import { NextRequest, NextResponse } from 'next/server';
+import { authorizeAdmin } from '@/lib/admin-auth';
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
 
 export async function POST(request: NextRequest) {
-  if (!functionBaseUrl) {
+  const supabase = await getSupabaseAdmin();
+  if (!supabase) {
     return NextResponse.json(
-      { error: "NEXT_PUBLIC_SUPABASE_URL não configurada." },
+      { error: 'Supabase service role não configurado.' },
       { status: 500 }
     );
   }
 
-  const headers = new Headers();
-  const authHeader = request.headers.get("authorization");
-  if (authHeader) {
-    headers.set("authorization", authHeader);
-  } else if (anonKey) {
-    headers.set("authorization", `Bearer ${anonKey}`);
+  const auth = await authorizeAdmin(request, { allowCron: true });
+  if (!auth.authorized) {
+    return NextResponse.json(
+      { error: auth.message ?? 'Acesso negado.' },
+      { status: auth.status ?? 401 }
+    );
   }
 
-  const incomingCronSecret = request.headers.get("x-cron-secret");
-  if (incomingCronSecret) {
-    headers.set("x-cron-secret", incomingCronSecret);
-  } else if (cronSecret) {
-    headers.set("x-cron-secret", cronSecret);
+  let payload: { id?: string } | null = null;
+  try {
+    payload = (await request.json()) as { id?: string } | null;
+  } catch {
+    return NextResponse.json({ error: 'JSON inválido.' }, { status: 400 });
   }
 
-  const body = await request.text();
-  if (!headers.has("content-type")) {
-    headers.set("content-type", request.headers.get("content-type") ?? "application/json");
+  const id = payload?.id;
+  if (!id || typeof id !== 'string') {
+    return NextResponse.json({ error: 'ID não fornecido.' }, { status: 400 });
   }
 
-  const response = await fetch(functionBaseUrl, {
-    method: "POST",
-    headers,
-    body,
-  });
+  const { error } = await supabase.from('noticias').update({ destaque: false }).eq('id', id);
 
-  const responseBody = await response.text();
+  if (error) {
+    console.error('Erro ao remover destaque:', error);
+    return NextResponse.json({ error: 'Erro ao remover destaque.' }, { status: 500 });
+  }
 
-  return new NextResponse(responseBody, {
-    status: response.status,
-    headers: {
-      "content-type": response.headers.get("content-type") ?? "application/json; charset=utf-8",
-    },
-  });
+  return NextResponse.json({ success: true, message: 'Destaque removido com sucesso.' });
 }

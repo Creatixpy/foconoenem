@@ -2,15 +2,10 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { verificarStatusDestaques, getNoticiasDestaque } from "@/lib/supabase";
 import { Noticia } from "@/types";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import NewsImage from "@/app/components/NewsImage";
-
-const FUNCTION_BASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
-  ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1`
-  : null;
 
 type DestaquesUpdateResult = {
   status?: "success" | "error" | "skipped";
@@ -63,18 +58,29 @@ export default function AdminDestaques() {
   const [moderationError, setModerationError] = useState<string | null>(null);
 
   const carregarStatus = useCallback(async () => {
+    if (!accessToken) return;
     try {
-      const status = await verificarStatusDestaques();
-      setStatusDestaques(status);
+      const response = await fetch("/api/noticias/destaques/status", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(payload?.error ?? "Falha ao consultar status dos destaques.");
+      }
+
+      setStatusDestaques(payload);
     } catch (error) {
       console.error("Erro ao carregar status de destaques:", error);
     }
-  }, []);
+  }, [accessToken]);
 
   const carregarNoticiasDestaque = useCallback(async () => {
     try {
       setLoadingDestaques(true);
-      const destaques = await getNoticiasDestaque(10);
+      const destaques = await fetchNoticiasDestaque(10);
       setNoticiasDestaque(destaques);
     } catch (error) {
       console.error("Erro ao carregar notícias em destaque:", error);
@@ -167,24 +173,6 @@ export default function AdminDestaques() {
     void carregarNoticiasDestaque();
   }, [authorized, carregarNoticiasDestaque, carregarStatus]);
 
-  const authFetch = useCallback(
-    async (path: string, init: RequestInit = {}) => {
-      if (!FUNCTION_BASE_URL) {
-        throw new Error("NEXT_PUBLIC_SUPABASE_URL não configurada.");
-      }
-
-      if (!accessToken) {
-        throw new Error("Sessão não encontrada. Faça login novamente.");
-      }
-
-      const headers = new Headers(init.headers as HeadersInit | undefined);
-      headers.set("Authorization", `Bearer ${accessToken}`);
-
-      return fetch(`${FUNCTION_BASE_URL}${path}`, { ...init, headers });
-    },
-    [accessToken]
-  );
-
   const formatarData = (dataString: string | null) => {
     if (!dataString) return "Não disponível";
 
@@ -207,7 +195,15 @@ export default function AdminDestaques() {
       setIsLoading(true);
       setResult(null);
 
-      const response = await authFetch("/update-highlights");
+      if (!accessToken) {
+        throw new Error("Sessão expirada. Faça login novamente.");
+      }
+
+      const response = await fetch("/api/atualizarDestaques", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
       const data = await response.json().catch(() => null);
 
       if (!response.ok) {
@@ -234,7 +230,7 @@ export default function AdminDestaques() {
     } finally {
       setIsLoading(false);
     }
-  }, [authFetch, authorized, carregarNoticiasDestaque, carregarStatus]);
+  }, [accessToken, authorized, carregarNoticiasDestaque, carregarStatus]);
 
   const handleImportarNoticias = useCallback(async () => {
     if (!authorized) {
@@ -291,9 +287,14 @@ export default function AdminDestaques() {
       try {
         setRemoveLoading((prev) => ({ ...prev, [id]: true }));
 
-        const response = await authFetch("/remove-highlight", {
+        if (!accessToken) {
+          throw new Error("Sessão expirada. Faça login novamente.");
+        }
+
+        const response = await fetch("/api/destaques/remover", {
           method: "POST",
           headers: {
+            Authorization: `Bearer ${accessToken}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ id }),
@@ -321,7 +322,7 @@ export default function AdminDestaques() {
         setRemoveLoading((prev) => ({ ...prev, [id]: false }));
       }
     },
-    [authFetch, authorized]
+    [accessToken, authorized]
   );
 
   const handleLimparNoticiasIrrelevantes = useCallback(async () => {
@@ -730,4 +731,23 @@ export default function AdminDestaques() {
       </div>
     </main>
   );
+}
+
+async function fetchNoticiasDestaque(limit: number): Promise<Noticia[]> {
+  const params = new URLSearchParams({
+    limit: limit.toString(),
+    destaque: "true",
+  });
+
+  const response = await fetch(`/api/noticias?${params.toString()}`, {
+    cache: "no-store",
+  });
+
+  const payload = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(payload?.error ?? "Falha ao buscar destaques.");
+  }
+
+  return (payload?.noticias as Noticia[] | undefined) ?? [];
 }

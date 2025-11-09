@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Noticia } from "@/types";
-import { getNoticiaPorSlug, getNoticiasPorTag } from "@/lib/supabase";
 import NewsImage from "@/app/components/NewsImage";
 
 export default function NoticiaDetalhePage() {
@@ -24,7 +23,7 @@ export default function NoticiaDetalhePage() {
         setIsLoading(true);
         setError(null);
         
-        const resultado = await getNoticiaPorSlug(slug);
+        const resultado = await fetchNoticiaPorSlug(slug);
         
         if (!resultado) {
           setError("Notícia não encontrada");
@@ -35,7 +34,7 @@ export default function NoticiaDetalhePage() {
         
         // Carregar notícias relacionadas usando a primeira tag
         if (resultado.tags && resultado.tags.length > 0) {
-          const relacionadas = await getNoticiasPorTag(resultado.tags[0], 3);
+          const relacionadas = await fetchNoticiasPorTag(resultado.tags[0], 3);
           // Filtrar para não incluir a notícia atual
           setNoticiasRelacionadas(
             relacionadas.filter(item => item.id !== resultado.id)
@@ -259,4 +258,33 @@ export default function NoticiaDetalhePage() {
       </div>
     </main>
   );
+}
+
+async function fetchNoticiaPorSlug(slug: string): Promise<Noticia | null> {
+  const response = await fetch(`/api/noticias/${slug}`, { cache: "no-store" });
+  const payload = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(payload?.error ?? "Notícia não encontrada.");
+  }
+
+  return (payload?.noticia as Noticia | undefined) ?? null;
+}
+
+async function fetchNoticiasPorTag(tag: string, limit: number): Promise<Noticia[]> {
+  const params = new URLSearchParams({
+    tag,
+    limit: limit.toString(),
+  });
+
+  const response = await fetch(`/api/noticias?${params.toString()}`, {
+    cache: "no-store",
+  });
+
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(payload?.error ?? "Falha ao carregar notícias relacionadas.");
+  }
+
+  return (payload?.noticias as Noticia[] | undefined) ?? [];
 }

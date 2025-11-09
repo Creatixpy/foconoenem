@@ -1,18 +1,28 @@
 begin;
 
--- Configurações extras no perfil para comunidade
-alter table public.user_profiles
-  add column if not exists is_over_16 boolean,
-  add column if not exists community_age_confirmed_at timestamptz,
-  add column if not exists community_terms_version text,
-  add column if not exists community_terms_accepted_at timestamptz,
-  add column if not exists community_tagline text,
-  add column if not exists community_profile_theme text,
-  add column if not exists community_show_statistics boolean not null default true;
+-- Configurações extras no perfil para comunidade (executa apenas se a tabela existir)
+do $$
+begin
+  if exists (
+    select 1
+    from pg_tables
+    where schemaname = 'public'
+      and tablename = 'user_profiles'
+  ) then
+    alter table public.user_profiles
+      add column if not exists is_over_16 boolean,
+      add column if not exists community_age_confirmed_at timestamptz,
+      add column if not exists community_terms_version text,
+      add column if not exists community_terms_accepted_at timestamptz,
+      add column if not exists community_tagline text,
+      add column if not exists community_profile_theme text,
+      add column if not exists community_show_statistics boolean not null default true;
 
-update public.user_profiles
-set community_show_statistics = coalesce(community_show_statistics, true)
-where community_show_statistics is distinct from true;
+    update public.user_profiles
+    set community_show_statistics = coalesce(community_show_statistics, true)
+    where community_show_statistics is distinct from true;
+  end if;
+end $$;
 
 -- Tabelas de conquistas
 create table if not exists public.achievements (

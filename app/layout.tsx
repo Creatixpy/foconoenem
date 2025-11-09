@@ -66,6 +66,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const isTelemetryEnabled = process.env.NODE_ENV === "production";
   return (
     <html lang="pt-BR" data-theme="system">
       <head>
@@ -91,8 +92,12 @@ export default function RootLayout({
           <CookieConsent />
           <StructuredData />
           <AdSenseLoader />
-          <SpeedInsights />
-          <Analytics />
+          {isTelemetryEnabled && (
+            <>
+              <SpeedInsights debug={false} />
+              <Analytics debug={false} mode="production" />
+            </>
+          )}
         </Providers>
       </body>
     </html>

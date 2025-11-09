@@ -726,7 +726,7 @@ export interface Database {
         ];
       };
     };
-    Views: {};
+    Views: Record<string, never>;
     Functions: {
       recalculate_user_statistics: {
         Args: { target_user_id: string };
