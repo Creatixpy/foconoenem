@@ -51,8 +51,8 @@ export interface Noticia {
   slug: string;
   resumo: string;
   conteudo: string;
-  imagem_url: string;
-  autor: string;
+  imagem_url: string | null;
+  autor: string | null;
   data_publicacao: string;
   tags: string[];
   destaque: boolean;
