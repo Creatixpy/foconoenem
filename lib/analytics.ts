@@ -60,7 +60,7 @@ export async function trackEvent(
 interface AnalyticsEvent {
   id: string;
   event_type: string;
-  metadata: Record<string, unknown>;
+  metadata: Record<string, unknown> | null;
   user_ip: string | null;
   user_agent: string | null;
   created_at: string;
