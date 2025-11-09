@@ -162,9 +162,10 @@ export async function POST(request: NextRequest) {
     created_at: new Date().toISOString(),
   };
 
-  const { error: insertError } = await withSupabaseTimeout((signal) =>
-    supabase.from("quiz_results").insert(insertPayload).abortSignal(signal)
-  );
+  const { error: insertError } = await withSupabaseTimeout(async (signal) => {
+    const { error } = await supabase.from("quiz_results").insert(insertPayload).abortSignal(signal);
+    return { error };
+  });
   if (insertError) {
     console.error("Erro ao inserir quiz_results:", insertError);
     return NextResponse.json(
@@ -173,11 +174,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { error: statsError } = await withSupabaseTimeout((signal) =>
-    supabase.rpc("recalculate_user_statistics", {
-      target_user_id: userId,
-    }).abortSignal(signal)
-  );
+  const { error: statsError } = await withSupabaseTimeout(async (signal) => {
+    const { error } = await supabase
+      .rpc("recalculate_user_statistics", {
+        target_user_id: userId,
+      })
+      .abortSignal(signal);
+
+    return { error };
+  });
   if (statsError) {
     console.error("Erro ao recalcular estatísticas:", statsError);
   }
