@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import type { Question, QuizResult } from "@/types";
+import type { Json } from "@/types/supabase";
 import { withSupabaseTimeout } from "@/lib/supabase";
 
 const functionUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -11,6 +12,77 @@ const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
 const DISCIPLINES: Question["discipline"][] = ["Matemática", "Português", "Química", "Física", "Geografia"];
+
+type QuizRequestPayload = {
+  result: QuizResult;
+  selectedAnswers: Record<string, string>;
+  questions: Question[];
+  disciplines: Question["discipline"][];
+};
+
+function assertQuizPayload(payload: unknown): QuizRequestPayload {
+  if (!payload || typeof payload !== "object") {
+    throw new Error("Payload ausente ou inválido");
+  }
+
+  const { result, selectedAnswers, questions, disciplines } = payload as Record<string, unknown>;
+
+  if (!result || typeof result !== "object") {
+    throw new Error("Dados do resultado inválidos");
+  }
+
+  const castResult = result as QuizResult;
+  const requiredNumbers: Array<keyof QuizResult> = [
+    "totalQuestions",
+    "correctAnswers",
+    "wrongAnswers",
+    "unansweredQuestions",
+    "score",
+  ];
+  for (const key of requiredNumbers) {
+    if (typeof castResult[key] !== "number") {
+      throw new Error("Dados do resultado inválidos");
+    }
+  }
+
+  if (!Array.isArray(questions) || questions.length === 0) {
+    throw new Error("Lista de questões inválida");
+  }
+
+  if (!selectedAnswers || typeof selectedAnswers !== "object") {
+    throw new Error("Mapa de respostas inválido");
+  }
+
+  const normalizedDisciplines = Array.isArray(disciplines)
+    ? (disciplines.filter((item): item is Question["discipline"] =>
+        typeof item === "string" ? DISCIPLINES.includes(item as Question["discipline"]) : false)
+      )
+    : [];
+
+  return {
+    result: castResult,
+    selectedAnswers: selectedAnswers as Record<string, string>,
+    questions: questions as Question[],
+    disciplines: normalizedDisciplines,
+  };
+}
+
+function buildInsertPayload(userId: string, payload: QuizRequestPayload) {
+  const { result, questions, selectedAnswers, disciplines } = payload;
+
+  return {
+    user_id: userId,
+    total_questions: Number.isFinite(result.totalQuestions) ? result.totalQuestions : questions.length,
+    correct_answers: Number.isFinite(result.correctAnswers) ? result.correctAnswers : 0,
+    wrong_answers: Number.isFinite(result.wrongAnswers) ? result.wrongAnswers : 0,
+    unanswered_questions: Number.isFinite(result.unansweredQuestions) ? result.unansweredQuestions : 0,
+    score: Number.isFinite(result.score) ? result.score : 0,
+    questions_data: questions as unknown as Json[],
+    answers_data: selectedAnswers as unknown as Json,
+    disciplines,
+    created_at: new Date().toISOString(),
+  };
+}
 
 function buildHeaders(request: NextRequest): Headers {
   const headers = new Headers();
@@ -91,46 +163,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, saved: false, reason: "not_authenticated" });
   }
 
-  let payload: {
-    result?: QuizResult;
-    selectedAnswers?: Record<string, string>;
-    questions?: Question[];
-    disciplines?: string[];
-  };
-
+  let parsedPayload: QuizRequestPayload;
   try {
-    payload = (await request.json()) as typeof payload;
-  } catch {
-    return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
+    const raw = await request.json();
+    parsedPayload = assertQuizPayload(raw);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "JSON inválido";
+    return NextResponse.json({ error: message }, { status: 400 });
   }
-
-  const { result, selectedAnswers, questions, disciplines } = payload ?? {};
-
-  if (
-    !result ||
-    typeof result !== "object" ||
-    typeof result.totalQuestions !== "number" ||
-    typeof result.correctAnswers !== "number" ||
-    typeof result.wrongAnswers !== "number" ||
-    typeof result.unansweredQuestions !== "number" ||
-    typeof result.score !== "number"
-  ) {
-    return NextResponse.json({ error: "Dados do resultado inválidos" }, { status: 400 });
-  }
-
-  if (!Array.isArray(questions) || questions.length === 0) {
-    return NextResponse.json({ error: "Lista de questões inválida" }, { status: 400 });
-  }
-
-  if (!selectedAnswers || typeof selectedAnswers !== "object") {
-    return NextResponse.json({ error: "Mapa de respostas inválido" }, { status: 400 });
-  }
-
-  const normalizedDisciplines = Array.isArray(disciplines)
-    ? disciplines.filter((item): item is Question["discipline"] =>
-        typeof item === "string" ? DISCIPLINES.includes(item as Question["discipline"]) : false
-      )
-    : [];
 
   const supabase = createClient(supabaseUrl, anonKey, {
     auth: { persistSession: false },
@@ -149,18 +189,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, saved: false, reason: "user_not_found" });
   }
 
-  const insertPayload = {
-    user_id: userId,
-    total_questions: Number.isFinite(result.totalQuestions) ? result.totalQuestions : questions.length,
-    correct_answers: Number.isFinite(result.correctAnswers) ? result.correctAnswers : 0,
-    wrong_answers: Number.isFinite(result.wrongAnswers) ? result.wrongAnswers : 0,
-    unanswered_questions: Number.isFinite(result.unansweredQuestions) ? result.unansweredQuestions : 0,
-    score: Number.isFinite(result.score) ? result.score : 0,
-    questions_data: questions,
-    answers_data: selectedAnswers,
-    disciplines: normalizedDisciplines,
-    created_at: new Date().toISOString(),
-  };
+  const insertPayload = buildInsertPayload(userId, parsedPayload);
 
   const { error: insertError } = await withSupabaseTimeout(async (signal) => {
     const { error } = await supabase.from("quiz_results").insert(insertPayload).abortSignal(signal);
