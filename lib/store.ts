@@ -130,8 +130,8 @@ export async function storeQuizResult(payload: QuizResultStoragePayload): Promis
           wrong_answers: payload.wrong_answers,
           unanswered_questions: payload.unanswered_questions,
           score: payload.score,
-          questions_data: payload.questions,
-          answers_data: payload.answers,
+          questions_data: payload.questions as unknown as Json[],
+          answers_data: payload.answers as unknown as Json,
           disciplines: payload.disciplines,
           created_at: payload.created_at ?? new Date().toISOString()
         })
