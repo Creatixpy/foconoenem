@@ -1,8 +1,7 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import type { RealtimeChannel } from "@supabase/supabase-js";
 import {
   COMMUNITY_TERMS_VERSION,
   acceptCommunityTerms,
@@ -15,25 +14,13 @@ import {
 } from "@/lib/auth";
 import { supabase, withSupabaseTimeout } from "@/lib/supabase";
 import { useAuth } from "../contexts/AuthContext";
+import {
+  useCommunityThreads,
+  type CommunityComment,
+  type CommunityPost,
+  type CommunityThread,
+} from "./hooks/useCommunityThreads";
 import { useCommunityTopics } from "./hooks/useCommunityTopics";
-
-type CommunityPost = {
-  id: string;
-  topic_id: string;
-  user_id: string;
-  title: string;
-  content: string;
-  created_at: string;
-  updated_at: string;
-};
-
-type CommunityComment = {
-  id: string;
-  post_id: string;
-  user_id: string;
-  content: string;
-  created_at: string;
-};
 
 type ProfilePreview = {
   user_id: string;
@@ -42,8 +29,6 @@ type ProfilePreview = {
   community_tagline: string | null;
   community_show_statistics: boolean | null;
 };
-
-type CommunityThread = CommunityPost & { comments: CommunityComment[] };
 
 type AwardResponse = {
   achievements: UserAchievement[];
@@ -138,9 +123,6 @@ export default function CommunityPageClient() {
   const { user, profile, loading: authLoading, refreshProfile } = useAuth();
   const { topics, loading: topicsLoading, error: topicsError, reload: reloadTopics } = useCommunityTopics();
   const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
-
-  const [threads, setThreads] = useState<CommunityThread[]>([]);
-  const [postsLoading, setPostsLoading] = useState(false);
   const [postsError, setPostsError] = useState<string | null>(null);
 
   const [profileCache, setProfileCache] = useState<Record<string, ProfilePreview>>({});
@@ -154,12 +136,10 @@ export default function CommunityPageClient() {
   const [commentLoading, setCommentLoading] = useState<Record<string, boolean>>({});
   const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
   const [commentDeleting, setCommentDeleting] = useState<Record<string, boolean>>({});
-  const [postLikes, setPostLikes] = useState<Record<string, { count: number; liked: boolean }>>({});
   const [likeLoading, setLikeLoading] = useState<Record<string, boolean>>({});
 
   const [statistics, setStatistics] = useState<UserStatistics | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
-  const [commentCount, setCommentCount] = useState(0);
 
   const [userBadges, setUserBadges] = useState<UserAchievement[]>([]);
 
@@ -171,7 +151,19 @@ export default function CommunityPageClient() {
   const [ageCheckbox, setAgeCheckbox] = useState(false);
   const [termsCheckbox, setTermsCheckbox] = useState(false);
   const [consentSaving, setConsentSaving] = useState(false);
-  const realtimeChannelRef = useRef<RealtimeChannel | null>(null);
+
+  const {
+    threads,
+    setThreads,
+    loading: threadsLoading,
+    error: threadsError,
+    reload: reloadThreads,
+    postLikes,
+    setPostLikes,
+    commentCount,
+    setCommentCount,
+  } = useCommunityThreads(selectedTopicId, user?.id ?? null);
+  const combinedPostsError = postsError ?? threadsError;
 
   useEffect(() => {
     if (!selectedTopicId && topics.length > 0) {
@@ -201,70 +193,6 @@ export default function CommunityPageClient() {
     if (!user) return;
     setAchievementCache((previous) => ({ ...previous, [user.id]: userBadges }));
   }, [user, userBadges]);
-
-  useEffect(() => {
-    if (!user || !selectedTopicId) {
-      if (realtimeChannelRef.current) {
-        supabase.removeChannel(realtimeChannelRef.current);
-        realtimeChannelRef.current = null;
-      }
-      return;
-    }
-
-    const channel = supabase
-      .channel(`community-feed-${selectedTopicId}`)
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "community_posts" },
-        (payload) => {
-          const newPost = payload.new as CommunityPost;
-          if (newPost.topic_id !== selectedTopicId) return;
-          setThreads((previous) => {
-            if (previous.some((thread) => thread.id === newPost.id)) {
-              return previous;
-            }
-            return [{ ...newPost, comments: [] }, ...previous];
-          });
-          void hydrateProfiles([newPost.user_id]);
-          void hydrateAchievements([newPost.user_id]);
-          setPostLikes((previous) => ({
-            ...previous,
-            [newPost.id]: { count: 0, liked: false },
-          }));
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "community_comments" },
-        (payload) => {
-          const newComment = payload.new as CommunityComment;
-          setThreads((previous) =>
-            previous.map((thread) => {
-              if (thread.id === newComment.post_id) {
-                return { ...thread, comments: [...thread.comments, newComment] };
-              }
-              return thread;
-            })
-          );
-          void hydrateProfiles([newComment.user_id]);
-          void hydrateAchievements([newComment.user_id]);
-          if (newComment.user_id === user.id) {
-            setCommentCount((prev) => prev + 1);
-          }
-        }
-      )
-      .subscribe();
-
-    realtimeChannelRef.current = channel;
-
-    return () => {
-      if (channel) {
-        supabase.removeChannel(channel);
-      }
-      realtimeChannelRef.current = null;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, selectedTopicId]);
 
   const hydrateProfiles = useCallback(async (userIds: string[]) => {
     if (userIds.length === 0) return;
@@ -362,85 +290,57 @@ export default function CommunityPageClient() {
         console.error("Erro ao carregar curtidas:", error);
       }
     },
-    [user?.id]
+    [setPostLikes, user?.id]
   );
 
-  const loadPosts = useCallback(
-    async (topicId: string) => {
-      try {
-        setPostsLoading(true);
-        setPostsError(null);
+  useEffect(() => {
+    if (threads.length === 0) {
+      return;
+    }
 
-        const { data: postsData, error: postsErrorResponse } = await withSupabaseTimeout(async (signal) => {
-          const response = await supabase
-            .from("community_posts")
-            .select("*")
-            .eq("topic_id", topicId)
-            .order("created_at", { ascending: false })
-            .limit(25)
-            .abortSignal(signal);
+    const missingProfiles = new Set<string>();
+    const missingAchievements = new Set<string>();
+    const missingLikes: string[] = [];
 
-          return response;
-        });
-
-        if (postsErrorResponse) {
-          throw postsErrorResponse;
-        }
-
-        const postsList = postsData ?? [];
-        const postIds = postsList.map((post) => post.id);
-
-        let comments: CommunityComment[] = [];
-        if (postIds.length > 0) {
-          const { data: commentsData, error: commentsError } = await withSupabaseTimeout(async (signal) => {
-            const response = await supabase
-              .from("community_comments")
-              .select("*")
-              .in("post_id", postIds)
-              .order("created_at", { ascending: true })
-              .abortSignal(signal);
-
-            return response;
-          });
-
-          if (commentsError) {
-            throw commentsError;
-          }
-
-          comments = commentsData ?? [];
-        }
-
-        const userIds = new Set<string>();
-        postsList.forEach((post) => userIds.add(post.user_id));
-        comments.forEach((comment) => userIds.add(comment.user_id));
-
-        const commentsByPost = comments.reduce<Record<string, CommunityComment[]>>((accumulator, comment) => {
-          accumulator[comment.post_id] = accumulator[comment.post_id]
-            ? [...accumulator[comment.post_id], comment]
-            : [comment];
-          return accumulator;
-        }, {});
-
-        setThreads(
-          postsList.map((post) => ({
-            ...post,
-            comments: commentsByPost[post.id] ?? [],
-          }))
-        );
-
-        void hydrateProfiles(Array.from(userIds));
-        void hydrateAchievements(Array.from(userIds));
-        void hydrateLikes(postIds);
-      } catch (error) {
-        console.error("Erro ao carregar posts:", error);
-        setPostsError("Não foi possível carregar os posts deste tópico no momento.");
-        setThreads([]);
-      } finally {
-        setPostsLoading(false);
+    threads.forEach((thread) => {
+      if (!profileCache[thread.user_id]) {
+        missingProfiles.add(thread.user_id);
       }
-    },
-    [hydrateAchievements, hydrateLikes, hydrateProfiles]
-  );
+      if (!achievementCache[thread.user_id]) {
+        missingAchievements.add(thread.user_id);
+      }
+      thread.comments.forEach((comment) => {
+        if (!profileCache[comment.user_id]) {
+          missingProfiles.add(comment.user_id);
+        }
+        if (!achievementCache[comment.user_id]) {
+          missingAchievements.add(comment.user_id);
+        }
+      });
+
+      if (!postLikes[thread.id]) {
+        missingLikes.push(thread.id);
+      }
+    });
+
+    if (missingProfiles.size > 0) {
+      void hydrateProfiles(Array.from(missingProfiles));
+    }
+    if (missingAchievements.size > 0) {
+      void hydrateAchievements(Array.from(missingAchievements));
+    }
+    if (missingLikes.length > 0) {
+      void hydrateLikes(missingLikes);
+    }
+  }, [
+    achievementCache,
+    hydrateAchievements,
+    hydrateLikes,
+    hydrateProfiles,
+    postLikes,
+    profileCache,
+    threads,
+  ]);
 
   const loadStatistics = useCallback(async () => {
     if (!user) return;
@@ -473,7 +373,7 @@ export default function CommunityPageClient() {
     } catch (error) {
       console.error("Erro ao contar comentários:", error);
     }
-  }, [user]);
+  }, [setCommentCount, user]);
 
   const loadUserBadges = useCallback(async () => {
     if (!user) return;
@@ -514,12 +414,6 @@ export default function CommunityPageClient() {
     void loadUserBadges();
     void loadCommentCount();
   }, [authLoading, user, loadCommentCount, loadStatistics, loadUserBadges]);
-
-  useEffect(() => {
-    if (user && selectedTopicId) {
-      void loadPosts(selectedTopicId);
-    }
-  }, [user, selectedTopicId, loadPosts]);
 
   useEffect(() => {
     if (!user || !statistics) {
@@ -1117,8 +1011,8 @@ export default function CommunityPageClient() {
                   <button
                     type="button"
                     className="btn btn-glass px-4 py-2 text-sm font-semibold text-primary"
-                    onClick={() => selectedTopicId && void loadPosts(selectedTopicId)}
-                    disabled={!selectedTopicId || postsLoading}
+                    onClick={() => void reloadThreads()}
+                    disabled={!selectedTopicId || threadsLoading}
                   >
                     Atualizar feed
                   </button>
@@ -1209,13 +1103,13 @@ export default function CommunityPageClient() {
               )}
             </div>
 
-            {postsError && (
+            {combinedPostsError && (
               <div className="rounded-2xl border border-danger/30 bg-danger-light/20 p-4 text-sm text-danger">
-                {postsError}
+                {combinedPostsError}
               </div>
             )}
 
-            {postsLoading ? (
+            {threadsLoading ? (
               <div className="space-y-4">
                 {[...Array(3)].map((_, index) => (
                   <div key={index} className="h-40 animate-pulse rounded-3xl bg-muted-bg/70" />
