@@ -274,13 +274,15 @@ export default function CommunityPageClient() {
     try {
       setTopicsLoading(true);
       setTopicsError(null);
-      const { data, error } = await withSupabaseTimeout((signal) =>
-        supabase
+      const { data, error } = await withSupabaseTimeout(async (signal) => {
+        const response = await supabase
           .from("community_topics")
           .select("*")
           .order("title", { ascending: true })
-          .abortSignal(signal)
-      );
+          .abortSignal(signal);
+
+        return response;
+      });
 
       if (error) throw error;
 
@@ -305,13 +307,15 @@ export default function CommunityPageClient() {
   const hydrateProfiles = useCallback(async (userIds: string[]) => {
     if (userIds.length === 0) return;
     try {
-      const { data, error } = await withSupabaseTimeout((signal) =>
-        supabase
+      const { data, error } = await withSupabaseTimeout(async (signal) => {
+        const response = await supabase
           .from("user_profiles")
           .select(profileFields)
           .in("user_id", userIds)
-          .abortSignal(signal)
-      );
+          .abortSignal(signal);
+
+        return response;
+      });
 
       if (error) throw error;
       if (!data) return;
@@ -331,13 +335,15 @@ export default function CommunityPageClient() {
   const hydrateAchievements = useCallback(async (userIds: string[]) => {
     if (userIds.length === 0) return;
     try {
-      const { data, error } = await withSupabaseTimeout((signal) =>
-        supabase
+      const { data, error } = await withSupabaseTimeout(async (signal) => {
+        const response = await supabase
           .from("user_achievements")
           .select("user_id,id,achievement_id,earned_at,metadata,achievement:achievements(*)")
           .in("user_id", userIds)
-          .abortSignal(signal)
-      );
+          .abortSignal(signal);
+
+        return response;
+      });
 
       if (error) throw error;
       if (!data) return;
@@ -360,13 +366,15 @@ export default function CommunityPageClient() {
     async (postIds: string[]) => {
       if (postIds.length === 0) return;
       try {
-        const { data, error } = await withSupabaseTimeout((signal) =>
-          supabase
+        const { data, error } = await withSupabaseTimeout(async (signal) => {
+          const response = await supabase
             .from("community_post_likes")
             .select(likeSelectOptions)
             .in("post_id", postIds)
-            .abortSignal(signal)
-        );
+            .abortSignal(signal);
+
+          return response;
+        });
 
         if (error) {
           throw error;
@@ -401,15 +409,17 @@ export default function CommunityPageClient() {
         setPostsLoading(true);
         setPostsError(null);
 
-        const { data: postsData, error: postsErrorResponse } = await withSupabaseTimeout((signal) =>
-          supabase
+        const { data: postsData, error: postsErrorResponse } = await withSupabaseTimeout(async (signal) => {
+          const response = await supabase
             .from("community_posts")
             .select("*")
             .eq("topic_id", topicId)
             .order("created_at", { ascending: false })
             .limit(25)
-            .abortSignal(signal)
-        );
+            .abortSignal(signal);
+
+          return response;
+        });
 
         if (postsErrorResponse) {
           throw postsErrorResponse;
@@ -420,14 +430,16 @@ export default function CommunityPageClient() {
 
         let comments: CommunityComment[] = [];
         if (postIds.length > 0) {
-          const { data: commentsData, error: commentsError } = await withSupabaseTimeout((signal) =>
-            supabase
+          const { data: commentsData, error: commentsError } = await withSupabaseTimeout(async (signal) => {
+            const response = await supabase
               .from("community_comments")
               .select("*")
               .in("post_id", postIds)
               .order("created_at", { ascending: true })
-              .abortSignal(signal)
-          );
+              .abortSignal(signal);
+
+            return response;
+          });
 
           if (commentsError) {
             throw commentsError;
@@ -484,13 +496,15 @@ export default function CommunityPageClient() {
   const loadCommentCount = useCallback(async () => {
     if (!user) return;
     try {
-      const { count, error } = await withSupabaseTimeout((signal) =>
-        supabase
+      const { count, error } = await withSupabaseTimeout(async (signal) => {
+        const response = await supabase
           .from("community_comments")
           .select("*", commentCountSelectOptions)
           .eq("user_id", user.id)
-          .abortSignal(signal)
-      );
+          .abortSignal(signal);
+
+        return response;
+      });
 
       if (error) throw error;
       setCommentCount(count ?? 0);
@@ -568,9 +582,16 @@ export default function CommunityPageClient() {
 
     try {
       setDeletingPostId(postId);
-      const { error } = await withSupabaseTimeout((signal) =>
-        supabase.from("community_posts").delete().eq("id", postId).eq("user_id", user.id).abortSignal(signal)
-      );
+      const { error } = await withSupabaseTimeout(async (signal) => {
+        const response = await supabase
+          .from("community_posts")
+          .delete()
+          .eq("id", postId)
+          .eq("user_id", user.id)
+          .abortSignal(signal);
+
+        return response;
+      });
       if (error) {
         throw error;
       }
@@ -598,8 +619,8 @@ export default function CommunityPageClient() {
       setCreatingPost(true);
       setPostsError(null);
 
-      const { data, error } = await withSupabaseTimeout((signal) =>
-        supabase
+      const { data, error } = await withSupabaseTimeout(async (signal) => {
+        const response = await supabase
           .from("community_posts")
           .insert({
             title: trimmedTitle,
@@ -609,8 +630,10 @@ export default function CommunityPageClient() {
           })
           .select()
           .single()
-          .abortSignal(signal)
-      );
+          .abortSignal(signal);
+
+        return response;
+      });
 
       if (error) {
         throw error;
@@ -656,9 +679,16 @@ export default function CommunityPageClient() {
 
     try {
       setCommentDeleting((previous) => ({ ...previous, [commentId]: true }));
-      const { error } = await withSupabaseTimeout((signal) =>
-        supabase.from("community_comments").delete().eq("id", commentId).eq("user_id", user.id).abortSignal(signal)
-      );
+      const { error } = await withSupabaseTimeout(async (signal) => {
+        const response = await supabase
+          .from("community_comments")
+          .delete()
+          .eq("id", commentId)
+          .eq("user_id", user.id)
+          .abortSignal(signal);
+
+        return response;
+      });
       if (error) {
         throw error;
       }
@@ -697,8 +727,8 @@ export default function CommunityPageClient() {
       setCommentLoading((previous) => ({ ...previous, [postId]: true }));
       setPostsError(null);
 
-      const { data, error } = await withSupabaseTimeout((signal) =>
-        supabase
+      const { data, error } = await withSupabaseTimeout(async (signal) => {
+        const response = await supabase
           .from("community_comments")
           .insert({
             content: rawContent,
@@ -707,8 +737,10 @@ export default function CommunityPageClient() {
           })
           .select()
           .single()
-          .abortSignal(signal)
-      );
+          .abortSignal(signal);
+
+        return response;
+      });
 
       if (error) {
         throw error;
@@ -749,14 +781,16 @@ export default function CommunityPageClient() {
 
     try {
       if (liked) {
-        const { error } = await withSupabaseTimeout((signal) =>
-          supabase
+        const { error } = await withSupabaseTimeout(async (signal) => {
+          const response = await supabase
             .from("community_post_likes")
             .delete()
             .eq("post_id", postId)
             .eq("user_id", user.id)
-            .abortSignal(signal)
-        );
+            .abortSignal(signal);
+
+          return response;
+        });
         if (error) throw error;
         setPostLikes((previous) => ({
           ...previous,
@@ -766,12 +800,17 @@ export default function CommunityPageClient() {
           },
         }));
       } else {
-        const { error } = await withSupabaseTimeout((signal) =>
-          supabase.from("community_post_likes").insert({
-            post_id: postId,
-            user_id: user.id,
-          }).abortSignal(signal)
-        );
+        const { error } = await withSupabaseTimeout(async (signal) => {
+          const response = await supabase
+            .from("community_post_likes")
+            .insert({
+              post_id: postId,
+              user_id: user.id,
+            })
+            .abortSignal(signal);
+
+          return response;
+        });
         if (error) throw error;
         setPostLikes((previous) => ({
           ...previous,
