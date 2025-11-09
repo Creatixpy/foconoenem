@@ -3,9 +3,7 @@
 import { useState, useEffect, FormEvent } from "react";
 import Link from "next/link";
 import NewsImage from "@/app/components/NewsImage";
-import { Noticia } from "@/types";
-import { getNoticias, getNoticiasDestaque } from "@/lib/supabase";
-import { withTimeout } from "@/lib/with-timeout";
+import { useNoticiasFeed, useNoticiasHighlights } from "./hooks";
 
 export function generateMetadata() {
   return {
@@ -16,56 +14,26 @@ export function generateMetadata() {
 }
 
 export default function NoticiasPageClient() {
-  const [noticias, setNoticias] = useState<Noticia[]>([]);
-  const [noticiasDestaque, setNoticiasDestaque] = useState<Noticia[]>([]);
-  const [isFeedLoading, setIsFeedLoading] = useState(true);
   const [isIaSearching, setIsIaSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
   const [buscaIA, setBuscaIA] = useState("");
   const [pagina, setPagina] = useState(1);
-  const [temMaisNoticias, setTemMaisNoticias] = useState(true);
   const [noticiasIA, setNoticiasIA] = useState<string | null>(null);
   const limitePorPagina = 6;
+  const feedState = useNoticiasFeed(pagina, limitePorPagina);
+  const destaqueState = useNoticiasHighlights(pagina === 1);
 
   useEffect(() => {
-    const carregarNoticias = async () => {
-      try {
-        setIsFeedLoading(true);
+    if (feedState.error) {
+      setError(feedState.error);
+      return;
+    }
 
-        if (pagina === 1) {
-          const destaques = await withTimeout(
-            () => getNoticiasDestaque(),
-            10000,
-            "Tempo limite ao buscar notícias em destaque."
-          );
-          setNoticiasDestaque(destaques);
-        }
-
-        const offset = (pagina - 1) * limitePorPagina;
-        const resultado = await withTimeout(
-          () => getNoticias(limitePorPagina, offset),
-          10000,
-          "Tempo limite ao buscar notícias."
-        );
-
-        if (pagina === 1) {
-          setNoticias(resultado);
-        } else {
-          setNoticias((previous) => [...previous, ...resultado]);
-        }
-
-        setTemMaisNoticias(resultado.length === limitePorPagina);
-      } catch (erro) {
-        console.error("Erro ao carregar notícias:", erro);
-        setError("Não foi possível carregar as notícias. Tente novamente mais tarde.");
-      } finally {
-        setIsFeedLoading(false);
-      }
-    };
-
-    void carregarNoticias();
-  }, [pagina]);
+    if (destaqueState.error) {
+      setError(destaqueState.error);
+    }
+  }, [feedState.error, destaqueState.error]);
 
   const buscarComIA = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -117,20 +85,23 @@ export default function NoticiasPageClient() {
   };
 
   const carregarMais = () => {
-    if (isFeedLoading) return;
+    if (feedState.loading) return;
     setPagina((previous) => previous + 1);
   };
 
   const termoBusca = busca.trim().toLowerCase();
   const filtrando = termoBusca.length > 0;
   const noticiasVisiveis = filtrando
-    ? noticias.filter(
+    ? feedState.data.filter(
         (noticia) =>
           noticia.titulo.toLowerCase().includes(termoBusca) ||
           noticia.resumo.toLowerCase().includes(termoBusca) ||
           noticia.tags?.some((tag) => tag.toLowerCase().includes(termoBusca))
       )
-    : noticias;
+    : feedState.data;
+  const noticiasDestaque = destaqueState.data;
+  const temMaisNoticias = feedState.hasMore;
+  const isFeedLoading = feedState.loading;
 
   return (
     <main className="flex-grow">
