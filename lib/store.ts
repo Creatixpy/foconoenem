@@ -1,5 +1,6 @@
 import { EssayResult, Question } from "@/types";
 import { supabase, withSupabaseTimeout } from "./supabase";
+import type { Json } from "@/types/supabase";
 
 /**
  * Obtém um resultado de redação pelo ID do Supabase
