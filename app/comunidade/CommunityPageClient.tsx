@@ -15,14 +15,7 @@ import {
 } from "@/lib/auth";
 import { supabase, withSupabaseTimeout } from "@/lib/supabase";
 import { useAuth } from "../contexts/AuthContext";
-
-type CommunityTopic = {
-  id: string;
-  slug: string;
-  title: string;
-  description: string | null;
-  created_at: string;
-};
+import { useCommunityTopics } from "./hooks/useCommunityTopics";
 
 type CommunityPost = {
   id: string;
@@ -143,10 +136,8 @@ const renderBadges = (badges?: UserAchievement[]) => {
 
 export default function CommunityPageClient() {
   const { user, profile, loading: authLoading, refreshProfile } = useAuth();
-  const [topics, setTopics] = useState<CommunityTopic[]>([]);
+  const { topics, loading: topicsLoading, error: topicsError, reload: reloadTopics } = useCommunityTopics();
   const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
-  const [topicsLoading, setTopicsLoading] = useState(true);
-  const [topicsError, setTopicsError] = useState<string | null>(null);
 
   const [threads, setThreads] = useState<CommunityThread[]>([]);
   const [postsLoading, setPostsLoading] = useState(false);
@@ -180,8 +171,13 @@ export default function CommunityPageClient() {
   const [ageCheckbox, setAgeCheckbox] = useState(false);
   const [termsCheckbox, setTermsCheckbox] = useState(false);
   const [consentSaving, setConsentSaving] = useState(false);
-
   const realtimeChannelRef = useRef<RealtimeChannel | null>(null);
+
+  useEffect(() => {
+    if (!selectedTopicId && topics.length > 0) {
+      setSelectedTopicId(topics[0].id);
+    }
+  }, [topics, selectedTopicId]);
 
   useEffect(() => {
     setTaglineDraft(profile?.community_tagline ?? "");
@@ -269,40 +265,6 @@ export default function CommunityPageClient() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, selectedTopicId]);
-
-  const loadTopics = useCallback(async () => {
-    try {
-      setTopicsLoading(true);
-      setTopicsError(null);
-      const { data, error } = await withSupabaseTimeout(async (signal) => {
-        const response = await supabase
-          .from("community_topics")
-          .select("*")
-          .order("title", { ascending: true })
-          .abortSignal(signal);
-
-        return response;
-      });
-
-      if (error) throw error;
-
-      const topicList = data ?? [];
-      setTopics(topicList);
-      setSelectedTopicId((previous) => {
-        if (previous && topicList.some((topic) => topic.id === previous)) {
-          return previous;
-        }
-        return topicList[0]?.id ?? null;
-      });
-    } catch (error) {
-      console.error("Erro ao carregar tópicos:", error);
-      setTopicsError("Não foi possível carregar os tópicos agora. Tente novamente em alguns minutos.");
-      setTopics([]);
-      setSelectedTopicId(null);
-    } finally {
-      setTopicsLoading(false);
-    }
-  }, []);
 
   const hydrateProfiles = useCallback(async (userIds: string[]) => {
     if (userIds.length === 0) return;
@@ -548,11 +510,10 @@ export default function CommunityPageClient() {
       return;
     }
 
-    void loadTopics();
     void loadStatistics();
     void loadUserBadges();
     void loadCommentCount();
-  }, [authLoading, user, loadCommentCount, loadStatistics, loadTopics, loadUserBadges]);
+  }, [authLoading, user, loadCommentCount, loadStatistics, loadUserBadges]);
 
   useEffect(() => {
     if (user && selectedTopicId) {
@@ -1045,7 +1006,7 @@ export default function CommunityPageClient() {
                 <h2 className="text-lg font-semibold text-foreground">Tópicos</h2>
                 <button
                   type="button"
-                  onClick={() => void loadTopics()}
+                  onClick={() => void reloadTopics()}
                   className="text-sm font-semibold text-primary hover:text-primary-dark"
                 >
                   Atualizar
