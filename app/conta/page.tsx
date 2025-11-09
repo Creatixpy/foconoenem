@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "../contexts/AuthContext";
@@ -28,6 +28,7 @@ import {
 } from "recharts";
 import { supabase } from "@/lib/supabase";
 import { withTimeout } from "@/lib/with-timeout";
+import { isAbortError } from "@/lib/errors";
 
 export default function ContaPage() {
   const router = useRouter();
@@ -37,6 +38,18 @@ export default function ContaPage() {
   const [loading, setLoading] = useState(true);
   const [recalculating, setRecalculating] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const statsRequestRef = useRef<Promise<UserStatistics | null> | null>(null);
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+        retryTimeoutRef.current = null;
+      }
+      statsRequestRef.current = null;
+    };
+  }, []);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -46,16 +59,62 @@ export default function ContaPage() {
 
   const fetchLatestStatistics = useCallback(async () => {
     if (!user) return null;
+    if (statsRequestRef.current) {
+      return statsRequestRef.current;
+    }
 
-    const stats = await withTimeout(
+    const request = withTimeout(
       () => getUserStatistics(user.id),
       10000,
       "Tempo limite ao buscar estatísticas."
-    );
+    )
+      .then((stats) => {
+        setStatistics(stats);
+        setErrorMessage(null);
+        return stats;
+      })
+      .catch((error) => {
+        if (isAbortError(error)) {
+          setErrorMessage("Conexão instável. Tentaremos novamente em instantes.");
+        }
+        throw error;
+      })
+      .finally(() => {
+        statsRequestRef.current = null;
+      });
 
-    setStatistics(stats);
-    return stats;
+    statsRequestRef.current = request;
+    return request;
   }, [user]);
+
+  const scheduleStatisticsRetry = useCallback(() => {
+    if (retryTimeoutRef.current || statsRequestRef.current) {
+      return;
+    }
+
+    retryTimeoutRef.current = setTimeout(() => {
+      retryTimeoutRef.current = null;
+      void fetchLatestStatistics().catch((error) => {
+        if (isAbortError(error)) {
+          scheduleStatisticsRetry();
+        } else {
+          console.error('Erro ao atualizar estatísticas após nova tentativa:', error);
+          setErrorMessage('Não foi possível atualizar suas estatísticas em tempo real.');
+        }
+      });
+    }, 5000);
+  }, [fetchLatestStatistics, setErrorMessage]);
+
+  const triggerStatisticsRefresh = useCallback(() => {
+    void fetchLatestStatistics().catch((error) => {
+      console.error('Erro ao atualizar estatísticas:', error);
+      if (isAbortError(error)) {
+        scheduleStatisticsRetry();
+      } else {
+        setErrorMessage('Não foi possível atualizar suas estatísticas em tempo real.');
+      }
+    });
+  }, [fetchLatestStatistics, scheduleStatisticsRetry, setErrorMessage]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -91,14 +150,19 @@ export default function ContaPage() {
         setEssays(essaysData || []);
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
-        setErrorMessage('Não foi possível carregar seus dados agora. Tente novamente em instantes.');
+        if (isAbortError(error)) {
+          setErrorMessage('Conexão instável. Tentaremos novamente em instantes.');
+          scheduleStatisticsRetry();
+        } else {
+          setErrorMessage('Não foi possível carregar seus dados agora. Tente novamente em instantes.');
+        }
       } finally {
         setLoading(false);
       }
     };
 
     void loadData();
-  }, [user, fetchLatestStatistics]);
+  }, [user, fetchLatestStatistics, scheduleStatisticsRetry]);
 
   useEffect(() => {
     if (!user) return;
@@ -109,10 +173,7 @@ export default function ContaPage() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'user_statistics', filter: `user_id=eq.${user.id}` },
         () => {
-          void fetchLatestStatistics().catch((error) => {
-            console.error('Erro ao atualizar estatísticas em tempo real:', error);
-            setErrorMessage('Não foi possível atualizar suas estatísticas em tempo real.');
-          });
+          triggerStatisticsRefresh();
         }
       )
       .on(
@@ -149,10 +210,7 @@ export default function ContaPage() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'quiz_results', filter: `user_id=eq.${user.id}` },
         () => {
-          void fetchLatestStatistics().catch((error) => {
-            console.error('Erro ao atualizar estatísticas após quiz:', error);
-            setErrorMessage('Não foi possível atualizar suas estatísticas em tempo real.');
-          });
+          triggerStatisticsRefresh();
         }
       )
       .subscribe();
@@ -160,7 +218,29 @@ export default function ContaPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, fetchLatestStatistics]);
+  }, [user, triggerStatisticsRefresh]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      return;
+    }
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        triggerStatisticsRefresh();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('focus', handleVisibility);
+    window.addEventListener('online', handleVisibility);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('focus', handleVisibility);
+      window.removeEventListener('online', handleVisibility);
+    };
+  }, [triggerStatisticsRefresh]);
 
   const handleRecalculate = async () => {
     if (!user) return;

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { supabase, withSupabaseTimeout } from "@/lib/supabase";
+import { isAbortError } from "@/lib/errors";
 
 export type CommunityPost = {
   id: string;
@@ -41,6 +42,7 @@ export function useCommunityThreads(
   const [postLikes, setPostLikes] = useState<Record<string, { count: number; liked: boolean }>>({});
   const [commentCount, setCommentCount] = useState(0);
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const isFetchingRef = useRef(false);
   const onThreadsLoadedRef = useRef<UseCommunityThreadsOptions['onThreadsLoaded']>(options?.onThreadsLoaded);
   const onPostInsertedRef = useRef<UseCommunityThreadsOptions['onPostInserted']>(options?.onPostInserted);
   const onCommentInsertedRef = useRef<UseCommunityThreadsOptions['onCommentInserted']>(options?.onCommentInserted);
@@ -52,6 +54,9 @@ export function useCommunityThreads(
   }, [options?.onThreadsLoaded, options?.onPostInserted, options?.onCommentInserted]);
 
   const loadThreads = useCallback(async () => {
+    if (isFetchingRef.current) {
+      return;
+    }
     if (!topicId) {
       setThreads([]);
       setPostLikes({});
@@ -59,6 +64,7 @@ export function useCommunityThreads(
     }
 
     try {
+      isFetchingRef.current = true;
       setLoading(true);
       setError(null);
 
@@ -112,16 +118,50 @@ export function useCommunityThreads(
       setThreads(normalizedThreads);
       onThreadsLoadedRef.current?.(normalizedThreads);
     } catch (loadError) {
-      console.error("Erro ao carregar posts:", loadError);
-      setError("Não foi possível carregar os posts deste tópico no momento.");
-      setThreads([]);
+      if (isAbortError(loadError)) {
+        console.warn("Requisição abortada ao carregar posts, aguardando nova tentativa.", loadError);
+        setError("Conexão instável. Tentaremos novamente ao retomar a aba.");
+      } else {
+        console.error("Erro ao carregar posts:", loadError);
+        setError("Não foi possível carregar os posts deste tópico no momento.");
+        setThreads([]);
+      }
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
   }, [topicId]);
 
   useEffect(() => {
     void loadThreads();
+  }, [loadThreads]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof document === "undefined") {
+      return;
+    }
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible" && !isFetchingRef.current) {
+        void loadThreads();
+      }
+    };
+
+    const handleOnline = () => {
+      if (!isFetchingRef.current) {
+        void loadThreads();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("focus", handleVisibility);
+    window.addEventListener("online", handleOnline);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("focus", handleVisibility);
+      window.removeEventListener("online", handleOnline);
+    };
   }, [loadThreads]);
 
   useEffect(() => {

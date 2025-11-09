@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Noticia } from "@/types";
 import { getNoticias, getNoticiasDestaque } from "@/lib/supabase";
 import { withTimeout } from "@/lib/with-timeout";
+import { isAbortError } from "@/lib/errors";
 
 const DEFAULT_TIMEOUT = 10000;
 const FEED_ERROR_MESSAGE = "Não foi possível carregar as notícias. Tente novamente mais tarde.";
@@ -29,52 +30,92 @@ export function useNoticiasFeed(page: number, limit: number): FeedState {
     error: null,
     hasMore: true,
   });
+  const inFlightRef = useRef(false);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
-    let canceled = false;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  const fetchFeed = useCallback(async () => {
+    if (inFlightRef.current) {
+      return;
+    }
+
     const currentPage = Math.max(1, page);
     const offset = (currentPage - 1) * limit;
+    inFlightRef.current = true;
 
     setState((previous) => ({
       ...previous,
       loading: true,
       error: null,
-      ...(currentPage === 1 ? { data: [] } : null),
     }));
 
-    async function fetchFeed() {
-      try {
-        const noticias = await withTimeout(
-          () => getNoticias(limit, offset),
-          DEFAULT_TIMEOUT,
-          "Tempo limite ao buscar notícias."
-        );
+    try {
+      const noticias = await withTimeout(
+        () => getNoticias(limit, offset),
+        DEFAULT_TIMEOUT,
+        "Tempo limite ao buscar notícias."
+      );
 
-        if (canceled) return;
+      if (!mountedRef.current) {
+        return;
+      }
 
-        setState((previous) => ({
-          data: currentPage === 1 ? noticias : [...previous.data, ...noticias],
-          loading: false,
-          error: null,
-          hasMore: noticias.length === limit,
-        }));
-      } catch (error) {
-        if (canceled) return;
-        console.error("Erro ao carregar notícias:", error);
+      setState((previous) => ({
+        data: currentPage === 1 ? noticias : [...previous.data, ...noticias],
+        loading: false,
+        error: null,
+        hasMore: noticias.length === limit,
+      }));
+    } catch (error) {
+      console.error("Erro ao carregar notícias:", error);
+      if (mountedRef.current) {
         setState((previous) => ({
           ...previous,
           loading: false,
-          error: FEED_ERROR_MESSAGE,
+          error: isAbortError(error) ? null : FEED_ERROR_MESSAGE,
         }));
       }
+    } finally {
+      inFlightRef.current = false;
+    }
+  }, [limit, page]);
+
+  useEffect(() => {
+    void fetchFeed();
+  }, [fetchFeed]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof document === "undefined") {
+      return;
     }
 
-    void fetchFeed();
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible" && !inFlightRef.current) {
+        void fetchFeed();
+      }
+    };
+
+    const handleOnline = () => {
+      if (!inFlightRef.current) {
+        void fetchFeed();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("focus", handleVisibility);
+    window.addEventListener("online", handleOnline);
 
     return () => {
-      canceled = true;
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("focus", handleVisibility);
+      window.removeEventListener("online", handleOnline);
     };
-  }, [page, limit]);
+  }, [fetchFeed]);
 
   return state;
 }
@@ -85,6 +126,7 @@ export function useNoticiasHighlights(enabled: boolean): HighlightState {
     loading: false,
     error: null,
   });
+  const inFlightRef = useRef(false);
 
   useEffect(() => {
     if (!enabled) {
@@ -99,6 +141,11 @@ export function useNoticiasHighlights(enabled: boolean): HighlightState {
     }));
 
     async function fetchHighlights() {
+      if (inFlightRef.current) {
+        return;
+      }
+
+      inFlightRef.current = true;
       try {
         const noticias = await withTimeout(
           () => getNoticiasDestaque(),
@@ -114,20 +161,23 @@ export function useNoticiasHighlights(enabled: boolean): HighlightState {
           error: null,
         });
       } catch (error) {
-        if (canceled) return;
         console.error("Erro ao carregar destaques:", error);
-        setState({
-          data: [],
-          loading: false,
-          error: HIGHLIGHT_ERROR_MESSAGE,
-        });
+        if (!canceled) {
+          setState((previous) => ({
+            ...previous,
+            loading: false,
+            error: isAbortError(error) ? null : HIGHLIGHT_ERROR_MESSAGE,
+          }));
+        }
       }
+      inFlightRef.current = false;
     }
 
     void fetchHighlights();
 
     return () => {
       canceled = true;
+      inFlightRef.current = false;
     };
   }, [enabled]);
 
