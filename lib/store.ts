@@ -37,9 +37,9 @@ export async function getResult(id: string): Promise<EssayResult | null> {
       redacaoOriginal: data.redacao_original,
       createdAt: data.created_at,
       origem: data.origem as "IA" | "Simulação",
-      tema: data.tema,
-      textoApoio1: data.texto_apoio1,
-      textoApoio2: data.texto_apoio2
+      tema: data.tema ?? undefined,
+      textoApoio1: data.texto_apoio1 ?? undefined,
+      textoApoio2: data.texto_apoio2 ?? undefined
     };
   } catch (error) {
     console.error("Erro ao obter resultado:", error);
