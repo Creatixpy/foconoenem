@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { supabase, withSupabaseTimeout } from "./supabase";
 
 /**
  * Verifica se o usuário pode fazer uma requisição (rate limiting)
@@ -12,25 +12,20 @@ export async function checkRateLimit(
   try {
     const windowStart = new Date(Date.now() - windowMinutes * 60 * 1000);
     
-    // Buscar registros existentes na janela de tempo
-    const { data: existingRecords, error: fetchError } = await supabase
-      .from('rate_limits')
-      .select('*')
-      .eq('identifier', identifier)
-      .eq('endpoint', endpoint)
-      .gte('window_start', windowStart.toISOString());
+    const existingRecords = await withSupabaseTimeout(async (signal) => {
+      const { data, error } = await supabase
+        .from('rate_limits')
+        .select('*')
+        .eq('identifier', identifier)
+        .eq('endpoint', endpoint)
+        .gte('window_start', windowStart.toISOString())
+        .abortSignal(signal);
+
+      if (error) throw error;
+      return data ?? [];
+    });
     
-    if (fetchError) {
-      console.error("Erro ao verificar rate limit:", fetchError);
-      // Em caso de erro, permitir a requisição
-      return {
-        allowed: true,
-        remaining: maxRequests - 1,
-        resetAt: new Date(Date.now() + windowMinutes * 60 * 1000)
-      };
-    }
-    
-    const totalRequests = existingRecords?.length || 0;
+    const totalRequests = existingRecords.length;
     
     if (totalRequests >= maxRequests) {
       // Limite excedido
@@ -45,18 +40,21 @@ export async function checkRateLimit(
     }
     
     // Registrar nova requisição
-    const { error: insertError } = await supabase
-      .from('rate_limits')
-      .insert({
-        identifier,
-        endpoint,
-        request_count: 1,
-        window_start: new Date().toISOString()
-      });
-    
-    if (insertError) {
-      console.error("Erro ao registrar rate limit:", insertError);
-    }
+    await withSupabaseTimeout(async (signal) => {
+      const { error } = await supabase
+        .from('rate_limits')
+        .insert({
+          identifier,
+          endpoint,
+          request_count: 1,
+          window_start: new Date().toISOString()
+        })
+        .abortSignal(signal);
+      
+      if (error) {
+        console.error("Erro ao registrar rate limit:", error);
+      }
+    });
     
     return {
       allowed: true,
@@ -81,14 +79,17 @@ export async function cleanupOldRateLimits(): Promise<void> {
   try {
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     
-    const { error } = await supabase
-      .from('rate_limits')
-      .delete()
-      .lt('window_start', oneHourAgo);
-    
-    if (error) {
-      console.error("Erro ao limpar rate limits antigos:", error);
-    }
+    await withSupabaseTimeout(async (signal) => {
+      const { error } = await supabase
+        .from('rate_limits')
+        .delete()
+        .lt('window_start', oneHourAgo)
+        .abortSignal(signal);
+      
+      if (error) {
+        console.error("Erro ao limpar rate limits antigos:", error);
+      }
+    });
   } catch (error) {
     console.error("Erro ao limpar rate limits antigos:", error);
   }
@@ -105,17 +106,19 @@ export async function getRateLimitInfo(
   try {
     const windowStart = new Date(Date.now() - windowMinutes * 60 * 1000);
     
-    const { data, error } = await supabase
-      .from('rate_limits')
-      .select('*')
-      .eq('identifier', identifier)
-      .eq('endpoint', endpoint)
-      .gte('window_start', windowStart.toISOString())
-      .order('window_start', { ascending: true });
-    
-    if (error || !data) {
-      return { count: 0, oldestRequest: null };
-    }
+    const data = await withSupabaseTimeout(async (signal) => {
+      const { data, error } = await supabase
+        .from('rate_limits')
+        .select('*')
+        .eq('identifier', identifier)
+        .eq('endpoint', endpoint)
+        .gte('window_start', windowStart.toISOString())
+        .order('window_start', { ascending: true })
+        .abortSignal(signal);
+      
+      if (error) throw error;
+      return data ?? [];
+    });
     
     return {
       count: data.length,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createHash } from 'node:crypto';
 import { authorizeAdmin } from '@/lib/admin-auth';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { withSupabaseTimeout } from '@/lib/supabase';
 
 type NewsApiArticle = {
   title: string | null;
@@ -249,10 +250,13 @@ export async function POST(request: NextRequest) {
 
   const slugs = uniqueRecords.map((record) => record.slug);
 
-  const { data: existing, error: existingError } = await supabaseAdmin
-    .from('noticias')
-    .select('slug')
-    .in('slug', slugs);
+  const { data: existing, error: existingError } = await withSupabaseTimeout(async (signal) =>
+    supabaseAdmin
+      .from('noticias')
+      .select('slug')
+      .in('slug', slugs)
+      .abortSignal(signal)
+  );
 
   if (existingError) {
     console.error('Erro ao verificar notícias existentes:', existingError);
@@ -270,10 +274,13 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const { data: inserted, error: insertError } = await supabaseAdmin
-    .from('noticias')
-    .insert(freshRecords)
-    .select('id, slug');
+  const { data: inserted, error: insertError } = await withSupabaseTimeout(async (signal) =>
+    supabaseAdmin
+      .from('noticias')
+      .insert(freshRecords)
+      .select('id, slug')
+      .abortSignal(signal)
+  );
 
   if (insertError) {
     console.error('Erro ao inserir notícias:', insertError);

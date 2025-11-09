@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { supabase, withSupabaseTimeout } from "./supabase";
 
 /**
  * Interface para tema em cache
@@ -19,24 +19,35 @@ export async function getCachedTheme(): Promise<CachedTheme | null> {
   try {
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     
-    const { data, error } = await supabase
-      .from('cached_themes')
-      .select('*')
-      .gte('created_at', oneDayAgo)
-      .order('usado_count', { ascending: true })
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
+    const data = await withSupabaseTimeout(async (signal) => {
+      const { data, error } = await supabase
+        .from('cached_themes')
+        .select('*')
+        .gte('created_at', oneDayAgo)
+        .order('usado_count', { ascending: true })
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
+        .abortSignal(signal);
+      
+      if (error) {
+        return null;
+      }
+      
+      return data as CachedTheme | null;
+    });
     
-    if (error || !data) {
+    if (!data) {
       return null;
     }
     
-    // Incrementar contador de uso
-    await supabase
-      .from('cached_themes')
-      .update({ usado_count: data.usado_count + 1 })
-      .eq('id', data.id);
+    await withSupabaseTimeout(async (signal) => {
+      await supabase
+        .from('cached_themes')
+        .update({ usado_count: data.usado_count + 1 })
+        .eq('id', data.id)
+        .abortSignal(signal);
+    });
     
     return data;
   } catch (error) {
@@ -54,18 +65,21 @@ export async function cacheTheme(
   textoApoio2: string
 ): Promise<void> {
   try {
-    const { error } = await supabase
-      .from('cached_themes')
-      .insert({
-        tema,
-        texto_apoio1: textoApoio1,
-        texto_apoio2: textoApoio2,
-        usado_count: 1
-      });
-    
-    if (error) {
-      console.error("Erro ao cachear tema:", error);
-    }
+    await withSupabaseTimeout(async (signal) => {
+      const { error } = await supabase
+        .from('cached_themes')
+        .insert({
+          tema,
+          texto_apoio1: textoApoio1,
+          texto_apoio2: textoApoio2,
+          usado_count: 1
+        })
+        .abortSignal(signal);
+      
+      if (error) {
+        console.error("Erro ao cachear tema:", error);
+      }
+    });
   } catch (error) {
     console.error("Erro ao cachear tema:", error);
   }
@@ -78,14 +92,17 @@ export async function cleanupOldThemes(): Promise<void> {
   try {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     
-    const { error } = await supabase
-      .from('cached_themes')
-      .delete()
-      .lt('created_at', sevenDaysAgo);
-    
-    if (error) {
-      console.error("Erro ao limpar temas antigos:", error);
-    }
+    await withSupabaseTimeout(async (signal) => {
+      const { error } = await supabase
+        .from('cached_themes')
+        .delete()
+        .lt('created_at', sevenDaysAgo)
+        .abortSignal(signal);
+      
+      if (error) {
+        console.error("Erro ao limpar temas antigos:", error);
+      }
+    });
   } catch (error) {
     console.error("Erro ao limpar temas antigos:", error);
   }

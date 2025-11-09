@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabase, withSupabaseTimeout } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,9 +22,12 @@ export async function GET(request: NextRequest) {
     }
     
     // Ordenar, limitar e pagina
-    const { data, error } = await query
-      .order('data_publicacao', { ascending: false })
-      .range(offset, offset + limit - 1);
+    const { data, error } = await withSupabaseTimeout(async (signal) =>
+      query
+        .order('data_publicacao', { ascending: false })
+        .range(offset, offset + limit - 1)
+        .abortSignal(signal)
+    );
     
     if (error) {
       console.error('Erro ao buscar notícias:', error);

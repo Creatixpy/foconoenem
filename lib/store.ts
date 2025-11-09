@@ -1,23 +1,26 @@
 import { EssayResult, Question } from "@/types";
-import { supabase } from "./supabase";
+import { supabase, withSupabaseTimeout } from "./supabase";
 
 /**
  * Obtém um resultado de redação pelo ID do Supabase
  */
 export async function getResult(id: string): Promise<EssayResult | null> {
   try {
-    const { data, error } = await supabase
-      .from('essay_results')
-      .select('*')
-      .eq('id', id)
-      .maybeSingle();
+    const data = await withSupabaseTimeout(async (signal) => {
+      const { data, error } = await supabase
+        .from('essay_results')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle()
+        .abortSignal(signal);
 
-    if (error) {
-      console.error("Erro ao buscar resultado:", error);
+      if (error) throw error;
+      return data;
+    });
+
+    if (!data) {
       return null;
     }
-
-    if (!data) return null;
     
     // Converter do formato do banco para o formato da aplicação
     return {
@@ -49,32 +52,32 @@ export async function getResult(id: string): Promise<EssayResult | null> {
  */
 export async function storeResult(id: string, result: EssayResult & { user_id?: string }): Promise<void> {
   try {
-    const { error } = await supabase
-      .from('essay_results')
-      .insert({
-        id,
-        nota: result.nota,
-        competencia1: result.competencia1,
-        competencia2: result.competencia2,
-        competencia3: result.competencia3,
-        competencia4: result.competencia4,
-        competencia5: result.competencia5,
-        feedback_geral: result.feedbackGeral,
-        ponto_fortes: result.pontoFortes,
-        pontos_a_melhorar: result.pontosAMelhorar,
-        redacao_original: result.redacaoOriginal,
-        origem: result.origem,
-        tema: result.tema,
-        texto_apoio1: result.textoApoio1,
-        texto_apoio2: result.textoApoio2,
-        user_id: result.user_id || null,
-        created_at: result.createdAt
-      });
-    
-    if (error) {
-      console.error("Erro ao armazenar resultado:", error);
-      throw error;
-    }
+    await withSupabaseTimeout(async (signal) => {
+      const { error } = await supabase
+        .from('essay_results')
+        .insert({
+          id,
+          nota: result.nota,
+          competencia1: result.competencia1,
+          competencia2: result.competencia2,
+          competencia3: result.competencia3,
+          competencia4: result.competencia4,
+          competencia5: result.competencia5,
+          feedback_geral: result.feedbackGeral,
+          ponto_fortes: result.pontoFortes,
+          pontos_a_melhorar: result.pontosAMelhorar,
+          redacao_original: result.redacaoOriginal,
+          origem: result.origem,
+          tema: result.tema,
+          texto_apoio1: result.textoApoio1,
+          texto_apoio2: result.textoApoio2,
+          user_id: result.user_id || null,
+          created_at: result.createdAt
+        })
+        .abortSignal(signal);
+      
+      if (error) throw error;
+    });
   } catch (error) {
     console.error("Erro ao armazenar resultado:", error);
     throw error;
@@ -86,14 +89,17 @@ export async function storeResult(id: string, result: EssayResult & { user_id?: 
  */
 export async function clearResults(): Promise<void> {
   try {
-    const { error } = await supabase
-      .from('essay_results')
-      .delete()
-      .neq('id', '00000000-0000-0000-0000-000000000000'); // Deleta todos
-    
-    if (error) {
-      console.error("Erro ao limpar resultados:", error);
-    }
+    await withSupabaseTimeout(async (signal) => {
+      const { error } = await supabase
+        .from('essay_results')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000')
+        .abortSignal(signal);
+      
+      if (error) {
+        console.error("Erro ao limpar resultados:", error);
+      }
+    });
   } catch (error) {
     console.error("Erro ao limpar resultados:", error);
   }
@@ -114,25 +120,25 @@ type QuizResultStoragePayload = {
 
 export async function storeQuizResult(payload: QuizResultStoragePayload): Promise<void> {
   try {
-    const { error } = await supabase
-      .from('quiz_results')
-      .insert({
-        user_id: payload.user_id ?? null,
-        total_questions: payload.total_questions,
-        correct_answers: payload.correct_answers,
-        wrong_answers: payload.wrong_answers,
-        unanswered_questions: payload.unanswered_questions,
-        score: payload.score,
-        questions_data: payload.questions,
-        answers_data: payload.answers,
-        disciplines: payload.disciplines,
-        created_at: payload.created_at ?? new Date().toISOString()
-      });
+    await withSupabaseTimeout(async (signal) => {
+      const { error } = await supabase
+        .from('quiz_results')
+        .insert({
+          user_id: payload.user_id ?? null,
+          total_questions: payload.total_questions,
+          correct_answers: payload.correct_answers,
+          wrong_answers: payload.wrong_answers,
+          unanswered_questions: payload.unanswered_questions,
+          score: payload.score,
+          questions_data: payload.questions,
+          answers_data: payload.answers,
+          disciplines: payload.disciplines,
+          created_at: payload.created_at ?? new Date().toISOString()
+        })
+        .abortSignal(signal);
 
-    if (error) {
-      console.error("Erro ao armazenar resultado de simulado:", error);
-      throw error;
-    }
+      if (error) throw error;
+    });
   } catch (error) {
     console.error("Erro ao armazenar resultado de simulado:", error);
     throw error;

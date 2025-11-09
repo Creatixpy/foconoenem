@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { supabase, withSupabaseTimeout } from "./supabase";
 
 /**
  * Tipos de eventos rastreados
@@ -32,19 +32,22 @@ export async function trackEvent(
 ): Promise<void> {
   try {
     const mergedMetadata = userId ? { ...(metadata ?? {}), user_id: userId } : metadata;
-    const { error } = await supabase
-      .from('analytics_events')
-      .insert({
-        event_type: eventType,
-        metadata: mergedMetadata || {},
-        user_ip: userIp,
-        user_agent: userAgent,
-        user_id: userId ?? null,
-      });
-    
-    if (error) {
-      console.error("Erro ao registrar evento:", error);
-    }
+    await withSupabaseTimeout(async (signal) => {
+      const { error } = await supabase
+        .from('analytics_events')
+        .insert({
+          event_type: eventType,
+          metadata: mergedMetadata || {},
+          user_ip: userIp,
+          user_agent: userAgent,
+          user_id: userId ?? null,
+        })
+        .abortSignal(signal);
+      
+      if (error) {
+        throw error;
+      }
+    });
   } catch (error) {
     // Não falhar a aplicação se analytics falhar
     console.error("Erro ao registrar evento:", error);
@@ -72,30 +75,32 @@ export async function getEventStats(
   endDate?: Date
 ): Promise<AnalyticsEvent[]> {
   try {
-    let query = supabase
-      .from('analytics_events')
-      .select('*');
+    const data = await withSupabaseTimeout(async (signal) => {
+      let query = supabase
+        .from('analytics_events')
+        .select('*');
+      
+      if (eventType) {
+        query = query.eq('event_type', eventType);
+      }
+      
+      if (startDate) {
+        query = query.gte('created_at', startDate.toISOString());
+      }
+      
+      if (endDate) {
+        query = query.lte('created_at', endDate.toISOString());
+      }
+      
+      const { data, error } = await query
+        .order('created_at', { ascending: false })
+        .abortSignal(signal);
+      
+      if (error) throw error;
+      return data ?? [];
+    });
     
-    if (eventType) {
-      query = query.eq('event_type', eventType);
-    }
-    
-    if (startDate) {
-      query = query.gte('created_at', startDate.toISOString());
-    }
-    
-    if (endDate) {
-      query = query.lte('created_at', endDate.toISOString());
-    }
-    
-    const { data, error } = await query.order('created_at', { ascending: false });
-    
-    if (error) {
-      console.error("Erro ao buscar estatísticas:", error);
-      return [];
-    }
-    
-    return data || [];
+    return data;
   } catch (error) {
     console.error("Erro ao buscar estatísticas:", error);
     return [];
@@ -110,25 +115,24 @@ export async function countEventsByType(
   endDate?: Date
 ): Promise<Record<string, number>> {
   try {
-    let query = supabase
-      .from('analytics_events')
-      .select('event_type');
+    const data = await withSupabaseTimeout(async (signal) => {
+      let query = supabase
+        .from('analytics_events')
+        .select('event_type');
+      
+      if (startDate) {
+        query = query.gte('created_at', startDate.toISOString());
+      }
+      
+      if (endDate) {
+        query = query.lte('created_at', endDate.toISOString());
+      }
+      
+      const { data, error } = await query.abortSignal(signal);
+      if (error) throw error;
+      return data ?? [];
+    });
     
-    if (startDate) {
-      query = query.gte('created_at', startDate.toISOString());
-    }
-    
-    if (endDate) {
-      query = query.lte('created_at', endDate.toISOString());
-    }
-    
-    const { data, error } = await query;
-    
-    if (error || !data) {
-      return {};
-    }
-    
-    // Contar eventos por tipo
     const counts: Record<string, number> = {};
     data.forEach((event: { event_type: string }) => {
       counts[event.event_type] = (counts[event.event_type] || 0) + 1;
@@ -148,14 +152,17 @@ export async function cleanupOldEvents(): Promise<void> {
   try {
     const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
     
-    const { error } = await supabase
-      .from('analytics_events')
-      .delete()
-      .lt('created_at', ninetyDaysAgo);
-    
-    if (error) {
-      console.error("Erro ao limpar eventos antigos:", error);
-    }
+    await withSupabaseTimeout(async (signal) => {
+      const { error } = await supabase
+        .from('analytics_events')
+        .delete()
+        .lt('created_at', ninetyDaysAgo)
+        .abortSignal(signal);
+      
+      if (error) {
+        console.error("Erro ao limpar eventos antigos:", error);
+      }
+    });
   } catch (error) {
     console.error("Erro ao limpar eventos antigos:", error);
   }

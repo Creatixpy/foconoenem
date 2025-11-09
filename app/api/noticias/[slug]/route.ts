@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabase, withSupabaseTimeout } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   // Extrai o slug da URL
@@ -11,11 +11,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Slug não fornecido' }, { status: 400 });
   }
 
-  const { data, error } = await supabase
-    .from('noticias')
-    .select('*')
-    .eq('slug', slug)
-    .single();
+  const { data, error } = await withSupabaseTimeout(async (signal) =>
+    supabase
+      .from('noticias')
+      .select('*')
+      .eq('slug', slug)
+      .single()
+      .abortSignal(signal)
+  );
 
   if (error) {
     console.error('Erro ao buscar notícia:', error);
