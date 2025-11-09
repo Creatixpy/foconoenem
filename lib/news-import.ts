@@ -185,8 +185,8 @@ export async function fetchNewsApiArticles(options: {
     const payload = (await response.json()) as NewsApiResponse;
 
     if (!response.ok || payload.status !== 'ok') {
-      const detail = 'code' in payload ? payload.code : 'erro_newsapi';
-      throw new Error(payload.message ?? detail ?? 'Falha ao consultar NewsAPI');
+      const detail = payload.status === 'error' ? payload.message ?? payload.code : 'erro_newsapi';
+      throw new Error(detail ?? 'Falha ao consultar NewsAPI');
     }
 
     return payload.articles;
