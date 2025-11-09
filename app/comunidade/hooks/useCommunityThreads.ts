@@ -41,10 +41,15 @@ export function useCommunityThreads(
   const [postLikes, setPostLikes] = useState<Record<string, { count: number; liked: boolean }>>({});
   const [commentCount, setCommentCount] = useState(0);
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const onThreadsLoadedRef = useRef<UseCommunityThreadsOptions['onThreadsLoaded']>(options?.onThreadsLoaded);
+  const onPostInsertedRef = useRef<UseCommunityThreadsOptions['onPostInserted']>(options?.onPostInserted);
+  const onCommentInsertedRef = useRef<UseCommunityThreadsOptions['onCommentInserted']>(options?.onCommentInserted);
 
-  const onThreadsLoaded = options?.onThreadsLoaded;
-  const onPostInserted = options?.onPostInserted;
-  const onCommentInserted = options?.onCommentInserted;
+  useEffect(() => {
+    onThreadsLoadedRef.current = options?.onThreadsLoaded;
+    onPostInsertedRef.current = options?.onPostInserted;
+    onCommentInsertedRef.current = options?.onCommentInserted;
+  }, [options?.onThreadsLoaded, options?.onPostInserted, options?.onCommentInserted]);
 
   const loadThreads = useCallback(async () => {
     if (!topicId) {
@@ -105,7 +110,7 @@ export function useCommunityThreads(
       }));
 
       setThreads(normalizedThreads);
-      onThreadsLoaded?.(normalizedThreads);
+      onThreadsLoadedRef.current?.(normalizedThreads);
     } catch (loadError) {
       console.error("Erro ao carregar posts:", loadError);
       setError("Não foi possível carregar os posts deste tópico no momento.");
@@ -113,7 +118,7 @@ export function useCommunityThreads(
     } finally {
       setLoading(false);
     }
-  }, [topicId, onThreadsLoaded]);
+  }, [topicId]);
 
   useEffect(() => {
     void loadThreads();
@@ -149,7 +154,7 @@ export function useCommunityThreads(
             [newPost.id]: previous[newPost.id] ?? { count: 0, liked: false },
           }));
 
-          onPostInserted?.(newPost);
+          onPostInsertedRef.current?.(newPost);
         }
       )
       .on(
@@ -170,7 +175,7 @@ export function useCommunityThreads(
             setCommentCount((prev) => prev + 1);
           }
 
-          onCommentInserted?.(newComment);
+          onCommentInsertedRef.current?.(newComment);
         }
       )
       .subscribe();
@@ -183,7 +188,7 @@ export function useCommunityThreads(
         channelRef.current = null;
       }
     };
-  }, [topicId, userId, onPostInserted, onCommentInserted]);
+  }, [topicId, userId]);
 
   return {
     threads,
