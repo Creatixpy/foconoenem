@@ -33,6 +33,7 @@ import { isAbortError } from "@/lib/errors";
 export default function ContaPage() {
   const router = useRouter();
   const { user, profile, loading: authLoading } = useAuth();
+  const userId = user?.id ?? null;
   const [statistics, setStatistics] = useState<UserStatistics | null>(null);
   const [essays, setEssays] = useState<Array<{nota: number; created_at: string; id: string}>>([]);
   const [loading, setLoading] = useState(true);
@@ -58,13 +59,13 @@ export default function ContaPage() {
   }, [user, authLoading, router]);
 
   const fetchLatestStatistics = useCallback(async () => {
-    if (!user) return null;
+    if (!userId) return null;
     if (statsRequestRef.current) {
       return statsRequestRef.current;
     }
 
     const request = withTimeout(
-      () => getUserStatistics(user.id),
+      () => getUserStatistics(userId),
       10000,
       "Tempo limite ao buscar estatísticas."
     )
@@ -82,10 +83,9 @@ export default function ContaPage() {
       .finally(() => {
         statsRequestRef.current = null;
       });
-
     statsRequestRef.current = request;
     return request;
-  }, [user]);
+  }, [userId]);
 
   const scheduleStatisticsRetry = useCallback(() => {
     if (retryTimeoutRef.current || statsRequestRef.current) {
@@ -118,7 +118,7 @@ export default function ContaPage() {
 
   useEffect(() => {
     const loadData = async () => {
-      if (!user) {
+      if (!userId) {
         setLoading(false);
         return;
       }
@@ -134,7 +134,7 @@ export default function ContaPage() {
             await supabase
               .from('essay_results')
               .select('id, nota, created_at')
-              .eq('user_id', user.id)
+              .eq('user_id', userId)
               .order('created_at', { ascending: false })
               .limit(10),
           10000,
@@ -162,23 +162,23 @@ export default function ContaPage() {
     };
 
     void loadData();
-  }, [user, fetchLatestStatistics, scheduleStatisticsRetry]);
+  }, [userId, fetchLatestStatistics, scheduleStatisticsRetry]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!userId) return;
 
     const channel = supabase
-      .channel(`account-updates-${user.id}`)
+      .channel(`account-updates-${userId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'user_statistics', filter: `user_id=eq.${user.id}` },
+        { event: '*', schema: 'public', table: 'user_statistics', filter: `user_id=eq.${userId}` },
         () => {
           triggerStatisticsRefresh();
         }
       )
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'essay_results', filter: `user_id=eq.${user.id}` },
+        { event: 'INSERT', schema: 'public', table: 'essay_results', filter: `user_id=eq.${userId}` },
         (payload) => {
           const newEssay = payload.new as { id: string; nota: number; created_at: string };
           setEssays((previous) => {
@@ -189,7 +189,7 @@ export default function ContaPage() {
       )
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'essay_results', filter: `user_id=eq.${user.id}` },
+        { event: 'UPDATE', schema: 'public', table: 'essay_results', filter: `user_id=eq.${userId}` },
         (payload) => {
           const updatedEssay = payload.new as { id: string; nota: number; created_at: string };
           setEssays((previous) => {
@@ -200,7 +200,7 @@ export default function ContaPage() {
       )
       .on(
         'postgres_changes',
-        { event: 'DELETE', schema: 'public', table: 'essay_results', filter: `user_id=eq.${user.id}` },
+        { event: 'DELETE', schema: 'public', table: 'essay_results', filter: `user_id=eq.${userId}` },
         (payload) => {
           const removedEssay = payload.old as { id: string };
           setEssays((previous) => previous.filter((essay) => essay.id !== removedEssay.id));
@@ -208,7 +208,7 @@ export default function ContaPage() {
       )
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'quiz_results', filter: `user_id=eq.${user.id}` },
+        { event: '*', schema: 'public', table: 'quiz_results', filter: `user_id=eq.${userId}` },
         () => {
           triggerStatisticsRefresh();
         }
@@ -218,7 +218,7 @@ export default function ContaPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, triggerStatisticsRefresh]);
+  }, [userId, triggerStatisticsRefresh]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof document === 'undefined') {
@@ -243,12 +243,12 @@ export default function ContaPage() {
   }, [triggerStatisticsRefresh]);
 
   const handleRecalculate = async () => {
-    if (!user) return;
-    
+    if (!userId) return;
+
     setRecalculating(true);
     setErrorMessage(null);
     try {
-      await recalculateUserStatistics(user.id);
+      await recalculateUserStatistics(userId);
       // Recarregar estatísticas
       await fetchLatestStatistics();
     } catch (error) {

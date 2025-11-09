@@ -225,7 +225,7 @@ async function requestEssayAnalysis(
     messages: [{ role: 'user', content: prompt }],
     model: provider.model,
     temperature: 0.1,
-    max_completion_tokens: 8050,
+    max_completion_tokens: 15000,
     top_p: 1,
     stream: false,
     response_format: { type: 'json_object' },
