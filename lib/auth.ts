@@ -455,9 +455,10 @@ export async function getUserStatistics(userId: string): Promise<UserStatistics 
   ];
 
   const normalized = { ...data } as UserStatistics;
+  const rawData = data as unknown as Record<string, unknown>;
 
   for (const field of numericFields) {
-    normalized[field] = parseNumeric((data as Record<string, unknown>)[field]);
+    normalized[field] = parseNumeric(rawData[field]);
   }
 
     return normalized;
