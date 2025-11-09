@@ -526,7 +526,14 @@ export async function createUserGoal(userId: string, goal: Partial<UserGoal>) {
         .from('user_goals')
         .insert({
           user_id: userId,
-          ...goal,
+          tipo: goal.tipo ?? 'redacao_nota_minima',
+          descricao: goal.descricao ?? 'Meta sem descrição',
+          valor_alvo: goal.valor_alvo ?? null,
+          disciplina: goal.disciplina ?? null,
+          competencia: goal.competencia ?? null,
+          prazo: goal.prazo ?? null,
+          concluida: goal.concluida ?? false,
+          progresso: goal.progresso ?? 0,
         })
         .select()
         .single()
