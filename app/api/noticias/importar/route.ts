@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
   if (uniqueRecords.length === 0) {
     return NextResponse.json({
       imported: 0,
-      skipped: payload.articles.length,
+      skipped: articles.length,
       message: 'Nenhuma notícia válida encontrada na resposta da NewsAPI.',
     });
   }
