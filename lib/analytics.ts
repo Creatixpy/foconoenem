@@ -1,4 +1,5 @@
 import { supabase, withSupabaseTimeout } from "./supabase";
+import type { Database } from "@/types/supabase";
 
 /**
  * Tipos de eventos rastreados
@@ -57,14 +58,7 @@ export async function trackEvent(
 /**
  * Interface para evento de analytics
  */
-interface AnalyticsEvent {
-  id: string;
-  event_type: string;
-  metadata: Record<string, unknown> | null;
-  user_ip: string | null;
-  user_agent: string | null;
-  created_at: string;
-}
+type AnalyticsEvent = Database['public']['Tables']['analytics_events']['Row'];
 
 /**
  * Busca estatísticas de eventos
