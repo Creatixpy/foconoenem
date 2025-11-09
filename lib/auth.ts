@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { supabase, withSupabaseTimeout } from "./supabase";
 
 /**
  * Interface para dados de perfil do usuário
@@ -228,95 +228,142 @@ export async function getCurrentUser() {
  * Obtém o perfil do usuário
  */
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
-  const { data, error } = await supabase
-    .from('user_profiles')
-    .select('*')
-    .eq('user_id', userId)
-    .single();
-  
-  if (error) {
+  try {
+    const data = await withSupabaseTimeout(async (signal) => {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single()
+        .abortSignal(signal);
+
+      if (error) throw error;
+      return data as UserProfile;
+    });
+
+    return data;
+  } catch (error) {
     console.error('Erro ao buscar perfil:', error);
     return null;
   }
-  
-  return data;
 }
 
 /**
  * Cria perfil do usuário
  */
 export async function createUserProfile(userId: string, nomeCompleto?: string, objetivo?: string | null) {
-  const { data, error } = await supabase
-    .from('user_profiles')
-    .upsert(
-      {
-        user_id: userId,
-        nome_completo: nomeCompleto || null,
-        objetivo: objetivo ?? null,
-      },
-      { onConflict: 'user_id' }
-    )
-    .select()
-    .single();
-  
-  if (error) {
+  try {
+    const profile = await withSupabaseTimeout(async (signal) => {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .upsert(
+          {
+            user_id: userId,
+            nome_completo: nomeCompleto || null,
+            objetivo: objetivo ?? null,
+          },
+          { onConflict: 'user_id' }
+        )
+        .select()
+        .single()
+        .abortSignal(signal);
+
+      if (error) throw error;
+      return data;
+    });
+
+    await withSupabaseTimeout(async (signal) => {
+      const { error } = await supabase
+        .from('user_statistics')
+        .upsert(
+          { user_id: userId },
+          { onConflict: 'user_id' }
+        )
+        .abortSignal(signal);
+
+      if (error) throw error;
+    });
+
+    return profile;
+  } catch (error) {
     console.error('Erro ao criar perfil:', error);
     throw error;
   }
-  
-  // Criar estatísticas iniciais
-  await supabase
-    .from('user_statistics')
-    .upsert({
-      user_id: userId,
-    }, { onConflict: 'user_id' });
-  
-  return data;
 }
 
 /**
  * Atualiza perfil do usuário
  */
 export async function updateUserProfile(userId: string, updates: Partial<UserProfile>) {
-  const { data, error } = await supabase
-    .from('user_profiles')
-    .update(updates)
-    .eq('user_id', userId)
-    .select()
-    .single();
-  
-  if (error) throw error;
-  return data;
+  try {
+    const data = await withSupabaseTimeout(async (signal) => {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .update(updates)
+        .eq('user_id', userId)
+        .select()
+        .single()
+        .abortSignal(signal);
+
+      if (error) throw error;
+      return data;
+    });
+
+    return data;
+  } catch (error) {
+    console.error('Erro ao atualizar perfil:', error);
+    throw error;
+  }
 }
 
 export async function confirmCommunityAge(userId: string) {
-  const { data, error } = await supabase
-    .from('user_profiles')
-    .update({
-      is_over_16: true,
-      community_age_confirmed_at: new Date().toISOString(),
-    })
-    .eq('user_id', userId)
-    .select()
-    .single();
-  
-  if (error) throw error;
-  return data;
+  try {
+    const data = await withSupabaseTimeout(async (signal) => {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .update({
+          is_over_16: true,
+          community_age_confirmed_at: new Date().toISOString(),
+        })
+        .eq('user_id', userId)
+        .select()
+        .single()
+        .abortSignal(signal);
+
+      if (error) throw error;
+      return data;
+    });
+
+    return data;
+  } catch (error) {
+    console.error('Erro ao confirmar idade na comunidade:', error);
+    throw error;
+  }
 }
 
 export async function acceptCommunityTerms(userId: string, version: string = COMMUNITY_TERMS_VERSION) {
-  const { data, error } = await supabase
-    .from('user_profiles')
-    .update({
-      community_terms_version: version,
-      community_terms_accepted_at: new Date().toISOString(),
-    })
-    .eq('user_id', userId)
-    .select()
-    .single();
-  
-  if (error) throw error;
-  return data;
+  try {
+    const data = await withSupabaseTimeout(async (signal) => {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .update({
+          community_terms_version: version,
+          community_terms_accepted_at: new Date().toISOString(),
+        })
+        .eq('user_id', userId)
+        .select()
+        .single()
+        .abortSignal(signal);
+
+      if (error) throw error;
+      return data;
+    });
+
+    return data;
+  } catch (error) {
+    console.error('Erro ao aceitar termos da comunidade:', error);
+    throw error;
+  }
 }
 
 type CommunitySettingsInput = {
@@ -326,35 +373,50 @@ type CommunitySettingsInput = {
 };
 
 export async function updateCommunitySettings(userId: string, payload: CommunitySettingsInput) {
-  const { data, error } = await supabase
-    .from('user_profiles')
-    .update(payload)
-    .eq('user_id', userId)
-    .select()
-    .single();
-  
-  if (error) throw error;
-  return data;
+  try {
+    const data = await withSupabaseTimeout(async (signal) => {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .update(payload)
+        .eq('user_id', userId)
+        .select()
+        .single()
+        .abortSignal(signal);
+
+      if (error) throw error;
+      return data;
+    });
+
+    return data;
+  } catch (error) {
+    console.error('Erro ao atualizar preferências da comunidade:', error);
+    throw error;
+  }
 }
 
 /**
  * Obtém estatísticas do usuário
  */
 export async function getUserStatistics(userId: string): Promise<UserStatistics | null> {
-  const { data, error } = await supabase
-    .from('user_statistics')
-    .select('*')
-    .eq('user_id', userId)
-    .single();
-  
-  if (error) {
-    console.error('Erro ao buscar estatísticas:', error);
-    return null;
-  }
-  
-  if (!data) {
-    return null;
-  }
+  try {
+    const data = await withSupabaseTimeout(async (signal) => {
+      const { data, error } = await supabase
+        .from('user_statistics')
+        .select('*')
+        .eq('user_id', userId)
+        .single()
+        .abortSignal(signal);
+
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+
+      return data as UserStatistics | null;
+    });
+
+    if (!data) {
+      return null;
+    }
 
   const parseNumeric = (value: unknown): number | null => {
     if (value === null || value === undefined) {
@@ -398,7 +460,11 @@ export async function getUserStatistics(userId: string): Promise<UserStatistics 
     normalized[field] = parseNumeric((data as Record<string, unknown>)[field]);
   }
 
-  return normalized;
+    return normalized;
+  } catch (error) {
+    console.error('Erro ao buscar estatísticas:', error);
+    return null;
+  }
 }
 
 /**
@@ -406,8 +472,12 @@ export async function getUserStatistics(userId: string): Promise<UserStatistics 
  */
 export async function recalculateUserStatistics(userId: string): Promise<UserStatistics | null> {
   try {
-    const { data, error } = await supabase.rpc('recalculate_user_statistics', {
-      target_user_id: userId,
+    const { data, error } = await withSupabaseTimeout(async (signal) => {
+      return await supabase
+        .rpc('recalculate_user_statistics', {
+          target_user_id: userId,
+        })
+        .abortSignal(signal);
     });
 
     if (error) {
@@ -425,76 +495,117 @@ export async function recalculateUserStatistics(userId: string): Promise<UserSta
  * Obtém metas do usuário
  */
 export async function getUserGoals(userId: string): Promise<UserGoal[]> {
-  const { data, error } = await supabase
-    .from('user_goals')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
-  
-  if (error) {
+  try {
+    const data = await withSupabaseTimeout(async (signal) => {
+      const { data, error } = await supabase
+        .from('user_goals')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .abortSignal(signal);
+
+      if (error) throw error;
+      return data ?? [];
+    });
+
+    return data;
+  } catch (error) {
     console.error('Erro ao buscar metas:', error);
     return [];
   }
-  
-  return data || [];
 }
 
 /**
  * Cria uma nova meta
  */
 export async function createUserGoal(userId: string, goal: Partial<UserGoal>) {
-  const { data, error } = await supabase
-    .from('user_goals')
-    .insert({
-      user_id: userId,
-      ...goal,
-    })
-    .select()
-    .single();
-  
-  if (error) throw error;
-  return data;
+  try {
+    const data = await withSupabaseTimeout(async (signal) => {
+      const { data, error } = await supabase
+        .from('user_goals')
+        .insert({
+          user_id: userId,
+          ...goal,
+        })
+        .select()
+        .single()
+        .abortSignal(signal);
+
+      if (error) throw error;
+      return data;
+    });
+
+    return data;
+  } catch (error) {
+    console.error('Erro ao criar meta:', error);
+    throw error;
+  }
 }
 
 /**
  * Atualiza uma meta
  */
 export async function updateUserGoal(goalId: string, updates: Partial<UserGoal>) {
-  const { data, error } = await supabase
-    .from('user_goals')
-    .update(updates)
-    .eq('id', goalId)
-    .select()
-    .single();
-  
-  if (error) throw error;
-  return data;
+  try {
+    const data = await withSupabaseTimeout(async (signal) => {
+      const { data, error } = await supabase
+        .from('user_goals')
+        .update(updates)
+        .eq('id', goalId)
+        .select()
+        .single()
+        .abortSignal(signal);
+
+      if (error) throw error;
+      return data;
+    });
+
+    return data;
+  } catch (error) {
+    console.error('Erro ao atualizar meta:', error);
+    throw error;
+  }
 }
 
 /**
  * Deleta uma meta
  */
 export async function deleteUserGoal(goalId: string) {
-  const { error } = await supabase
-    .from('user_goals')
-    .delete()
-    .eq('id', goalId);
-  
-  if (error) throw error;
-  return true;
+  try {
+    await withSupabaseTimeout(async (signal) => {
+      const { error } = await supabase
+        .from('user_goals')
+        .delete()
+        .eq('id', goalId)
+        .abortSignal(signal);
+
+      if (error) throw error;
+    });
+
+    return true;
+  } catch (error) {
+    console.error('Erro ao excluir meta:', error);
+    throw error;
+  }
 }
 
 export async function getUserAchievements(userId: string): Promise<UserAchievement[]> {
-  const { data, error } = await supabase
-    .from('user_achievements')
-    .select('*, achievement:achievements(*)')
-    .eq('user_id', userId)
-    .order('earned_at', { ascending: false });
-  
-  if (error) {
+  try {
+    const data = await withSupabaseTimeout(async (signal) => {
+      const { data, error } = await supabase
+        .from('user_achievements')
+        .select('*, achievement:achievements(*)')
+        .eq('user_id', userId)
+        .order('earned_at', { ascending: false })
+        .abortSignal(signal);
+
+      if (error) throw error;
+      return (data as UserAchievement[]) ?? [];
+    });
+
+    return data;
+  } catch (error) {
     console.error('Erro ao buscar badges do usuário:', error);
     return [];
   }
-  
-  return (data as UserAchievement[]) ?? [];
 }
