@@ -19,19 +19,17 @@ export default function ResultadosPage() {
     const fetchResult = async () => {
       try {
         setLoading(true);
-        const { data } = await supabase.auth.getSession();
-        const token = data.session?.access_token;
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData.session?.access_token;
         if (!token) {
           throw new Error("Sessão expirada. Faça login novamente.");
         }
 
-        const response = await fetch(`/api/resultados/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await fetch(`/api/resultados/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         if (!response.ok) {
           throw new Error("Resultado não encontrado");
