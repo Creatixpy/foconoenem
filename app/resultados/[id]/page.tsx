@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { EssayResult } from "@/types";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/app/contexts/AuthContext";
 
 export default function ResultadosPage() {
   const [result, setResult] = useState<EssayResult | null>(null);
@@ -11,12 +13,25 @@ export default function ResultadosPage() {
   const [error, setError] = useState<string | null>(null);
   const params = useParams();
   const id = params?.id as string;
+  const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
     const fetchResult = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/resultados/${id}`);
+        const { data } = await supabase.auth.getSession();
+        const token = data.session?.access_token;
+        if (!token) {
+          throw new Error("Sessão expirada. Faça login novamente.");
+        }
+
+        const response = await fetch(`/api/resultados/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         if (!response.ok) {
           throw new Error("Resultado não encontrado");
@@ -38,8 +53,18 @@ export default function ResultadosPage() {
       return;
     }
 
+    if (authLoading) {
+      return;
+    }
+
+    if (!user) {
+      setError("Faça login para visualizar suas correções.");
+      setLoading(false);
+      return;
+    }
+
     void fetchResult();
-  }, [id]);
+  }, [id, authLoading, user]);
 
   const getGradeColor = (grade: number) => {
     if (grade >= 800) return "text-green-600";

@@ -2,8 +2,10 @@
 
 import { useState, useRef, useEffect, useCallback, useMemo, useId, type ClipboardEvent } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { getOperatingHoursInfo, type OperatingHoursInfo } from "@/lib/schedule";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/app/contexts/AuthContext";
 
 const guidanceSteps = [
   "Leia o tema e destaque o problema central.",
@@ -58,6 +60,7 @@ const getErrorMessage = (payload: unknown, fallback: string) => {
 };
 
 export default function RedacaoPageClient() {
+  const { user, loading: authLoading } = useAuth();
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -190,6 +193,11 @@ export default function RedacaoPageClient() {
   }, [isFocusMode]);
 
   const handleSubmit = async () => {
+    if (!user) {
+      setError("Faça login para enviar sua redação e acompanhar os resultados.");
+      return;
+    }
+
     const info = operatingInfo ?? (await fetchOperatingInfo());
     applyOperatingInfo(info);
 
@@ -249,14 +257,14 @@ export default function RedacaoPageClient() {
 
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData?.session?.access_token;
+      if (!accessToken) {
+        throw new Error("Sua sessão expirou. Faça login novamente.");
+      }
 
       const headers: HeadersInit = {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
       };
-
-      if (accessToken) {
-        headers.Authorization = `Bearer ${accessToken}`;
-      }
 
       const response = await fetch("/api/corrigir", {
         method: "POST",
@@ -602,6 +610,26 @@ export default function RedacaoPageClient() {
             </div>
 
             <div className={`grid gap-8 ${isFocusMode ? "" : "lg:grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)]"}`}>
+              {!authLoading && !user && (
+                <div className="col-span-full rounded-3xl border border-warning/30 bg-warning/10 p-5 shadow-sm">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-warning">Entre para enviar e salvar suas correções</p>
+                      <p className="text-xs text-foreground/70">
+                        Os resultados ficam vinculados à sua conta e alimentam seus gráficos na área do aluno.
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-3">
+                      <Link href="/auth/login" className="btn btn-primary text-sm">
+                        Fazer login
+                      </Link>
+                      <Link href="/auth/register" className="btn btn-outline text-sm">
+                        Criar conta
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              )}
               <div className="space-y-6">
                 <div className="surface-card space-y-6 p-6 shadow-xl">
                   <div className="flex flex-wrap items-center justify-between gap-3">
@@ -744,10 +772,12 @@ export default function RedacaoPageClient() {
                     )}
                     <button
                       onClick={handleSubmit}
-                      disabled={isSubmitting || !isSystemAvailable}
+                      disabled={isSubmitting || !isSystemAvailable || !user}
                       className="btn btn-primary px-6 py-3 text-base disabled:cursor-not-allowed disabled:opacity-60"
                       title={
-                        !isSystemAvailable && operatingInfo
+                        !user
+                          ? "É necessário estar logado para enviar sua redação"
+                          : !isSystemAvailable && operatingInfo
                           ? `Sistema disponível apenas das ${operatingInfo.opensAt} às ${operatingInfo.closesAt}`
                           : ""
                       }
@@ -756,6 +786,13 @@ export default function RedacaoPageClient() {
                         <span className="flex items-center gap-2">
                           <span className="inline-block h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
                           Enviando...
+                        </span>
+                      ) : !user ? (
+                        <span className="flex items-center gap-2">
+                          Entre para enviar
+                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                          </svg>
                         </span>
                       ) : !isSystemAvailable ? (
                         <span className="flex items-center gap-2">
@@ -773,6 +810,11 @@ export default function RedacaoPageClient() {
                         </span>
                       )}
                     </button>
+                    {!user && (
+                      <p className="w-full text-right text-xs text-foreground/70">
+                        O envio fica liberado após fazer login.
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
