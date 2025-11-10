@@ -1,4 +1,5 @@
 import { supabase, withSupabaseTimeout } from "./supabase";
+import { sanitizeRedirectPath } from './security';
 
 /**
  * Interface para dados de perfil do usuário
@@ -149,13 +150,20 @@ export async function signIn(email: string, password: string) {
 type GoogleSignupExtras = {
   nomeCompleto?: string;
   objetivo?: string;
+  redirectTo?: string;
 };
 
 export async function signInWithGoogle(extras?: GoogleSignupExtras) {
   // Usa a URL de produção para evitar problemas de redirect_uri_mismatch
-  const redirectTo = process.env.NODE_ENV === 'production'
+  const baseRedirect = process.env.NODE_ENV === 'production'
     ? 'https://foconoenem.vercel.app/auth/callback'
     : `${window.location.origin}/auth/callback`;
+
+  const callbackUrl = new URL(baseRedirect);
+  if (extras?.redirectTo) {
+    const safeNext = sanitizeRedirectPath(extras.redirectTo);
+    callbackUrl.searchParams.set('next', safeNext);
+  }
 
   if (extras?.nomeCompleto || extras?.objetivo) {
     try {
@@ -173,7 +181,7 @@ export async function signInWithGoogle(extras?: GoogleSignupExtras) {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo,
+      redirectTo: callbackUrl.toString(),
       queryParams: {
         access_type: 'offline',
         prompt: 'consent',
