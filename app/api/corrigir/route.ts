@@ -3,11 +3,10 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
 import { randomUUID } from 'crypto';
 import { buildGroqProviders, GROQ_MAX_ATTEMPTS, GroqProvider, isRateLimitError } from '@/lib/ai/groq';
-import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { getOperatingHoursInfo } from '@/lib/server/operating-hours';
 import { checkRateLimit } from '@/lib/server/rate-limit';
-import { extractUserIdFromToken } from '@/lib/server/jwt';
 import { trackEvent } from '@/lib/server/analytics';
+import { resolveRequestUser } from '@/lib/server/auth-request';
 
 type EssaySubmission = {
   redacao: string;
@@ -52,14 +51,6 @@ const DEFAULT_TEXT_1 =
 const DEFAULT_TEXT_2 =
   'A pandemia de COVID-19 evidenciou a necessidade de integração digital no ensino, mas também mostrou que muitos estudantes e professores não estão preparados para o uso efetivo das tecnologias educacionais.';
 
-async function requireSupabaseAdmin(): Promise<SupabaseClient<Database>> {
-  const client = await getSupabaseAdmin();
-  if (!client) {
-    throw new Error('Supabase service role não configurado. Defina SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY.');
-  }
-  return client as SupabaseClient<Database>;
-}
-
 function normalizeEssayRow(row: EssayRow): EssayResult {
   return {
     id: row.id,
@@ -81,8 +72,13 @@ function normalizeEssayRow(row: EssayRow): EssayResult {
   };
 }
 
-async function getResultById(client: SupabaseClient<Database>, id: string): Promise<EssayResult | null> {
-  const { data, error } = await client.from('essay_results').select('*').eq('id', id).maybeSingle();
+async function getResultById(client: SupabaseClient<Database>, id: string, userId: string): Promise<EssayResult | null> {
+  const { data, error } = await client
+    .from('essay_results')
+    .select('*')
+    .eq('id', id)
+    .eq('user_id', userId)
+    .maybeSingle();
 
   if (error) {
     console.error('Erro ao buscar redação corrigida:', error);
@@ -99,7 +95,7 @@ async function getResultById(client: SupabaseClient<Database>, id: string): Prom
 async function storeResult(
   client: SupabaseClient<Database>,
   result: EssayResult,
-  userId: string | null
+  userId: string
 ): Promise<void> {
   const payload: Database['public']['Tables']['essay_results']['Insert'] = {
     id: result.id,
@@ -124,36 +120,6 @@ async function storeResult(
   const { error } = await client.from('essay_results').insert(payload);
   if (error) {
     throw error;
-  }
-}
-
-async function resolveUserId(
-  client: SupabaseClient<Database>,
-  authorizationHeader: string | null
-): Promise<string | null> {
-  if (!authorizationHeader || !authorizationHeader.toLowerCase().startsWith('bearer ')) {
-    return null;
-  }
-
-  const token = authorizationHeader.slice('bearer '.length).trim();
-  if (!token) {
-    return null;
-  }
-
-  const decoded = extractUserIdFromToken(token);
-  if (decoded) {
-    return decoded;
-  }
-
-  try {
-    const { data, error } = await client.auth.getUser(token);
-    if (error) {
-      throw error;
-    }
-    return data?.user?.id ?? null;
-  } catch (error) {
-    console.error('Erro ao validar token do usuário:', error);
-    return null;
   }
 }
 
@@ -313,14 +279,20 @@ async function analyseEssay(input: {
 }
 
 export async function GET(request: NextRequest) {
-  const supabase = await requireSupabaseAdmin();
+  const auth = await resolveRequestUser(request);
+  if ('error' in auth) {
+    return auth.error;
+  }
+
+  const supabase = auth.supabase as SupabaseClient<Database>;
+  const userId = auth.userId;
   const id = request.nextUrl.searchParams.get('id');
 
   if (!id) {
     return NextResponse.json({ error: 'ID não fornecido' }, { status: 400 });
   }
 
-  const result = await getResultById(supabase, id);
+  const result = await getResultById(supabase, id, userId);
   if (!result) {
     return NextResponse.json({ error: 'Resultado não encontrado' }, { status: 404 });
   }
@@ -330,18 +302,26 @@ export async function GET(request: NextRequest) {
     metadata: { essay_id: id },
     userIp: request.headers.get('x-forwarded-for') ?? undefined,
     userAgent: request.headers.get('user-agent') ?? undefined,
+    userId,
   });
 
   return NextResponse.json({ result });
 }
 
 export async function POST(request: NextRequest) {
-  const supabase = await requireSupabaseAdmin();
+  const auth = await resolveRequestUser(request);
+  if ('error' in auth) {
+    return auth.error;
+  }
+
+  const supabase = auth.supabase as SupabaseClient<Database>;
+  const userId = auth.userId;
   const forwardedFor = request.headers.get('x-forwarded-for');
   const ip = forwardedFor?.split(',')[0].trim() ?? request.headers.get('x-real-ip') ?? 'unknown';
   const userAgent = request.headers.get('user-agent') ?? 'unknown';
 
-  const rateResult = await checkRateLimit(ip, '/api/corrigir', 5, 1);
+  const rateIdentifier = userId || ip;
+  const rateResult = await checkRateLimit(rateIdentifier, '/api/corrigir', 5, 1);
   if (!rateResult.allowed) {
     return NextResponse.json(
       {
@@ -404,9 +384,6 @@ export async function POST(request: NextRequest) {
   const temaFinal = submission.usarTemaPadrao !== false ? DEFAULT_THEME : submission.tema ?? DEFAULT_THEME;
   const textoApoio1Final = submission.usarTemaPadrao !== false ? DEFAULT_TEXT_1 : submission.textoApoio1 ?? '';
   const textoApoio2Final = submission.usarTemaPadrao !== false ? DEFAULT_TEXT_2 : submission.textoApoio2 ?? '';
-
-  const authHeader = request.headers.get('authorization');
-  const userId = await resolveUserId(supabase, authHeader);
 
   let aiAnalysis: { analysis: Omit<EssayResult, 'createdAt' | 'origem'>; provider: string } | null = null;
   try {
