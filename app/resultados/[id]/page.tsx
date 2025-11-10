@@ -10,7 +10,7 @@ type ResultadosPageProps = {
 
 export default async function ResultadosPage({ params }: ResultadosPageProps) {
   const { id } = await params;
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const { data } = await supabase.auth.getUser();
 
   if (!data.user) {

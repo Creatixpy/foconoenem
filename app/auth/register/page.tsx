@@ -11,7 +11,7 @@ type RegisterPageProps = {
 export default async function RegisterPage({ searchParams }: RegisterPageProps) {
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const redirectTo = sanitizeRedirectPath(resolvedSearchParams?.next as string | undefined);
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const { data } = await supabase.auth.getUser();
 
   if (data.user) {
