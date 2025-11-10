@@ -259,7 +259,7 @@ export default function ContaPageClient() {
     }
   }, [authLoading, user, router]);
 
-  if (authLoading || loading || !user) {
+  if (authLoading || loading || !user || !profile) {
     return (
       <main className="flex min-h-[60vh] items-center justify-center px-4 py-12">
         <div className="loader" />
