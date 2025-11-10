@@ -5,15 +5,11 @@ import { sanitizeRedirectPath } from '@/lib/security';
 
 type SearchParams = Record<string, string | string[] | undefined>;
 type RegisterPageProps = {
-  searchParams?: SearchParams | Promise<SearchParams>;
+  searchParams?: Promise<SearchParams>;
 };
 
-function isPromise<T = unknown>(value: unknown): value is Promise<T> {
-  return typeof value === 'object' && value !== null && 'then' in value;
-}
-
 export default async function RegisterPage({ searchParams }: RegisterPageProps) {
-  const resolvedSearchParams = isPromise(searchParams) ? await searchParams : searchParams;
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const redirectTo = sanitizeRedirectPath(resolvedSearchParams?.next as string | undefined);
   const supabase = createServerSupabaseClient();
   const { data } = await supabase.auth.getUser();
