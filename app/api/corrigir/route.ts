@@ -42,6 +42,11 @@ type EssayResult = {
 
 type EssayRow = Database['public']['Tables']['essay_results']['Row'];
 
+type ThemeAlignmentResult = {
+  aligned: boolean;
+  justification: string;
+};
+
 const MAX_ESSAY_LENGTH = 5000;
 const MIN_ESSAY_LENGTH = 50;
 
@@ -237,6 +242,96 @@ async function requestEssayAnalysis(
   };
 }
 
+async function requestThemeAlignment(
+  provider: GroqProvider,
+  submission: EssaySubmission,
+  temaFinal: string
+): Promise<ThemeAlignmentResult> {
+  const response = await provider.client.chat.completions.create({
+    messages: [
+      {
+        role: 'user',
+        content: `Analise rapidamente se a redação a seguir aborda o tema proposto.
+
+Tema: "${temaFinal}"
+
+Redação:
+${submission.redacao}
+
+Responda APENAS como JSON no formato:
+{
+  "alinhado": true|false,
+  "justificativa": "Explicação breve"
+}
+
+Regras:
+- Se a redação não tratar diretamente do tema, use alinhado=false.
+- Se tangenciar de forma muito superficial, considere false e explique.
+- Se abordar corretamente, alinhado=true e justifique em uma frase.
+`,
+      },
+    ],
+    model: provider.model,
+    temperature: 0,
+    max_completion_tokens: 256,
+    top_p: 1,
+    stream: false,
+    response_format: { type: 'json_object' },
+  });
+
+  const raw = response.choices?.[0]?.message?.content ?? '';
+  let parsed: { alinhado?: boolean; justificativa?: string };
+  try {
+    parsed = JSON.parse(raw);
+  } catch (error) {
+    console.error('Falha ao interpretar verificação de alinhamento:', error, raw);
+    throw new Error('Resposta inválida da IA ao verificar o tema.');
+  }
+
+  if (typeof parsed.alinhado !== 'boolean') {
+    throw new Error('A verificação de tema não retornou o campo "alinhado".');
+  }
+
+  return {
+    aligned: parsed.alinhado,
+    justification: parsed.justificativa?.trim() || (parsed.alinhado ? 'Alinhado ao tema.' : 'Não aborda o tema proposto.'),
+  };
+}
+
+async function verifyThemeAlignment(submission: EssaySubmission, temaFinal: string): Promise<ThemeAlignmentResult> {
+  const providers = buildGroqProviders();
+  const attemptsLog: string[] = [];
+
+  for (let providerIndex = 0; providerIndex < providers.length; providerIndex++) {
+    const provider = providers[providerIndex];
+    let attempt = 0;
+
+    while (attempt < GROQ_MAX_ATTEMPTS) {
+      attempt++;
+      try {
+        return await requestThemeAlignment(provider, submission, temaFinal);
+      } catch (error) {
+        const detail =
+          error instanceof Error
+            ? error.message
+            : typeof error === 'string'
+              ? error
+              : JSON.stringify(error);
+        attemptsLog.push(`(tema:${provider.name}) tentativa ${attempt}: ${detail}`);
+        console.error('Erro ao verificar alinhamento de tema:', error);
+
+        if (isRateLimitError(error) && providerIndex < providers.length - 1) {
+          break;
+        }
+      }
+    }
+  }
+
+  const finalError = new Error(attemptsLog.join(' | ') || 'Falha ao verificar alinhamento de tema');
+  (finalError as Error & { attemptsLog?: string[] }).attemptsLog = attemptsLog;
+  throw finalError;
+}
+
 async function analyseEssay(input: {
   submission: EssaySubmission;
   temaFinal: string;
@@ -385,6 +480,50 @@ export async function POST(request: NextRequest) {
   const textoApoio1Final = submission.usarTemaPadrao !== false ? DEFAULT_TEXT_1 : submission.textoApoio1 ?? '';
   const textoApoio2Final = submission.usarTemaPadrao !== false ? DEFAULT_TEXT_2 : submission.textoApoio2 ?? '';
 
+  let alignmentResult: ThemeAlignmentResult | null = null;
+  try {
+    alignmentResult = await verifyThemeAlignment({ ...submission, redacao: trimmedEssay }, temaFinal);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    const attempts =
+      error && typeof error === 'object' && 'attemptsLog' in error
+        ? ((error as { attemptsLog?: string[] }).attemptsLog ?? undefined)
+        : undefined;
+
+    console.error('Erro ao validar alinhamento de tema:', error);
+    return NextResponse.json(
+      {
+        error: 'Erro ao validar o tema',
+        message: 'Não foi possível confirmar se a redação aborda o tema. Tente novamente em instantes.',
+        diagnostics: { stage: 'verifyThemeAlignment', detail, attempts },
+      },
+      { status: 503 }
+    );
+  }
+
+  if (!alignmentResult.aligned) {
+    await trackEvent({
+      eventType: 'essay_rejected_theme',
+      metadata: {
+        theme_type: submission.usarTemaPadrao !== false ? 'padrao' : submission.tema ? 'personalizado' : 'gerado',
+        justification: alignmentResult.justification,
+        tema: temaFinal,
+      },
+      userIp: ip,
+      userAgent,
+      userId,
+    });
+
+    return NextResponse.json(
+      {
+        error: 'Tema não abordado',
+        message: 'Sua redação não trata do tema solicitado. Revise antes de reenviar.',
+        justification: alignmentResult.justification,
+      },
+      { status: 400 }
+    );
+  }
+
   let aiAnalysis: { analysis: Omit<EssayResult, 'createdAt' | 'origem'>; provider: string } | null = null;
   try {
     aiAnalysis = await analyseEssay({
@@ -438,6 +577,7 @@ export async function POST(request: NextRequest) {
       score: result.nota,
       tema: temaFinal,
       provider: aiAnalysis.provider,
+      alignment_justification: alignmentResult.justification,
     },
     userIp: ip,
     userAgent,
