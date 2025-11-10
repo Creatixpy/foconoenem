@@ -5,19 +5,11 @@ import { sanitizeRedirectPath } from '@/lib/security';
 
 
 type ResultadosPageProps = {
-  params: Promise<{ id: string } | { [key: string]: string }> | { id: string } | { [key: string]: string };
+  params: Promise<{ id: string }>;
 };
 
-function isPromise<T = unknown>(value: unknown): value is Promise<T> {
-  return typeof value === 'object' && value !== null && 'then' in value;
-}
-
 export default async function ResultadosPage({ params }: ResultadosPageProps) {
-  const resolvedParams = isPromise(params) ? await params : params;
-  const id = typeof resolvedParams === 'object' && 'id' in resolvedParams ? resolvedParams.id : undefined;
-  if (!id || typeof id !== 'string') {
-    redirect('/');
-  }
+  const { id } = await params;
   const supabase = createServerSupabaseClient();
   const { data } = await supabase.auth.getUser();
 
