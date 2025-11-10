@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import type { Question, QuizResult } from "@/types";
-import type { Database, Json } from "@/types/supabase";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Json } from "@/types/supabase";
 import { buildGroqProviders, GroqProvider, isRateLimitError } from "@/lib/ai/groq";
 import { getOperatingHoursInfo } from "@/lib/server/operating-hours";
-import { getSupabaseAdmin } from "@/lib/supabase-admin";
-import { extractUserIdFromToken } from "@/lib/server/jwt";
+import { resolveRequestUser } from "@/lib/server/auth-request";
 
 const DISCIPLINES: Question["discipline"][] = ["Matemática", "Português", "Química", "Física", "Geografia"];
 const QUESTIONS_PER_DISCIPLINE = 3;
@@ -94,24 +92,6 @@ function buildInsertPayload(userId: string, payload: QuizRequestPayload) {
     disciplines,
     created_at: new Date().toISOString(),
   };
-}
-
-async function resolveUserId(token: string, supabase: SupabaseClient<Database>): Promise<string | null> {
-  const decoded = extractUserIdFromToken(token);
-  if (decoded) {
-    return decoded;
-  }
-
-  try {
-    const { data, error } = await supabase.auth.getUser(token);
-    if (error) {
-      throw error;
-    }
-    return data?.user?.id ?? null;
-  } catch (error) {
-    console.error("Erro ao validar token do usuário:", error);
-    return null;
-  }
 }
 
 type GenerationDiagnostics = Record<Question["discipline"], string>;
@@ -364,12 +344,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
-  if (!authHeader || !authHeader.toLowerCase().startsWith("bearer ")) {
-    return NextResponse.json({ success: true, saved: false, reason: "not_authenticated" });
-  }
-
-  const token = authHeader.slice("bearer ".length).trim();
-  if (!token) {
+  if (!authHeader) {
     return NextResponse.json({ success: true, saved: false, reason: "not_authenticated" });
   }
 
@@ -382,18 +357,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: message }, { status: 400 });
   }
 
-  const supabase = await getSupabaseAdmin();
-  if (!supabase) {
-    return NextResponse.json(
-      { error: "Supabase service role não configurado." },
-      { status: 500 }
-    );
+  const auth = await resolveRequestUser(request);
+  if ('error' in auth) {
+    if (auth.error.status === 401) {
+      return NextResponse.json({ success: true, saved: false, reason: "invalid_token" });
+    }
+    return auth.error;
   }
 
-  const userId = await resolveUserId(token, supabase);
-  if (!userId) {
-    return NextResponse.json({ success: true, saved: false, reason: "invalid_token" });
-  }
+  const { supabase, userId } = auth;
 
   const insertPayload = buildInsertPayload(userId, parsedPayload);
 

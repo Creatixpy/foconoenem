@@ -1,22 +1,30 @@
 'use server';
 
 import { NextRequest, NextResponse } from 'next/server';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient, User } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
-import { extractUserIdFromToken } from '@/lib/server/jwt';
 
 type AuthSuccess = {
   supabase: SupabaseClient<Database>;
   userId: string;
   token: string;
+  user: User;
 };
 
 type AuthFailure = {
   error: NextResponse;
 };
 
-export async function resolveRequestUser(request: NextRequest): Promise<AuthSuccess | AuthFailure> {
+type ResolveRequestUserOptions = {
+  requireEmailConfirmed?: boolean;
+};
+
+export async function resolveRequestUser(
+  request: NextRequest,
+  options: ResolveRequestUserOptions = {}
+): Promise<AuthSuccess | AuthFailure> {
+  const { requireEmailConfirmed = false } = options;
   const authorization = request.headers.get('authorization');
   if (!authorization || !authorization.toLowerCase().startsWith('bearer ')) {
     return {
@@ -41,24 +49,25 @@ export async function resolveRequestUser(request: NextRequest): Promise<AuthSucc
     };
   }
 
-  let userId = extractUserIdFromToken(token);
-
-  if (!userId) {
-    try {
-      const { data, error } = await supabase.auth.getUser(token);
-      if (error || !data?.user?.id) {
-        return {
-          error: NextResponse.json({ error: 'invalid_token' }, { status: 401 }),
-        };
-      }
-      userId = data.user.id;
-    } catch (error) {
-      console.error('Erro ao validar token do usuário:', error);
+  try {
+    const { data, error } = await supabase.auth.getUser(token);
+    if (error || !data?.user) {
       return {
-        error: NextResponse.json({ error: 'unable_to_validate_token' }, { status: 500 }),
+        error: NextResponse.json({ error: 'invalid_token' }, { status: 401 }),
       };
     }
-  }
 
-  return { supabase, userId, token };
+    if (requireEmailConfirmed && !data.user.email_confirmed_at) {
+      return {
+        error: NextResponse.json({ error: 'email_not_verified' }, { status: 403 }),
+      };
+    }
+
+    return { supabase, userId: data.user.id, token, user: data.user };
+  } catch (error) {
+    console.error('Erro ao validar token do usuário:', error);
+    return {
+      error: NextResponse.json({ error: 'unable_to_validate_token' }, { status: 500 }),
+    };
+  }
 }

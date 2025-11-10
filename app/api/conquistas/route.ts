@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseAdmin } from '@/lib/supabase-admin';
-import { extractUserIdFromToken } from '@/lib/server/jwt';
+import { resolveRequestUser } from '@/lib/server/auth-request';
 
 const ACHIEVEMENT_SLUGS = ['primeira_redacao', 'maratona_questoes', 'nota_mil', 'mentor_comunitario'] as const;
 type AchievementSlug = (typeof ACHIEVEMENT_SLUGS)[number];
@@ -19,50 +18,13 @@ const checkConditions = (context: AwardContext): Record<AchievementSlug, boolean
   mentor_comunitario: context.comment_count >= 5,
 });
 
-async function resolveUserId(request: NextRequest) {
-  const supabase = await getSupabaseAdmin();
-  if (!supabase) return null;
-
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader || !authHeader.toLowerCase().startsWith('bearer ')) {
-    return null;
-  }
-
-  const token = authHeader.slice('bearer '.length).trim();
-  if (!token) {
-    return null;
-  }
-
-  const decoded = extractUserIdFromToken(token);
-  if (decoded) {
-    return decoded;
-  }
-
-  try {
-    const { data, error } = await supabase.auth.getUser(token);
-    if (error) {
-      throw error;
-    }
-    return data?.user?.id ?? null;
-  } catch (error) {
-    console.error('Erro ao validar token do usuário:', error);
-    return null;
-  }
-}
-
 export async function POST(request: NextRequest) {
-  const supabase = await getSupabaseAdmin();
-  if (!supabase) {
-    return NextResponse.json(
-      { error: 'Supabase service role não configurado.' },
-      { status: 500 }
-    );
+  const auth = await resolveRequestUser(request);
+  if ('error' in auth) {
+    return auth.error;
   }
 
-  const userId = await resolveUserId(request);
-  if (!userId) {
-    return NextResponse.json({ error: 'missing_token' }, { status: 401 });
-  }
+  const { supabase, userId } = auth;
 
   const [{ data: stats, error: statsError }, { count: commentCount = 0, error: commentsError }] = await Promise.all([
     supabase
