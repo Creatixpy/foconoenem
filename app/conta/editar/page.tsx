@@ -4,7 +4,7 @@ import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { sanitizeRedirectPath } from '@/lib/security';
 
 export default async function EditarContaPage() {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const { data } = await supabase.auth.getUser();
 
   if (!data.user) {
