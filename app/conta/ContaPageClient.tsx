@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "../contexts/AuthContext";
 import { 
   getUserStatistics, 
@@ -30,6 +31,7 @@ import { withTimeout } from "@/lib/with-timeout";
 import { isAbortError } from "@/lib/errors";
 
 export default function ContaPageClient() {
+  const router = useRouter();
   const { user, profile, loading: authLoading } = useAuth();
   const userId = user?.id ?? null;
   const [statistics, setStatistics] = useState<UserStatistics | null>(null);
@@ -251,16 +253,18 @@ export default function ContaPageClient() {
     }
   };
 
-  if (authLoading || loading) {
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace(`/auth/login?next=${encodeURIComponent('/conta')}`);
+    }
+  }, [authLoading, user, router]);
+
+  if (authLoading || loading || !user) {
     return (
       <main className="flex min-h-[60vh] items-center justify-center px-4 py-12">
         <div className="loader" />
       </main>
     );
-  }
-
-  if (!user || !profile) {
-    return null;
   }
 
   // Preparar dados para gráficos

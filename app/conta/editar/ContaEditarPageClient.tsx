@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "../../contexts/AuthContext";
 import { updateUserProfile, UserProfile } from "@/lib/auth";
 
-export default function EditarPerfilPage() {
+export default function ContaEditarPageClient() {
   const router = useRouter();
   const { user, profile, loading: authLoading, refreshProfile } = useAuth();
   const [nomeCompleto, setNomeCompleto] = useState('');
@@ -54,16 +54,18 @@ export default function EditarPerfilPage() {
     }
   };
 
-  if (authLoading) {
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace(`/auth/login?next=${encodeURIComponent('/conta/editar')}`);
+    }
+  }, [authLoading, user, router]);
+
+  if (authLoading || !user) {
     return (
       <main className="flex min-h-[60vh] items-center justify-center px-4 py-12">
         <div className="loader" />
       </main>
     );
-  }
-
-  if (!user) {
-    return null;
   }
 
   return (
