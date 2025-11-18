@@ -133,9 +133,15 @@ export default function HomePageClient() {
         className="relative overflow-hidden px-4 pb-24 pt-20 sm:px-6 lg:px-8 lg:pt-32"
         aria-labelledby="home-hero-heading home-hero-description"
       >
+          {/* Background decoration */}
+          <div className="absolute inset-0 -z-10 overflow-hidden">
+            <div className="absolute -top-[30%] -left-[10%] w-[70%] h-[70%] rounded-full bg-primary/5 blur-3xl" />
+            <div className="absolute top-[20%] -right-[10%] w-[60%] h-[60%] rounded-full bg-accent/5 blur-3xl" />
+          </div>
+
           <div className="container relative z-10 mx-auto grid max-w-7xl gap-16 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
             <div className="space-y-10">
-              <div className="inline-flex items-center gap-2 rounded-full border border-border-color bg-secondary/50 px-3 py-1 text-sm font-medium text-foreground/80">
+              <div className="inline-flex items-center gap-2 rounded-full bg-secondary/80 backdrop-blur-sm px-3 py-1 text-sm font-medium text-foreground/80 shadow-sm">
                 <span className="h-2 w-2 rounded-full bg-success animate-pulse" />
                 Aberto 7h — 23h30 (BRT)
               </div>
@@ -144,7 +150,7 @@ export default function HomePageClient() {
                   id="home-hero-heading"
                   className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl"
                 >
-                  Transforme estudo em <span className="text-primary">resultado</span>.
+                  Transforme estudo em <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">resultado</span>.
                 </h1>
                 <p
                   id="home-hero-description"
@@ -154,10 +160,10 @@ export default function HomePageClient() {
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-                <Link href="/redacao" className="inline-flex items-center justify-center rounded-xl bg-primary px-8 py-3 text-base font-semibold text-white shadow-sm transition-all hover:bg-primary-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+                <Link href="/redacao" className="btn btn-primary text-base px-8 py-3">
                   Começar pela redação
                 </Link>
-                <Link href="/questoes" className="inline-flex items-center justify-center gap-2 rounded-xl border border-border-color bg-card-bg px-8 py-3 text-base font-semibold text-foreground transition-all hover:bg-secondary/50 hover:border-primary/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+                <Link href="/questoes" className="btn btn-secondary gap-2 text-base px-8 py-3">
                   Explorar simulados
                   <svg className="h-5 w-5 text-foreground/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -165,7 +171,7 @@ export default function HomePageClient() {
                 </Link>
               </div>
               
-              <dl className="grid gap-8 sm:grid-cols-3 pt-4 border-t border-border-color/50">
+              <dl className="grid gap-8 sm:grid-cols-3 pt-8 border-t border-border-color">
                 {heroStats.map((stat) => (
                   <div key={stat.label}>
                     <dd className="text-3xl font-bold text-foreground">{stat.value}</dd>
@@ -177,7 +183,7 @@ export default function HomePageClient() {
 
             <div className="relative isolate hidden lg:block">
               <div className="relative z-10 space-y-6">
-                <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
+                <div className="card p-6 bg-white/80 backdrop-blur-md border-0">
                   <div className="flex items-center justify-between text-sm text-foreground/60">
                     <span className="inline-flex items-center gap-2 font-medium text-foreground">
                       <span className="h-2 w-2 rounded-full bg-success" />
@@ -191,8 +197,8 @@ export default function HomePageClient() {
                         <span>Competência 1</span>
                         <span className="font-semibold text-foreground">200 / 200</span>
                       </div>
-                      <div className="mt-3 h-2 rounded-full bg-border-color">
-                        <div className="h-full rounded-full bg-success" style={{ width: "100%" }} />
+                      <div className="mt-3 h-2 rounded-full bg-gray-100 dark:bg-gray-800">
+                        <div className="h-full rounded-full bg-success shadow-[0_0_10px_rgba(16,185,129,0.3)]" style={{ width: "100%" }} />
                       </div>
                     </div>
 
@@ -201,14 +207,14 @@ export default function HomePageClient() {
                         <span>Competência 2</span>
                         <span className="font-semibold text-foreground">180 / 200</span>
                       </div>
-                      <div className="mt-3 h-2 rounded-full bg-border-color">
-                        <div className="h-full rounded-full bg-primary" style={{ width: "90%" }} />
+                      <div className="mt-3 h-2 rounded-full bg-gray-100 dark:bg-gray-800">
+                        <div className="h-full rounded-full bg-primary shadow-[0_0_10px_rgba(59,130,246,0.3)]" style={{ width: "90%" }} />
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm translate-x-8">
+                <div className="card p-6 translate-x-8 bg-white/80 backdrop-blur-md border-0">
                   <h3 className="text-lg font-semibold">Simulado rápido</h3>
                   <p className="mt-2 text-sm text-foreground/60">
                     Matemática · Linguagens · Ciências Humanas
@@ -218,8 +224,8 @@ export default function HomePageClient() {
                       <span className="text-foreground/60">Progresso</span>
                       <span className="font-semibold text-foreground">12/15</span>
                     </div>
-                    <div className="h-2 rounded-full bg-border-color">
-                        <div className="h-full rounded-full bg-accent" style={{ width: "80%" }} />
+                    <div className="h-2 rounded-full bg-gray-100 dark:bg-gray-800">
+                        <div className="h-full rounded-full bg-accent shadow-[0_0_10px_rgba(139,92,246,0.3)]" style={{ width: "80%" }} />
                     </div>
                   </div>
                 </div>
@@ -235,7 +241,7 @@ export default function HomePageClient() {
         >
           <div className="container mx-auto max-w-6xl">
             <div className="space-y-4 text-center">
-              <p className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1 text-sm font-semibold text-primary">
+              <p className="inline-flex items-center gap-2 rounded-full bg-primary/5 px-4 py-1 text-sm font-semibold text-primary">
                 Recursos completos para estudar com confiança
               </p>
               <h2 id="home-recursos-heading" className="text-3xl font-semibold text-foreground sm:text-4xl">
@@ -249,7 +255,7 @@ export default function HomePageClient() {
 
             <div className="mt-14 grid gap-6 lg:grid-cols-2">
               {highlights.map((highlight) => (
-                <article key={highlight.title} className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm transition-shadow hover:shadow-md">
+                <article key={highlight.title} className="card p-6 hover:bg-secondary/30 border-0">
                   <div className="flex items-start gap-4">
                     <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
                       {highlight.icon}
@@ -267,14 +273,15 @@ export default function HomePageClient() {
 
         <section
           id="metodologia"
-          className="relative px-4 py-24 sm:px-6 lg:px-8 bg-secondary/30"
+          className="relative px-4 py-24 sm:px-6 lg:px-8"
           aria-labelledby="home-metodologia-heading"
         >
+          <div className="absolute inset-0 -z-10 bg-gradient-to-b from-transparent via-secondary/30 to-transparent" />
           <div className="container mx-auto max-w-6xl">
             <div className="grid gap-16 lg:grid-cols-[1fr_1.1fr] lg:items-center">
               <div className="space-y-8">
                 <div className="space-y-4">
-                  <p className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/5 px-3 py-1 text-sm font-medium text-accent">
+                  <p className="inline-flex items-center gap-2 rounded-full bg-accent/5 px-3 py-1 text-sm font-medium text-accent">
                     Metodologia em 3 etapas
                   </p>
                   <h2 id="home-metodologia-heading" className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
@@ -298,7 +305,7 @@ export default function HomePageClient() {
 
               <div className="grid gap-4">
                 {steps.map((step) => (
-                  <div key={step.number} className="rounded-2xl border border-border-color bg-card-bg p-6 sm:p-8 shadow-sm transition-all hover:border-primary/20 hover:shadow-md">
+                  <div key={step.number} className="card p-6 sm:p-8 border-0 hover:bg-white/50">
                     <span className="text-sm font-bold tracking-wider text-primary/80 uppercase">{step.number}</span>
                     <h3 className="mt-2 text-xl font-semibold text-foreground">{step.title}</h3>
                     <p className="mt-2 text-base text-foreground/60">{step.description}</p>
@@ -316,7 +323,7 @@ export default function HomePageClient() {
         >
           <div className="container mx-auto max-w-6xl">
             <div className="space-y-4 text-center mb-16">
-              <p className="inline-flex items-center gap-2 rounded-full border border-success/20 bg-success/5 px-3 py-1 text-sm font-medium text-success">
+              <p className="inline-flex items-center gap-2 rounded-full bg-success/5 px-3 py-1 text-sm font-medium text-success">
                 Histórias reais de evolução
               </p>
               <h2 id="home-historias-heading" className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
@@ -326,11 +333,11 @@ export default function HomePageClient() {
 
             <div className="grid gap-6 md:grid-cols-3">
               {testimonials.map((testimonial) => (
-                <figure key={testimonial.author} className="rounded-2xl border border-border-color bg-card-bg p-8 shadow-sm">
+                <figure key={testimonial.author} className="card p-8 border-0 bg-secondary/20">
                   <blockquote className="text-base leading-relaxed text-foreground/60 italic">
                     “{testimonial.quote}”
                   </blockquote>
-                  <figcaption className="mt-6 border-t border-border-color/50 pt-4">
+                  <figcaption className="mt-6 border-t border-border-color pt-4">
                     <p className="font-semibold text-foreground">{testimonial.author}</p>
                     <p className="text-sm text-foreground/50">{testimonial.role}</p>
                   </figcaption>
@@ -342,11 +349,12 @@ export default function HomePageClient() {
 
         {user && (
           <section
-            className="relative px-4 py-24 sm:px-6 lg:px-8 bg-secondary/30"
+            className="relative px-4 py-24 sm:px-6 lg:px-8"
             aria-labelledby="home-comunidade-heading"
           >
+            <div className="absolute inset-0 -z-10 bg-gradient-to-t from-secondary/30 to-transparent" />
             <div className="container mx-auto max-w-5xl space-y-4 text-center">
-              <p className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/5 px-3 py-1 text-sm font-medium text-accent">
+              <p className="inline-flex items-center gap-2 rounded-full bg-accent/5 px-3 py-1 text-sm font-medium text-accent">
                 Comunidade exclusiva
               </p>
               <h2 id="home-comunidade-heading" className="text-3xl font-semibold text-foreground sm:text-4xl">
@@ -358,14 +366,14 @@ export default function HomePageClient() {
               </p>
             </div>
             <div className="mt-10 grid gap-6 md:grid-cols-2">
-              <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
+              <div className="card p-6 border-0">
                 <h3 className="text-xl font-semibold text-foreground">Fóruns por tema</h3>
                 <p className="mt-2 text-sm text-foreground/60">
                   Discuta repertórios, compartilhe repertórios confiáveis e receba feedback em tópicos moderados por quem
                   entende do ENEM.
                 </p>
               </div>
-              <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
+              <div className="card p-6 border-0">
                 <h3 className="text-xl font-semibold text-foreground">Eventos da comunidade</h3>
                 <p className="mt-2 text-sm text-foreground/60">
                   Encontros semanais com dicas de planejamento, desafios de redação e mentorias rápidas para manter o foco.
@@ -386,7 +394,7 @@ export default function HomePageClient() {
           aria-labelledby="home-cta-heading"
         >
           <div className="container mx-auto max-w-5xl">
-            <div className="rounded-2xl border border-border-color bg-card-bg p-10 text-center shadow-sm">
+            <div className="card p-10 text-center border-0 bg-gradient-to-br from-card-bg to-secondary/50">
               <div className="space-y-6">
                 <h2 id="home-cta-heading" className="text-3xl font-semibold text-foreground sm:text-4xl">
                   Vamos conquistar a redação mil juntos?

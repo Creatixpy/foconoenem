@@ -95,7 +95,7 @@ export default function Header() {
               </button>
 
               {showUserMenu && (
-                <div className="absolute right-0 mt-3 w-52 overflow-hidden rounded-2xl border border-border-color/60 bg-card-bg shadow-xl">
+                <div className="absolute right-0 mt-3 w-52 overflow-hidden rounded-2xl border-0 bg-card-bg shadow-xl">
                   <Link
                     href="/conta"
                     className="block px-4 py-3 text-sm font-medium text-foreground/80 transition-colors hover:bg-muted-bg"
@@ -141,8 +141,8 @@ export default function Header() {
 
           <button
             type="button"
-            className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border transition-all md:hidden ${
-              isScrolled ? "border-border-color/70 text-foreground" : "border-border-color/40 text-foreground"
+            className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border-0 transition-all md:hidden ${
+              isScrolled ? "bg-muted-bg/50 text-foreground" : "bg-white/20 text-foreground backdrop-blur-sm"
             }`}
             onClick={() => setMobileMenuOpen((previous) => !previous)}
             aria-label={mobileMenuOpen ? "Fechar menu de navegação" : "Abrir menu de navegação"}
@@ -163,7 +163,7 @@ export default function Header() {
       </div>
 
       {mobileMenuOpen && (
-        <div className="border-t border-border-color/60 bg-card-bg/95 px-4 pb-6 pt-4 shadow-xl backdrop-blur md:hidden" id="mobile-navigation">
+        <div className="border-t border-border-color/30 bg-card-bg/95 px-4 pb-6 pt-4 shadow-xl backdrop-blur md:hidden" id="mobile-navigation">
           <nav className="space-y-1" aria-label="Navegação mobile">
             {navLinks.map((link) => (
               <Link
@@ -185,7 +185,7 @@ export default function Header() {
               <Link
                 href="/auth/login"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-center rounded-2xl border border-border-color/70 px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted-bg"
+                className="flex items-center justify-center rounded-2xl border-0 bg-muted-bg/50 px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted-bg"
               >
                 Entrar
               </Link>

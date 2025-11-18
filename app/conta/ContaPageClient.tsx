@@ -383,7 +383,7 @@ export default function ContaPageClient() {
     <main className="flex-grow">
       <div className="container mx-auto max-w-7xl p-4 md:p-8">
         {/* Header da Conta */}
-        <div className="mb-8 rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm animate-fadeIn md:p-8">
+        <div className="mb-8 rounded-2xl border-0 bg-card-bg p-6 shadow-sm animate-fadeIn md:p-8">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center text-2xl font-bold text-primary">
@@ -425,7 +425,7 @@ export default function ContaPageClient() {
 
         {/* Cards de Estatísticas Principais */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 animate-stagger">
-          <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
+          <div className="rounded-2xl border-0 bg-card-bg p-6 shadow-sm">
             <div className="flex items-center justify-between mb-2">
               <span className="text-foreground/60">Redações Feitas</span>
               <svg className="w-8 h-8 text-primary/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -440,7 +440,7 @@ export default function ContaPageClient() {
             )}
           </div>
 
-          <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
+          <div className="rounded-2xl border-0 bg-card-bg p-6 shadow-sm">
             <div className="flex items-center justify-between mb-2">
               <span className="text-foreground/60">Simulados Feitos</span>
               <svg className="w-8 h-8 text-accent/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -455,7 +455,7 @@ export default function ContaPageClient() {
             )}
           </div>
 
-          <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
+          <div className="rounded-2xl border-0 bg-card-bg p-6 shadow-sm">
             <div className="flex items-center justify-between mb-2">
               <span className="text-foreground/60">Taxa de Acerto</span>
               <svg className="w-8 h-8 text-success/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -470,7 +470,7 @@ export default function ContaPageClient() {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
+          <div className="rounded-2xl border-0 bg-card-bg p-6 shadow-sm">
             <div className="flex items-center justify-between mb-2">
               <span className="text-foreground/60">Melhor Redação</span>
               <svg className="w-8 h-8 text-warning/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -490,7 +490,7 @@ export default function ContaPageClient() {
         {(analises.length > 0 || recomendacoes.length > 0) && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             {analises.length > 0 && (
-              <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
+              <div className="rounded-2xl border-0 bg-card-bg p-6 shadow-sm">
                 <h2 className="text-xl font-bold text-foreground mb-4 flex items-center">
                   <svg className="w-6 h-6 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -501,7 +501,7 @@ export default function ContaPageClient() {
                   {analises.map((analise, index) => (
                     <span
                       key={`${analise}-${index}`}
-                      className="rounded-full border border-border-color px-3 py-2 text-xs text-foreground/60"
+                      className="rounded-full bg-muted-bg/50 border-0 px-3 py-2 text-xs text-foreground/60"
                     >
                       {analise}
                     </span>
@@ -511,7 +511,7 @@ export default function ContaPageClient() {
             )}
 
             {recomendacoes.length > 0 && (
-              <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
+              <div className="rounded-2xl border-0 bg-card-bg p-6 shadow-sm">
                 <h2 className="text-xl font-bold text-foreground mb-4 flex items-center">
                   <svg className="w-6 h-6 mr-2 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
@@ -537,7 +537,7 @@ export default function ContaPageClient() {
         {statistics && statistics.total_redacoes > 0 && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             {/* Gráfico de Competências */}
-            <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
+            <div className="rounded-2xl border-0 bg-card-bg p-6 shadow-sm">
               <h2 className="text-xl font-bold text-foreground mb-4">
                 Desempenho por Competência
               </h2>
@@ -563,7 +563,7 @@ export default function ContaPageClient() {
 
             {/* Gráfico de Evolução */}
             {evolucaoRedacoes.length > 1 && (
-              <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
+              <div className="rounded-2xl border-0 bg-card-bg p-6 shadow-sm">
                 <h2 className="text-xl font-bold text-foreground mb-4">
                   Evolução das Notas
                 </h2>
@@ -593,7 +593,7 @@ export default function ContaPageClient() {
 
         {/* Gráficos de Questões */}
         {statistics && statistics.total_questoes_respondidas > 0 && (
-          <div className="rounded-2xl border border-border-color bg-card-bg p-6 mb-8 shadow-sm">
+          <div className="rounded-2xl border-0 bg-card-bg p-6 mb-8 shadow-sm">
             <h2 className="text-xl font-bold text-foreground mb-4">
               Desempenho por Disciplina
             </h2>
@@ -613,7 +613,7 @@ export default function ContaPageClient() {
 
         {/* Mensagem se não houver dados */}
         {statistics && statistics.total_redacoes === 0 && statistics.total_simulados === 0 && (
-          <div className="rounded-2xl border border-border-color bg-card-bg p-12 text-center shadow-sm">
+          <div className="rounded-2xl border-0 bg-card-bg p-12 text-center shadow-sm">
             <svg className="w-20 h-20 mx-auto mb-4 text-foreground/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>

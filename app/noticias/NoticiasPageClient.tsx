@@ -122,17 +122,17 @@ export default function NoticiasPageClient() {
                   </p>
                 </div>
                 <dl className="grid gap-4 sm:grid-cols-3">
-                  <div className="rounded-2xl border border-border-color bg-card-bg px-5 py-4 shadow-sm">
+                  <div className="rounded-2xl border-0 bg-card-bg px-5 py-4 shadow-sm">
                     <dt className="text-xs uppercase tracking-wide text-foreground/60">Cobertura</dt>
                     <dd className="mt-2 text-xl font-semibold text-primary">ENEM & Educação</dd>
                     <p className="mt-1 text-xs text-foreground/60">MEC, INEP e temas sociais em uma linha.</p>
                   </div>
-                  <div className="rounded-2xl border border-border-color bg-card-bg px-5 py-4 shadow-sm">
+                  <div className="rounded-2xl border-0 bg-card-bg px-5 py-4 shadow-sm">
                     <dt className="text-xs uppercase tracking-wide text-foreground/60">Curadoria</dt>
                     <dd className="mt-2 text-xl font-semibold text-primary">Feita por quem estuda</dd>
                     <p className="mt-1 text-xs text-foreground/60">Equipe que vive o vestibular diariamente.</p>
                   </div>
-                  <div className="rounded-2xl border border-border-color bg-card-bg px-5 py-4 shadow-sm">
+                  <div className="rounded-2xl border-0 bg-card-bg px-5 py-4 shadow-sm">
                     <dt className="text-xs uppercase tracking-wide text-foreground/60">Busca inteligente</dt>
                     <dd className="mt-2 text-xl font-semibold text-primary">IA integrada</dd>
                     <p className="mt-1 text-xs text-foreground/60">Pesquise a web sem sair da página.</p>
@@ -140,7 +140,7 @@ export default function NoticiasPageClient() {
                 </dl>
               </div>
 
-                <div className="flex h-full flex-col gap-6 rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm" role="complementary" aria-label="Filtros e busca de notícias">
+                <div className="flex h-full flex-col gap-6 rounded-2xl border-0 bg-card-bg p-6 shadow-sm" role="complementary" aria-label="Filtros e busca de notícias">
                 <div>
                   <p className="text-xs uppercase tracking-[0.18em] text-primary">Filtro rápido</p>
                   <h2 className="mt-2 text-lg font-semibold text-foreground">Busque em poucas palavras</h2>
@@ -151,7 +151,7 @@ export default function NoticiasPageClient() {
                     value={busca}
                     onChange={(event) => setBusca(event.target.value)}
                     placeholder="Tema, autor ou tag..."
-                    className="w-full rounded-xl border border-border-color bg-background py-3 pl-12 pr-4 text-base text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="w-full rounded-xl border-0 bg-muted-bg/50 py-3 pl-12 pr-4 text-base text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
                   <svg
                     className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-foreground/60"
@@ -162,7 +162,7 @@ export default function NoticiasPageClient() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </div>
-                <details className="rounded-xl border border-border-color bg-secondary/10 p-4 shadow-sm">
+                <details className="rounded-xl border-0 bg-secondary/10 p-4 shadow-sm">
                   <summary className="flex cursor-pointer items-center justify-between gap-2 text-sm font-semibold text-foreground">
                     Busca com IA
                     <svg className="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -176,7 +176,7 @@ export default function NoticiasPageClient() {
                       value={buscaIA}
                       onChange={(event) => setBuscaIA(event.target.value)}
                       placeholder="Ex.: cronograma ENEM 2025"
-                      className="flex-grow rounded-xl border border-border-color bg-background px-4 py-3 text-sm text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                      className="flex-grow rounded-xl border-0 bg-muted-bg/50 px-4 py-3 text-sm text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                       disabled={isIaSearching}
                     />
                     <button
@@ -195,7 +195,7 @@ export default function NoticiasPageClient() {
                           Limpar
                         </button>
                       </div>
-                      <div className="max-h-72 overflow-y-auto rounded-xl border border-border-color bg-background p-4 text-sm text-foreground/80">
+                      <div className="max-h-72 overflow-y-auto rounded-xl border-0 bg-muted-bg/30 p-4 text-sm text-foreground/80">
                         <pre className="whitespace-pre-wrap">{noticiasIA}</pre>
                       </div>
                       <p className="text-xs text-foreground/60">* Conteúdo sintetizado por IA com base em resultados da web.</p>
@@ -267,7 +267,7 @@ export default function NoticiasPageClient() {
                   <div className="loader" />
                 </div>
               ) : noticiasVisiveis.length === 0 ? (
-                <div className="flex flex-col items-center gap-4 rounded-2xl border border-border-color bg-card-bg p-10 text-center shadow-sm">
+                <div className="flex flex-col items-center gap-4 rounded-2xl border-0 bg-card-bg p-10 text-center shadow-sm">
                   <svg className="h-12 w-12 text-foreground/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1M9 5V3m0 2h6m0 0V3m-6 6h6v4H9V9z" />
                   </svg>
@@ -288,7 +288,7 @@ export default function NoticiasPageClient() {
                       <Link
                         key={noticia.id}
                         href={`/noticias/${noticia.slug}`}
-                        className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border-color bg-card-bg shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
+                        className="group flex h-full flex-col overflow-hidden rounded-2xl border-0 bg-card-bg shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
                       >
                         <div className="relative h-44">
                           {noticia.imagem_url ? (

@@ -84,7 +84,7 @@ function PesquisaContent() {
             value={novaPesquisa}
             onChange={(e) => setNovaPesquisa(e.target.value)}
             placeholder="Buscar notícias..."
-            className="flex-grow p-3 rounded-l-lg border border-border-color focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+            className="flex-grow p-3 rounded-l-lg border-0 focus:outline-none focus:ring-2 focus:ring-primary transition-all"
             aria-label="Buscar notícias"
           />
           <button
@@ -116,7 +116,7 @@ function PesquisaContent() {
           <div className="loader"></div>
         </div>
       ) : noticias.length === 0 ? (
-        <div className="text-center py-12 card border border-border-color">
+        <div className="text-center py-12 card border-0">
           <svg className="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
           </svg>
@@ -131,7 +131,7 @@ function PesquisaContent() {
             <Link
               key={noticia.id}
               href={`/noticias/${noticia.slug}`}
-              className="card border border-border-color overflow-hidden hover:shadow-lg transition-all"
+              className="card border-0 overflow-hidden hover:shadow-lg transition-all"
             >
               <div className="h-40 relative">
                 {noticia.imagem_url ? (

@@ -40,7 +40,7 @@ export default function ThemeToggle() {
         type="button"
         onClick={toggleTheme}
         aria-label={isLight ? "Ativar modo escuro" : "Ativar modo claro"}
-        className="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-border-color/70 bg-card-bg/90 px-4 py-2.5 text-sm font-semibold text-foreground shadow-xl backdrop-blur transition-all hover:-translate-y-0.5 hover:bg-card-bg"
+        className="pointer-events-auto inline-flex items-center gap-2 rounded-full border-0 bg-card-bg/90 px-4 py-2.5 text-sm font-semibold text-foreground shadow-xl backdrop-blur transition-all hover:-translate-y-0.5 hover:bg-card-bg"
       >
         {isLight ? (
           <svg
