@@ -380,20 +380,20 @@ export default function ContaPageClient() {
   }
 
   return (
-    <main className="flex-grow bg-gradient-to-br from-background via-background to-muted-bg">
+    <main className="flex-grow">
       <div className="container mx-auto max-w-7xl p-4 md:p-8">
         {/* Header da Conta */}
-        <div className="card card-gradient p-6 md:p-8 mb-8 animate-fadeIn">
+        <div className="mb-8 rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm animate-fadeIn md:p-8">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-2xl font-bold text-white">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center text-2xl font-bold text-primary">
                 {profile.nome_completo?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
               </div>
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold text-foreground">
                   {profile.nome_completo || 'Estudante'}
                 </h1>
-                <p className="text-foreground opacity-70">{user.email}</p>
+                <p className="text-foreground/60">{user.email}</p>
                 {profile.objetivo && (
                   <p className="text-sm text-primary mt-1">🎯 {profile.objetivo}</p>
                 )}
@@ -425,10 +425,10 @@ export default function ContaPageClient() {
 
         {/* Cards de Estatísticas Principais */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 animate-stagger">
-          <div className="card card-gradient p-6 border-l-4 border-primary">
+          <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-foreground opacity-70">Redações Feitas</span>
-              <svg className="w-8 h-8 text-primary opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <span className="text-foreground/60">Redações Feitas</span>
+              <svg className="w-8 h-8 text-primary/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
             </div>
@@ -440,10 +440,10 @@ export default function ContaPageClient() {
             )}
           </div>
 
-          <div className="card card-gradient p-6 border-l-4 border-accent">
+          <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-foreground opacity-70">Simulados Feitos</span>
-              <svg className="w-8 h-8 text-accent opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <span className="text-foreground/60">Simulados Feitos</span>
+              <svg className="w-8 h-8 text-accent/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
@@ -455,32 +455,32 @@ export default function ContaPageClient() {
             )}
           </div>
 
-          <div className="card card-gradient p-6 border-l-4 border-success">
+          <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-foreground opacity-70">Taxa de Acerto</span>
-              <svg className="w-8 h-8 text-success opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <span className="text-foreground/60">Taxa de Acerto</span>
+              <svg className="w-8 h-8 text-success/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             <p className="text-3xl font-bold text-foreground">
               {statistics?.taxa_acerto ? `${statistics.taxa_acerto.toFixed(1)}%` : '-'}
             </p>
-            <p className="text-sm text-foreground opacity-70 mt-1">
+            <p className="text-sm text-foreground/60 mt-1">
               {statistics?.total_acertos || 0} acertos de {statistics?.total_questoes_respondidas || 0}
             </p>
           </div>
 
-          <div className="card card-gradient p-6 border-l-4 border-warning">
+          <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-foreground opacity-70">Melhor Redação</span>
-              <svg className="w-8 h-8 text-warning opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <span className="text-foreground/60">Melhor Redação</span>
+              <svg className="w-8 h-8 text-warning/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
               </svg>
             </div>
             <p className="text-3xl font-bold text-foreground">
               {statistics?.melhor_nota_redacao || '-'}
             </p>
-            <p className="text-sm text-foreground opacity-70 mt-1">
+            <p className="text-sm text-foreground/60 mt-1">
               {statistics?.pior_nota_redacao ? `Pior: ${statistics.pior_nota_redacao}` : 'Faça uma redação'}
             </p>
           </div>
@@ -490,7 +490,7 @@ export default function ContaPageClient() {
         {(analises.length > 0 || recomendacoes.length > 0) && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             {analises.length > 0 && (
-              <div className="card card-gradient p-6">
+              <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
                 <h2 className="text-xl font-bold text-foreground mb-4 flex items-center">
                   <svg className="w-6 h-6 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -501,7 +501,7 @@ export default function ContaPageClient() {
                   {analises.map((analise, index) => (
                     <span
                       key={`${analise}-${index}`}
-                      className="rounded-full border border-border-color/70 px-3 py-2 text-xs text-foreground/80"
+                      className="rounded-full border border-border-color px-3 py-2 text-xs text-foreground/60"
                     >
                       {analise}
                     </span>
@@ -511,7 +511,7 @@ export default function ContaPageClient() {
             )}
 
             {recomendacoes.length > 0 && (
-              <div className="card card-gradient p-6 bg-gradient-to-br from-accent/5 to-primary/5">
+              <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
                 <h2 className="text-xl font-bold text-foreground mb-4 flex items-center">
                   <svg className="w-6 h-6 mr-2 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
@@ -522,7 +522,7 @@ export default function ContaPageClient() {
                   {recomendacoes.map((rec, index) => (
                     <span
                       key={`${rec}-${index}`}
-                      className="rounded-full bg-primary/5 px-3 py-2 text-xs text-foreground/80"
+                      className="rounded-full bg-primary/10 px-3 py-2 text-xs text-foreground/60"
                     >
                       {rec}
                     </span>
@@ -537,7 +537,7 @@ export default function ContaPageClient() {
         {statistics && statistics.total_redacoes > 0 && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             {/* Gráfico de Competências */}
-            <div className="card card-gradient p-6">
+            <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
               <h2 className="text-xl font-bold text-foreground mb-4">
                 Desempenho por Competência
               </h2>
@@ -556,14 +556,14 @@ export default function ContaPageClient() {
                   <Tooltip />
                 </RadarChart>
               </ResponsiveContainer>
-              <p className="text-sm text-foreground opacity-70 text-center mt-2">
+              <p className="text-sm text-foreground/60 text-center mt-2">
                 Escala de 0 a 200 pontos por competência
               </p>
             </div>
 
             {/* Gráfico de Evolução */}
             {evolucaoRedacoes.length > 1 && (
-              <div className="card card-gradient p-6">
+              <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
                 <h2 className="text-xl font-bold text-foreground mb-4">
                   Evolução das Notas
                 </h2>
@@ -583,7 +583,7 @@ export default function ContaPageClient() {
                     />
                   </LineChart>
                 </ResponsiveContainer>
-                <p className="text-sm text-foreground opacity-70 text-center mt-2">
+                <p className="text-sm text-foreground/60 text-center mt-2">
                   Últimas {evolucaoRedacoes.length} redações
                 </p>
               </div>
@@ -593,7 +593,7 @@ export default function ContaPageClient() {
 
         {/* Gráficos de Questões */}
         {statistics && statistics.total_questoes_respondidas > 0 && (
-          <div className="card card-gradient p-6 mb-8">
+          <div className="rounded-2xl border border-border-color bg-card-bg p-6 mb-8 shadow-sm">
             <h2 className="text-xl font-bold text-foreground mb-4">
               Desempenho por Disciplina
             </h2>
@@ -613,14 +613,14 @@ export default function ContaPageClient() {
 
         {/* Mensagem se não houver dados */}
         {statistics && statistics.total_redacoes === 0 && statistics.total_simulados === 0 && (
-          <div className="card card-gradient p-12 text-center">
-            <svg className="w-20 h-20 mx-auto mb-4 text-foreground opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="rounded-2xl border border-border-color bg-card-bg p-12 text-center shadow-sm">
+            <svg className="w-20 h-20 mx-auto mb-4 text-foreground/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             <h2 className="text-2xl font-bold text-foreground mb-4">
               Comece sua Jornada de Estudos!
             </h2>
-            <p className="text-foreground opacity-70 mb-6 max-w-2xl mx-auto">
+            <p className="text-foreground/60 mb-6 max-w-2xl mx-auto">
               Você ainda não fez nenhuma redação ou simulado. Comece agora para acompanhar seu progresso e receber análises personalizadas!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

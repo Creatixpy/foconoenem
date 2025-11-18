@@ -78,16 +78,15 @@ export default function SobrePage() {
   return (
     <main className="flex-grow">
       <section className="relative overflow-hidden px-4 pb-20 pt-16 sm:px-6 lg:px-8">
-          <div className="hero-accent absolute inset-0 blur-3xl" aria-hidden />
           <div className="container relative z-10 mx-auto max-w-5xl space-y-12">
-            <div className="surface-card space-y-5 p-8 text-center shadow-xl md:p-12">
-              <span className="hero-status shadow-glow justify-center text-sm">
+            <div className="space-y-5 rounded-2xl border border-border-color bg-card-bg p-8 text-center shadow-sm md:p-12">
+              <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary shadow-sm justify-center">
                 💙 Feito por alunos para alunos
               </span>
-              <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
+              <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
                 Preparação para o ENEM sem excesso de texto.
               </h1>
-              <p className="mx-auto max-w-2xl text-base text-foreground/75">
+              <p className="mx-auto max-w-2xl text-base text-foreground/60">
                 Criamos correção, simulados e notícias curtas para democratizar ferramentas de qualidade.
               </p>
               <div className="flex flex-wrap justify-center gap-3">
@@ -102,60 +101,60 @@ export default function SobrePage() {
               </div>
             </div>
 
-            <div className="surface-card space-y-6 p-8 shadow-xl md:p-10">
+            <div className="space-y-6 rounded-2xl border border-border-color bg-card-bg p-8 shadow-sm md:p-10">
               <div className="flex items-center gap-3">
                 <span className="text-3xl">📖</span>
                 <h2 className="text-2xl font-semibold text-foreground">Nossa história</h2>
               </div>
               <div className="grid gap-6 lg:grid-cols-3">
                 {timeline.map((item) => (
-                  <div key={item.year} className="surface-card border border-border-color/70 bg-card-bg/90 p-5 shadow-sm">
+                  <div key={item.year} className="rounded-2xl border border-border-color bg-card-bg p-5 shadow-sm">
                     <p className="text-xs uppercase tracking-[0.18em] text-primary">{item.year}</p>
                     <h3 className="mt-3 text-lg font-semibold text-foreground">{item.title}</h3>
-                    <p className="mt-2 text-sm text-foreground/70">{item.description}</p>
+                    <p className="mt-2 text-sm text-foreground/60">{item.description}</p>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="surface-card space-y-8 p-8 shadow-xl md:p-10">
+            <div className="space-y-8 rounded-2xl border border-border-color bg-card-bg p-8 shadow-sm md:p-10">
               <div className="flex items-center gap-3">
                 <span className="text-3xl">✨</span>
                 <h2 className="text-2xl font-semibold text-foreground">O que entregamos para você</h2>
               </div>
               <div className="grid gap-6 sm:grid-cols-2">
                 {recursos.map((feature) => (
-                  <div key={feature.title} className="select-card surface-card flex h-full flex-col gap-3 border border-border-color/70 p-6 shadow-sm">
+                  <div key={feature.title} className="flex h-full flex-col gap-3 rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
                     <span className="text-2xl">{feature.icon}</span>
                     <h3 className="text-lg font-semibold text-foreground">{feature.title}</h3>
-                    <p className="text-sm text-foreground/70">{feature.description}</p>
+                    <p className="text-sm text-foreground/60">{feature.description}</p>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="surface-card space-y-8 p-8 shadow-xl md:p-10">
+            <div className="space-y-8 rounded-2xl border border-border-color bg-card-bg p-8 shadow-sm md:p-10">
               <div className="flex items-center gap-3">
                 <span className="text-3xl">💎</span>
                 <h2 className="text-2xl font-semibold text-foreground">Nossos valores</h2>
               </div>
               <div className="grid gap-6 sm:grid-cols-2">
                 {valores.map((valor) => (
-                  <div key={valor.title} className="surface-card flex h-full flex-col gap-3 border border-border-color/70 p-6 shadow-sm">
+                  <div key={valor.title} className="flex h-full flex-col gap-3 rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
                     <span className="text-2xl">{valor.emoji}</span>
                     <h3 className="text-lg font-semibold text-foreground">{valor.title}</h3>
-                    <p className="text-sm text-foreground/70">{valor.description}</p>
+                    <p className="text-sm text-foreground/60">{valor.description}</p>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="gradient-border cta-surface overflow-hidden rounded-[2.5rem] p-10 text-center shadow-2xl backdrop-blur">
+            <div className="rounded-2xl border border-border-color bg-card-bg p-10 text-center shadow-sm">
               <div className="space-y-5">
-                <h2 className="text-3xl font-semibold text-foreground sm:text-4xl">
+                <h2 className="text-3xl font-bold text-foreground sm:text-4xl">
                   Vamos construir sua aprovação juntos?
                 </h2>
-                <p className="mx-auto max-w-2xl text-sm text-foreground/75">
+                <p className="mx-auto max-w-2xl text-sm text-foreground/60">
                   Cadastre-se gratuitamente, monte seu plano de estudos e acompanhe todo o progresso. Estamos lançando novidades
                   constantemente para apoiar sua jornada rumo ao ensino superior.
                 </p>
@@ -164,7 +163,7 @@ export default function SobrePage() {
                     className="btn btn-primary px-6 py-3 text-sm"
                     loggedInLabel="Acessar minha conta"
                   />
-                  <Link href="/noticias" className="btn btn-glass px-6 py-3 text-sm">
+                  <Link href="/noticias" className="btn btn-outline px-6 py-3 text-sm">
                     Ver novidades do ENEM
                   </Link>
                 </div>

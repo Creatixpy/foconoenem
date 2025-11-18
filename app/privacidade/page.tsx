@@ -102,20 +102,19 @@ export default function PrivacyPolicyPage() {
   return (
     <main className="flex-grow">
       <section className="relative overflow-hidden px-4 pb-20 pt-16 sm:px-6 lg:px-8">
-          <div className="hero-accent absolute inset-0 blur-3xl" aria-hidden />
           <div className="container relative z-10 mx-auto max-w-5xl space-y-10">
-            <div className="surface-card space-y-5 p-8 shadow-xl md:p-12">
-              <span className="hero-status shadow-glow w-fit text-sm">
+            <div className="rounded-2xl border border-border-color bg-card-bg p-8 shadow-sm md:p-12">
+              <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">
                 🔒 Última atualização: {new Date().toLocaleDateString("pt-BR")}
               </span>
-              <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Política de Privacidade</h1>
-              <p className="text-base text-foreground/75">
+              <h1 className="mt-6 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">Política de Privacidade</h1>
+              <p className="mt-4 text-base text-foreground/60">
                 Este documento explica como tratamos as informações que você compartilha com o Foco no ENEM. Transparência é
                 fundamental: leia com atenção para entender seus direitos e escolhas.
               </p>
             </div>
 
-            <div className="surface-card p-6 shadow-xl md:p-8">
+            <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm md:p-8">
               <h2 className="text-lg font-semibold text-foreground">Resumo rápido</h2>
               <ul className="mt-4 grid gap-3 sm:grid-cols-2">
                 {policySections.map((section) => (
@@ -133,7 +132,7 @@ export default function PrivacyPolicyPage() {
                 <details
                   key={section.id}
                   id={section.id}
-                  className="surface-card border border-border-color/60 p-0 shadow-sm"
+                  className="rounded-2xl border border-border-color bg-card-bg shadow-sm"
                   open={index === 0}
                 >
                   <summary className="flex cursor-pointer items-center gap-3 px-6 py-4 text-left">
@@ -142,9 +141,9 @@ export default function PrivacyPolicyPage() {
                     </span>
                     <span className="text-base font-semibold text-foreground">{section.title}</span>
                   </summary>
-                  <div className="space-y-4 border-t border-border-color/60 px-6 py-5 text-sm text-foreground/75">
+                  <div className="space-y-4 border-t border-border-color px-6 py-5 text-sm text-foreground/60">
                     {section.alert && (
-                      <div className="rounded-2xl border border-success/40 bg-success/10 p-4 text-sm text-success">{section.alert}</div>
+                      <div className="rounded-xl border border-success/40 bg-success/10 p-4 text-sm text-success">{section.alert}</div>
                     )}
                     {section.paragraphs?.map((paragraph) => (
                       <p key={paragraph} className="leading-relaxed">
@@ -152,7 +151,7 @@ export default function PrivacyPolicyPage() {
                       </p>
                     ))}
                     {section.list && (
-                      <ul className="list-disc space-y-2 pl-6 text-foreground/70">
+                      <ul className="list-disc space-y-2 pl-6 text-foreground/60">
                         {section.list.map((item) => (
                           <li key={item}>{item}</li>
                         ))}
@@ -163,10 +162,10 @@ export default function PrivacyPolicyPage() {
               ))}
             </div>
 
-            <div className="gradient-border cta-surface overflow-hidden rounded-[2.5rem] p-10 text-center shadow-2xl backdrop-blur">
+            <div className="rounded-2xl border border-border-color bg-card-bg p-10 text-center shadow-sm">
               <div className="space-y-4">
                 <h2 className="text-2xl font-semibold text-foreground sm:text-3xl">Estamos disponíveis para esclarecer dúvidas.</h2>
-                <p className="mx-auto max-w-3xl text-sm text-foreground/75">
+                <p className="mx-auto max-w-3xl text-sm text-foreground/60">
                   Se precisar exercer seus direitos ou falar sobre privacidade, envie um email para contato@foconoenem.com.
                   Responderemos em até 15 dias úteis.
                 </p>

@@ -15,7 +15,7 @@ const OperatingHoursIndicator = dynamic(() => import("../components/OperatingHou
 const LazyQuizResults = dynamic(() => import("../components/QuizResults"), {
   ssr: false,
   loading: () => (
-    <div className="surface-card border border-border-color/60 p-6 text-center shadow-sm">
+    <div className="rounded-2xl border border-border-color bg-card-bg p-6 text-center shadow-sm">
       <p className="text-sm font-semibold text-foreground/80">Calculando seu desempenho...</p>
     </div>
   ),
@@ -358,38 +358,37 @@ export default function QuestoesPageClient() {
           className="relative overflow-hidden px-4 pb-20 pt-16 sm:px-6 lg:px-8"
           aria-labelledby="questoes-hero-heading questoes-hero-description"
         >
-          <div className="hero-accent absolute inset-0 blur-3xl" aria-hidden />
           <div className="container relative z-10 mx-auto max-w-6xl">
             <div className="grid gap-12 lg:grid-cols-[1.2fr_0.9fr]">
               <div className="space-y-8">
-                <div className="hero-status shadow-glow">
+                <div className="inline-flex items-center gap-2 rounded-full bg-success/10 px-3 py-1 text-xs font-semibold text-success">
                   <span className="h-2 w-2 rounded-full bg-success" />
                   Simulado inteligente de questões
                 </div>
                 <div className="space-y-5">
-                  <h1 id="questoes-hero-heading" className="text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl">
+                  <h1 id="questoes-hero-heading" className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl text-foreground">
                     Pratique questões inéditas e receba explicações na hora.
                   </h1>
-                  <p id="questoes-hero-description" className="max-w-xl text-lg text-foreground/75">
+                  <p id="questoes-hero-description" className="max-w-xl text-lg text-foreground/60">
                     Monte o seu treino com disciplinas específicas, responda no seu ritmo e descubra imediatamente quais
                     conteúdos precisam de reforço.
                   </p>
                 </div>
                 <dl className="grid gap-4 sm:grid-cols-3">
                   {heroHighlights.map((highlight) => (
-                    <div key={highlight.label} className="stat-card px-5 py-4">
-                      <dt className="text-xs uppercase tracking-wide text-foreground/80">{highlight.label}</dt>
+                    <div key={highlight.label} className="rounded-2xl border border-border-color bg-card-bg p-5 shadow-sm">
+                      <dt className="text-xs uppercase tracking-wide text-foreground/60">{highlight.label}</dt>
                       <dd className="mt-2 text-xl font-semibold text-primary">{highlight.value}</dd>
-                      <p className="mt-1 text-xs text-foreground/80">{highlight.detail}</p>
+                      <p className="mt-1 text-xs text-foreground/60">{highlight.detail}</p>
                     </div>
                   ))}
                 </dl>
               </div>
 
-              <div className="surface-card flex h-full flex-col gap-6 p-6 shadow-xl">
+              <div className="flex h-full flex-col gap-6 rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
                 <div>
                   <h2 className="text-lg font-semibold text-foreground">Como funciona o treino personalizado</h2>
-                  <ol className="mt-4 space-y-4 text-sm text-foreground/75">
+                  <ol className="mt-4 space-y-4 text-sm text-foreground/60">
                     <li className="flex gap-3">
                       <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
                         01
@@ -418,7 +417,7 @@ export default function QuestoesPageClient() {
                     </li>
                   </ol>
                 </div>
-                <div className="rounded-2xl border border-border-color/60 bg-card-bg/80 p-4 text-sm text-foreground/70 shadow-inner backdrop-blur">
+                <div className="rounded-xl border border-border-color bg-muted-bg/50 p-4 text-sm text-foreground/60">
                   {isSystemAvailable === false ? (
                     <p>
                       O simulador está indisponível no momento. Verifique os horários de funcionamento indicados acima para
@@ -453,14 +452,14 @@ export default function QuestoesPageClient() {
 
             {showResults && quizResult ? (
               <div className="space-y-8">
-                <div className="surface-card space-y-4 p-6 shadow-xl md:p-8">
+                <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm md:p-8">
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
                       <p className="text-xs uppercase tracking-[0.18em] text-primary">Resultado do simulador</p>
                       <h2 className="mt-2 text-2xl font-semibold text-foreground">Confira os seus números e próximos passos</h2>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      <button onClick={handleRetakeQuiz} className="btn btn-secondary px-4 py-2 text-sm">
+                      <button onClick={handleRetakeQuiz} className="btn btn-outline px-4 py-2 text-sm">
                         Montar novo simulado
                       </button>
                       <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="btn btn-primary px-4 py-2 text-sm">
@@ -468,15 +467,15 @@ export default function QuestoesPageClient() {
                       </button>
                     </div>
                   </div>
-                  {saveStatusMessage && <p className="text-sm text-foreground/70">{saveStatusMessage}</p>}
+                  {saveStatusMessage && <p className="text-sm text-foreground/60">{saveStatusMessage}</p>}
                 </div>
                 <LazyQuizResults result={quizResult} onRetakeQuiz={handleRetakeQuiz} />
               </div>
             ) : !hasStarted ? (
-              <div className="surface-card space-y-8 p-6 shadow-xl md:p-8">
+              <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm md:p-8 space-y-8">
                 <div className="space-y-2">
                   <h2 className="text-2xl font-semibold text-foreground">Monte o treino ideal para agora</h2>
-                  <p className="text-sm text-foreground/70">
+                  <p className="text-sm text-foreground/60">
                     Cada disciplina adiciona automaticamente três questões. Misture áreas para um treino completo ou foque nos
                     temas que precisam de reforço imediato.
                   </p>
@@ -489,18 +488,20 @@ export default function QuestoesPageClient() {
                       <button
                         key={discipline.name}
                         onClick={() => toggleDiscipline(discipline.name)}
-                        className={`select-card group flex h-full flex-col rounded-2xl border border-border-color bg-card-bg/80 p-5 text-left shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
-                          isSelected ? "select-card--active" : ""
+                        className={`group flex h-full flex-col rounded-2xl border p-5 text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+                          isSelected 
+                            ? "border-primary bg-primary/5 shadow-sm" 
+                            : "border-border-color bg-card-bg shadow-sm hover:border-primary/50"
                         }`}
                       >
                         <span className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${discipline.accent} text-primary`}>
                           {discipline.icon}
                         </span>
                         <strong className="text-base text-foreground">{discipline.name}</strong>
-                        <span className="mt-2 text-sm text-foreground/70">{discipline.description}</span>
+                        <span className="mt-2 text-sm text-foreground/60">{discipline.description}</span>
                         <span
                           className={`mt-4 inline-flex w-fit items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                            isSelected ? "border-primary/40 bg-primary/10 text-primary" : "border-border-color text-foreground/80"
+                            isSelected ? "border-primary/40 bg-primary/10 text-primary" : "border-border-color text-foreground/60"
                           }`}
                         >
                           {isSelected ? (
@@ -536,8 +537,8 @@ export default function QuestoesPageClient() {
                   )}
                 </div>
 
-                <div className="flex flex-col items-center gap-3 rounded-2xl border border-border-color bg-card-bg/90 p-6 text-center shadow-sm backdrop-blur">
-                  <p className="text-sm text-foreground/70">
+                <div className="flex flex-col items-center gap-3 rounded-2xl border border-border-color bg-card-bg p-6 text-center shadow-sm">
+                  <p className="text-sm text-foreground/60">
                     As questões são produzidas na hora por IA e trazem explicações detalhadas ao finalizar.
                   </p>
                   <button
@@ -568,7 +569,7 @@ export default function QuestoesPageClient() {
             ) : (
               <div className="space-y-8">
                 {saveStatusMessage && (
-                  <div className="surface-card p-4 text-sm text-foreground/75 shadow-sm">
+                  <div className="rounded-2xl border border-border-color bg-card-bg p-4 text-sm text-foreground/60 shadow-sm">
                     <strong>Status:</strong> {saveStatusMessage}
                   </div>
                 )}
@@ -586,26 +587,26 @@ export default function QuestoesPageClient() {
                       />
                     ))}
                   </div>
-                  <aside className="surface-card flex flex-col gap-4 rounded-3xl p-6 shadow-xl lg:sticky lg:top-28">
+                  <aside className="flex flex-col gap-4 rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm lg:sticky lg:top-28">
                     <div>
                       <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground/80">Resumo rápido</h3>
-                      <p className="mt-2 text-sm text-foreground/75">
+                      <p className="mt-2 text-sm text-foreground/60">
                         {answeredCount} de {questions.length} questões respondidas.
                         {unansweredCount > 0 && ` Restam ${unansweredCount}.`}
                       </p>
                     </div>
-                    <div className="rounded-2xl border border-border-color bg-muted-bg/60 p-4">
+                    <div className="rounded-xl border border-border-color bg-muted-bg/50 p-4">
                       <p className="text-xs uppercase tracking-wide text-primary">Dica</p>
-                      <p className="mt-2 text-sm text-foreground/75">
+                      <p className="mt-2 text-sm text-foreground/60">
                         Marque as alternativas com confiança. As explicações ao final destacam por que cada resposta correta faz
                         sentido — use-as como guia de revisão.
                       </p>
                     </div>
                     <div className="space-y-2 text-sm">
-                      <p className="font-semibold text-foreground/75">Disciplinas desta rodada</p>
+                      <p className="font-semibold text-foreground/80">Disciplinas desta rodada</p>
                       <div className="flex flex-wrap gap-2">
                         {Array.from(selectedDisciplines).map((discipline) => (
-                          <span key={discipline} className="rounded-full border border-border-color bg-card-bg px-3 py-1 text-xs text-foreground/70">
+                          <span key={discipline} className="rounded-full border border-border-color bg-card-bg px-3 py-1 text-xs text-foreground/60">
                             {discipline}
                           </span>
                         ))}
@@ -634,7 +635,7 @@ export default function QuestoesPageClient() {
 
                 {questions.length > 0 && (
                   <div className="sticky bottom-0 -mx-4 flex flex-col gap-3 border-t border-border-color bg-background/95 px-4 py-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:gap-0">
-                    <div className="text-sm text-foreground/70">
+                    <div className="text-sm text-foreground/60">
                       <span className="font-semibold text-foreground">
                         {answeredCount} / {questions.length}
                       </span>

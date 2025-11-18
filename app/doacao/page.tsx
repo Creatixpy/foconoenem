@@ -76,34 +76,33 @@
    };
  
    return (
-     <main className="flex-grow">
-       <section className="relative overflow-hidden px-4 pb-20 pt-16 sm:px-6 lg:px-8">
-           <div className="hero-accent absolute inset-0 blur-3xl" aria-hidden />
-           <div className="container relative z-10 mx-auto max-w-5xl space-y-12">
-            <div className="surface-card space-y-5 p-8 text-center shadow-xl md:p-12">
-              <span className="hero-status shadow-glow justify-center text-sm">
+    <main className="flex-grow">
+      <section className="relative overflow-hidden px-4 pb-20 pt-16 sm:px-6 lg:px-8">
+          <div className="container relative z-10 mx-auto max-w-5xl space-y-12">
+            <div className="space-y-5 rounded-2xl border border-border-color bg-card-bg p-8 text-center shadow-sm md:p-12">
+              <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary shadow-sm justify-center">
                 ❤️ 100% financiado pela comunidade
               </span>
-              <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
+              <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
                 Doe para manter tudo gratuito e simples.
               </h1>
-              <p className="mx-auto max-w-2xl text-base text-foreground/75">
+              <p className="mx-auto max-w-2xl text-base text-foreground/60">
                 Pagamos APIs de IA, servidores e melhorias com pequenas contribuições. Qualquer valor mantém milhares de estudantes praticando.
               </p>
               <div className="flex flex-wrap justify-center gap-3">
                 <Link href="/sobre" className="btn btn-outline px-6 py-3 text-sm">
                   Conheça o projeto
                 </Link>
-                <Link href="/noticias" className="btn btn-glass px-6 py-3 text-sm">
+                <Link href="/noticias" className="btn btn-outline px-6 py-3 text-sm">
                   Ver impacto
                 </Link>
               </div>
             </div>
  
-             <div className="surface-card space-y-8 p-8 shadow-xl md:p-10">
+             <div className="space-y-8 rounded-2xl border border-border-color bg-card-bg p-8 shadow-sm md:p-10">
                <div className="flex flex-col gap-4 text-center">
                  <h2 className="text-2xl font-semibold text-foreground">Escolha um valor</h2>
-                 <p className="text-sm text-foreground/70">
+                 <p className="text-sm text-foreground/60">
                    Nosso custo médio por estudante ativa é de R$ 12,80/mês. Qualquer valor acima de R$ 5 já nos ajuda a manter a infraestrutura.
                  </p>
                </div>
@@ -119,12 +118,14 @@
                          setError(null);
                        }}
                        disabled={isProcessing}
-                       className={`select-card surface-card flex h-full flex-col items-center gap-2 border border-border-color/60 p-5 text-center shadow-sm transition-all ${
-                         isActive ? "select-card--active" : ""
+                       className={`flex h-full flex-col items-center gap-2 rounded-2xl border p-5 text-center shadow-sm transition-all ${
+                         isActive 
+                           ? "border-primary bg-primary/5 shadow-md" 
+                           : "border-border-color bg-card-bg hover:border-primary/50"
                        } ${isProcessing ? "cursor-not-allowed opacity-60" : ""}`}
                      >
                        <span className="text-xl font-semibold text-primary">{amount.label}</span>
-                       <p className="text-xs text-foreground/70">{amount.description}</p>
+                       <p className="text-xs text-foreground/60">{amount.description}</p>
                      </button>
                    );
                  })}
@@ -132,7 +133,7 @@
                <div className="space-y-2">
                  <p className="text-sm font-semibold text-foreground">Ou escolha seu próprio valor</p>
                  <div className="relative">
-                   <span className="absolute left-5 top-1/2 -translate-y-1/2 text-sm font-semibold text-foreground/70">R$</span>
+                   <span className="absolute left-5 top-1/2 -translate-y-1/2 text-sm font-semibold text-foreground/60">R$</span>
                    <input
                      type="number"
                      min="5"
@@ -145,7 +146,7 @@
                      }}
                      placeholder="Digite um valor (mínimo R$ 5)"
                      disabled={isProcessing}
-                     className="w-full rounded-2xl border border-border-color/70 bg-card-bg/80 py-3 pl-12 pr-4 text-base text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-60"
+                     className="w-full rounded-xl border border-border-color bg-background py-3 pl-12 pr-4 text-base text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-60"
                    />
                  </div>
                </div>
@@ -174,14 +175,14 @@
                  )}
                </button>
  
-               <div className="rounded-2xl border border-primary/20 bg-primary/10 p-4 text-sm text-foreground/70">
+               <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm text-foreground/60">
                  <div className="flex items-center justify-center gap-2 font-semibold text-primary">
                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                    </svg>
                    Pagamento 100% seguro via Stripe
                  </div>
-                 <p className="mt-2 text-xs">
+                 <p className="mt-2 text-xs text-center">
                    Seus dados são criptografados de ponta a ponta. Não armazenamos informações de cartão. Receba o recibo de doação
                    diretamente no seu email.
                  </p>
@@ -190,15 +191,15 @@
 
              <div className="grid gap-6 md:grid-cols-3">
                {impactItems.map((impact) => (
-                 <div key={impact.title} className="surface-card flex h-full flex-col gap-3 border border-border-color/70 p-6 text-center shadow-sm">
+                 <div key={impact.title} className="flex h-full flex-col gap-3 rounded-2xl border border-border-color bg-card-bg p-6 text-center shadow-sm">
                    <span className="text-3xl">{impact.icon}</span>
                    <h3 className="text-lg font-semibold text-foreground">{impact.title}</h3>
-                   <p className="text-sm text-foreground/70">{impact.description}</p>
+                   <p className="text-sm text-foreground/60">{impact.description}</p>
                  </div>
                ))}
              </div>
 
-             <div className="text-center text-sm text-foreground/80">
+             <div className="text-center text-sm text-foreground/60">
                Quer doar por Pix ou boleto? Entre em contato pelo nosso{" "}
                <Link href="mailto:contato@foconoenem.com" className="text-primary font-semibold hover:underline">
                  email oficial
