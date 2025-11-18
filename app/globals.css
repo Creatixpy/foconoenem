@@ -802,13 +802,10 @@ footer p, footer a, footer div {
   box-shadow: var(--shadow-md);
   border-color: var(--primary-light);
 }
-  transform: translateY(-6px);
-  box-shadow: 0 28px 60px -32px rgba(15, 23, 42, 0.35);
-}
 
 [data-theme="dark"] .glass-card {
-  border: 1.5px solid rgba(148, 163, 184, 0.24);
-  background: rgba(15, 23, 42, 0.68);
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
 }
 
 .gradient-border {

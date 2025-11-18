@@ -359,16 +359,16 @@ export default function HomePageClient() {
               </p>
             </div>
             <div className="mt-10 grid gap-6 md:grid-cols-2">
-              <div className="glass-card border border-border-color/60 bg-card-bg/80 p-6">
+              <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
                 <h3 className="text-xl font-semibold text-foreground">Fóruns por tema</h3>
-                <p className="mt-2 text-sm text-foreground/70">
+                <p className="mt-2 text-sm text-foreground/60">
                   Discuta repertórios, compartilhe repertórios confiáveis e receba feedback em tópicos moderados por quem
                   entende do ENEM.
                 </p>
               </div>
-              <div className="glass-card border border-border-color/60 bg-card-bg/80 p-6">
+              <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
                 <h3 className="text-xl font-semibold text-foreground">Eventos da comunidade</h3>
-                <p className="mt-2 text-sm text-foreground/70">
+                <p className="mt-2 text-sm text-foreground/60">
                   Encontros semanais com dicas de planejamento, desafios de redação e mentorias rápidas para manter o foco.
                 </p>
               </div>
