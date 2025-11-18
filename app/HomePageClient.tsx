@@ -135,7 +135,7 @@ export default function HomePageClient() {
       >
           <div className="container relative z-10 mx-auto grid max-w-7xl gap-16 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
             <div className="space-y-10">
-              <div className="inline-flex items-center gap-2 rounded-full border border-border-color bg-secondary/50 px-3 py-1 text-sm font-medium text-foreground/80 backdrop-blur-sm">
+              <div className="inline-flex items-center gap-2 rounded-full border border-border-color bg-secondary/50 px-3 py-1 text-sm font-medium text-foreground/80">
                 <span className="h-2 w-2 rounded-full bg-success animate-pulse" />
                 Aberto 7h — 23h30 (BRT)
               </div>
@@ -154,7 +154,7 @@ export default function HomePageClient() {
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-                <Link href="/redacao" className="inline-flex items-center justify-center rounded-xl bg-primary px-8 py-3 text-base font-semibold text-white shadow-lg shadow-primary/20 transition-all hover:bg-primary-dark hover:shadow-primary/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+                <Link href="/redacao" className="inline-flex items-center justify-center rounded-xl bg-primary px-8 py-3 text-base font-semibold text-white shadow-sm transition-all hover:bg-primary-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
                   Começar pela redação
                 </Link>
                 <Link href="/questoes" className="inline-flex items-center justify-center gap-2 rounded-xl border border-border-color bg-card-bg px-8 py-3 text-base font-semibold text-foreground transition-all hover:bg-secondary/50 hover:border-primary/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
@@ -176,9 +176,8 @@ export default function HomePageClient() {
             </div>
 
             <div className="relative isolate hidden lg:block">
-              <div className="absolute -right-8 -top-8 h-64 w-64 rounded-full bg-primary/10 blur-3xl" aria-hidden />
               <div className="relative z-10 space-y-6">
-                <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-xl shadow-black/5">
+                <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
                   <div className="flex items-center justify-between text-sm text-foreground/60">
                     <span className="inline-flex items-center gap-2 font-medium text-foreground">
                       <span className="h-2 w-2 rounded-full bg-success" />
@@ -209,7 +208,7 @@ export default function HomePageClient() {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-xl shadow-black/5 translate-x-8">
+                <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm translate-x-8">
                   <h3 className="text-lg font-semibold">Simulado rápido</h3>
                   <p className="mt-2 text-sm text-foreground/60">
                     Matemática · Linguagens · Ciências Humanas
@@ -242,7 +241,7 @@ export default function HomePageClient() {
               <h2 id="home-recursos-heading" className="text-3xl font-semibold text-foreground sm:text-4xl">
                 Tudo que você precisa em um só lugar
               </h2>
-              <p className="mx-auto max-w-3xl text-base text-foreground/70">
+              <p className="mx-auto max-w-3xl text-base text-foreground/60">
                 Organizamos a sua preparação com ferramentas inteligentes, painéis intuitivos e uma experiência que parece feita
                 sob medida para o seu ritmo de estudos.
               </p>
@@ -328,7 +327,7 @@ export default function HomePageClient() {
             <div className="grid gap-6 md:grid-cols-3">
               {testimonials.map((testimonial) => (
                 <figure key={testimonial.author} className="rounded-2xl border border-border-color bg-card-bg p-8 shadow-sm">
-                  <blockquote className="text-base leading-relaxed text-foreground/70 italic">
+                  <blockquote className="text-base leading-relaxed text-foreground/60 italic">
                     “{testimonial.quote}”
                   </blockquote>
                   <figcaption className="mt-6 border-t border-border-color/50 pt-4">
@@ -353,7 +352,7 @@ export default function HomePageClient() {
               <h2 id="home-comunidade-heading" className="text-3xl font-semibold text-foreground sm:text-4xl">
                 Converse com quem também está no ENEM
               </h2>
-              <p className="mx-auto max-w-3xl text-base text-foreground/70">
+              <p className="mx-auto max-w-3xl text-base text-foreground/60">
                 Participe dos fóruns privados para trocar estratégias de redação, revisar simulados em grupo e manter a
                 motivação. Nossa equipe modera todos os tópicos para evitar plágios e garantir um ambiente colaborativo.
               </p>
@@ -387,12 +386,12 @@ export default function HomePageClient() {
           aria-labelledby="home-cta-heading"
         >
           <div className="container mx-auto max-w-5xl">
-            <div className="gradient-border cta-surface overflow-hidden rounded-[2.75rem] p-10 text-center shadow-2xl backdrop-blur">
+            <div className="rounded-2xl border border-border-color bg-card-bg p-10 text-center shadow-sm">
               <div className="space-y-6">
                 <h2 id="home-cta-heading" className="text-3xl font-semibold text-foreground sm:text-4xl">
                   Vamos conquistar a redação mil juntos?
                 </h2>
-                <p className="mx-auto max-w-2xl text-base text-foreground/70">
+                <p className="mx-auto max-w-2xl text-base text-foreground/60">
                   Teste gratuitamente, acompanhe sua evolução e descubra o plano ideal para chegar na nota que você merece.
                   Estudar pode ser leve quando você enxerga cada avanço.
                 </p>
@@ -403,7 +402,7 @@ export default function HomePageClient() {
                   />
                   <Link
                     href="/noticias"
-                    className="btn btn-glass gap-2 px-8 py-3 text-base font-semibold text-primary"
+                    className="btn btn-outline gap-2 px-8 py-3 text-base font-semibold text-primary"
                   >
                     Ver novidades do ENEM
                     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

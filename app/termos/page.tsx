@@ -94,20 +94,19 @@ export default function TermsOfServicePage() {
   return (
     <main className="flex-grow">
       <section className="relative overflow-hidden px-4 pb-20 pt-16 sm:px-6 lg:px-8">
-          <div className="hero-accent absolute inset-0 blur-3xl" aria-hidden />
           <div className="container relative z-10 mx-auto max-w-5xl space-y-10">
-            <div className="surface-card space-y-5 p-8 shadow-xl md:p-12">
-              <span className="hero-status shadow-glow w-fit text-sm">
+            <div className="rounded-2xl border border-border-color bg-card-bg p-8 shadow-sm md:p-12">
+              <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">
                 📄 Última atualização: {new Date().toLocaleDateString("pt-BR")}
               </span>
-              <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Termos de Serviço</h1>
-              <p className="text-base text-foreground/75">
+              <h1 className="mt-6 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">Termos de Serviço</h1>
+              <p className="mt-4 text-base text-foreground/60">
                 Estes termos definem como você pode utilizar o Foco no ENEM. Leia com atenção: queremos garantir um ambiente seguro,
                 ético e transparente para todos que estudam conosco.
               </p>
             </div>
 
-            <div className="surface-card p-6 shadow-xl md:p-8">
+            <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm md:p-8">
               <h2 className="text-lg font-semibold text-foreground">Guia rápido</h2>
               <ul className="mt-4 grid gap-3 sm:grid-cols-2">
                 {sections.map((section) => (
@@ -125,7 +124,7 @@ export default function TermsOfServicePage() {
                 <details
                   key={section.id}
                   id={section.id}
-                  className="surface-card border border-border-color/60 p-0 shadow-sm"
+                  className="rounded-2xl border border-border-color bg-card-bg shadow-sm"
                   open={index === 0}
                 >
                   <summary className="flex cursor-pointer items-center gap-3 px-6 py-4 text-left">
@@ -134,10 +133,10 @@ export default function TermsOfServicePage() {
                     </span>
                     <span className="text-base font-semibold text-foreground">{section.title}</span>
                   </summary>
-                  <div className="space-y-4 border-t border-border-color/60 px-6 py-5 text-sm text-foreground/75">
+                  <div className="space-y-4 border-t border-border-color px-6 py-5 text-sm text-foreground/60">
                     <p className="leading-relaxed">{section.content}</p>
                     {section.list && (
-                      <ul className="list-disc space-y-2 pl-6 text-foreground/70">
+                      <ul className="list-disc space-y-2 pl-6 text-foreground/60">
                         {section.list.map((item) => (
                           <li key={item}>{item}</li>
                         ))}
@@ -146,11 +145,11 @@ export default function TermsOfServicePage() {
                     {section.subsections && (
                       <div className="space-y-4">
                         {section.subsections.map((subsection) => (
-                          <div key={subsection.subtitle} className="rounded-2xl border border-border-color/50 bg-card-bg/80 p-5">
+                          <div key={subsection.subtitle} className="rounded-xl border border-border-color bg-background p-5">
                             <p className="text-sm font-semibold text-foreground">{subsection.subtitle}</p>
-                            <p className="mt-2 text-sm text-foreground/70">{subsection.description}</p>
+                            <p className="mt-2 text-sm text-foreground/60">{subsection.description}</p>
                             {subsection.list && (
-                              <ul className="mt-3 list-disc space-y-2 pl-5 text-foreground/70">
+                              <ul className="mt-3 list-disc space-y-2 pl-5 text-foreground/60">
                                 {subsection.list.map((item) => (
                                   <li key={item}>{item}</li>
                                 ))}
@@ -165,12 +164,12 @@ export default function TermsOfServicePage() {
               ))}
             </div>
 
-            <div className="gradient-border cta-surface overflow-hidden rounded-[2.5rem] p-10 text-center shadow-2xl backdrop-blur">
+            <div className="rounded-2xl border border-border-color bg-card-bg p-10 text-center shadow-sm">
               <div className="space-y-4">
                 <h2 className="text-2xl font-semibold text-foreground sm:text-3xl">
                   Obrigado por estudar com o Foco no ENEM 💙
                 </h2>
-                <p className="mx-auto max-w-3xl text-sm text-foreground/75">
+                <p className="mx-auto max-w-3xl text-sm text-foreground/60">
                   Respeitar estes termos nos ajuda a manter o projeto sustentável, seguro e disponível para milhares de estudantes.
                   Caso precise de algo, estamos sempre a um email de distância.
                 </p>

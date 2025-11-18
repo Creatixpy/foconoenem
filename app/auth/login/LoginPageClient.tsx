@@ -74,26 +74,25 @@ export default function LoginPageClient({ redirectTo }: LoginPageClientProps) {
   return (
     <main className="flex-grow">
       <section className="relative overflow-hidden px-4 pb-20 pt-16 sm:px-6 lg:px-8">
-          <div className="hero-accent absolute inset-0 blur-3xl" aria-hidden />
           <div className="container relative z-10 mx-auto grid max-w-6xl gap-10 lg:grid-cols-[0.85fr_1fr]">
             <div className="space-y-8">
-              <div className="hero-status shadow-glow w-fit text-sm">
+              <div className="inline-flex items-center gap-2 rounded-full border border-border-color bg-secondary/50 px-3 py-1 text-sm font-medium text-foreground/80">
                 🔐 Acesso seguro às suas ferramentas
               </div>
               <div className="space-y-5">
-                <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
+                <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
                   Bem-vindo de volta! Continue evoluindo com seus simulados e redações.
                 </h1>
-                <p className="max-w-lg text-lg text-foreground/75">
+                <p className="max-w-lg text-lg text-foreground/60">
                   Faça login para desbloquear relatórios inteligentes, histórico de desempenho e recomendações orientadas para
                   notas altas no ENEM.
                 </p>
               </div>
               <div className="space-y-4">
                 {highlights.map((item) => (
-                  <div key={item.title} className="surface-card border border-border-color/60 p-4 shadow-sm">
+                  <div key={item.title} className="rounded-2xl border border-border-color bg-card-bg p-4 shadow-sm">
                     <h3 className="text-sm font-semibold text-foreground">{item.title}</h3>
-                    <p className="mt-1 text-sm text-foreground/70">{item.description}</p>
+                    <p className="mt-1 text-sm text-foreground/60">{item.description}</p>
                   </div>
                 ))}
               </div>
@@ -106,10 +105,10 @@ export default function LoginPageClient({ redirectTo }: LoginPageClientProps) {
               </p>
             </div>
 
-            <div className="surface-card h-fit space-y-6 p-6 shadow-xl md:p-8">
+            <div className="h-fit space-y-6 rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm md:p-8">
               <div className="space-y-2 text-center">
                 <h2 className="text-2xl font-semibold text-foreground">Entre com sua conta</h2>
-                <p className="text-sm text-foreground/80">Conecte-se para acompanhar sua jornada rumo à aprovação.</p>
+                <p className="text-sm text-foreground/60">Conecte-se para acompanhar sua jornada rumo à aprovação.</p>
               </div>
 
               {formError && (
@@ -125,7 +124,7 @@ export default function LoginPageClient({ redirectTo }: LoginPageClientProps) {
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     required
-                    className="mt-2 w-full rounded-2xl border border-border-color/70 bg-card-bg/80 px-4 py-3 text-base text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className="mt-2 w-full rounded-2xl border border-border-color bg-card-bg px-4 py-3 text-base text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                     placeholder="seu@email.com"
                     autoComplete="email"
                   />
@@ -139,7 +138,7 @@ export default function LoginPageClient({ redirectTo }: LoginPageClientProps) {
                     onChange={(event) => setPassword(event.target.value)}
                     required
                     minLength={6}
-                    className="mt-2 w-full rounded-2xl border border-border-color/70 bg-card-bg/80 px-4 py-3 text-base text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className="mt-2 w-full rounded-2xl border border-border-color bg-card-bg px-4 py-3 text-base text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                     placeholder="Digite sua senha"
                     autoComplete="current-password"
                   />
@@ -163,10 +162,10 @@ export default function LoginPageClient({ redirectTo }: LoginPageClientProps) {
 
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-border-color/70" />
+                  <span className="w-full border-t border-border-color" />
                 </div>
                 <div className="relative flex justify-center">
-                  <span className="bg-card-bg/90 px-3 text-xs font-semibold uppercase tracking-[0.25em] text-foreground/75">
+                  <span className="bg-card-bg px-3 text-xs font-semibold uppercase tracking-[0.25em] text-foreground/60">
                     ou continue com
                   </span>
                 </div>
@@ -176,7 +175,7 @@ export default function LoginPageClient({ redirectTo }: LoginPageClientProps) {
                 type="button"
                 onClick={handleGoogleSignIn}
                 disabled={submitting}
-                className="btn-glass flex w-full items-center justify-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-foreground transition-transform duration-200 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+                className="btn btn-outline flex w-full items-center justify-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-foreground transition-transform duration-200 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <svg className="h-5 w-5" viewBox="0 0 533.5 544.3" aria-hidden="true">
                   <path fill="#4285f4" d="M533.5 278.4c0-17.4-1.4-34.1-4-50.4H272v95.4h147.4c-6.4 34.9-25.7 64.4-54.7 84.2v69.8h88.4c51.7-47.6 80.4-117.8 80.4-199z" />

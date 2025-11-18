@@ -747,7 +747,7 @@ export default function CommunityPageClient() {
   if (!user) {
     return (
       <main className="px-4 pb-24 pt-28 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl rounded-[2.5rem] border border-border-color/60 bg-card-bg/80 p-10 text-center">
+        <div className="mx-auto max-w-2xl rounded-2xl border border-border-color bg-card-bg p-10 text-center shadow-sm">
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1 text-sm font-semibold text-primary">
             Comunidade exclusiva
           </div>
@@ -759,7 +759,7 @@ export default function CommunityPageClient() {
             <Link href="/auth/login?redirect=/comunidade" className="btn btn-primary px-8 py-3 text-base">
               Entrar na minha conta
             </Link>
-            <Link href="/auth/register" className="btn btn-glass px-8 py-3 text-base font-semibold text-primary">
+            <Link href="/auth/register" className="btn btn-outline px-8 py-3 text-base font-semibold text-primary">
               Criar conta gratuita
             </Link>
           </div>
@@ -779,15 +779,15 @@ export default function CommunityPageClient() {
   if (needsAgeConfirmation) {
     return (
       <main className="px-4 pb-24 pt-28 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-3xl rounded-[2.5rem] border border-border-color/60 bg-card-bg/80 p-10">
+        <div className="mx-auto max-w-3xl rounded-2xl border border-border-color bg-card-bg p-10 shadow-sm">
           <h1 className="text-3xl font-semibold text-foreground sm:text-4xl">Confirme que tem 16 anos ou mais</h1>
           <p className="mt-4 text-base text-foreground/70">
             Para proteger menores de idade e seguir a LGPD, a comunidade fica disponível apenas para estudantes com 16 anos ou mais.
           </p>
-          <label className="mt-8 flex items-start gap-3 rounded-2xl border border-border-color/60 bg-muted-bg/20 p-4 text-sm text-foreground/80">
+          <label className="mt-8 flex items-start gap-3 rounded-xl border border-border-color bg-muted-bg/30 p-4 text-sm text-foreground/80 cursor-pointer hover:bg-muted-bg/50 transition-colors">
             <input
               type="checkbox"
-              className="mt-1 h-4 w-4 rounded border-border-color/70 text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className="mt-1 h-4 w-4 rounded border-border-color text-primary focus:ring-primary"
               checked={ageCheckbox}
               onChange={(event) => setAgeCheckbox(event.target.checked)}
             />
@@ -809,7 +809,7 @@ export default function CommunityPageClient() {
   if (needsTermsAcceptance) {
     return (
       <main className="px-4 pb-24 pt-28 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-3xl rounded-[2.5rem] border border-border-color/60 bg-card-bg/80 p-10">
+        <div className="mx-auto max-w-3xl rounded-2xl border border-border-color bg-card-bg p-10 shadow-sm">
           <div className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-4 py-1 text-xs font-semibold text-accent">
             Termos da comunidade · {COMMUNITY_POLICY_VERSION_LABEL}
           </div>
@@ -822,15 +822,15 @@ export default function CommunityPageClient() {
           </ul>
           <div className="mt-6 flex flex-wrap gap-4 text-sm text-primary">
             {COMMUNITY_TERMS_LINKS.map((item) => (
-              <Link key={item.href} href={item.href} className="underline decoration-dotted underline-offset-4">
+              <Link key={item.href} href={item.href} className="underline decoration-dotted underline-offset-4 hover:text-primary-dark">
                 {item.label}
               </Link>
             ))}
           </div>
-          <label className="mt-8 flex items-start gap-3 rounded-2xl border border-border-color/60 bg-muted-bg/20 p-4 text-sm text-foreground/80">
+          <label className="mt-8 flex items-start gap-3 rounded-xl border border-border-color bg-muted-bg/30 p-4 text-sm text-foreground/80 cursor-pointer hover:bg-muted-bg/50 transition-colors">
             <input
               type="checkbox"
-              className="mt-1 h-4 w-4 rounded border-border-color/70 text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className="mt-1 h-4 w-4 rounded border-border-color text-primary focus:ring-primary"
               checked={termsCheckbox}
               onChange={(event) => setTermsCheckbox(event.target.checked)}
             />
@@ -853,22 +853,22 @@ export default function CommunityPageClient() {
     <main className="px-4 pb-24 pt-28 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl space-y-10">
         <header className="text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-4 py-1 text-sm font-semibold text-accent">
+          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1 text-sm font-semibold text-primary">
             Comunidade privada
           </div>
-          <h1 className="mt-6 text-3xl font-semibold text-foreground sm:text-4xl">Troque repertórios e dúvidas com segurança</h1>
-          <p className="mx-auto mt-4 max-w-3xl text-base text-foreground/70">
+          <h1 className="mt-6 text-3xl font-bold text-foreground sm:text-4xl">Troque repertórios e dúvidas com segurança</h1>
+          <p className="mx-auto mt-4 max-w-3xl text-base text-foreground/60">
             Organize debates por tema, peça feedbacks curtos sobre redação e acompanhe discussões moderadas como em um fórum estilo Reddit.
           </p>
           {renderBadges(userBadges)}
           {profile.community_tagline && (
-            <p className="mt-4 text-sm font-semibold text-foreground/70">“{profile.community_tagline}”</p>
+            <p className="mt-4 text-sm font-semibold text-foreground/60">“{profile.community_tagline}”</p>
           )}
         </header>
 
         <section className="grid gap-6 lg:grid-cols-[280px_1fr]">
           <aside className="space-y-6">
-            <div className="glass-card border border-border-color/60 bg-card-bg/80 p-5">
+            <div className="rounded-2xl border border-border-color bg-card-bg p-5 shadow-sm">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-foreground">Tópicos</h2>
                 <button
@@ -882,7 +882,7 @@ export default function CommunityPageClient() {
               {topicsLoading ? (
                 <div className="mt-6 space-y-3">
                   {[...Array(4)].map((_, index) => (
-                    <div key={index} className="h-10 w-full animate-pulse rounded-2xl bg-muted-bg/60" />
+                    <div key={index} className="h-10 w-full animate-pulse rounded-xl bg-muted-bg/50" />
                   ))}
                 </div>
               ) : topicsError ? (
@@ -890,7 +890,7 @@ export default function CommunityPageClient() {
               ) : (
                 <ul className="mt-4 space-y-2">
                   {topics.length === 0 && (
-                    <li className="rounded-2xl border border-dashed border-border-color/50 px-4 py-3 text-sm text-foreground/70">
+                    <li className="rounded-xl border border-dashed border-border-color px-4 py-3 text-sm text-foreground/60">
                       Nenhum tópico cadastrado ainda. Solicite à equipe de suporte para criar os primeiros canais.
                     </li>
                   )}
@@ -900,15 +900,15 @@ export default function CommunityPageClient() {
                       <li key={topic.id}>
                         <button
                           type="button"
-                          className={`w-full rounded-2xl border px-4 py-3 text-left text-sm transition-all ${
+                          className={`w-full rounded-xl border px-4 py-3 text-left text-sm transition-all ${
                             isActive
-                              ? "border-primary/50 bg-primary/10 text-foreground shadow-inner"
-                              : "border-border-color/60 text-foreground/80 hover:border-primary/40"
+                              ? "border-primary bg-primary/5 text-primary shadow-sm"
+                              : "border-border-color bg-card-bg text-foreground/60 hover:border-primary/50 hover:text-foreground"
                           }`}
                           onClick={() => setSelectedTopicId(topic.id)}
                         >
                           <p className="font-semibold">{topic.title}</p>
-                          {topic.description && <p className="mt-1 text-xs text-foreground/80">{topic.description}</p>}
+                          {topic.description && <p className="mt-1 text-xs opacity-80">{topic.description}</p>}
                         </button>
                       </li>
                     );
@@ -917,9 +917,9 @@ export default function CommunityPageClient() {
               )}
             </div>
 
-            <div className="glass-card border border-border-color/60 bg-card-bg/80 p-5">
+            <div className="rounded-2xl border border-border-color bg-card-bg p-5 shadow-sm">
               <h2 className="text-lg font-semibold text-foreground">Regras rápidas</h2>
-              <ul className="mt-4 space-y-3 text-sm text-foreground/70">
+              <ul className="mt-4 space-y-3 text-sm text-foreground/60">
                 {communityGuidelines.map((rule) => (
                   <li key={rule} className="flex items-start gap-3">
                     <span className="mt-1 inline-flex h-2 w-2 rounded-full bg-primary" aria-hidden />
@@ -927,14 +927,14 @@ export default function CommunityPageClient() {
                   </li>
                 ))}
               </ul>
-              <p className="mt-4 rounded-2xl bg-success/10 px-3 py-2 text-sm text-success">
+              <p className="mt-4 rounded-xl bg-success/10 px-3 py-2 text-sm text-success">
                 Conteúdo fora de educação pode ser removido automaticamente.
               </p>
             </div>
 
-            <div className="glass-card border border-border-color/60 bg-card-bg/80 p-5">
+            <div className="rounded-2xl border border-border-color bg-card-bg p-5 shadow-sm">
               <h2 className="text-lg font-semibold text-foreground">Perfil social</h2>
-              <label className="block text-sm font-medium text-foreground/80">
+              <label className="block text-sm font-medium text-foreground/60">
                 Frase de destaque
                 <textarea
                   value={taglineDraft}
@@ -942,13 +942,13 @@ export default function CommunityPageClient() {
                   rows={2}
                   maxLength={140}
                   placeholder="Compartilhe seu objetivo ou frase preferida."
-                  className="mt-2 w-full rounded-2xl border border-border-color/60 bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-foreground/75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  className="mt-2 w-full rounded-xl border border-border-color bg-background px-4 py-3 text-sm text-foreground placeholder:text-foreground/40 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </label>
-              <label className="mt-4 flex items-center gap-3 text-sm text-foreground/80">
+              <label className="mt-4 flex items-center gap-3 text-sm text-foreground/60 cursor-pointer">
                 <input
                   type="checkbox"
-                  className="h-4 w-4 rounded border-border-color/70 text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  className="h-4 w-4 rounded border-border-color text-primary focus:ring-primary"
                   checked={showStatsToggle}
                   onChange={(event) => setShowStatsToggle(event.target.checked)}
                 />
@@ -963,27 +963,27 @@ export default function CommunityPageClient() {
                 {preferencesSaving ? "Salvando..." : "Salvar preferências"}
               </button>
               {preferencesMessage && (
-                <p className="mt-3 text-center text-xs text-foreground/80">{preferencesMessage}</p>
+                <p className="mt-3 text-center text-xs text-foreground/60">{preferencesMessage}</p>
               )}
             </div>
           </aside>
 
           <section className="space-y-6">
-            <div className="glass-card border border-border-color/60 bg-card-bg/80 p-6">
+            <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
               <div className="flex flex-wrap items-center gap-4">
                 <div>
-                  <p className="text-sm font-semibold text-foreground/70">Tópico selecionado</p>
+                  <p className="text-sm font-semibold text-foreground/60">Tópico selecionado</p>
                   <h2 className="text-2xl font-semibold text-foreground">
                     {selectedTopic ? selectedTopic.title : "Escolha um tópico"}
                   </h2>
                   {selectedTopic?.description && (
-                    <p className="mt-1 text-sm text-foreground/70">{selectedTopic.description}</p>
+                    <p className="mt-1 text-sm text-foreground/60">{selectedTopic.description}</p>
                   )}
                 </div>
                 <div className="ml-auto flex gap-3">
                   <button
                     type="button"
-                    className="btn btn-glass px-4 py-2 text-sm font-semibold text-primary"
+                    className="btn btn-outline px-4 py-2 text-sm font-semibold"
                     onClick={() => void reloadThreads()}
                     disabled={!selectedTopicId || threadsLoading}
                   >
@@ -993,10 +993,10 @@ export default function CommunityPageClient() {
               </div>
             </div>
 
-            <div className="glass-card border border-border-color/60 bg-card-bg/80 p-6">
+            <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
               <h3 className="text-lg font-semibold text-foreground">Compartilhe algo com a comunidade</h3>
               <form className="mt-4 space-y-4" onSubmit={handleCreatePost}>
-                <label className="block text-sm font-medium text-foreground/80">
+                <label className="block text-sm font-medium text-foreground/60">
                   Título
                   <input
                     type="text"
@@ -1004,11 +1004,11 @@ export default function CommunityPageClient() {
                     onChange={(event) => setNewPostTitle(event.target.value)}
                     maxLength={120}
                     placeholder="Ex.: Estratégias para repertório sociocultural"
-                    className="mt-2 w-full rounded-2xl border border-border-color/60 bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-foreground/75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    className="mt-2 w-full rounded-xl border border-border-color bg-background px-4 py-3 text-sm text-foreground placeholder:text-foreground/40 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                     disabled={!selectedTopicId || creatingPost}
                   />
                 </label>
-                <label className="block text-sm font-medium text-foreground/80">
+                <label className="block text-sm font-medium text-foreground/60">
                   Conteúdo
                   <textarea
                     value={newPostContent}
@@ -1016,12 +1016,12 @@ export default function CommunityPageClient() {
                     rows={4}
                     maxLength={2000}
                     placeholder="Explique o contexto, cite fontes ou peça ajuda objetiva."
-                    className="mt-2 w-full rounded-2xl border border-border-color/60 bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-foreground/75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    className="mt-2 w-full rounded-xl border border-border-color bg-background px-4 py-3 text-sm text-foreground placeholder:text-foreground/40 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                     disabled={!selectedTopicId || creatingPost}
                   />
                 </label>
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <span className="text-xs text-foreground/80">
+                  <span className="text-xs text-foreground/60">
                     Postagens passam por moderação automática quando detectamos termos fora de educação.
                   </span>
                   <button type="submit" className="btn btn-primary px-6 py-2" disabled={creatingPost || !selectedTopicId}>
@@ -1031,12 +1031,12 @@ export default function CommunityPageClient() {
               </form>
             </div>
 
-            <div className="glass-card border border-border-color/60 bg-card-bg/80 p-6">
+            <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
               <div className="flex flex-wrap items-center gap-4">
                 <div>
-                  <p className="text-sm font-semibold text-foreground/70">Painel público</p>
+                  <p className="text-sm font-semibold text-foreground/60">Painel público</p>
                   <h3 className="text-xl font-semibold text-foreground">Suas notas e conquistas</h3>
-                  <p className="text-sm text-foreground/80">
+                  <p className="text-sm text-foreground/60">
                     {showStatsToggle
                       ? "Os colegas verão estes dados quando interagir nos tópicos."
                       : "Estatísticas ocultas para outros estudantes."}
@@ -1051,26 +1051,26 @@ export default function CommunityPageClient() {
                 </div>
               ) : statistics && showStatsToggle ? (
                 <dl className="mt-6 grid gap-4 sm:grid-cols-3">
-                  <div className="rounded-2xl border border-border-color/50 bg-muted-bg/20 p-4">
-                    <dt className="text-xs font-semibold uppercase tracking-wide text-foreground/80">Redações enviadas</dt>
+                  <div className="rounded-2xl border border-border-color bg-muted-bg/30 p-4">
+                    <dt className="text-xs font-semibold uppercase tracking-wide text-foreground/60">Redações enviadas</dt>
                     <dd className="mt-2 text-2xl font-semibold text-foreground">{statistics.total_redacoes ?? 0}</dd>
-                    <p className="text-xs text-foreground/80">Média: {Math.round(statistics.media_nota_redacao ?? 0)}</p>
+                    <p className="text-xs text-foreground/60">Média: {Math.round(statistics.media_nota_redacao ?? 0)}</p>
                   </div>
-                  <div className="rounded-2xl border border-border-color/50 bg-muted-bg/20 p-4">
-                    <dt className="text-xs font-semibold uppercase tracking-wide text-foreground/80">Questões resolvidas</dt>
+                  <div className="rounded-2xl border border-border-color bg-muted-bg/30 p-4">
+                    <dt className="text-xs font-semibold uppercase tracking-wide text-foreground/60">Questões resolvidas</dt>
                     <dd className="mt-2 text-2xl font-semibold text-foreground">{statistics.total_questoes_respondidas ?? 0}</dd>
-                    <p className="text-xs text-foreground/80">
+                    <p className="text-xs text-foreground/60">
                       Taxa de acerto: {Math.round((statistics.taxa_acerto ?? 0) * 100)}%
                     </p>
                   </div>
-                  <div className="rounded-2xl border border-border-color/50 bg-muted-bg/20 p-4">
-                    <dt className="text-xs font-semibold uppercase tracking-wide text-foreground/80">Comentários úteis</dt>
+                  <div className="rounded-2xl border border-border-color bg-muted-bg/30 p-4">
+                    <dt className="text-xs font-semibold uppercase tracking-wide text-foreground/60">Comentários úteis</dt>
                     <dd className="mt-2 text-2xl font-semibold text-foreground">{commentCount}</dd>
-                    <p className="text-xs text-foreground/80">Meta para mentor: 5 comentários</p>
+                    <p className="text-xs text-foreground/60">Meta para mentor: 5 comentários</p>
                   </div>
                 </dl>
               ) : (
-                <p className="mt-4 rounded-2xl border border-dashed border-border-color/50 bg-muted-bg/20 p-4 text-sm text-foreground/70">
+                <p className="mt-4 rounded-2xl border border-dashed border-border-color bg-muted-bg/10 p-4 text-sm text-foreground/60">
                   Estatísticas ocultas no momento. Ative a opção “Mostrar minhas notas” para exibir aos colegas.
                 </p>
               )}
@@ -1085,26 +1085,26 @@ export default function CommunityPageClient() {
             {threadsLoading ? (
               <div className="space-y-4">
                 {[...Array(3)].map((_, index) => (
-                  <div key={index} className="h-40 animate-pulse rounded-3xl bg-muted-bg/70" />
+                  <div key={index} className="h-40 animate-pulse rounded-3xl bg-muted-bg/50" />
                 ))}
               </div>
             ) : threads.length === 0 ? (
-              <div className="rounded-3xl border border-dashed border-border-color/50 bg-card-bg/60 p-10 text-center text-sm text-foreground/70">
+              <div className="rounded-3xl border border-dashed border-border-color bg-card-bg p-10 text-center text-sm text-foreground/60">
                 Ainda não existem posts neste tópico. Seja a primeira pessoa a compartilhar algo!
               </div>
             ) : (
               <div className="space-y-6">
                 {threads.map((thread) => (
-                  <article key={thread.id} className="glass-card border border-border-color/60 bg-card-bg/80 p-6">
+                  <article key={thread.id} className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
                     <header className="flex flex-wrap items-center gap-4">
                       <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-base font-semibold text-primary">
                         {getInitial(thread.user_id)}
                       </span>
                       <div>
                         <p className="text-sm font-semibold text-foreground">{getUserName(thread.user_id)}</p>
-                        <p className="text-xs text-foreground/80">{formatRelativeTime(thread.created_at)}</p>
+                        <p className="text-xs text-foreground/60">{formatRelativeTime(thread.created_at)}</p>
                         {profileCache[thread.user_id]?.community_tagline && (
-                          <p className="text-xs text-foreground/80">“{profileCache[thread.user_id].community_tagline}”</p>
+                          <p className="text-xs text-foreground/60">“{profileCache[thread.user_id].community_tagline}”</p>
                         )}
                         {renderBadges(achievementCache[thread.user_id])}
                       </div>
@@ -1113,8 +1113,8 @@ export default function CommunityPageClient() {
                           type="button"
                           className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
                             (postLikes[thread.id]?.liked ?? false)
-                              ? "border-primary/60 text-primary"
-                              : "border-border-color/60 text-foreground/70 hover:text-primary"
+                              ? "border-primary/60 text-primary bg-primary/5"
+                              : "border-border-color text-foreground/60 hover:text-primary hover:border-primary/40"
                           }`}
                           onClick={() => handleToggleLike(thread.id)}
                           disabled={likeLoading[thread.id]}
@@ -1135,7 +1135,7 @@ export default function CommunityPageClient() {
                             type="button"
                             onClick={() => handleDeletePost(thread.id)}
                             disabled={deletingPostId === thread.id}
-                            className="inline-flex items-center gap-2 rounded-full border border-border-color/60 px-3 py-1 text-xs font-semibold text-foreground/70 transition-colors hover:text-danger"
+                            className="inline-flex items-center gap-2 rounded-full border border-border-color px-3 py-1 text-xs font-semibold text-foreground/60 transition-colors hover:text-danger hover:border-danger/40"
                           >
                             {deletingPostId === thread.id ? "Removendo..." : "Excluir post"}
                             <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -1148,22 +1148,22 @@ export default function CommunityPageClient() {
 
                     <div className="mt-4">
                       <h3 className="text-xl font-semibold text-foreground">{thread.title}</h3>
-                      <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-foreground/80">{thread.content}</p>
+                      <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-foreground/60">{thread.content}</p>
                     </div>
 
-                    <footer className="mt-6 border-t border-border-color/50 pt-4">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-foreground/75">
+                    <footer className="mt-6 border-t border-border-color pt-4">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60">
                         {thread.comments.length} comentário{thread.comments.length === 1 ? "" : "s"}
                       </p>
 
                       <div className="mt-4 space-y-4">
                         {thread.comments.map((comment) => (
-                          <div key={comment.id} className="rounded-2xl border border-border-color/40 bg-muted-bg/30 p-3">
+                          <div key={comment.id} className="rounded-xl border border-border-color bg-muted-bg/30 p-3">
                             <div className="flex items-center gap-3">
                               <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
                                 {getInitial(comment.user_id)}
                               </span>
-                              <div className="text-xs text-foreground/70">
+                              <div className="text-xs text-foreground/60">
                                 <p className="font-semibold text-foreground">{getUserName(comment.user_id)}</p>
                                 <p>{formatRelativeTime(comment.created_at)}</p>
                               </div>
@@ -1172,7 +1172,7 @@ export default function CommunityPageClient() {
                                   type="button"
                                   onClick={() => handleDeleteComment(comment.id, thread.id)}
                                   disabled={commentDeleting[comment.id]}
-                                  className="ml-auto inline-flex items-center gap-1 text-[11px] font-semibold text-foreground/80 hover:text-danger"
+                                  className="ml-auto inline-flex items-center gap-1 text-[11px] font-semibold text-foreground/60 hover:text-danger"
                                 >
                                   {commentDeleting[comment.id] ? "Removendo..." : "Excluir"}
                                 </button>
@@ -1191,12 +1191,12 @@ export default function CommunityPageClient() {
                           rows={2}
                           maxLength={500}
                           placeholder="Adicionar comentário..."
-                          className="w-full rounded-2xl border border-border-color/60 bg-transparent px-4 py-2 text-sm text-foreground placeholder:text-foreground/75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                          className="w-full rounded-xl border border-border-color bg-background px-4 py-2 text-sm text-foreground placeholder:text-foreground/40 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                         />
                         <div className="flex justify-end">
                           <button
                             type="submit"
-                            className="btn btn-glass px-4 py-2 text-sm font-semibold text-primary"
+                            className="btn btn-outline px-4 py-2 text-sm font-semibold"
                             disabled={commentLoading[thread.id]}
                           >
                             {commentLoading[thread.id] ? "Enviando..." : "Responder"}
