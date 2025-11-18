@@ -130,152 +130,98 @@ export default function HomePageClient() {
     <main className="flex-grow">
       <section
         id="home-hero"
-        className="relative overflow-hidden px-4 pb-24 pt-20 sm:px-6 lg:px-8 lg:pt-28"
+        className="relative overflow-hidden px-4 pb-24 pt-20 sm:px-6 lg:px-8 lg:pt-32"
         aria-labelledby="home-hero-heading home-hero-description"
       >
-          <div className="hero-accent absolute inset-0 blur-3xl" aria-hidden />
           <div className="container relative z-10 mx-auto grid max-w-7xl gap-16 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
             <div className="space-y-10">
-              <div className="hero-status shadow-glow">
-                <span className="h-2 w-2 rounded-full bg-success" />
+              <div className="inline-flex items-center gap-2 rounded-full border border-border-color bg-secondary/50 px-3 py-1 text-sm font-medium text-foreground/80 backdrop-blur-sm">
+                <span className="h-2 w-2 rounded-full bg-success animate-pulse" />
                 Aberto 7h — 23h30 (BRT)
               </div>
               <div className="space-y-6">
                 <h1
                   id="home-hero-heading"
-                  className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl"
+                  className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl"
                 >
-                  Transforme estudo em resultado no ENEM.
+                  Transforme estudo em <span className="text-primary">resultado</span>.
                 </h1>
                 <p
                   id="home-hero-description"
-                  className="max-w-2xl text-lg leading-relaxed text-foreground/75 sm:text-xl"
+                  className="max-w-2xl text-lg leading-relaxed text-foreground/60 sm:text-xl"
                 >
                   Correção rápida, simulados sob medida e alertas curtos para estudar só o que importa.
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-                <Link href="/redacao" className="btn btn-primary px-8 py-3 text-base">
+                <Link href="/redacao" className="inline-flex items-center justify-center rounded-xl bg-primary px-8 py-3 text-base font-semibold text-white shadow-lg shadow-primary/20 transition-all hover:bg-primary-dark hover:shadow-primary/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
                   Começar pela redação
                 </Link>
-                <Link href="/questoes" className="btn btn-glass gap-2 px-8 py-3 text-base font-semibold text-primary">
+                <Link href="/questoes" className="inline-flex items-center justify-center gap-2 rounded-xl border border-border-color bg-card-bg px-8 py-3 text-base font-semibold text-foreground transition-all hover:bg-secondary/50 hover:border-primary/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
                   Explorar simulados
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-5 w-5 text-foreground/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
                 </Link>
               </div>
-              <nav className="space-y-3" aria-label="Atalhos da página">
-                <p className="text-sm font-semibold text-foreground/70">Acesse rápido:</p>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { href: "#recursos", label: "Recursos" },
-                    { href: "#metodologia", label: "Metodologia" },
-                    { href: "#historias", label: "Histórias" },
-                    { href: "#cta-final", label: "Convite final" },
-                  ].map((anchor) => (
-                    <a
-                      key={anchor.href}
-                      href={anchor.href}
-                      className="rounded-full border border-border-color/60 px-4 py-2 text-sm font-semibold text-foreground/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                    >
-                      {anchor.label}
-                    </a>
-                  ))}
-                </div>
-                <a
-                  href="#metodologia"
-                  className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                >
-                  Rolagem rápida
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </a>
-              </nav>
-              <dl className="grid gap-4 sm:grid-cols-3">
+              
+              <dl className="grid gap-8 sm:grid-cols-3 pt-4 border-t border-border-color/50">
                 {heroStats.map((stat) => (
-                  <div key={stat.label} className="stat-card px-5 py-4">
-                    <dt className="text-sm uppercase tracking-wide text-foreground/70">{stat.label}</dt>
-                    <dd className="mt-2 text-2xl font-semibold">{stat.value}</dd>
+                  <div key={stat.label}>
+                    <dd className="text-3xl font-bold text-foreground">{stat.value}</dd>
+                    <dt className="text-sm font-medium text-foreground/50 mt-1">{stat.label}</dt>
                   </div>
                 ))}
               </dl>
             </div>
 
-            <div className="relative isolate">
-              <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-accent/40 blur-3xl" aria-hidden />
-              <div className="glass-panel relative z-10 space-y-6">
-                <div className="surface-card p-6 text-foreground shadow-xl">
-                  <div className="flex items-center justify-between text-sm text-foreground/70">
-                    <span className="inline-flex items-center gap-2 font-medium">
+            <div className="relative isolate hidden lg:block">
+              <div className="absolute -right-8 -top-8 h-64 w-64 rounded-full bg-primary/10 blur-3xl" aria-hidden />
+              <div className="relative z-10 space-y-6">
+                <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-xl shadow-black/5">
+                  <div className="flex items-center justify-between text-sm text-foreground/60">
+                    <span className="inline-flex items-center gap-2 font-medium text-foreground">
                       <span className="h-2 w-2 rounded-full bg-success" />
                       Correção instantânea
                     </span>
-                    <span>Atualizado em tempo real</span>
+                    <span>Agora</span>
                   </div>
                   <div className="mt-6 space-y-4">
-                    <div className="rounded-2xl bg-success/10 p-4 text-foreground shadow-inner">
+                    <div className="rounded-xl bg-secondary/50 p-4">
                       <div className="flex items-center justify-between text-sm text-foreground/70">
                         <span>Competência 1</span>
-                        <span className="font-semibold text-success">200 / 200</span>
+                        <span className="font-semibold text-foreground">200 / 200</span>
                       </div>
-                      <div className="mt-3 h-2 rounded-full bg-success/20">
+                      <div className="mt-3 h-2 rounded-full bg-border-color">
                         <div className="h-full rounded-full bg-success" style={{ width: "100%" }} />
                       </div>
                     </div>
 
-                    <div className="rounded-2xl bg-primary/10 p-4 text-foreground shadow-inner">
+                    <div className="rounded-xl bg-secondary/50 p-4">
                       <div className="flex items-center justify-between text-sm text-foreground/70">
                         <span>Competência 2</span>
-                        <span className="font-semibold text-primary">180 / 200</span>
+                        <span className="font-semibold text-foreground">180 / 200</span>
                       </div>
-                      <div className="mt-3 h-2 rounded-full bg-primary/20">
+                      <div className="mt-3 h-2 rounded-full bg-border-color">
                         <div className="h-full rounded-full bg-primary" style={{ width: "90%" }} />
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl bg-accent/10 p-4 text-foreground shadow-inner">
-                      <div className="flex items-center justify-between text-sm text-foreground/70">
-                        <span>Competência 3</span>
-                        <span className="font-semibold text-accent">160 / 200</span>
-                      </div>
-                      <div className="mt-3 h-2 rounded-full bg-accent/20">
-                        <div className="h-full rounded-full bg-accent" style={{ width: "80%" }} />
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="surface-card p-6 text-foreground shadow-xl">
+                <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-xl shadow-black/5 translate-x-8">
                   <h3 className="text-lg font-semibold">Simulado rápido</h3>
-                  <p className="mt-2 text-sm text-foreground/70">
-                    Matemática · Linguagens · Ciências Humanas · Atualidades do ENEM 2024
+                  <p className="mt-2 text-sm text-foreground/60">
+                    Matemática · Linguagens · Ciências Humanas
                   </p>
                   <div className="mt-5 grid gap-3">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="inline-flex items-center gap-2 text-foreground/80">
-                        <span className="h-2 w-2 rounded-full bg-success" />
-                        Questões respondidas
-                      </span>
+                      <span className="text-foreground/60">Progresso</span>
                       <span className="font-semibold text-foreground">12/15</span>
                     </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="inline-flex items-center gap-2 text-foreground/80">
-                        <span className="h-2 w-2 rounded-full bg-warning" />
-                        Tempo restante
-                      </span>
-                      <span className="font-semibold text-foreground">08:46</span>
+                    <div className="h-2 rounded-full bg-border-color">
+                        <div className="h-full rounded-full bg-accent" style={{ width: "80%" }} />
                     </div>
-                    <Link
-                      href="/questoes"
-                      className="mt-4 inline-flex items-center justify-center gap-2 rounded-2xl bg-primary/10 px-4 py-3 text-sm font-semibold text-primary shadow-inner transition-colors hover:bg-primary/20"
-                    >
-                      Continuar simulado
-                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                      </svg>
-                    </Link>
                   </div>
                 </div>
               </div>
@@ -304,14 +250,14 @@ export default function HomePageClient() {
 
             <div className="mt-14 grid gap-6 lg:grid-cols-2">
               {highlights.map((highlight) => (
-                <article key={highlight.title} className="glass-card border border-border-color/60 bg-card-bg/70 p-6">
+                <article key={highlight.title} className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm transition-shadow hover:shadow-md">
                   <div className="flex items-start gap-4">
-                    <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-inner">
+                    <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
                       {highlight.icon}
                     </span>
-                    <div className="space-y-3">
-                      <h3 className="text-xl font-semibold text-foreground">{highlight.title}</h3>
-                      <p className="text-base text-foreground/70">{highlight.description}</p>
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-semibold text-foreground">{highlight.title}</h3>
+                      <p className="text-base text-foreground/60 leading-relaxed">{highlight.description}</p>
                     </div>
                   </div>
                 </article>
@@ -322,22 +268,24 @@ export default function HomePageClient() {
 
         <section
           id="metodologia"
-          className="relative px-4 py-20 sm:px-6 lg:px-8"
+          className="relative px-4 py-24 sm:px-6 lg:px-8 bg-secondary/30"
           aria-labelledby="home-metodologia-heading"
         >
           <div className="container mx-auto max-w-6xl">
             <div className="grid gap-16 lg:grid-cols-[1fr_1.1fr] lg:items-center">
-              <div className="space-y-6">
-                <p className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-4 py-1 text-sm font-semibold text-accent">
-                  Metodologia em 3 etapas
-                </p>
-                <h2 id="home-metodologia-heading" className="text-3xl font-semibold text-foreground sm:text-4xl">
-                  Prepare-se com fluxo rápido e claro
-                </h2>
-                <p className="text-base text-foreground/70">
-                  Desenhamos uma jornada que equilibra a prática constante com relatórios acionáveis. Avance pelos passos e use o
-                  painel para transformar feedbacks em uma rotina que cabe na sua agenda.
-                </p>
+              <div className="space-y-8">
+                <div className="space-y-4">
+                  <p className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/5 px-3 py-1 text-sm font-medium text-accent">
+                    Metodologia em 3 etapas
+                  </p>
+                  <h2 id="home-metodologia-heading" className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+                    Prepare-se com fluxo rápido e claro
+                  </h2>
+                  <p className="text-lg text-foreground/60 leading-relaxed">
+                    Desenhamos uma jornada que equilibra a prática constante com relatórios acionáveis. Avance pelos passos e use o
+                    painel para transformar feedbacks em uma rotina que cabe na sua agenda.
+                  </p>
+                </div>
                 <Link
                   href="/sobre"
                   className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary-dark"
@@ -351,10 +299,10 @@ export default function HomePageClient() {
 
               <div className="grid gap-4">
                 {steps.map((step) => (
-                  <div key={step.number} className="glass-card border border-border-color/60 bg-card-bg/80 p-6 sm:p-8">
-                    <span className="text-2xl font-semibold text-primary">{step.number}</span>
-                    <h3 className="mt-4 text-2xl font-semibold text-foreground">{step.title}</h3>
-                    <p className="mt-3 text-base text-foreground/70">{step.description}</p>
+                  <div key={step.number} className="rounded-2xl border border-border-color bg-card-bg p-6 sm:p-8 shadow-sm transition-all hover:border-primary/20 hover:shadow-md">
+                    <span className="text-sm font-bold tracking-wider text-primary/80 uppercase">{step.number}</span>
+                    <h3 className="mt-2 text-xl font-semibold text-foreground">{step.title}</h3>
+                    <p className="mt-2 text-base text-foreground/60">{step.description}</p>
                   </div>
                 ))}
               </div>
@@ -364,28 +312,28 @@ export default function HomePageClient() {
 
         <section
           id="historias"
-          className="relative px-4 py-20 sm:px-6 lg:px-8"
+          className="relative px-4 py-24 sm:px-6 lg:px-8"
           aria-labelledby="home-historias-heading"
         >
           <div className="container mx-auto max-w-6xl">
-            <div className="space-y-4 text-center">
-              <p className="inline-flex items-center gap-2 rounded-full border border-success/30 bg-success/10 px-4 py-1 text-sm font-semibold text-success">
+            <div className="space-y-4 text-center mb-16">
+              <p className="inline-flex items-center gap-2 rounded-full border border-success/20 bg-success/5 px-3 py-1 text-sm font-medium text-success">
                 Histórias reais de evolução
               </p>
-              <h2 id="home-historias-heading" className="text-3xl font-semibold text-foreground sm:text-4xl">
+              <h2 id="home-historias-heading" className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
                 Quem já está construindo resultados
               </h2>
             </div>
 
-            <div className="mt-12 grid gap-6 md:grid-cols-3">
+            <div className="grid gap-6 md:grid-cols-3">
               {testimonials.map((testimonial) => (
-                <figure key={testimonial.author} className="testimonial-card glass-card border border-border-color/50 bg-card-bg/80 p-6">
-                  <blockquote className="text-base leading-relaxed text-foreground/80">
+                <figure key={testimonial.author} className="rounded-2xl border border-border-color bg-card-bg p-8 shadow-sm">
+                  <blockquote className="text-base leading-relaxed text-foreground/70 italic">
                     “{testimonial.quote}”
                   </blockquote>
-                  <figcaption className="mt-6 space-y-1">
+                  <figcaption className="mt-6 border-t border-border-color/50 pt-4">
                     <p className="font-semibold text-foreground">{testimonial.author}</p>
-                    <p className="text-sm text-foreground/80">{testimonial.role}</p>
+                    <p className="text-sm text-foreground/50">{testimonial.role}</p>
                   </figcaption>
                 </figure>
               ))}
@@ -395,11 +343,11 @@ export default function HomePageClient() {
 
         {user && (
           <section
-            className="relative px-4 py-20 sm:px-6 lg:px-8"
+            className="relative px-4 py-24 sm:px-6 lg:px-8 bg-secondary/30"
             aria-labelledby="home-comunidade-heading"
           >
-            <div className="container mx-auto max-w-5xl space-y-2 text-center">
-              <p className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-4 py-1 text-sm font-semibold text-accent">
+            <div className="container mx-auto max-w-5xl space-y-4 text-center">
+              <p className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/5 px-3 py-1 text-sm font-medium text-accent">
                 Comunidade exclusiva
               </p>
               <h2 id="home-comunidade-heading" className="text-3xl font-semibold text-foreground sm:text-4xl">
