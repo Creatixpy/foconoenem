@@ -18,19 +18,19 @@ export default function QuizResults({ result, onRetakeQuiz }: QuizResultsProps) 
   };
   
   return (
-    <div className="card p-6 border border-border-color animate-fadeIn">
+    <div className="card p-6 border-0 shadow-sm animate-fadeIn">
       <div className="text-center py-6">
         <h2 className="text-2xl font-bold text-primary mb-4">Resultado do Simulado</h2>
         
         <div className="inline-block mb-6">
           <div className="relative w-36 h-36">
             {/* Círculo de fundo */}
-            <div className="absolute inset-0 rounded-full border-8 border-gray-100 dark:border-gray-800"></div>
+            <div className="absolute inset-0 rounded-full border-8 border-muted-bg/50"></div>
             
             {/* Círculo de progresso */}
             <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
               <circle 
-                className="text-gray-100 dark:text-gray-800" 
+                className="text-muted-bg/50" 
                 cx="50" 
                 cy="50" 
                 r="45" 
@@ -59,7 +59,7 @@ export default function QuizResults({ result, onRetakeQuiz }: QuizResultsProps) 
                 <span className={`text-3xl font-bold ${getScoreColor(result.score)}`}>
                   {result.score}
                 </span>
-                <span className="text-sm text-gray-500 dark:text-gray-400 block">
+                <span className="text-sm text-foreground/60 block">
                   /{result.totalQuestions}
                 </span>
               </div>
@@ -68,29 +68,29 @@ export default function QuizResults({ result, onRetakeQuiz }: QuizResultsProps) 
         </div>
         
         <div className="grid md:grid-cols-3 gap-4 mb-8">
-          <div className="bg-success-light p-4 rounded-lg text-center">
-            <div className="text-success-dark font-bold text-3xl mb-1">
+          <div className="bg-success/10 p-4 rounded-xl text-center">
+            <div className="text-success font-bold text-3xl mb-1">
               {result.correctAnswers}
             </div>
-            <div className="text-sm text-success-dark">
+            <div className="text-sm text-success/80">
               Acertos
             </div>
           </div>
           
-          <div className="bg-danger-light p-4 rounded-lg text-center">
-            <div className="text-danger-dark font-bold text-3xl mb-1">
+          <div className="bg-danger/10 p-4 rounded-xl text-center">
+            <div className="text-danger font-bold text-3xl mb-1">
               {result.wrongAnswers}
             </div>
-            <div className="text-sm text-danger-dark">
+            <div className="text-sm text-danger/80">
               Erros
             </div>
           </div>
           
-          <div className="bg-warning-light p-4 rounded-lg text-center">
-            <div className="text-warning-dark font-bold text-3xl mb-1">
+          <div className="bg-warning/10 p-4 rounded-xl text-center">
+            <div className="text-warning font-bold text-3xl mb-1">
               {result.unansweredQuestions}
             </div>
-            <div className="text-sm text-warning-dark">
+            <div className="text-sm text-warning/80">
               Não respondidas
             </div>
           </div>
@@ -99,7 +99,7 @@ export default function QuizResults({ result, onRetakeQuiz }: QuizResultsProps) 
         <div className="mt-8">
           <button 
             onClick={onRetakeQuiz}
-            className="theme-btn btn flex items-center mx-auto"
+            className="btn btn-primary flex items-center mx-auto px-6 py-3"
           >
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />

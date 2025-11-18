@@ -76,7 +76,7 @@ export default function LoginPageClient({ redirectTo }: LoginPageClientProps) {
       <section className="relative overflow-hidden px-4 pb-20 pt-16 sm:px-6 lg:px-8">
           <div className="container relative z-10 mx-auto grid max-w-6xl gap-10 lg:grid-cols-[0.85fr_1fr]">
             <div className="space-y-8">
-              <div className="inline-flex items-center gap-2 rounded-full border border-border-color bg-secondary/50 px-3 py-1 text-sm font-medium text-foreground/80">
+              <div className="inline-flex items-center gap-2 rounded-full border-0 bg-secondary/50 px-3 py-1 text-sm font-medium text-foreground/80">
                 🔐 Acesso seguro às suas ferramentas
               </div>
               <div className="space-y-5">
@@ -90,7 +90,7 @@ export default function LoginPageClient({ redirectTo }: LoginPageClientProps) {
               </div>
               <div className="space-y-4">
                 {highlights.map((item) => (
-                  <div key={item.title} className="rounded-2xl border border-border-color bg-card-bg p-4 shadow-sm">
+                  <div key={item.title} className="rounded-2xl border-0 bg-card-bg p-4 shadow-sm">
                     <h3 className="text-sm font-semibold text-foreground">{item.title}</h3>
                     <p className="mt-1 text-sm text-foreground/60">{item.description}</p>
                   </div>
@@ -105,7 +105,7 @@ export default function LoginPageClient({ redirectTo }: LoginPageClientProps) {
               </p>
             </div>
 
-            <div className="h-fit space-y-6 rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm md:p-8">
+            <div className="h-fit space-y-6 rounded-2xl border-0 bg-card-bg p-6 shadow-sm md:p-8">
               <div className="space-y-2 text-center">
                 <h2 className="text-2xl font-semibold text-foreground">Entre com sua conta</h2>
                 <p className="text-sm text-foreground/60">Conecte-se para acompanhar sua jornada rumo à aprovação.</p>
@@ -124,7 +124,7 @@ export default function LoginPageClient({ redirectTo }: LoginPageClientProps) {
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     required
-                    className="mt-2 w-full rounded-2xl border border-border-color bg-card-bg px-4 py-3 text-base text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className="mt-2 w-full rounded-2xl border-0 bg-muted-bg/50 px-4 py-3 text-base text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                     placeholder="seu@email.com"
                     autoComplete="email"
                   />
@@ -138,7 +138,7 @@ export default function LoginPageClient({ redirectTo }: LoginPageClientProps) {
                     onChange={(event) => setPassword(event.target.value)}
                     required
                     minLength={6}
-                    className="mt-2 w-full rounded-2xl border border-border-color bg-card-bg px-4 py-3 text-base text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className="mt-2 w-full rounded-2xl border-0 bg-muted-bg/50 px-4 py-3 text-base text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                     placeholder="Digite sua senha"
                     autoComplete="current-password"
                   />

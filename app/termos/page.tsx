@@ -95,7 +95,7 @@ export default function TermsOfServicePage() {
     <main className="flex-grow">
       <section className="relative overflow-hidden px-4 pb-20 pt-16 sm:px-6 lg:px-8">
           <div className="container relative z-10 mx-auto max-w-5xl space-y-10">
-            <div className="rounded-2xl border border-border-color bg-card-bg p-8 shadow-sm md:p-12">
+            <div className="card border-0 p-8 md:p-12">
               <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">
                 📄 Última atualização: {new Date().toLocaleDateString("pt-BR")}
               </span>
@@ -106,7 +106,7 @@ export default function TermsOfServicePage() {
               </p>
             </div>
 
-            <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm md:p-8">
+            <div className="card border-0 p-6 md:p-8">
               <h2 className="text-lg font-semibold text-foreground">Guia rápido</h2>
               <ul className="mt-4 grid gap-3 sm:grid-cols-2">
                 {sections.map((section) => (
@@ -124,7 +124,7 @@ export default function TermsOfServicePage() {
                 <details
                   key={section.id}
                   id={section.id}
-                  className="rounded-2xl border border-border-color bg-card-bg shadow-sm"
+                  className="card border-0"
                   open={index === 0}
                 >
                   <summary className="flex cursor-pointer items-center gap-3 px-6 py-4 text-left">
@@ -133,7 +133,7 @@ export default function TermsOfServicePage() {
                     </span>
                     <span className="text-base font-semibold text-foreground">{section.title}</span>
                   </summary>
-                  <div className="space-y-4 border-t border-border-color px-6 py-5 text-sm text-foreground/60">
+                  <div className="space-y-4 border-t border-border-color/50 px-6 py-5 text-sm text-foreground/60">
                     <p className="leading-relaxed">{section.content}</p>
                     {section.list && (
                       <ul className="list-disc space-y-2 pl-6 text-foreground/60">
@@ -145,7 +145,7 @@ export default function TermsOfServicePage() {
                     {section.subsections && (
                       <div className="space-y-4">
                         {section.subsections.map((subsection) => (
-                          <div key={subsection.subtitle} className="rounded-xl border border-border-color bg-background p-5">
+                          <div key={subsection.subtitle} className="rounded-xl bg-muted-bg/30 p-5">
                             <p className="text-sm font-semibold text-foreground">{subsection.subtitle}</p>
                             <p className="mt-2 text-sm text-foreground/60">{subsection.description}</p>
                             {subsection.list && (
@@ -164,7 +164,7 @@ export default function TermsOfServicePage() {
               ))}
             </div>
 
-            <div className="rounded-2xl border border-border-color bg-card-bg p-10 text-center shadow-sm">
+            <div className="card border-0 p-10 text-center">
               <div className="space-y-4">
                 <h2 className="text-2xl font-semibold text-foreground sm:text-3xl">
                   Obrigado por estudar com o Foco no ENEM 💙

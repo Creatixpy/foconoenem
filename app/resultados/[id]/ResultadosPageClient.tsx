@@ -109,7 +109,7 @@ export default function ResultadosPageClient({ essayId }: ResultadosPageClientPr
   return (
     <main className="flex-grow">
       <div className="container mx-auto p-4 md:p-8">
-        <section className="card p-6 md:p-8 mb-8 border border-border-color animate-fadeIn">
+        <section className="card p-6 md:p-8 mb-8 border-0 animate-fadeIn">
           <div className="flex flex-col md:flex-row md:justify-between md:items-start mb-6">
             <h2 className="text-2xl md:text-3xl font-bold text-primary mb-4 md:mb-0 flex items-center">
               <svg className="w-7 h-7 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -218,7 +218,7 @@ export default function ResultadosPageClient({ essayId }: ResultadosPageClientPr
             
             <div className="space-y-6">
               {/* Competência 1 */}
-              <div className="card overflow-hidden border border-border-color">
+              <div className="card overflow-hidden border-0">
                 <div className="bg-muted-bg p-4 border-b border-border-color">
                   <div className="flex flex-wrap justify-between items-center gap-2">
                     <h4 className="font-semibold flex-grow">Competência 1: Domínio da norma culta</h4>
@@ -241,7 +241,7 @@ export default function ResultadosPageClient({ essayId }: ResultadosPageClientPr
               </div>
               
               {/* Competência 2 */}
-              <div className="card overflow-hidden border border-border-color">
+              <div className="card overflow-hidden border-0">
                 <div className="bg-muted-bg p-4 border-b border-border-color">
                   <div className="flex flex-wrap justify-between items-center gap-2">
                     <h4 className="font-semibold flex-grow">Competência 2: Compreensão da proposta</h4>
@@ -264,7 +264,7 @@ export default function ResultadosPageClient({ essayId }: ResultadosPageClientPr
               </div>
               
               {/* Competência 3 */}
-              <div className="card overflow-hidden border border-border-color">
+              <div className="card overflow-hidden border-0">
                 <div className="bg-muted-bg p-4 border-b border-border-color">
                   <div className="flex flex-wrap justify-between items-center gap-2">
                     <h4 className="font-semibold flex-grow">Competência 3: Capacidade argumentativa</h4>
@@ -287,7 +287,7 @@ export default function ResultadosPageClient({ essayId }: ResultadosPageClientPr
               </div>
               
               {/* Competência 4 */}
-              <div className="card overflow-hidden border border-border-color">
+              <div className="card overflow-hidden border-0">
                 <div className="bg-muted-bg p-4 border-b border-border-color">
                   <div className="flex flex-wrap justify-between items-center gap-2">
                     <h4 className="font-semibold flex-grow">Competência 4: Mecanismos linguísticos</h4>
@@ -310,7 +310,7 @@ export default function ResultadosPageClient({ essayId }: ResultadosPageClientPr
               </div>
               
               {/* Competência 5 */}
-              <div className="card overflow-hidden border border-border-color">
+              <div className="card overflow-hidden border-0">
                 <div className="bg-muted-bg p-4 border-b border-border-color">
                   <div className="flex flex-wrap justify-between items-center gap-2">
                     <h4 className="font-semibold flex-grow">Competência 5: Proposta de intervenção</h4>
@@ -341,7 +341,7 @@ export default function ResultadosPageClient({ essayId }: ResultadosPageClientPr
               </svg>
               Sua Redação
             </h3>
-            <div className="bg-muted-bg p-5 rounded-lg border border-border-color whitespace-pre-line">
+            <div className="bg-muted-bg p-5 rounded-lg border-0 whitespace-pre-line">
               <div className="italic text-sm mb-2 text-gray-500">Texto original enviado:</div>
               {result.redacaoOriginal}
             </div>

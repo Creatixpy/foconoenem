@@ -384,7 +384,7 @@ export default function AdminDestaques() {
           </Link>
         </div>
 
-        <div className="card p-6 md:p-8 border border-border-color">
+        <div className="card p-6 md:p-8 border-0">
           <h1 className="text-2xl md:text-3xl font-bold text-primary mb-6 flex items-center">
             <svg className="w-7 h-7 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -487,7 +487,7 @@ export default function AdminDestaques() {
                     {noticiasDestaque.map((noticia) => (
                       <div
                         key={noticia.id}
-                        className="card flex flex-col md:flex-row overflow-hidden border border-border-color hover:shadow-md transition-all"
+                        className="card flex flex-col md:flex-row overflow-hidden border-0 hover:shadow-md transition-all"
                       >
                         <div className="h-48 md:h-auto md:w-48 relative flex-shrink-0">
                           {noticia.imagem_url ? (

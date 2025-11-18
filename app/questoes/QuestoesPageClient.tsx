@@ -15,7 +15,7 @@ const OperatingHoursIndicator = dynamic(() => import("../components/OperatingHou
 const LazyQuizResults = dynamic(() => import("../components/QuizResults"), {
   ssr: false,
   loading: () => (
-    <div className="rounded-2xl border border-border-color bg-card-bg p-6 text-center shadow-sm">
+    <div className="card border-0 shadow-sm p-6 text-center">
       <p className="text-sm font-semibold text-foreground/80">Calculando seu desempenho...</p>
     </div>
   ),
@@ -376,7 +376,7 @@ export default function QuestoesPageClient() {
                 </div>
                 <dl className="grid gap-4 sm:grid-cols-3">
                   {heroHighlights.map((highlight) => (
-                    <div key={highlight.label} className="rounded-2xl border border-border-color bg-card-bg p-5 shadow-sm">
+                    <div key={highlight.label} className="card border-0 shadow-sm p-5">
                       <dt className="text-xs uppercase tracking-wide text-foreground/60">{highlight.label}</dt>
                       <dd className="mt-2 text-xl font-semibold text-primary">{highlight.value}</dd>
                       <p className="mt-1 text-xs text-foreground/60">{highlight.detail}</p>
@@ -385,7 +385,7 @@ export default function QuestoesPageClient() {
                 </dl>
               </div>
 
-              <div className="flex h-full flex-col gap-6 rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
+              <div className="flex h-full flex-col gap-6 card border-0 shadow-sm p-6">
                 <div>
                   <h2 className="text-lg font-semibold text-foreground">Como funciona o treino personalizado</h2>
                   <ol className="mt-4 space-y-4 text-sm text-foreground/60">
@@ -417,7 +417,7 @@ export default function QuestoesPageClient() {
                     </li>
                   </ol>
                 </div>
-                <div className="rounded-xl border border-border-color bg-muted-bg/50 p-4 text-sm text-foreground/60">
+                <div className="rounded-xl border-0 bg-muted-bg/50 p-4 text-sm text-foreground/60">
                   {isSystemAvailable === false ? (
                     <p>
                       O simulador está indisponível no momento. Verifique os horários de funcionamento indicados acima para
@@ -452,7 +452,7 @@ export default function QuestoesPageClient() {
 
             {showResults && quizResult ? (
               <div className="space-y-8">
-                <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm md:p-8">
+                <div className="card border-0 shadow-sm p-6 md:p-8">
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
                       <p className="text-xs uppercase tracking-[0.18em] text-primary">Resultado do simulador</p>
@@ -472,7 +472,7 @@ export default function QuestoesPageClient() {
                 <LazyQuizResults result={quizResult} onRetakeQuiz={handleRetakeQuiz} />
               </div>
             ) : !hasStarted ? (
-              <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm md:p-8 space-y-8">
+              <div className="card border-0 shadow-sm p-6 md:p-8 space-y-8">
                 <div className="space-y-2">
                   <h2 className="text-2xl font-semibold text-foreground">Monte o treino ideal para agora</h2>
                   <p className="text-sm text-foreground/60">
@@ -488,10 +488,10 @@ export default function QuestoesPageClient() {
                       <button
                         key={discipline.name}
                         onClick={() => toggleDiscipline(discipline.name)}
-                        className={`group flex h-full flex-col rounded-2xl border p-5 text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+                        className={`group flex h-full flex-col rounded-2xl border-0 p-5 text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                           isSelected 
-                            ? "border-primary bg-primary/5 shadow-sm" 
-                            : "border-border-color bg-card-bg shadow-sm hover:border-primary/50"
+                            ? "bg-primary/5 shadow-sm" 
+                            : "bg-muted-bg/30 shadow-sm hover:bg-muted-bg/50"
                         }`}
                       >
                         <span className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${discipline.accent} text-primary`}>
@@ -500,8 +500,8 @@ export default function QuestoesPageClient() {
                         <strong className="text-base text-foreground">{discipline.name}</strong>
                         <span className="mt-2 text-sm text-foreground/60">{discipline.description}</span>
                         <span
-                          className={`mt-4 inline-flex w-fit items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                            isSelected ? "border-primary/40 bg-primary/10 text-primary" : "border-border-color text-foreground/60"
+                          className={`mt-4 inline-flex w-fit items-center gap-2 rounded-full border-0 px-3 py-1 text-xs font-medium transition-colors ${
+                            isSelected ? "bg-primary/10 text-primary" : "bg-muted-bg/50 text-foreground/60"
                           }`}
                         >
                           {isSelected ? (
@@ -537,7 +537,7 @@ export default function QuestoesPageClient() {
                   )}
                 </div>
 
-                <div className="flex flex-col items-center gap-3 rounded-2xl border border-border-color bg-card-bg p-6 text-center shadow-sm">
+                <div className="flex flex-col items-center gap-3 rounded-2xl border-0 bg-muted-bg/30 p-6 text-center shadow-sm">
                   <p className="text-sm text-foreground/60">
                     As questões são produzidas na hora por IA e trazem explicações detalhadas ao finalizar.
                   </p>
@@ -569,7 +569,7 @@ export default function QuestoesPageClient() {
             ) : (
               <div className="space-y-8">
                 {saveStatusMessage && (
-                  <div className="rounded-2xl border border-border-color bg-card-bg p-4 text-sm text-foreground/60 shadow-sm">
+                  <div className="card border-0 shadow-sm p-4 text-sm text-foreground/60">
                     <strong>Status:</strong> {saveStatusMessage}
                   </div>
                 )}
@@ -587,7 +587,7 @@ export default function QuestoesPageClient() {
                       />
                     ))}
                   </div>
-                  <aside className="flex flex-col gap-4 rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm lg:sticky lg:top-28">
+                  <aside className="flex flex-col gap-4 card border-0 shadow-sm p-6 lg:sticky lg:top-28">
                     <div>
                       <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground/80">Resumo rápido</h3>
                       <p className="mt-2 text-sm text-foreground/60">
@@ -595,7 +595,7 @@ export default function QuestoesPageClient() {
                         {unansweredCount > 0 && ` Restam ${unansweredCount}.`}
                       </p>
                     </div>
-                    <div className="rounded-xl border border-border-color bg-muted-bg/50 p-4">
+                    <div className="rounded-xl border-0 bg-muted-bg/50 p-4">
                       <p className="text-xs uppercase tracking-wide text-primary">Dica</p>
                       <p className="mt-2 text-sm text-foreground/60">
                         Marque as alternativas com confiança. As explicações ao final destacam por que cada resposta correta faz
@@ -606,7 +606,7 @@ export default function QuestoesPageClient() {
                       <p className="font-semibold text-foreground/80">Disciplinas desta rodada</p>
                       <div className="flex flex-wrap gap-2">
                         {Array.from(selectedDisciplines).map((discipline) => (
-                          <span key={discipline} className="rounded-full border border-border-color bg-card-bg px-3 py-1 text-xs text-foreground/60">
+                          <span key={discipline} className="rounded-full border-0 bg-muted-bg/50 px-3 py-1 text-xs text-foreground/60">
                             {discipline}
                           </span>
                         ))}
@@ -634,7 +634,7 @@ export default function QuestoesPageClient() {
                 </div>
 
                 {questions.length > 0 && (
-                  <div className="sticky bottom-0 -mx-4 flex flex-col gap-3 border-t border-border-color bg-background/95 px-4 py-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:gap-0">
+                  <div className="sticky bottom-0 -mx-4 flex flex-col gap-3 border-t-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] bg-background/95 px-4 py-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:gap-0">
                     <div className="text-sm text-foreground/60">
                       <span className="font-semibold text-foreground">
                         {answeredCount} / {questions.length}

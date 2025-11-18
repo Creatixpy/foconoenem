@@ -747,8 +747,8 @@ export default function CommunityPageClient() {
   if (!user) {
     return (
       <main className="px-4 pb-24 pt-28 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl rounded-2xl border border-border-color bg-card-bg p-10 text-center shadow-sm">
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1 text-sm font-semibold text-primary">
+        <div className="mx-auto max-w-2xl card border-0 p-10 text-center">
+          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1 text-sm font-semibold text-primary">
             Comunidade exclusiva
           </div>
           <h1 className="mt-6 text-3xl font-semibold text-foreground sm:text-4xl">Faça login para acessar a comunidade</h1>
@@ -779,12 +779,12 @@ export default function CommunityPageClient() {
   if (needsAgeConfirmation) {
     return (
       <main className="px-4 pb-24 pt-28 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-3xl rounded-2xl border border-border-color bg-card-bg p-10 shadow-sm">
+        <div className="mx-auto max-w-3xl card border-0 p-10">
           <h1 className="text-3xl font-semibold text-foreground sm:text-4xl">Confirme que tem 16 anos ou mais</h1>
           <p className="mt-4 text-base text-foreground/70">
             Para proteger menores de idade e seguir a LGPD, a comunidade fica disponível apenas para estudantes com 16 anos ou mais.
           </p>
-          <label className="mt-8 flex items-start gap-3 rounded-xl border border-border-color bg-muted-bg/30 p-4 text-sm text-foreground/80 cursor-pointer hover:bg-muted-bg/50 transition-colors">
+          <label className="mt-8 flex items-start gap-3 rounded-xl bg-muted-bg/30 p-4 text-sm text-foreground/80 cursor-pointer hover:bg-muted-bg/50 transition-colors">
             <input
               type="checkbox"
               className="mt-1 h-4 w-4 rounded border-border-color text-primary focus:ring-primary"
@@ -809,8 +809,8 @@ export default function CommunityPageClient() {
   if (needsTermsAcceptance) {
     return (
       <main className="px-4 pb-24 pt-28 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-3xl rounded-2xl border border-border-color bg-card-bg p-10 shadow-sm">
-          <div className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-4 py-1 text-xs font-semibold text-accent">
+        <div className="mx-auto max-w-3xl card border-0 p-10">
+          <div className="inline-flex items-center gap-2 rounded-full bg-accent/10 px-4 py-1 text-xs font-semibold text-accent">
             Termos da comunidade · {COMMUNITY_POLICY_VERSION_LABEL}
           </div>
           <h1 className="mt-6 text-3xl font-semibold text-foreground sm:text-4xl">Aceite os termos da comunidade</h1>
@@ -827,7 +827,7 @@ export default function CommunityPageClient() {
               </Link>
             ))}
           </div>
-          <label className="mt-8 flex items-start gap-3 rounded-xl border border-border-color bg-muted-bg/30 p-4 text-sm text-foreground/80 cursor-pointer hover:bg-muted-bg/50 transition-colors">
+          <label className="mt-8 flex items-start gap-3 rounded-xl bg-muted-bg/30 p-4 text-sm text-foreground/80 cursor-pointer hover:bg-muted-bg/50 transition-colors">
             <input
               type="checkbox"
               className="mt-1 h-4 w-4 rounded border-border-color text-primary focus:ring-primary"
@@ -868,7 +868,7 @@ export default function CommunityPageClient() {
 
         <section className="grid gap-6 lg:grid-cols-[280px_1fr]">
           <aside className="space-y-6">
-            <div className="rounded-2xl border border-border-color bg-card-bg p-5 shadow-sm">
+            <div className="card border-0 p-5">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-foreground">Tópicos</h2>
                 <button
@@ -903,7 +903,7 @@ export default function CommunityPageClient() {
                           className={`w-full rounded-xl border px-4 py-3 text-left text-sm transition-all ${
                             isActive
                               ? "border-primary bg-primary/5 text-primary shadow-sm"
-                              : "border-border-color bg-card-bg text-foreground/60 hover:border-primary/50 hover:text-foreground"
+                              : "border-transparent bg-muted-bg/30 text-foreground/60 hover:bg-muted-bg/50 hover:text-foreground"
                           }`}
                           onClick={() => setSelectedTopicId(topic.id)}
                         >
@@ -917,7 +917,7 @@ export default function CommunityPageClient() {
               )}
             </div>
 
-            <div className="rounded-2xl border border-border-color bg-card-bg p-5 shadow-sm">
+            <div className="card border-0 p-5">
               <h2 className="text-lg font-semibold text-foreground">Regras rápidas</h2>
               <ul className="mt-4 space-y-3 text-sm text-foreground/60">
                 {communityGuidelines.map((rule) => (
@@ -932,7 +932,7 @@ export default function CommunityPageClient() {
               </p>
             </div>
 
-            <div className="rounded-2xl border border-border-color bg-card-bg p-5 shadow-sm">
+            <div className="card border-0 p-5">
               <h2 className="text-lg font-semibold text-foreground">Perfil social</h2>
               <label className="block text-sm font-medium text-foreground/60">
                 Frase de destaque
@@ -942,7 +942,7 @@ export default function CommunityPageClient() {
                   rows={2}
                   maxLength={140}
                   placeholder="Compartilhe seu objetivo ou frase preferida."
-                  className="mt-2 w-full rounded-xl border border-border-color bg-background px-4 py-3 text-sm text-foreground placeholder:text-foreground/40 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="mt-2 w-full rounded-xl border-0 bg-muted-bg/30 px-4 py-3 text-sm text-foreground placeholder:text-foreground/40 focus:ring-2 focus:ring-primary focus:outline-none"
                 />
               </label>
               <label className="mt-4 flex items-center gap-3 text-sm text-foreground/60 cursor-pointer">
@@ -969,7 +969,7 @@ export default function CommunityPageClient() {
           </aside>
 
           <section className="space-y-6">
-            <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
+            <div className="card border-0 p-6">
               <div className="flex flex-wrap items-center gap-4">
                 <div>
                   <p className="text-sm font-semibold text-foreground/60">Tópico selecionado</p>
@@ -993,7 +993,7 @@ export default function CommunityPageClient() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
+            <div className="card border-0 p-6">
               <h3 className="text-lg font-semibold text-foreground">Compartilhe algo com a comunidade</h3>
               <form className="mt-4 space-y-4" onSubmit={handleCreatePost}>
                 <label className="block text-sm font-medium text-foreground/60">
@@ -1004,7 +1004,7 @@ export default function CommunityPageClient() {
                     onChange={(event) => setNewPostTitle(event.target.value)}
                     maxLength={120}
                     placeholder="Ex.: Estratégias para repertório sociocultural"
-                    className="mt-2 w-full rounded-xl border border-border-color bg-background px-4 py-3 text-sm text-foreground placeholder:text-foreground/40 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="mt-2 w-full rounded-xl border-0 bg-muted-bg/30 px-4 py-3 text-sm text-foreground placeholder:text-foreground/40 focus:ring-2 focus:ring-primary focus:outline-none"
                     disabled={!selectedTopicId || creatingPost}
                   />
                 </label>
@@ -1016,7 +1016,7 @@ export default function CommunityPageClient() {
                     rows={4}
                     maxLength={2000}
                     placeholder="Explique o contexto, cite fontes ou peça ajuda objetiva."
-                    className="mt-2 w-full rounded-xl border border-border-color bg-background px-4 py-3 text-sm text-foreground placeholder:text-foreground/40 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="mt-2 w-full rounded-xl border-0 bg-muted-bg/30 px-4 py-3 text-sm text-foreground placeholder:text-foreground/40 focus:ring-2 focus:ring-primary focus:outline-none"
                     disabled={!selectedTopicId || creatingPost}
                   />
                 </label>
@@ -1031,7 +1031,7 @@ export default function CommunityPageClient() {
               </form>
             </div>
 
-            <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
+            <div className="card border-0 p-6">
               <div className="flex flex-wrap items-center gap-4">
                 <div>
                   <p className="text-sm font-semibold text-foreground/60">Painel público</p>
@@ -1051,19 +1051,19 @@ export default function CommunityPageClient() {
                 </div>
               ) : statistics && showStatsToggle ? (
                 <dl className="mt-6 grid gap-4 sm:grid-cols-3">
-                  <div className="rounded-2xl border border-border-color bg-muted-bg/30 p-4">
+                  <div className="rounded-2xl bg-muted-bg/30 p-4">
                     <dt className="text-xs font-semibold uppercase tracking-wide text-foreground/60">Redações enviadas</dt>
                     <dd className="mt-2 text-2xl font-semibold text-foreground">{statistics.total_redacoes ?? 0}</dd>
                     <p className="text-xs text-foreground/60">Média: {Math.round(statistics.media_nota_redacao ?? 0)}</p>
                   </div>
-                  <div className="rounded-2xl border border-border-color bg-muted-bg/30 p-4">
+                  <div className="rounded-2xl bg-muted-bg/30 p-4">
                     <dt className="text-xs font-semibold uppercase tracking-wide text-foreground/60">Questões resolvidas</dt>
                     <dd className="mt-2 text-2xl font-semibold text-foreground">{statistics.total_questoes_respondidas ?? 0}</dd>
                     <p className="text-xs text-foreground/60">
                       Taxa de acerto: {Math.round((statistics.taxa_acerto ?? 0) * 100)}%
                     </p>
                   </div>
-                  <div className="rounded-2xl border border-border-color bg-muted-bg/30 p-4">
+                  <div className="rounded-2xl bg-muted-bg/30 p-4">
                     <dt className="text-xs font-semibold uppercase tracking-wide text-foreground/60">Comentários úteis</dt>
                     <dd className="mt-2 text-2xl font-semibold text-foreground">{commentCount}</dd>
                     <p className="text-xs text-foreground/60">Meta para mentor: 5 comentários</p>
@@ -1095,7 +1095,7 @@ export default function CommunityPageClient() {
             ) : (
               <div className="space-y-6">
                 {threads.map((thread) => (
-                  <article key={thread.id} className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
+                  <article key={thread.id} className="card border-0 p-6">
                     <header className="flex flex-wrap items-center gap-4">
                       <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-base font-semibold text-primary">
                         {getInitial(thread.user_id)}
@@ -1151,14 +1151,14 @@ export default function CommunityPageClient() {
                       <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-foreground/60">{thread.content}</p>
                     </div>
 
-                    <footer className="mt-6 border-t border-border-color pt-4">
+                    <footer className="mt-6 border-t border-border-color/50 pt-4">
                       <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60">
                         {thread.comments.length} comentário{thread.comments.length === 1 ? "" : "s"}
                       </p>
 
                       <div className="mt-4 space-y-4">
                         {thread.comments.map((comment) => (
-                          <div key={comment.id} className="rounded-xl border border-border-color bg-muted-bg/30 p-3">
+                          <div key={comment.id} className="rounded-xl bg-muted-bg/30 p-3">
                             <div className="flex items-center gap-3">
                               <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
                                 {getInitial(comment.user_id)}
@@ -1191,7 +1191,7 @@ export default function CommunityPageClient() {
                           rows={2}
                           maxLength={500}
                           placeholder="Adicionar comentário..."
-                          className="w-full rounded-xl border border-border-color bg-background px-4 py-2 text-sm text-foreground placeholder:text-foreground/40 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                          className="w-full rounded-xl border-0 bg-muted-bg/30 px-4 py-2 text-sm text-foreground placeholder:text-foreground/40 focus:ring-2 focus:ring-primary focus:outline-none"
                         />
                         <div className="flex justify-end">
                           <button

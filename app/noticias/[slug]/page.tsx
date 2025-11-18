@@ -105,7 +105,7 @@ export default function NoticiaDetalhePage() {
           </Link>
         </div>
         
-        <article className="card p-6 md:p-8 border border-border-color">
+        <article className="card p-6 md:p-8 border-0">
           {/* Cabeçalho da notícia */}
           <header className="mb-8">
             <h1 className="text-3xl md:text-4xl font-bold mb-4">{noticia.titulo}</h1>
@@ -144,7 +144,7 @@ export default function NoticiaDetalhePage() {
             )}
 
             {noticia.resumo && (
-              <details className="rounded-2xl border border-border-color bg-muted-bg/60 p-4 text-sm text-foreground/80">
+              <details className="rounded-2xl border-0 bg-muted-bg/60 p-4 text-sm text-foreground/80">
                 <summary className="cursor-pointer font-semibold text-foreground">Ver resumo rápido</summary>
                 <p className="mt-3 leading-relaxed">{noticia.resumo}</p>
               </details>
@@ -158,7 +158,7 @@ export default function NoticiaDetalhePage() {
           />
 
           {noticia.fonte_url && (
-            <div className="mt-8 rounded-lg border border-border-color bg-muted-bg p-4">
+            <div className="mt-8 rounded-lg border-0 bg-muted-bg p-4">
               <p className="text-xs uppercase tracking-[0.2em] text-foreground/75">Fonte original</p>
               <a
                 href={noticia.fonte_url}
@@ -227,7 +227,7 @@ export default function NoticiaDetalhePage() {
                 <Link
                   key={noticia.id}
                   href={`/noticias/${noticia.slug}`}
-                  className="card border border-border-color overflow-hidden hover:shadow-lg transition-all"
+                  className="card border-0 overflow-hidden hover:shadow-lg transition-all"
                 >
                   <div className="h-40 relative">
                     {noticia.imagem_url ? (

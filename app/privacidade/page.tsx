@@ -103,7 +103,7 @@ export default function PrivacyPolicyPage() {
     <main className="flex-grow">
       <section className="relative overflow-hidden px-4 pb-20 pt-16 sm:px-6 lg:px-8">
           <div className="container relative z-10 mx-auto max-w-5xl space-y-10">
-            <div className="rounded-2xl border border-border-color bg-card-bg p-8 shadow-sm md:p-12">
+            <div className="card border-0 p-8 md:p-12">
               <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">
                 🔒 Última atualização: {new Date().toLocaleDateString("pt-BR")}
               </span>
@@ -114,7 +114,7 @@ export default function PrivacyPolicyPage() {
               </p>
             </div>
 
-            <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm md:p-8">
+            <div className="card border-0 p-6 md:p-8">
               <h2 className="text-lg font-semibold text-foreground">Resumo rápido</h2>
               <ul className="mt-4 grid gap-3 sm:grid-cols-2">
                 {policySections.map((section) => (
@@ -132,7 +132,7 @@ export default function PrivacyPolicyPage() {
                 <details
                   key={section.id}
                   id={section.id}
-                  className="rounded-2xl border border-border-color bg-card-bg shadow-sm"
+                  className="card border-0"
                   open={index === 0}
                 >
                   <summary className="flex cursor-pointer items-center gap-3 px-6 py-4 text-left">
@@ -141,9 +141,9 @@ export default function PrivacyPolicyPage() {
                     </span>
                     <span className="text-base font-semibold text-foreground">{section.title}</span>
                   </summary>
-                  <div className="space-y-4 border-t border-border-color px-6 py-5 text-sm text-foreground/60">
+                  <div className="space-y-4 border-t border-border-color/50 px-6 py-5 text-sm text-foreground/60">
                     {section.alert && (
-                      <div className="rounded-xl border border-success/40 bg-success/10 p-4 text-sm text-success">{section.alert}</div>
+                      <div className="rounded-xl bg-success/10 p-4 text-sm text-success">{section.alert}</div>
                     )}
                     {section.paragraphs?.map((paragraph) => (
                       <p key={paragraph} className="leading-relaxed">
@@ -162,7 +162,7 @@ export default function PrivacyPolicyPage() {
               ))}
             </div>
 
-            <div className="rounded-2xl border border-border-color bg-card-bg p-10 text-center shadow-sm">
+            <div className="card border-0 p-10 text-center">
               <div className="space-y-4">
                 <h2 className="text-2xl font-semibold text-foreground sm:text-3xl">Estamos disponíveis para esclarecer dúvidas.</h2>
                 <p className="mx-auto max-w-3xl text-sm text-foreground/60">

@@ -55,9 +55,9 @@ export default function QuestionCard({
   const correctAlternativeId = getCorrectAlternativeId();
 
   return (
-    <article className="group relative mb-6 overflow-hidden rounded-3xl border border-border-color bg-card-bg shadow-sm transition-transform duration-200 animate-fadeIn">
+    <article className="group relative mb-6 overflow-hidden card border-0 shadow-sm transition-transform duration-200 animate-fadeIn">
       <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/60 via-accent/60 to-primary/60 opacity-70"></div>
-      <header className="flex flex-col gap-3 border-b border-border-color bg-muted-bg/80 px-4 py-4 sm:px-6 sm:py-5 md:flex-row md:items-center md:justify-between">
+      <header className="flex flex-col gap-3 border-b-0 bg-muted-bg/30 px-4 py-4 sm:px-6 sm:py-5 md:flex-row md:items-center md:justify-between">
         <div>
           <h3 className="text-sm font-medium uppercase tracking-wide text-foreground/80">Questão {questionNumber}</h3>
           <p className="mt-1 text-base font-semibold text-foreground sm:text-lg">{question.text}</p>
@@ -89,21 +89,21 @@ export default function QuestionCard({
                 onClick={() => handleSelectAlternative(alternative.id)}
                 disabled={showResults}
                 type="button"
-                className={`relative flex w-full flex-col gap-3 rounded-2xl border border-border-color bg-card-bg/60 p-4 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:flex-row sm:items-center sm:gap-4 ${
-                  isSelected && !showResults ? "border-primary bg-primary/5 shadow-md" : ""
-                } ${showAsCorrect ? "border-success bg-success/10" : ""} ${showAsWrong ? "border-danger bg-danger/10" : ""}`}
+                className={`relative flex w-full flex-col gap-3 rounded-2xl border-0 p-4 text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:flex-row sm:items-center sm:gap-4 ${
+                  isSelected && !showResults ? "bg-primary/5 shadow-md" : "bg-muted-bg/30 hover:bg-muted-bg/50"
+                } ${showAsCorrect ? "bg-success/10" : ""} ${showAsWrong ? "bg-danger/10" : ""}`}
                 aria-pressed={isSelected}
                 aria-label={`Alternativa ${alternative.id}`}
               >
                 <div className="flex w-full items-start gap-4">
-                  <span className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border-2 text-sm font-semibold transition-colors sm:h-10 sm:w-10 ${
+                  <span className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border-0 text-sm font-semibold transition-colors sm:h-10 sm:w-10 ${
                     showAsCorrect
-                      ? "border-success bg-success text-white"
+                      ? "bg-success text-white"
                       : showAsWrong
-                        ? "border-danger bg-danger text-white"
+                        ? "bg-danger text-white"
                         : isSelected
-                          ? "border-primary bg-primary text-white"
-                          : "border-border-color bg-card-bg text-foreground/70"
+                          ? "bg-primary text-white"
+                          : "bg-card-bg text-foreground/70 shadow-sm"
                   }`}>
                     {alternative.id}
                   </span>
@@ -133,7 +133,7 @@ export default function QuestionCard({
         </div>
 
         {showResults && (
-          <div className={`mt-6 rounded-2xl border p-5 text-sm leading-relaxed shadow-sm ${isCorrect ? "border-success/40 bg-success/10 text-success/90" : "border-danger/40 bg-danger/10 text-danger/90"}`}>
+          <div className={`mt-6 rounded-2xl border-0 p-5 text-sm leading-relaxed shadow-sm ${isCorrect ? "bg-success/10 text-success/90" : "bg-danger/10 text-danger/90"}`}>
             <h4 className="mb-2 flex items-center gap-2 text-base font-semibold">
               {isCorrect ? (
                 <>

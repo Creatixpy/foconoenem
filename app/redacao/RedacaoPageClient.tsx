@@ -382,7 +382,7 @@ export default function RedacaoPageClient() {
     if (themeMode === "personalizado") {
       return (
         <div className="space-y-5">
-          <div className="rounded-2xl border border-border-color bg-card-bg space-y-3 p-5 shadow-sm">
+          <div className="card border-0 shadow-sm space-y-3 p-5">
             <label className="block text-sm font-semibold text-foreground">
               Tema personalizado
               <input
@@ -393,14 +393,14 @@ export default function RedacaoPageClient() {
                   setValidationMessage((previous) => (previous === INVALID_THEME_MESSAGE ? null : previous));
                 }}
                 placeholder="Digite o tema da redação..."
-                className="mt-2 w-full rounded-xl border border-border-color bg-muted-bg/50 px-4 py-3 text-base text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                className="mt-2 w-full rounded-xl border-0 bg-muted-bg/50 px-4 py-3 text-base text-foreground shadow-sm focus:ring-2 focus:ring-primary/20 transition-all"
               />
             </label>
             <p className="text-xs text-foreground/60">
               Defina um tema claro, preferencialmente com recorte de problema e contexto social para facilitar sua tese.
             </p>
           </div>
-          <div className="rounded-2xl border border-border-color bg-card-bg space-y-3 p-5 shadow-sm">
+          <div className="card border-0 shadow-sm space-y-3 p-5">
             <p className="text-sm font-semibold text-foreground">Textos de apoio (opcional)</p>
             <p className="text-xs text-foreground/60">
               Use estes campos para guardar repertórios, dados ou citações que deseja inserir ao longo da redação.
@@ -413,7 +413,7 @@ export default function RedacaoPageClient() {
                   value={customText1}
                   onChange={(event) => setCustomText1(event.target.value)}
                   placeholder="Cole dados, citações ou estudos que deseja usar como referência."
-                  className="mt-2 w-full rounded-xl border border-border-color bg-muted-bg/50 px-4 py-3 text-base text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                  className="mt-2 w-full rounded-xl border-0 bg-muted-bg/50 px-4 py-3 text-base text-foreground shadow-sm focus:ring-2 focus:ring-primary/20 transition-all"
                 />
               </label>
               <label className="flex flex-col text-sm text-foreground/70">
@@ -423,7 +423,7 @@ export default function RedacaoPageClient() {
                   value={customText2}
                   onChange={(event) => setCustomText2(event.target.value)}
                   placeholder="Adicione outro ponto de vista ou estatística relevante."
-                  className="mt-2 w-full rounded-xl border border-border-color bg-muted-bg/50 px-4 py-3 text-base text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                  className="mt-2 w-full rounded-xl border-0 bg-muted-bg/50 px-4 py-3 text-base text-foreground shadow-sm focus:ring-2 focus:ring-primary/20 transition-all"
                 />
               </label>
             </div>
@@ -467,7 +467,7 @@ export default function RedacaoPageClient() {
 
     return (
       <div className="space-y-5">
-        <div className="rounded-2xl border border-border-color bg-card-bg space-y-3 p-5 shadow-sm">
+        <div className="card border-0 shadow-sm space-y-3 p-5">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-xs uppercase tracking-wider font-bold text-primary">
@@ -483,7 +483,7 @@ export default function RedacaoPageClient() {
             Use o tema como bússola: destaque o problema central, organize argumentos e pense na intervenção enquanto escreve.
           </p>
         </div>
-        <div className="rounded-2xl border border-border-color bg-card-bg p-5 shadow-sm">
+        <div className="card border-0 shadow-sm p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-foreground">Textos de apoio</p>
@@ -492,7 +492,7 @@ export default function RedacaoPageClient() {
             <button
               type="button"
               onClick={() => setIsSupportCollapsed((previous) => !previous)}
-              className="inline-flex items-center gap-2 rounded-full border border-border-color px-3 py-1.5 text-xs font-semibold text-foreground/70 transition hover:border-primary hover:text-primary hover:bg-primary/5"
+              className="inline-flex items-center gap-2 rounded-full border-0 bg-muted-bg/50 px-3 py-1.5 text-xs font-semibold text-foreground/70 transition hover:text-primary hover:bg-primary/5"
             >
               {isSupportCollapsed ? (
                 <>
@@ -516,7 +516,7 @@ export default function RedacaoPageClient() {
               {supportTexts.map((support) => (
                 <div
                   key={support.title}
-                  className="rounded-xl border border-border-color bg-muted-bg/30 p-4 text-sm leading-relaxed text-foreground/80"
+                  className="rounded-xl border-0 bg-muted-bg/30 p-4 text-sm leading-relaxed text-foreground/80"
                 >
                   <p className="text-xs font-bold uppercase tracking-wide text-primary">{support.title}</p>
                   <p className="mt-2">{support.content}</p>
@@ -539,7 +539,7 @@ export default function RedacaoPageClient() {
           aria-labelledby="redacao-hero-heading redacao-hero-description"
         >
           <div className="container relative z-10 mx-auto max-w-6xl space-y-10">
-            <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm sm:p-8">
+            <div className="card border-0 shadow-sm p-6 sm:p-8">
               <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
                 <div className="space-y-4">
                   <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
@@ -563,7 +563,7 @@ export default function RedacaoPageClient() {
                     className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition ${
                       isFocusMode
                         ? "bg-primary text-white shadow-md hover:bg-primary-dark"
-                        : "border border-border-color bg-card-bg text-foreground shadow-sm hover:border-primary hover:text-primary"
+                        : "border-0 bg-muted-bg/50 text-foreground shadow-sm hover:text-primary"
                     }`}
                   >
                     {isFocusMode ? (
@@ -630,7 +630,7 @@ export default function RedacaoPageClient() {
                 </div>
               )}
               <div className="space-y-6">
-                <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
+                <div className="card border-0 shadow-sm p-6">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <h2 className="text-lg font-semibold text-foreground">Escolha o tema</h2>
@@ -640,7 +640,7 @@ export default function RedacaoPageClient() {
                       type="button"
                       onClick={handleGenerateTheme}
                       disabled={isGeneratingTheme}
-                      className="inline-flex items-center gap-2 rounded-full border border-border-color px-4 py-2 text-sm font-semibold text-foreground transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
+                      className="inline-flex items-center gap-2 rounded-full border-0 bg-muted-bg/50 px-4 py-2 text-sm font-semibold text-foreground transition hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {isGeneratingTheme ? (
                         <span className="flex items-center gap-2">
@@ -659,7 +659,7 @@ export default function RedacaoPageClient() {
                   </div>
 
                   <div className="flex flex-wrap gap-3 mt-4">
-                    <label className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition cursor-pointer ${themeMode === "padrao" ? "border-primary bg-primary/5 text-primary" : "border-border-color text-foreground/70 hover:border-primary hover:text-primary"}`}>
+                    <label className={`flex items-center gap-2 rounded-full border-0 px-4 py-2 text-sm font-medium transition cursor-pointer ${themeMode === "padrao" ? "bg-primary/10 text-primary" : "bg-muted-bg/50 text-foreground/70 hover:text-primary"}`}>
                       <input
                         type="radio"
                         name="tema"
@@ -675,7 +675,7 @@ export default function RedacaoPageClient() {
                       />
                       <span>Tema padrão</span>
                     </label>
-                    <label className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition cursor-pointer ${themeMode === "personalizado" ? "border-primary bg-primary/5 text-primary" : "border-border-color text-foreground/70 hover:border-primary hover:text-primary"}`}>
+                    <label className={`flex items-center gap-2 rounded-full border-0 px-4 py-2 text-sm font-medium transition cursor-pointer ${themeMode === "personalizado" ? "bg-primary/10 text-primary" : "bg-muted-bg/50 text-foreground/70 hover:text-primary"}`}>
                       <input
                         type="radio"
                         name="tema"
@@ -691,7 +691,7 @@ export default function RedacaoPageClient() {
                       />
                       <span>Definir tema personalizado</span>
                     </label>
-                    <label className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition cursor-pointer ${themeMode === "gerado" ? "border-primary bg-primary/5 text-primary" : "border-border-color text-foreground/70 hover:border-primary hover:text-primary"}`}>
+                    <label className={`flex items-center gap-2 rounded-full border-0 px-4 py-2 text-sm font-medium transition cursor-pointer ${themeMode === "gerado" ? "bg-primary/10 text-primary" : "bg-muted-bg/50 text-foreground/70 hover:text-primary"}`}>
                       <input
                         type="radio"
                         name="tema"
@@ -712,7 +712,7 @@ export default function RedacaoPageClient() {
                   {renderThemeContent()}
                 </div>
 
-                <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm md:p-8">
+                <div className="card border-0 shadow-sm p-6 md:p-8">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="flex items-center gap-2">
                       <svg className="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -732,7 +732,7 @@ export default function RedacaoPageClient() {
                   </div>
                   <div
                     ref={editorRef}
-                    className="editor-container mt-4 min-h-[400px] rounded-xl border border-border-color bg-muted-bg/30 p-4 text-lg leading-relaxed text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className="editor-container mt-4 min-h-[400px] rounded-xl border-0 bg-muted-bg/30 p-4 text-lg leading-relaxed text-foreground focus:ring-2 focus:ring-primary/20 focus:outline-none"
                     contentEditable
                     tabIndex={0}
                     onInput={handleInput}
@@ -823,7 +823,7 @@ export default function RedacaoPageClient() {
 
               {!isFocusMode && (
                 <aside className="space-y-6">
-                  <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
+                  <div className="card border-0 shadow-sm p-6">
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg font-semibold text-foreground">Dicas rápidas</h3>
                       <span className="text-xs uppercase tracking-[0.2em] text-foreground/60">Modo minimal</span>
@@ -832,13 +832,13 @@ export default function RedacaoPageClient() {
                       {guidanceSteps.map((step, index) => (
                         <span
                           key={step}
-                          className="rounded-full border border-border-color px-3 py-1 text-xs text-foreground/60"
+                          className="rounded-full border-0 bg-muted-bg/50 px-3 py-1 text-xs text-foreground/60"
                         >
                           {String(index + 1).padStart(2, "0")}. {step}
                         </span>
                       ))}
                     </div>
-                    <details className="mt-4 rounded-xl border border-border-color bg-muted-bg/30 p-4 text-sm text-foreground/70">
+                    <details className="mt-4 rounded-xl border-0 bg-muted-bg/30 p-4 text-sm text-foreground/70">
                       <summary className="cursor-pointer font-semibold text-foreground">Ver checklist completo</summary>
                       <ul className="mt-3 space-y-2 text-sm text-foreground/60">
                         <li>
