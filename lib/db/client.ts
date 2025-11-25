@@ -23,15 +23,26 @@ const CONFIG = {
 // Environment validation
 // ============================================================================
 
-function getEnvVar(name: string, isPublic: boolean = false): string {
-  const value = isPublic
-    ? process.env[`NEXT_PUBLIC_${name}`]
-    : process.env[name] ?? process.env[`NEXT_PUBLIC_${name}`];
-  
-  if (!value) {
-    throw new Error(`Environment variable ${isPublic ? `NEXT_PUBLIC_${name}` : name} is not configured`);
+function getSupabaseUrl(): string {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!url) {
+    throw new Error(
+      'Environment variable NEXT_PUBLIC_SUPABASE_URL is not configured. ' +
+      'Please add it to your Vercel environment variables or .env.local file.'
+    );
   }
-  return value;
+  return url;
+}
+
+function getSupabaseAnonKey(): string {
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!key) {
+    throw new Error(
+      'Environment variable NEXT_PUBLIC_SUPABASE_ANON_KEY is not configured. ' +
+      'Please add it to your Vercel environment variables or .env.local file.'
+    );
+  }
+  return key;
 }
 
 // ============================================================================
@@ -47,8 +58,8 @@ let browserClient: SupabaseClient<Database> | null = null;
 export function getBrowserClient(): SupabaseClient<Database> {
   if (browserClient) return browserClient;
 
-  const url = getEnvVar('SUPABASE_URL', true);
-  const anonKey = getEnvVar('SUPABASE_ANON_KEY', true);
+  const url = getSupabaseUrl();
+  const anonKey = getSupabaseAnonKey();
 
   browserClient = createClient<Database>(url, anonKey, {
     auth: {
@@ -71,8 +82,8 @@ export function getBrowserClient(): SupabaseClient<Database> {
  * Uses anon key with RLS enabled
  */
 export function createServerClient(): SupabaseClient<Database> {
-  const url = getEnvVar('SUPABASE_URL');
-  const anonKey = getEnvVar('SUPABASE_ANON_KEY');
+  const url = getSupabaseUrl();
+  const anonKey = getSupabaseAnonKey();
 
   return createClient<Database>(url, anonKey, {
     auth: {
@@ -87,7 +98,7 @@ export function createServerClient(): SupabaseClient<Database> {
  * Uses service role key - bypasses RLS (use with caution)
  */
 export function createAdminClient(): SupabaseClient<Database> | null {
-  const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!url || !serviceKey) {
