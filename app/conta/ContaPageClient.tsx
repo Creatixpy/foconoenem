@@ -3,12 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "@/lib/auth/AuthContext";
 import { 
   getUserStatistics, 
   recalculateUserStatistics,
-  UserStatistics
-} from "@/lib/auth";
+} from "@/lib/auth/service";
+import type { UserStatistics } from "@/lib/auth/types";
 import { 
   LineChart, 
   Line, 

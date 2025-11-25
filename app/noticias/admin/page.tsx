@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Noticia } from "@/types";
-import { useAuth } from "@/app/contexts/AuthContext";
+import { useAuth } from "@/lib/auth/AuthContext";
 import { supabase } from "@/lib/supabase";
 import NewsImage from "@/app/components/NewsImage";
 

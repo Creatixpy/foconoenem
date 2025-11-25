@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "../../contexts/AuthContext";
-import { updateUserProfile, UserProfile } from "@/lib/auth";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { updateUserProfile } from "@/lib/auth/service";
+import type { UserProfile } from "@/lib/auth/types";
 
 export default function ContaEditarPageClient() {
   const router = useRouter();

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getOperatingHoursInfo, type OperatingHoursInfo } from "@/lib/schedule";
 import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/app/contexts/AuthContext";
+import { useAuth } from "@/lib/auth/AuthContext";
 
 const guidanceSteps = [
   "Leia o tema e destaque o problema central.",
