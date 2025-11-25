@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { useAuth } from "@/app/contexts/AuthContext";
+import { useAuth } from "@/lib/auth/AuthContext";
 
 const navLinks = [
   { href: "/", label: "Início" },

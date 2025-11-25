@@ -2,18 +2,17 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { COMMUNITY_TERMS_VERSION } from "@/lib/auth/constants";
 import {
-  COMMUNITY_TERMS_VERSION,
   acceptCommunityTerms,
   confirmCommunityAge,
   getUserAchievements,
   getUserStatistics,
-  type UserAchievement,
-  type UserStatistics,
   updateCommunitySettings,
-} from "@/lib/auth";
+} from "@/lib/auth/service";
+import type { UserAchievement, UserStatistics } from "@/lib/auth/types";
 import { supabase } from "@/lib/supabase";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "@/lib/auth/AuthContext";
 import {
   useCommunityThreads,
   type CommunityComment,

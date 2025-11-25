@@ -3,9 +3,9 @@
 import { useState, FormEvent, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signUp, signInWithGoogle } from "@/lib/auth";
-import { useAuth } from "@/app/contexts/AuthContext";
-import { supabase } from "@/lib/supabase";
+import { signUp, signInWithGoogle } from "@/lib/auth/service";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { supabase } from "@/lib/auth/client";
 
 type RegisterPageClientProps = {
   redirectTo: string;
@@ -91,7 +91,16 @@ export default function RegisterPageClient({ redirectTo }: RegisterPageClientPro
     setSubmitting(true);
 
     try {
-      await signUp(email.trim(), password, nomeCompleto.trim(), objetivo.trim());
+      const result = await signUp({
+        email: email.trim(),
+        password,
+        nomeCompleto: nomeCompleto.trim(),
+        objetivo: objetivo.trim(),
+      });
+      if (!result.success) {
+        setFormError(result.error?.message ?? "Não foi possível criar a conta. Tente novamente.");
+        return;
+      }
       setSuccess(true);
     } catch (error) {
       setFormError((error as Error)?.message ?? "Não foi possível criar a conta. Tente novamente.");
@@ -115,11 +124,15 @@ export default function RegisterPageClient({ redirectTo }: RegisterPageClientPro
     setSubmitting(true);
 
     try {
-      await signInWithGoogle({
+      const result = await signInWithGoogle({
         nomeCompleto: nomeCompleto.trim(),
         objetivo: objetivo.trim(),
         redirectTo,
       });
+      if (!result.success) {
+        setFormError(result.error?.message ?? "Erro ao autenticar com Google.");
+        setSubmitting(false);
+      }
     } catch (error) {
       setFormError((error as Error)?.message ?? "Erro ao autenticar com Google.");
       setSubmitting(false);

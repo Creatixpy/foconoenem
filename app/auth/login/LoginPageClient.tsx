@@ -3,8 +3,8 @@
 import { useState, FormEvent, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signIn, signInWithGoogle } from "@/lib/auth";
-import { useAuth } from "@/app/contexts/AuthContext";
+import { signIn, signInWithGoogle } from "@/lib/auth/service";
+import { useAuth } from "@/lib/auth/AuthContext";
 
 type LoginPageClientProps = {
   redirectTo: string;
@@ -49,7 +49,11 @@ export default function LoginPageClient({ redirectTo }: LoginPageClientProps) {
     setSubmitting(true);
 
     try {
-      await signIn(email, password);
+      const result = await signIn({ email, password });
+      if (!result.success) {
+        setFormError(result.error?.message ?? "Não foi possível entrar. Tente novamente.");
+        return;
+      }
       router.replace(redirectTo);
       router.refresh();
     } catch (error) {
@@ -64,7 +68,11 @@ export default function LoginPageClient({ redirectTo }: LoginPageClientProps) {
     setSubmitting(true);
 
     try {
-      await signInWithGoogle({ redirectTo });
+      const result = await signInWithGoogle({ redirectTo });
+      if (!result.success) {
+        setFormError(result.error?.message ?? "Erro ao autenticar com Google.");
+        setSubmitting(false);
+      }
     } catch (error) {
       setFormError((error as Error)?.message ?? "Erro ao autenticar com Google.");
       setSubmitting(false);

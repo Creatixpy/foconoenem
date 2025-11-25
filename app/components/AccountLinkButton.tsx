@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useAuth } from "@/app/contexts/AuthContext";
+import { useAuth } from "@/lib/auth/AuthContext";
 
 type AccountLinkButtonProps = {
   className?: string;
