@@ -26,8 +26,7 @@ import {
   Legend,
   ResponsiveContainer
 } from "recharts";
-import { getBrowserClient } from "@/lib/db";
-import { withTimeout } from "@/lib/with-timeout";
+import { getBrowserClient, withTimeout } from "@/lib/db";
 import { isAbortError } from "@/lib/errors";
 
 export default function ContaPageClient() {
@@ -41,7 +40,7 @@ export default function ContaPageClient() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const statsRequestRef = useRef<Promise<UserStatistics | null> | null>(null);
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const hasLoadedRef = useRef(false);
+  const hasLoadedRef = useRef<string | null>(null);
 
   useEffect(() => {
     return () => {
@@ -59,11 +58,7 @@ export default function ContaPageClient() {
       return statsRequestRef.current;
     }
 
-    const request = withTimeout(
-      () => getUserStatistics(userId),
-      10000,
-      "Tempo limite ao buscar estatísticas."
-    )
+    const request = getUserStatistics(userId)
       .then((stats) => {
         setStatistics(stats);
         setErrorMessage(null);
@@ -120,13 +115,19 @@ export default function ContaPageClient() {
 
   // Initial data load - only once per userId
   useEffect(() => {
-    if (!userId || hasLoadedRef.current) {
-      if (!userId) setLoading(false);
+    if (!userId) {
+      setLoading(false);
+      hasLoadedRef.current = null;
+      return;
+    }
+
+    // Skip if already loaded for this userId
+    if (hasLoadedRef.current === userId) {
       return;
     }
 
     const loadData = async () => {
-      hasLoadedRef.current = true;
+      hasLoadedRef.current = userId;
       setLoading(true);
       setErrorMessage(null);
 
@@ -135,15 +136,15 @@ export default function ContaPageClient() {
 
         const supabase = getBrowserClient();
         const essaysResponse = await withTimeout(
-          async () =>
+          async (signal) =>
             await supabase
               .from('essay_results')
               .select('id, nota, created_at')
               .eq('user_id', userId)
               .order('created_at', { ascending: false })
-              .limit(10),
-          10000,
-          'Tempo limite ao carregar redações.'
+              .limit(10)
+              .abortSignal(signal),
+          'default'
         );
 
         const { data: essaysData, error: essaysError } = essaysResponse;
