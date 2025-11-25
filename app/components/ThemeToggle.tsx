@@ -1,86 +1,80 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useTheme } from "@/app/contexts/ThemeContext";
 
+// Sun icon component
+function SunIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2" />
+      <path d="M12 20v2" />
+      <path d="m4.93 4.93 1.41 1.41" />
+      <path d="m17.66 17.66 1.41 1.41" />
+      <path d="M2 12h2" />
+      <path d="M20 12h2" />
+      <path d="m6.34 17.66-1.41 1.41" />
+      <path d="m19.07 4.93-1.41 1.41" />
+    </svg>
+  );
+}
+
+// Moon icon component
+function MoonIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+    </svg>
+  );
+}
+
 export default function ThemeToggle() {
-  const { theme, toggleTheme } = useTheme();
-  const [prefersDark, setPrefersDark] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleChange = (event: MediaQueryListEvent) => {
-      setPrefersDark(event.matches);
-    };
-
-    setPrefersDark(mediaQuery.matches);
-    if (typeof mediaQuery.addEventListener === "function") {
-      mediaQuery.addEventListener("change", handleChange);
-      return () => {
-        mediaQuery.removeEventListener("change", handleChange);
-      };
-    }
-
-    mediaQuery.addListener(handleChange);
-    return () => {
-      mediaQuery.removeListener(handleChange);
-    };
-  }, []);
-
-  const resolvedTheme = theme === "system" ? (prefersDark ? "dark" : "light") : theme;
+  const { resolvedTheme, toggleTheme, theme } = useTheme();
   const isLight = resolvedTheme === "light";
 
+  // Generate label text
+  const getLabel = () => {
+    if (theme === "system") {
+      return isLight ? "Ativar modo escuro" : "Ativar modo claro";
+    }
+    return isLight ? "Ativar modo escuro" : "Ativar modo claro";
+  };
+
   return (
-    <div className="pointer-events-none fixed bottom-4 right-4 z-40">
+    <div className="theme-toggle pointer-events-none fixed bottom-4 right-4 z-40 sm:bottom-6 sm:right-6">
       <button
         type="button"
         onClick={toggleTheme}
-        aria-label={isLight ? "Ativar modo escuro" : "Ativar modo claro"}
-        className="pointer-events-auto inline-flex items-center gap-2 rounded-full border-0 bg-card-bg/90 px-4 py-2.5 text-sm font-semibold text-foreground shadow-xl backdrop-blur transition-all hover:-translate-y-0.5 hover:bg-card-bg"
+        aria-label={getLabel()}
+        className="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-border-color bg-card-bg/95 px-3.5 py-2 text-sm font-medium text-foreground shadow-lg backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:px-4 sm:py-2.5"
       >
-        {isLight ? (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
-          </svg>
-        ) : (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="12" cy="12" r="4" />
-            <path d="M12 2v2" />
-            <path d="M12 20v2" />
-            <path d="m4.93 4.93 1.41 1.41" />
-            <path d="m17.66 17.66 1.41 1.41" />
-            <path d="M2 12h2" />
-            <path d="M20 12h2" />
-            <path d="m6.34 17.66-1.41 1.41" />
-            <path d="m19.07 4.93-1.41 1.41" />
-          </svg>
-        )}
+        <span className="relative flex h-5 w-5 items-center justify-center">
+          {isLight ? <MoonIcon /> : <SunIcon />}
+        </span>
         <span className="hidden text-xs font-semibold uppercase tracking-wide text-foreground/70 sm:inline">
-          {isLight ? "Modo escuro" : "Modo claro"}
+          {isLight ? "Escuro" : "Claro"}
         </span>
       </button>
     </div>
