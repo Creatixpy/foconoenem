@@ -1,9 +1,10 @@
 'use server';
 
-import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { createAdminClient, type EventType } from '@/lib/db';
+import type { Json } from '@/types/supabase';
 
 type TrackEventParams = {
-  eventType: string;
+  eventType: EventType;
   metadata: Record<string, unknown>;
   userIp?: string;
   userAgent?: string;
@@ -11,7 +12,7 @@ type TrackEventParams = {
 };
 
 export async function trackEvent({ eventType, metadata, userIp, userAgent, userId }: TrackEventParams) {
-  const supabase = await getSupabaseAdmin();
+  const supabase = createAdminClient();
   if (!supabase) {
     return;
   }
@@ -20,9 +21,9 @@ export async function trackEvent({ eventType, metadata, userIp, userAgent, userI
     const mergedMetadata = userId ? { ...metadata, user_id: userId } : metadata;
     const { error } = await supabase.from('analytics_events').insert({
       event_type: eventType,
-      metadata: mergedMetadata,
-      user_ip: userIp,
-      user_agent: userAgent,
+      metadata: mergedMetadata as Json,
+      user_ip: userIp ?? null,
+      user_agent: userAgent ?? null,
       user_id: userId ?? null,
     });
 

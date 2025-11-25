@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { createAdminClient } from "@/lib/db";
 
 export async function GET() {
-  const supabase = await getSupabaseAdmin();
+  const supabase = createAdminClient();
   if (!supabase) {
     return NextResponse.json(
       { error: "Supabase service role não configurado." },

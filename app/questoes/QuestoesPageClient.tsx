@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import QuestionCard from "../components/QuestionCard";
 import { Question, QuizResult } from "@/types";
 import { getOperatingHoursInfo } from "@/lib/schedule";
-import { supabase } from "@/lib/supabase";
+import { getBrowserClient } from "@/lib/db";
 
 const OperatingHoursIndicator = dynamic(() => import("../components/OperatingHoursIndicator"), {
   ssr: false,
@@ -292,6 +292,7 @@ export default function QuestoesPageClient() {
     try {
       setSaveStatusMessage("Salvando resultado na sua conta...");
 
+      const supabase = getBrowserClient();
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData?.session?.access_token;
 
@@ -564,6 +565,31 @@ export default function QuestoesPageClient() {
                       </>
                     )}
                   </button>
+                </div>
+              </div>
+            ) : loading ? (
+              <div className="card border-0 shadow-sm p-8 md:p-12 space-y-6">
+                <div className="flex flex-col items-center justify-center text-center">
+                  <div className="relative mb-6">
+                    <div className="h-16 w-16 rounded-full border-4 border-primary/20" />
+                    <div className="absolute inset-0 h-16 w-16 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+                  </div>
+                  <h2 className="text-xl font-semibold text-foreground">Gerando suas questões...</h2>
+                  <p className="mt-2 max-w-md text-sm text-foreground/60">
+                    Nossa IA está criando {selectedDisciplines.size * QUESTIONS_PER_DISCIPLINE} questões personalizadas 
+                    para {selectedDisciplines.size === 1 ? "a disciplina selecionada" : `as ${selectedDisciplines.size} disciplinas selecionadas`}. 
+                    Isso pode levar alguns segundos.
+                  </p>
+                  <div className="mt-6 flex flex-wrap justify-center gap-2">
+                    {Array.from(selectedDisciplines).map((discipline) => (
+                      <span 
+                        key={discipline} 
+                        className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
+                      >
+                        {discipline}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
             ) : (

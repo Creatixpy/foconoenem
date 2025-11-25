@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { buildGroqProviders, GROQ_MAX_ATTEMPTS, GroqProvider, isRateLimitError } from '@/lib/ai/groq';
-import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { createAdminClient } from '@/lib/db';
 import { getOperatingHoursInfo } from '@/lib/server/operating-hours';
 import { checkRateLimit } from '@/lib/server/rate-limit';
 import { trackEvent } from '@/lib/server/analytics';
@@ -15,7 +15,7 @@ type CachedThemeRow = {
 };
 
 async function getCachedTheme() {
-  const supabase = await getSupabaseAdmin();
+  const supabase = createAdminClient();
   if (!supabase) return null;
 
   const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -53,7 +53,7 @@ async function getCachedTheme() {
 }
 
 async function cacheTheme(tema: string, textoApoio1: string, textoApoio2: string) {
-  const supabase = await getSupabaseAdmin();
+  const supabase = createAdminClient();
   if (!supabase) return;
 
   const { error } = await supabase.from('cached_themes').insert({
@@ -157,7 +157,7 @@ async function generateThemeWithGroq() {
 }
 
 export async function GET(request: NextRequest) {
-  const supabase = await getSupabaseAdmin();
+  const supabase = createAdminClient();
   if (!supabase) {
     return NextResponse.json(
       { error: 'Supabase service role não configurado.' },

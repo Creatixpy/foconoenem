@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authorizeAdmin } from '@/lib/admin-auth';
-import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { createAdminClient } from '@/lib/db';
 
 async function cleanupCachedThemes() {
-  const supabase = await getSupabaseAdmin();
+  const supabase = createAdminClient();
   if (!supabase) return 0;
 
   const threshold = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
@@ -20,7 +20,7 @@ async function cleanupCachedThemes() {
 }
 
 async function cleanupRateLimits() {
-  const supabase = await getSupabaseAdmin();
+  const supabase = createAdminClient();
   if (!supabase) return 0;
 
   const threshold = new Date(Date.now() - 60 * 60 * 1000).toISOString();
@@ -37,7 +37,7 @@ async function cleanupRateLimits() {
 }
 
 async function cleanupAnalytics() {
-  const supabase = await getSupabaseAdmin();
+  const supabase = createAdminClient();
   if (!supabase) return 0;
 
   const threshold = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();

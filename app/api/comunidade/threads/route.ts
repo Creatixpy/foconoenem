@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { createAdminClient } from '@/lib/db';
 import type { Database } from "@/types/supabase";
 
 type CommunityCommentRow = Database["public"]["Tables"]["community_comments"]["Row"];
@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "topicId obrigatório" }, { status: 400 });
   }
 
-  const supabase = await getSupabaseAdmin();
+  const supabase = createAdminClient();
   if (!supabase) {
     return NextResponse.json(
       { error: "Supabase service role não configurado." },

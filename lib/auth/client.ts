@@ -2,39 +2,18 @@
 
 /**
  * Supabase Client for Authentication
- * Centralized client configuration for auth operations
+ * Re-exports the browser client from the db module for auth operations
  */
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { getBrowserClient } from '@/lib/db';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
 
-let supabaseInstance: SupabaseClient<Database> | null = null;
-
 /**
- * Gets or creates the Supabase client instance
+ * Gets the Supabase client instance for auth operations
  */
 export function getSupabaseClient(): SupabaseClient<Database> {
-  if (supabaseInstance) {
-    return supabaseInstance;
-  }
-
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Variáveis de ambiente do Supabase não configuradas');
-  }
-
-  supabaseInstance = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: true,
-      flowType: 'pkce', // More secure than implicit flow
-    },
-  });
-
-  return supabaseInstance;
+  return getBrowserClient();
 }
 
 /**

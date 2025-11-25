@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { EssayResult } from "@/types";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+import { getBrowserClient } from "@/lib/db";
 import { useAuth } from "@/lib/auth/AuthContext";
 
 type ResultadosPageClientProps = {
@@ -20,6 +20,7 @@ export default function ResultadosPageClient({ essayId }: ResultadosPageClientPr
     const fetchResult = async () => {
       try {
         setLoading(true);
+        const supabase = getBrowserClient();
         const { data: sessionData } = await supabase.auth.getSession();
         const token = sessionData.session?.access_token;
         if (!token) {

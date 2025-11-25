@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Noticia } from "@/types";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { supabase } from "@/lib/supabase";
+import { getBrowserClient } from "@/lib/db";
 import NewsImage from "@/app/components/NewsImage";
 
 type DestaquesUpdateResult = {
@@ -111,6 +111,7 @@ export default function AdminDestaques() {
       setAuthError(null);
 
       try {
+        const supabase = getBrowserClient();
         const { data: sessionData } = await supabase.auth.getSession();
         if (cancelled) {
           setCheckingAccess(false);

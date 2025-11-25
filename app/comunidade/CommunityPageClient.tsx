@@ -11,7 +11,7 @@ import {
   updateCommunitySettings,
 } from "@/lib/auth/service";
 import type { UserAchievement, UserStatistics } from "@/lib/auth/types";
-import { supabase } from "@/lib/supabase";
+import { getBrowserClient } from "@/lib/db";
 import { useAuth } from "@/lib/auth/AuthContext";
 import {
   useCommunityThreads,
@@ -172,6 +172,7 @@ export default function CommunityPageClient() {
   }, []);
 
   const getAccessToken = useCallback(async () => {
+    const supabase = getBrowserClient();
     const { data } = await supabase.auth.getSession();
     return data.session?.access_token ?? null;
   }, []);
@@ -410,6 +411,7 @@ export default function CommunityPageClient() {
     if (!user) return;
 
     try {
+      const supabase = getBrowserClient();
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData.session?.access_token;
       if (!token) {
