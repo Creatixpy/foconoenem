@@ -1,5 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google";
-import { Metadata } from "next";
+import { Metadata, Viewport } from "next";
 import "./globals.css";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -10,14 +10,20 @@ import Providers from "./providers";
 import StructuredData from "./structured-data";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
+import { themeScript } from "./contexts/ThemeContext";
 
 const siteTitle = "Foco no ENEM - Plataforma de Simulados e Redações";
 const siteDescription =
   "Simule redações e questões do ENEM com feedback por IA, dashboards personalizados e notícias atualizadas.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://foconoenem.vercel.app"),
-  title: siteTitle,
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://foconoenem.vercel.app"
+  ),
+  title: {
+    default: siteTitle,
+    template: "%s | Foco no ENEM",
+  },
   description: siteDescription,
   icons: {
     icon: [
@@ -49,16 +55,32 @@ export const metadata: Metadata = {
     creator: "@foconoenem",
     images: ["/foconoenemicon.png"],
   },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a0f" },
+  ],
 };
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export default function RootLayout({
@@ -67,31 +89,61 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const isTelemetryEnabled = process.env.NODE_ENV === "production";
+
   return (
-    <html lang="pt-BR" data-theme="system">
+    <html
+      lang="pt-BR"
+      data-theme="system"
+      suppressHydrationWarning
+    >
       <head>
-        <meta
-          name="google-adsense-account"
-          content="ca-pub-8449266040565561"
+        {/* Theme script to prevent FOUC */}
+        <script
+          dangerouslySetInnerHTML={{ __html: themeScript }}
         />
-        <link rel="icon" href="/foconoenemicon.png" type="image/png" sizes="any" />
+        <meta name="google-adsense-account" content="ca-pub-8449266040565561" />
+        <link
+          rel="icon"
+          href="/foconoenemicon.png"
+          type="image/png"
+          sizes="any"
+        />
         <link rel="apple-touch-icon" href="/foconoenemicon.png" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers>
-          <div className="flex min-h-screen flex-col bg-page-gradient text-foreground">
+          {/* Skip to main content link for accessibility */}
+          <a
+            href="#main-content"
+            className="skip-link"
+          >
+            Pular para o conteúdo principal
+          </a>
+
+          {/* Main layout wrapper */}
+          <div className="flex min-h-screen flex-col">
             <Header />
-            <div id="conteudo-principal" className="flex-1">
+
+            <main
+              id="main-content"
+              className="flex-1"
+            >
               {children}
-            </div>
+            </main>
+
             <Footer />
           </div>
+
+          {/* Floating elements */}
           <ThemeToggle />
           <CookieConsent />
+
+          {/* SEO and analytics */}
           <StructuredData />
           <AdSenseLoader />
+
           {isTelemetryEnabled && (
             <>
               <SpeedInsights debug={false} />
