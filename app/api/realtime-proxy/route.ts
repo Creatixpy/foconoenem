@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { RealtimeChannel } from '@supabase/supabase-js';
-import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { createAdminClient } from '@/lib/db';
 
 export const runtime = 'nodejs';
 
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'topicId é obrigatório.' }, { status: 400 });
   }
 
-  const supabase = await getSupabaseAdmin();
+  const supabase = createAdminClient();
   if (!supabase) {
     return NextResponse.json(
       { error: 'Supabase service role não configurado.' },

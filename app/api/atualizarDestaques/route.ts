@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authorizeAdmin } from '@/lib/admin-auth';
-import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { createAdminClient, type SupabaseClient, type Database } from '@/lib/db';
 import { buildGroqProviders, GROQ_MAX_ATTEMPTS, isRateLimitError } from '@/lib/ai/groq';
 
 type NoticiaResumo = {
@@ -11,7 +11,7 @@ type NoticiaResumo = {
   tags: string[] | null;
 };
 
-async function isUpdateNeeded(client: Awaited<ReturnType<typeof getSupabaseAdmin>>) {
+async function isUpdateNeeded(client: SupabaseClient<Database> | null) {
   if (!client) return false;
 
   try {
@@ -43,7 +43,7 @@ async function isUpdateNeeded(client: Awaited<ReturnType<typeof getSupabaseAdmin
   }
 }
 
-async function atualizarTimestamp(client: Awaited<ReturnType<typeof getSupabaseAdmin>>) {
+async function atualizarTimestamp(client: SupabaseClient<Database> | null) {
   if (!client) return;
 
   try {
@@ -145,7 +145,7 @@ async function selectHighlightsWithGroq(noticias: NoticiaResumo[]) {
   throw finalError;
 }
 
-async function processAutomaticUpdate(client: Awaited<ReturnType<typeof getSupabaseAdmin>>) {
+async function processAutomaticUpdate(client: SupabaseClient<Database> | null) {
   if (!client) {
     throw new Error('Supabase service role não configurado.');
   }
@@ -201,7 +201,7 @@ async function processAutomaticUpdate(client: Awaited<ReturnType<typeof getSupab
 }
 
 export async function GET(request: NextRequest) {
-  const supabase = await getSupabaseAdmin();
+  const supabase = createAdminClient();
   if (!supabase) {
     return NextResponse.json(
       { error: 'Supabase service role não configurado.' },

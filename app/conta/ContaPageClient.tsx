@@ -26,7 +26,7 @@ import {
   Legend, 
   ResponsiveContainer
 } from "recharts";
-import { supabase } from "@/lib/supabase";
+import { getBrowserClient } from "@/lib/db";
 import { withTimeout } from "@/lib/with-timeout";
 import { isAbortError } from "@/lib/errors";
 
@@ -123,6 +123,7 @@ export default function ContaPageClient() {
       try {
         await fetchLatestStatistics();
 
+        const supabase = getBrowserClient();
         const essaysResponse = await withTimeout(
           async () =>
             await supabase
@@ -161,6 +162,7 @@ export default function ContaPageClient() {
   useEffect(() => {
     if (!userId) return;
 
+    const supabase = getBrowserClient();
     const channel = supabase
       .channel(`account-updates-${userId}`)
       .on(

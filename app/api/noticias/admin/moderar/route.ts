@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authorizeAdmin } from "@/lib/admin-auth";
-import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { createAdminClient } from '@/lib/db';
 import { buildGroqProviders, GROQ_MAX_ATTEMPTS, GroqProvider, isRateLimitError } from "@/lib/ai/groq";
 
 const MAX_NEWS_TO_REVIEW = 25;
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const supabaseAdmin = await getSupabaseAdmin();
+  const supabaseAdmin = createAdminClient();
 
   if (!supabaseAdmin) {
     return NextResponse.json(

@@ -1,6 +1,6 @@
 'use server';
 
-import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { createAdminClient } from '@/lib/db';
 
 export type RateLimitResult = {
   allowed: boolean;
@@ -14,7 +14,7 @@ export async function checkRateLimit(
   maxRequests: number,
   windowMinutes: number
 ): Promise<RateLimitResult> {
-  const supabase = await getSupabaseAdmin();
+  const supabase = createAdminClient();
   const resetAt = new Date(Date.now() + windowMinutes * 60 * 1000);
 
   if (!supabase) {

@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback, useMemo, useId, type Clipboar
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getOperatingHoursInfo, type OperatingHoursInfo } from "@/lib/schedule";
-import { supabase } from "@/lib/supabase";
+import { getBrowserClient } from "@/lib/db";
 import { useAuth } from "@/lib/auth/AuthContext";
 
 const guidanceSteps = [
@@ -255,6 +255,7 @@ export default function RedacaoPageClient() {
         payload.textoApoio2 = generatedText2;
       }
 
+      const supabase = getBrowserClient();
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData?.session?.access_token;
       if (!accessToken) {

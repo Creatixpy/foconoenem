@@ -1,12 +1,12 @@
 'use server';
 
-import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { createAdminClient } from '@/lib/db';
 
 const NOTICIA_FIELDS =
   'id,titulo,slug,resumo,conteudo,imagem_url,autor,data_publicacao,tags,destaque,created_at,fonte_url';
 
-async function requireSupabaseAdmin() {
-  const client = await getSupabaseAdmin();
+function requireSupabaseAdmin() {
+  const client = createAdminClient();
   if (!client) {
     throw new Error('Supabase service role não configurado.');
   }
@@ -20,7 +20,7 @@ export async function listNoticias(options: {
   destaque?: boolean;
 }) {
   const { limit, offset, tag, destaque } = options;
-  const supabase = await requireSupabaseAdmin();
+  const supabase = requireSupabaseAdmin();
 
   let query = supabase.from('noticias').select(NOTICIA_FIELDS).order('data_publicacao', { ascending: false });
 
@@ -41,7 +41,7 @@ export async function listNoticias(options: {
 }
 
 export async function fetchNoticiaBySlug(slug: string) {
-  const supabase = await requireSupabaseAdmin();
+  const supabase = requireSupabaseAdmin();
   const { data, error } = await supabase.from('noticias').select(NOTICIA_FIELDS).eq('slug', slug).maybeSingle();
   if (error) {
     throw error;
@@ -50,7 +50,7 @@ export async function fetchNoticiaBySlug(slug: string) {
 }
 
 export async function searchNoticias(termo: string, limit: number) {
-  const supabase = await requireSupabaseAdmin();
+  const supabase = requireSupabaseAdmin();
   const sanitizedTerm = termo.trim();
   if (!sanitizedTerm) {
     return [];
@@ -74,7 +74,7 @@ export async function searchNoticias(termo: string, limit: number) {
 }
 
 export async function fetchNoticiasPorTag(tag: string, limit: number) {
-  const supabase = await requireSupabaseAdmin();
+  const supabase = requireSupabaseAdmin();
   const { data, error } = await supabase
     .from('noticias')
     .select(NOTICIA_FIELDS)

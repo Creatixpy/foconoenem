@@ -503,8 +503,9 @@ export async function POST(request: NextRequest) {
 
   if (!alignmentResult.aligned) {
     await trackEvent({
-      eventType: 'essay_rejected_theme',
+      eventType: 'error_occurred',
       metadata: {
+        error_type: 'essay_rejected_theme',
         theme_type: submission.usarTemaPadrao !== false ? 'padrao' : submission.tema ? 'personalizado' : 'gerado',
         justification: alignmentResult.justification,
         tema: temaFinal,

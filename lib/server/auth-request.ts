@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { SupabaseClient, User } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
-import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { createAdminClient } from '@/lib/db';
 
 type AuthSuccess = {
   supabase: SupabaseClient<Database>;
@@ -39,7 +39,7 @@ export async function resolveRequestUser(
     };
   }
 
-  const supabase = await getSupabaseAdmin();
+  const supabase = createAdminClient();
   if (!supabase) {
     return {
       error: NextResponse.json(
