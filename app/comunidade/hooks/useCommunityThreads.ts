@@ -42,6 +42,9 @@ export function useCommunityThreads(
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isFetchingRef = useRef(false);
+  const hasLoadedRef = useRef<string | null>(null);
+
+  // Store options in refs to avoid dependency issues
   const onThreadsLoadedRef = useRef<UseCommunityThreadsOptions['onThreadsLoaded']>(options?.onThreadsLoaded);
   const onPostInsertedRef = useRef<UseCommunityThreadsOptions['onPostInserted']>(options?.onPostInserted);
   const onCommentInsertedRef = useRef<UseCommunityThreadsOptions['onCommentInserted']>(options?.onCommentInserted);
@@ -69,6 +72,7 @@ export function useCommunityThreads(
 
       const fetchedThreads = await fetchCommunityThreads(topicId, 25);
       setThreads(fetchedThreads);
+      hasLoadedRef.current = topicId;
       onThreadsLoadedRef.current?.(fetchedThreads);
     } catch (loadError) {
       if (isAbortError(loadError)) {
@@ -85,10 +89,25 @@ export function useCommunityThreads(
     }
   }, [topicId]);
 
+  // Store loadThreads in ref for event handlers
+  const loadThreadsRef = useRef(loadThreads);
   useEffect(() => {
-    void loadThreads();
+    loadThreadsRef.current = loadThreads;
   }, [loadThreads]);
 
+  // Initial load when topic changes
+  useEffect(() => {
+    // Only load if topic changed from what we already loaded
+    if (topicId && hasLoadedRef.current !== topicId) {
+      void loadThreads();
+    } else if (!topicId) {
+      setThreads([]);
+      setPostLikes({});
+      hasLoadedRef.current = null;
+    }
+  }, [topicId, loadThreads]);
+
+  // Visibility and online handlers - use ref for loadThreads
   useEffect(() => {
     if (typeof window === "undefined" || typeof document === "undefined") {
       return;
@@ -96,13 +115,13 @@ export function useCommunityThreads(
 
     const handleVisibility = () => {
       if (document.visibilityState === "visible" && !isFetchingRef.current) {
-        void loadThreads();
+        void loadThreadsRef.current();
       }
     };
 
     const handleOnline = () => {
       if (!isFetchingRef.current) {
-        void loadThreads();
+        void loadThreadsRef.current();
       }
     };
 
@@ -115,7 +134,7 @@ export function useCommunityThreads(
       window.removeEventListener("focus", handleVisibility);
       window.removeEventListener("online", handleOnline);
     };
-  }, [loadThreads]);
+  }, []); // No dependencies - uses refs
 
   useEffect(() => {
     if (typeof window === "undefined") {

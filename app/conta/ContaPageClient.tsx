@@ -4,26 +4,26 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { 
-  getUserStatistics, 
+import {
+  getUserStatistics,
   recalculateUserStatistics,
 } from "@/lib/auth/service";
 import type { UserStatistics } from "@/lib/auth/types";
-import { 
-  LineChart, 
-  Line, 
-  BarChart, 
-  Bar, 
-  RadarChart, 
-  Radar, 
-  PolarGrid, 
-  PolarAngleAxis, 
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  RadarChart,
+  Radar,
+  PolarGrid,
+  PolarAngleAxis,
   PolarRadiusAxis,
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
   ResponsiveContainer
 } from "recharts";
 import { getBrowserClient } from "@/lib/db";
@@ -41,6 +41,7 @@ export default function ContaPageClient() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const statsRequestRef = useRef<Promise<UserStatistics | null> | null>(null);
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hasLoadedRef = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -110,16 +111,25 @@ export default function ContaPageClient() {
     });
   }, [fetchLatestStatistics, scheduleStatisticsRetry, setErrorMessage]);
 
-  useEffect(() => {
-    const loadData = async () => {
-      if (!userId) {
-        setLoading(false);
-        return;
-      }
+  // Store the refresh function in a ref to avoid subscription recreation
+  const triggerRefreshRef = useRef<() => void>(() => {});
 
+  useEffect(() => {
+    triggerRefreshRef.current = triggerStatisticsRefresh;
+  }, [triggerStatisticsRefresh]);
+
+  // Initial data load - only once per userId
+  useEffect(() => {
+    if (!userId || hasLoadedRef.current) {
+      if (!userId) setLoading(false);
+      return;
+    }
+
+    const loadData = async () => {
+      hasLoadedRef.current = true;
       setLoading(true);
       setErrorMessage(null);
-      
+
       try {
         await fetchLatestStatistics();
 
@@ -157,8 +167,10 @@ export default function ContaPageClient() {
     };
 
     void loadData();
-  }, [userId, fetchLatestStatistics, scheduleStatisticsRetry]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]); // Callbacks excluded - using refs to prevent infinite loops
 
+  // Realtime subscription - use refs for callbacks to prevent recreation
   useEffect(() => {
     if (!userId) return;
 
@@ -169,7 +181,7 @@ export default function ContaPageClient() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'user_statistics', filter: `user_id=eq.${userId}` },
         () => {
-          triggerStatisticsRefresh();
+          triggerRefreshRef.current();
         }
       )
       .on(
@@ -206,7 +218,7 @@ export default function ContaPageClient() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'quiz_results', filter: `user_id=eq.${userId}` },
         () => {
-          triggerStatisticsRefresh();
+          triggerRefreshRef.current();
         }
       )
       .subscribe();
@@ -214,8 +226,9 @@ export default function ContaPageClient() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId, triggerStatisticsRefresh]);
+  }, [userId]); // Only depend on userId - use refs for callbacks
 
+  // Visibility and focus handlers - use ref for callback
   useEffect(() => {
     if (typeof window === 'undefined' || typeof document === 'undefined') {
       return;
@@ -223,7 +236,7 @@ export default function ContaPageClient() {
 
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
-        triggerStatisticsRefresh();
+        triggerRefreshRef.current();
       }
     };
 
@@ -236,7 +249,7 @@ export default function ContaPageClient() {
       window.removeEventListener('focus', handleVisibility);
       window.removeEventListener('online', handleVisibility);
     };
-  }, [triggerStatisticsRefresh]);
+  }, []); // No dependencies - uses ref
 
   const handleRecalculate = async () => {
     if (!userId) return;

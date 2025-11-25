@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { COMMUNITY_TERMS_VERSION } from "@/lib/auth/constants";
 import {
@@ -329,54 +329,72 @@ export default function CommunityPageClient() {
     [fetchJson, setPostLikes, user?.id]
   );
 
+  // Track hydration state to prevent infinite loops
+  const isHydratingRef = useRef(false);
+  const hydratedProfilesRef = useRef<Set<string>>(new Set());
+  const hydratedAchievementsRef = useRef<Set<string>>(new Set());
+  const hydratedLikesRef = useRef<Set<string>>(new Set());
+
+  // Hydrate missing data when threads change - with loop protection
   useEffect(() => {
-    if (threads.length === 0) {
+    if (threads.length === 0 || isHydratingRef.current) {
       return;
     }
 
-    const missingProfiles = new Set<string>();
-    const missingAchievements = new Set<string>();
+    const missingProfiles: string[] = [];
+    const missingAchievements: string[] = [];
     const missingLikes: string[] = [];
 
     threads.forEach((thread) => {
-      if (!profileCache[thread.user_id]) {
-        missingProfiles.add(thread.user_id);
+      // Only hydrate profiles we haven't already requested
+      if (!hydratedProfilesRef.current.has(thread.user_id) && !profileCache[thread.user_id]) {
+        missingProfiles.push(thread.user_id);
+        hydratedProfilesRef.current.add(thread.user_id);
       }
-      if (!achievementCache[thread.user_id]) {
-        missingAchievements.add(thread.user_id);
+      if (!hydratedAchievementsRef.current.has(thread.user_id) && !achievementCache[thread.user_id]) {
+        missingAchievements.push(thread.user_id);
+        hydratedAchievementsRef.current.add(thread.user_id);
       }
+
       thread.comments.forEach((comment) => {
-        if (!profileCache[comment.user_id]) {
-          missingProfiles.add(comment.user_id);
+        if (!hydratedProfilesRef.current.has(comment.user_id) && !profileCache[comment.user_id]) {
+          missingProfiles.push(comment.user_id);
+          hydratedProfilesRef.current.add(comment.user_id);
         }
-        if (!achievementCache[comment.user_id]) {
-          missingAchievements.add(comment.user_id);
+        if (!hydratedAchievementsRef.current.has(comment.user_id) && !achievementCache[comment.user_id]) {
+          missingAchievements.push(comment.user_id);
+          hydratedAchievementsRef.current.add(comment.user_id);
         }
       });
 
-      if (!postLikes[thread.id]) {
+      if (!hydratedLikesRef.current.has(thread.id) && !postLikes[thread.id]) {
         missingLikes.push(thread.id);
+        hydratedLikesRef.current.add(thread.id);
       }
     });
 
-    if (missingProfiles.size > 0) {
-      void hydrateProfiles(Array.from(missingProfiles));
+    // Only proceed if we have missing data to fetch
+    if (missingProfiles.length === 0 && missingAchievements.length === 0 && missingLikes.length === 0) {
+      return;
     }
-    if (missingAchievements.size > 0) {
-      void hydrateAchievements(Array.from(missingAchievements));
-    }
-    if (missingLikes.length > 0) {
-      void hydrateLikes(missingLikes);
-    }
-  }, [
-    achievementCache,
-    hydrateAchievements,
-    hydrateLikes,
-    hydrateProfiles,
-    postLikes,
-    profileCache,
-    threads,
-  ]);
+
+    isHydratingRef.current = true;
+
+    const hydrateAll = async () => {
+      try {
+        await Promise.all([
+          missingProfiles.length > 0 ? hydrateProfiles(missingProfiles) : Promise.resolve(),
+          missingAchievements.length > 0 ? hydrateAchievements(missingAchievements) : Promise.resolve(),
+          missingLikes.length > 0 ? hydrateLikes(missingLikes) : Promise.resolve(),
+        ]);
+      } finally {
+        isHydratingRef.current = false;
+      }
+    };
+
+    void hydrateAll();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [threads]); // Only depend on threads - cache objects intentionally excluded to prevent infinite loops
 
   const loadStatistics = useCallback(async () => {
     if (!user) return;
@@ -399,7 +417,8 @@ export default function CommunityPageClient() {
     } catch (error) {
       console.error("Erro ao contar comentários:", error);
     }
-  }, [fetchAuthorizedJson, setCommentCount, user]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchAuthorizedJson, user]); // setCommentCount excluded - stable setter reference
 
   const loadUserBadges = useCallback(async () => {
     if (!user) return;
@@ -454,13 +473,18 @@ export default function CommunityPageClient() {
     void loadCommentCount();
   }, [authLoading, user, loadCommentCount, loadStatistics, loadUserBadges]);
 
+  // Track if gamification has been evaluated to prevent re-evaluation loops
+  const hasEvaluatedGamificationRef = useRef(false);
+
   useEffect(() => {
-    if (!user || !statistics) {
+    if (!user || !statistics || hasEvaluatedGamificationRef.current) {
       return;
     }
 
+    // Only evaluate once when we have valid user and statistics
+    hasEvaluatedGamificationRef.current = true;
     void evaluateGamification();
-  }, [evaluateGamification, statistics, user, commentCount]);
+  }, [evaluateGamification, statistics, user]); // Remove commentCount - it causes loops
 
   const handleDeletePost = async (postId: string) => {
     if (!user) return;
