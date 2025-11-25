@@ -38,5 +38,16 @@ export async function withTimeout<T>(
   }
 }
 
-// Export singleton instance
-export const supabase = getSupabaseClient();
+// Lazy singleton - only initializes when first accessed (avoids build-time errors)
+let _supabaseInstance: SupabaseClient<Database> | null = null;
+
+export const supabase = new Proxy({} as SupabaseClient<Database>, {
+  get(_, prop) {
+    if (!_supabaseInstance) {
+      _supabaseInstance = getBrowserClient();
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const value = (_supabaseInstance as any)[prop];
+    return typeof value === 'function' ? value.bind(_supabaseInstance) : value;
+  },
+});
