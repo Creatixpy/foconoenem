@@ -122,7 +122,6 @@ export default function RootLayout({
             Pular para o conteúdo principal
           </a>
 
-          {/* Main layout wrapper */}
           <div className="flex min-h-screen flex-col">
             <Header />
 
@@ -136,11 +135,9 @@ export default function RootLayout({
             <Footer />
           </div>
 
-          {/* Floating elements */}
           <ThemeToggle />
           <CookieConsent />
 
-          {/* SEO and analytics */}
           <StructuredData />
           <AdSenseLoader />
 

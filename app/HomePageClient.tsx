@@ -133,7 +133,6 @@ export default function HomePageClient() {
         className="relative overflow-hidden px-4 pb-24 pt-20 sm:px-6 lg:px-8 lg:pt-32"
         aria-labelledby="home-hero-heading home-hero-description"
       >
-          {/* Background decoration */}
           <div className="absolute inset-0 -z-10 overflow-hidden">
             <div className="absolute -top-[30%] -left-[10%] w-[70%] h-[70%] rounded-full bg-primary/5 blur-3xl" />
             <div className="absolute top-[20%] -right-[10%] w-[60%] h-[60%] rounded-full bg-accent/5 blur-3xl" />

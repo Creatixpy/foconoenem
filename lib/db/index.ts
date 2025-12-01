@@ -15,9 +15,6 @@
  * ```
  */
 
-// ============================================================================
-// Client Exports
-// ============================================================================
 
 export {
   getBrowserClient,
@@ -32,9 +29,6 @@ export {
   type QueryTimeoutLevel,
 } from './client';
 
-// ============================================================================
-// Type Exports
-// ============================================================================
 
 export type {
   // Row types
@@ -90,9 +84,6 @@ export type {
   PaginatedResult,
 } from './types';
 
-// ============================================================================
-// Transformer Exports
-// ============================================================================
 
 export {
   toUserProfile,
@@ -106,9 +97,6 @@ export {
   fromNoticiaInsert,
 } from './transformers';
 
-// ============================================================================
-// Repository Exports (namespaced)
-// ============================================================================
 
 import * as usersRepo from './repositories/users';
 import * as essaysRepo from './repositories/essays';
@@ -124,19 +112,14 @@ export const news = newsRepo;
 export const community = communityRepo;
 export const analytics = analyticsRepo;
 
-// ============================================================================
-// Convenience namespace export
-// ============================================================================
 
 import { getBrowserClient, createServerClient, createAdminClient } from './client';
 
 export const db = {
-  // Clients
   getBrowserClient,
   createServerClient,
   createAdminClient,
   
-  // Repositories
   users: usersRepo,
   essays: essaysRepo,
   quizzes: quizzesRepo,

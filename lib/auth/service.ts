@@ -32,7 +32,6 @@ import type {
  */
 export async function signUp(data: SignUpData): Promise<AuthResult<{ needsConfirmation: boolean }>> {
   try {
-    // Validate email
     const emailValidation = validateEmail(data.email);
     if (!emailValidation.isValid) {
       return {
@@ -44,7 +43,6 @@ export async function signUp(data: SignUpData): Promise<AuthResult<{ needsConfir
       };
     }
 
-    // Validate password
     const passwordValidation = validatePassword(data.password);
     if (!passwordValidation.isValid) {
       return {
@@ -56,7 +54,6 @@ export async function signUp(data: SignUpData): Promise<AuthResult<{ needsConfir
       };
     }
 
-    // Sanitize inputs
     const nomeCompleto = data.nomeCompleto ? sanitizeInput(data.nomeCompleto) : undefined;
     const objetivo = data.objetivo ? sanitizeInput(data.objetivo) : undefined;
 
@@ -72,7 +69,6 @@ export async function signUp(data: SignUpData): Promise<AuthResult<{ needsConfir
     });
 
     if (error) {
-      // Map Supabase errors to our error codes
       if (error.message.includes('already registered')) {
         return {
           success: false,
@@ -85,7 +81,6 @@ export async function signUp(data: SignUpData): Promise<AuthResult<{ needsConfir
       throw error;
     }
 
-    // Create profile if session is available (email confirmed or confirmation disabled)
     if (authData.session?.user) {
       try {
         await createUserProfile(authData.session.user.id, nomeCompleto, objetivo);
@@ -119,7 +114,6 @@ export async function signIn(data: SignInData): Promise<AuthResult> {
   const rateLimitKey = `login:${data.email.toLowerCase()}`;
 
   try {
-    // Check rate limit
     const rateLimit = checkRateLimit(rateLimitKey);
     if (!rateLimit.allowed) {
       return {
@@ -131,7 +125,6 @@ export async function signIn(data: SignInData): Promise<AuthResult> {
       };
     }
 
-    // Validate email
     const emailValidation = validateEmail(data.email);
     if (!emailValidation.isValid) {
       return {
@@ -149,7 +142,6 @@ export async function signIn(data: SignInData): Promise<AuthResult> {
     });
 
     if (error) {
-      // Record failed attempt
       recordRateLimitAttempt(rateLimitKey);
 
       if (error.message.includes('Invalid login credentials')) {
@@ -175,7 +167,6 @@ export async function signIn(data: SignInData): Promise<AuthResult> {
       throw error;
     }
 
-    // Clear rate limit on success
     clearRateLimit(rateLimitKey);
     updateLastActivity();
 
@@ -201,7 +192,6 @@ export async function signInWithGoogle(options?: {
   redirectTo?: string;
 }): Promise<AuthResult> {
   try {
-    // Build callback URL
     const baseRedirect = process.env.NODE_ENV === 'production'
       ? 'https://foconoenem.vercel.app/auth/callback'
       : `${window.location.origin}/auth/callback`;
@@ -213,7 +203,6 @@ export async function signInWithGoogle(options?: {
       callbackUrl.searchParams.set('next', safeNext);
     }
 
-    // Store signup context for later profile creation
     if (options?.nomeCompleto || options?.objetivo) {
       try {
         const context: OAuthSignupContext = {
@@ -226,7 +215,6 @@ export async function signInWithGoogle(options?: {
           JSON.stringify(context)
         );
       } catch {
-        // Ignore storage errors
       }
     }
 
@@ -345,7 +333,6 @@ export async function requestPasswordReset(email: string): Promise<AuthResult> {
     return { success: true };
   } catch (error) {
     console.error('Erro ao solicitar reset de senha:', error);
-    // Don't reveal if email exists or not
     return { success: true };
   }
 }
@@ -385,7 +372,6 @@ export async function updatePassword(newPassword: string): Promise<AuthResult> {
   }
 }
 
-// ==================== Profile Management ====================
 
 /**
  * Get user profile
@@ -497,7 +483,6 @@ export async function updateUserProfile(
   }
 }
 
-// ==================== Statistics ====================
 
 /**
  * Get user statistics
@@ -572,7 +557,6 @@ export async function recalculateUserStatistics(userId: string): Promise<UserSta
   }
 }
 
-// ==================== Goals ====================
 
 /**
  * Get user goals
@@ -667,7 +651,6 @@ export async function deleteUserGoal(goalId: string): Promise<void> {
   });
 }
 
-// ==================== Achievements ====================
 
 /**
  * Get user achievements
@@ -693,7 +676,6 @@ export async function getUserAchievements(userId: string): Promise<UserAchieveme
   }
 }
 
-// ==================== Community ====================
 
 /**
  * Confirm community age

@@ -20,7 +20,6 @@ import { SESSION_CONFIG } from './constants';
 import { updateLastActivity, isSessionIdle, clearAuthStorage } from './security';
 import type { UserProfile, OAuthSignupContext } from './types';
 
-// Import profile functions directly to avoid circular deps
 async function getUserProfile(userId: string): Promise<UserProfile | null> {
   try {
     const { data, error } = await supabase
@@ -142,7 +141,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const isMountedRef = useRef(true);
   const activityIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Load signup context from sessionStorage on mount
   useEffect(() => {
     if (typeof window !== 'undefined' && signupContextRef.current === null) {
       try {
@@ -161,7 +159,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, []);
 
-  // Resolve profile for a user
   const resolveProfile = useCallback(async (sessionUser: User | null) => {
     if (!sessionUser) {
       setProfile(null);
@@ -215,7 +212,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, []);
 
-  // Refresh profile
   const refreshProfile = useCallback(async () => {
     if (user) {
       const userProfile = await getUserProfile(user.id);
@@ -225,7 +221,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [user]);
 
-  // Refresh auth state
   const refreshAuth = useCallback(async () => {
     const result = await refreshSession();
     if (result.success) {
@@ -237,7 +232,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, []);
 
-  // Sign out handler
   const handleSignOut = useCallback(async () => {
     await signOut();
     if (isMountedRef.current) {
@@ -247,16 +241,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, []);
 
-  // Activity tracking and session refresh
   useEffect(() => {
     if (!session) return;
 
-    // Update activity on user interactions
     const handleActivity = () => {
       updateLastActivity();
     };
 
-    // Check for idle timeout and session refresh periodically
     const checkSession = async () => {
       if (isSessionIdle()) {
         console.log('Sessão inativa, fazendo logout...');
@@ -264,7 +255,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return;
       }
 
-      // Refresh session if needed (within 1 hour of expiry)
       if (session.expires_at) {
         const expiresAt = session.expires_at * 1000;
         const refreshThreshold = SESSION_CONFIG.REFRESH_THRESHOLD * 1000;
@@ -275,16 +265,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     };
 
-    // Add activity listeners
     const events = ['mousedown', 'keydown', 'touchstart', 'scroll'];
     events.forEach(event => {
       window.addEventListener(event, handleActivity, { passive: true });
     });
 
-    // Check session every minute
     activityIntervalRef.current = setInterval(checkSession, 60 * 1000);
 
-    // Initial activity update
     updateLastActivity();
 
     return () => {
@@ -297,7 +284,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     };
   }, [session, handleSignOut, refreshAuth]);
 
-  // Bootstrap auth on mount
   useEffect(() => {
     isMountedRef.current = true;
 
@@ -331,7 +317,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     void bootstrap();
 
-    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
         if (!isMountedRef.current) return;

@@ -25,20 +25,17 @@ export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const { user, profile, signOut } = useAuth();
 
-  // Handle scroll state
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 16);
     };
 
-    // Initial check
     handleScroll();
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Close mobile menu on escape key
   useEffect(() => {
     if (!mobileMenuOpen) return;
 
@@ -52,7 +49,6 @@ export default function Header() {
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [mobileMenuOpen]);
 
-  // Close user menu when clicking outside
   useEffect(() => {
     if (!showUserMenu) return;
 
@@ -67,7 +63,6 @@ export default function Header() {
     return () => document.removeEventListener("click", handleClickOutside);
   }, [showUserMenu]);
 
-  // Lock body scroll when mobile menu is open
   useEffect(() => {
     if (mobileMenuOpen) {
       document.body.style.overflow = "hidden";
@@ -103,7 +98,6 @@ export default function Header() {
     setMobileMenuOpen(false);
   }, []);
 
-  // Dynamic classes based on scroll state
   const headerSurfaceClass = isScrolled
     ? "header-surface header-surface--scrolled"
     : "header-surface header-surface--top";
@@ -127,7 +121,6 @@ export default function Header() {
         role="banner"
       >
         <div className="mx-auto flex h-[4.5rem] max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          {/* Logo */}
           <Link
             href="/"
             className="flex items-center gap-2.5 transition-transform hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-lg"
@@ -148,7 +141,6 @@ export default function Header() {
             </span>
           </Link>
 
-          {/* Desktop Navigation */}
           <nav
             className="hidden items-center gap-1 md:flex"
             aria-label="Navegação principal"
@@ -164,7 +156,6 @@ export default function Header() {
             ))}
           </nav>
 
-          {/* Desktop Actions */}
           <div className="flex items-center gap-3">
             {user ? (
               <div className="relative" data-user-menu>
@@ -198,7 +189,6 @@ export default function Header() {
                   </svg>
                 </button>
 
-                {/* User Dropdown Menu */}
                 {showUserMenu && (
                   <div
                     className="absolute right-0 mt-2 w-56 origin-top-right animate-fadeIn rounded-xl border border-border-color bg-card-bg shadow-xl"
@@ -275,7 +265,6 @@ export default function Header() {
               </div>
             )}
 
-            {/* Mobile Menu Button */}
             <button
               type="button"
               className={`inline-flex h-10 w-10 items-center justify-center rounded-xl transition-colors md:hidden ${
@@ -325,7 +314,6 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Mobile Navigation */}
         {mobileMenuOpen && (
           <div
             id="mobile-navigation"
@@ -360,7 +348,6 @@ export default function Header() {
               ))}
             </nav>
 
-            {/* Mobile Auth Buttons */}
             {!user && (
               <div className="mt-6 space-y-3">
                 <Link
@@ -380,7 +367,6 @@ export default function Header() {
               </div>
             )}
 
-            {/* Mobile User Menu */}
             {user && (
               <div className="mt-6 border-t border-border-color pt-4">
                 <div className="mb-4 flex items-center gap-3 px-4">
@@ -444,7 +430,6 @@ export default function Header() {
         )}
       </header>
 
-      {/* Mobile menu backdrop */}
       {mobileMenuOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm md:hidden"

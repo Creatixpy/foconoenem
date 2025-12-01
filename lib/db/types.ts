@@ -5,13 +5,9 @@
 
 import type { Database } from '@/types/supabase';
 
-// ============================================================================
-// Table Row Types (from database)
-// ============================================================================
 
 export type Tables = Database['public']['Tables'];
 
-// User-related
 export type UserProfileRow = Tables['user_profiles']['Row'];
 export type UserProfileInsert = Tables['user_profiles']['Insert'];
 export type UserProfileUpdate = Tables['user_profiles']['Update'];
@@ -27,7 +23,6 @@ export type UserGoalUpdate = Tables['user_goals']['Update'];
 export type UserAchievementRow = Tables['user_achievements']['Row'];
 export type AchievementRow = Tables['achievements']['Row'];
 
-// Content
 export type EssayResultRow = Tables['essay_results']['Row'];
 export type EssayResultInsert = Tables['essay_results']['Insert'];
 
@@ -40,7 +35,6 @@ export type NoticiaUpdate = Tables['noticias']['Update'];
 
 export type CachedThemeRow = Tables['cached_themes']['Row'];
 
-// Community
 export type CommunityTopicRow = Tables['community_topics']['Row'];
 export type CommunityPostRow = Tables['community_posts']['Row'];
 export type CommunityPostInsert = Tables['community_posts']['Insert'];
@@ -48,15 +42,11 @@ export type CommunityCommentRow = Tables['community_comments']['Row'];
 export type CommunityCommentInsert = Tables['community_comments']['Insert'];
 export type CommunityPostLikeRow = Tables['community_post_likes']['Row'];
 
-// System
 export type AnalyticsEventRow = Tables['analytics_events']['Row'];
 export type AnalyticsEventInsert = Tables['analytics_events']['Insert'];
 export type RateLimitRow = Tables['rate_limits']['Row'];
 export type ConfiguracaoRow = Tables['configuracoes']['Row'];
 
-// ============================================================================
-// Enums
-// ============================================================================
 
 export type EventType = Database['public']['Enums']['event_type_enum'];
 
@@ -65,9 +55,6 @@ export type EssayOrigin = 'IA' | 'Simulação';
 export type PostStatus = 'published' | 'archived';
 export type CommentStatus = 'visible' | 'hidden';
 
-// ============================================================================
-// Application Models (transformed from DB rows)
-// ============================================================================
 
 /** User profile with snake_case to camelCase conversion */
 export interface UserProfile {
@@ -194,9 +181,6 @@ export interface CommunityPost {
   userHasLiked?: boolean;
 }
 
-// ============================================================================
-// Query Options
-// ============================================================================
 
 export interface PaginationOptions {
   page?: number;
@@ -213,9 +197,6 @@ export interface QueryOptions {
   sort?: SortOptions;
 }
 
-// ============================================================================
-// Result Types
-// ============================================================================
 
 export interface QueryResult<T> {
   data: T;

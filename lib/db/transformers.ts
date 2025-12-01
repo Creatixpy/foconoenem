@@ -19,9 +19,7 @@ import type {
   CommunityPost,
 } from './types';
 
-// ============================================================================
 // Utility Functions
-// ============================================================================
 
 /**
  * Safely parse a numeric value from various input types
@@ -36,9 +34,6 @@ function parseNumeric(value: unknown): number | null {
   return null;
 }
 
-// ============================================================================
-// User Profile Transformers
-// ============================================================================
 
 export function toUserProfile(row: UserProfileRow): UserProfile {
   return {
@@ -80,9 +75,6 @@ export function fromUserProfileUpdate(profile: Partial<UserProfile>): Record<str
   return updates;
 }
 
-// ============================================================================
-// User Statistics Transformers
-// ============================================================================
 
 export function toUserStatistics(row: UserStatisticsRow): UserStatistics {
   return {
@@ -113,9 +105,6 @@ export function toUserStatistics(row: UserStatisticsRow): UserStatistics {
   };
 }
 
-// ============================================================================
-// Essay Result Transformers
-// ============================================================================
 
 export function toEssayResult(row: EssayResultRow): EssayResult {
   return {
@@ -162,9 +151,6 @@ export function fromEssayResult(
   };
 }
 
-// ============================================================================
-// Quiz Result Transformers
-// ============================================================================
 
 export function toQuizResult(row: QuizResultRow): QuizResult {
   return {
@@ -180,9 +166,6 @@ export function toQuizResult(row: QuizResultRow): QuizResult {
   };
 }
 
-// ============================================================================
-// News Transformers
-// ============================================================================
 
 export function toNoticia(row: NoticiaRow): Noticia {
   return {
@@ -217,9 +200,6 @@ export function fromNoticiaInsert(noticia: Omit<Noticia, 'id' | 'createdAt' | 'u
   };
 }
 
-// ============================================================================
-// Community Transformers
-// ============================================================================
 
 export function toCommunityPost(
   row: CommunityPostRow,
