@@ -2,17 +2,17 @@
 
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import QuestionCard from "../components/QuestionCard";
+import { QuestionCard } from "../components/features/quiz";
 import { Question, QuizResult } from "@/types";
 import { getOperatingHoursInfo } from "@/lib/schedule";
 import { getBrowserClient } from "@/lib/db";
 
-const OperatingHoursIndicator = dynamic(() => import("../components/OperatingHoursIndicator"), {
+const OperatingHoursIndicator = dynamic(() => import("../components/ui/OperatingHoursIndicator").then(mod => ({ default: mod.default })), {
   ssr: false,
   loading: () => null,
 });
 
-const LazyQuizResults = dynamic(() => import("../components/QuizResults"), {
+const LazyQuizResults = dynamic(() => import("../components/features/quiz/QuizResults"), {
   ssr: false,
   loading: () => (
     <div className="card border-0 shadow-sm p-6 text-center">
@@ -183,12 +183,12 @@ export default function QuestoesPageClient() {
         const diagnostics = errorData?.diagnostics as Record<string, string> | undefined;
         const diagMessage = diagnostics
           ? Object.entries(diagnostics)
-              .map(([disc, msg]) => `${disc}: ${msg}`)
-              .join(" | ")
+            .map(([disc, msg]) => `${disc}: ${msg}`)
+            .join(" | ")
           : null;
         throw new Error(
           (errorData?.message || errorData?.error || "Erro ao carregar questões") +
-            (diagMessage ? ` (${diagMessage})` : "")
+          (diagMessage ? ` (${diagMessage})` : "")
         );
       }
 
@@ -489,11 +489,10 @@ export default function QuestoesPageClient() {
                       <button
                         key={discipline.name}
                         onClick={() => toggleDiscipline(discipline.name)}
-                        className={`group flex h-full flex-col rounded-2xl border-0 p-5 text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
-                          isSelected 
-                            ? "bg-primary/5 shadow-sm" 
+                        className={`group flex h-full flex-col rounded-2xl border-0 p-5 text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background ${isSelected
+                            ? "bg-primary/5 shadow-sm"
                             : "bg-muted-bg/30 shadow-sm hover:bg-muted-bg/50"
-                        }`}
+                          }`}
                       >
                         <span className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${discipline.accent} text-primary`}>
                           {discipline.icon}
@@ -501,9 +500,8 @@ export default function QuestoesPageClient() {
                         <strong className="text-base text-foreground">{discipline.name}</strong>
                         <span className="mt-2 text-sm text-foreground/60">{discipline.description}</span>
                         <span
-                          className={`mt-4 inline-flex w-fit items-center gap-2 rounded-full border-0 px-3 py-1 text-xs font-medium transition-colors ${
-                            isSelected ? "bg-primary/10 text-primary" : "bg-muted-bg/50 text-foreground/60"
-                          }`}
+                          className={`mt-4 inline-flex w-fit items-center gap-2 rounded-full border-0 px-3 py-1 text-xs font-medium transition-colors ${isSelected ? "bg-primary/10 text-primary" : "bg-muted-bg/50 text-foreground/60"
+                            }`}
                         >
                           {isSelected ? (
                             <>
@@ -576,14 +574,14 @@ export default function QuestoesPageClient() {
                   </div>
                   <h2 className="text-xl font-semibold text-foreground">Gerando suas questões...</h2>
                   <p className="mt-2 max-w-md text-sm text-foreground/60">
-                    Nossa IA está criando {selectedDisciplines.size * QUESTIONS_PER_DISCIPLINE} questões personalizadas 
-                    para {selectedDisciplines.size === 1 ? "a disciplina selecionada" : `as ${selectedDisciplines.size} disciplinas selecionadas`}. 
+                    Nossa IA está criando {selectedDisciplines.size * QUESTIONS_PER_DISCIPLINE} questões personalizadas
+                    para {selectedDisciplines.size === 1 ? "a disciplina selecionada" : `as ${selectedDisciplines.size} disciplinas selecionadas`}.
                     Isso pode levar alguns segundos.
                   </p>
                   <div className="mt-6 flex flex-wrap justify-center gap-2">
                     {Array.from(selectedDisciplines).map((discipline) => (
-                      <span 
-                        key={discipline} 
+                      <span
+                        key={discipline}
                         className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
                       >
                         {discipline}
