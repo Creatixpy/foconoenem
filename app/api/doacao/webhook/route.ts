@@ -14,7 +14,8 @@ function getStripe() {
   }
 
   stripeClient = new Stripe(secretKey, {
-    apiVersion: '2025-10-29.clover',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    apiVersion: '2025-09-30.clover' as any,
   });
 
   return stripeClient;
