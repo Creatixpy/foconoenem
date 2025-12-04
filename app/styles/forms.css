@@ -1,0 +1,282 @@
+/* ============================================================================
+   FORM ELEMENTS
+   ============================================================================ */
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+textarea,
+select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    color: var(--foreground);
+    font-family: inherit;
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+    transition:
+        border-color var(--duration-fast) var(--easing-default),
+        box-shadow var(--duration-fast) var(--easing-default);
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: var(--color-fg-subtle);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--color-primary-100);
+}
+
+[data-theme="dark"] input:focus,
+[data-theme="dark"] textarea:focus,
+[data-theme="dark"] select:focus {
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+}
+
+/* Form validation states */
+input:invalid:not(:placeholder-shown),
+textarea:invalid:not(:placeholder-shown) {
+    border-color: var(--danger);
+}
+
+/* Checkbox and radio styling */
+.form-checkbox,
+.form-radio {
+    accent-color: var(--primary);
+}
+
+/* ============================================================================
+   EDITOR CONTAINER (ESSAY WRITING)
+   ============================================================================ */
+
+.editor-container {
+    min-height: 520px;
+    padding: var(--space-6);
+    background-color: var(--card-bg);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    color: var(--foreground);
+    font-size: var(--text-base);
+    line-height: var(--leading-loose);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    transition:
+        border-color var(--duration-fast) var(--easing-default),
+        box-shadow var(--duration-fast) var(--easing-default);
+}
+
+.editor-container:focus-within {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--color-primary-100);
+}
+
+[data-theme="dark"] .editor-container:focus-within {
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+}
+
+.editor-container:empty::before {
+    content: "Digite sua redação aqui...";
+    color: var(--color-fg-subtle);
+    font-style: italic;
+}
+
+.editor-container * {
+    white-space: inherit;
+    overflow-wrap: inherit;
+    word-break: inherit;
+}
+
+.editor-line {
+    min-height: 2rem;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.char-counter {
+    margin-top: 0.75rem;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--color-fg-muted);
+    text-align: right;
+}
+
+/* ============================================================================
+   QUESTION SYSTEM
+   ============================================================================ */
+
+.question-alternative {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    transition:
+        background-color var(--duration-fast) var(--easing-default),
+        border-color var(--duration-fast) var(--easing-default),
+        transform var(--duration-fast) var(--easing-default);
+}
+
+.question-alternative:hover {
+    background-color: var(--muted-bg);
+}
+
+.question-alternative.selected {
+    background-color: var(--primary-light);
+    border-color: var(--primary);
+}
+
+.question-alternative.correct {
+    background-color: var(--success-light);
+    border-color: var(--success);
+}
+
+.question-alternative.incorrect {
+    background-color: var(--danger-light);
+    border-color: var(--danger);
+}
+
+.alternative-selected {
+    transform: translateX(4px);
+    box-shadow: var(--shadow-md);
+}
+
+.alternative-option {
+    transition: all var(--duration-fast) var(--easing-default);
+}
+
+.alternative-option:focus-visible {
+    outline: var(--ring-width) solid var(--ring-color);
+    outline-offset: var(--ring-offset);
+}
+
+/* Result boxes */
+.result-box {
+    padding: 1rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid;
+}
+
+.result-box.correct {
+    background-color: var(--success-light);
+    border-color: var(--success);
+    color: var(--color-success-700);
+}
+
+[data-theme="dark"] .result-box.correct {
+    color: var(--success);
+}
+
+.result-box.incorrect {
+    background-color: var(--warning-light);
+    border-color: var(--warning);
+    color: var(--color-warning-700);
+}
+
+[data-theme="dark"] .result-box.incorrect {
+    color: var(--warning);
+}
+
+/* Quiz intro styles */
+.quiz-intro-box {
+    background-color: var(--primary-light);
+    border: 1px solid var(--color-primary-200);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+[data-theme="dark"] .quiz-intro-box {
+    border-color: var(--color-primary-600);
+}
+
+.quiz-intro-text {
+    color: var(--foreground);
+    font-weight: 500;
+}
+
+.quiz-intro-steps li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--foreground);
+}
+
+.quiz-intro-steps .step-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    flex-shrink: 0;
+    background-color: var(--primary);
+    color: white;
+    border-radius: 50%;
+    font-size: var(--text-sm);
+    font-weight: 700;
+}
+
+.quiz-instructions-text {
+    color: var(--color-fg-muted);
+}
+
+.instruction-item {
+    color: var(--color-fg-muted);
+}
+
+.step-number {
+    color: var(--step-number-color);
+}
+
+/* ============================================================================
+   THEME BOX & SUPPORT TEXT
+   ============================================================================ */
+
+.theme-box {
+    background-color: var(--primary-light);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1rem;
+    color: var(--foreground);
+}
+
+.theme-text {
+    color: var(--foreground);
+    font-size: var(--text-lg);
+    line-height: var(--leading-relaxed);
+}
+
+.support-text-box {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    color: var(--foreground);
+}
+
+.support-text-title {
+    color: var(--foreground);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.support-text-content {
+    color: var(--color-fg-muted);
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+}
+
+.topic-description {
+    color: var(--color-fg-muted);
+}
