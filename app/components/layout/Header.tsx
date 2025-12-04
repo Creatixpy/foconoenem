@@ -204,6 +204,7 @@ export default function Header() {
                     className="absolute right-0 mt-2 w-56 origin-top-right animate-fadeIn rounded-xl border border-border-color bg-card-bg shadow-xl"
                     role="menu"
                     aria-orientation="vertical"
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <div className="p-1">
                       <Link
@@ -230,7 +231,10 @@ export default function Header() {
                       </Link>
                       <button
                         type="button"
-                        onClick={handleSignOut}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSignOut();
+                        }}
                         className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-danger transition-colors hover:bg-danger-light/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-danger"
                         role="menuitem"
                       >
@@ -258,11 +262,10 @@ export default function Header() {
               <div className="hidden items-center gap-2 sm:flex">
                 <Link
                   href="/auth/login"
-                  className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
-                    isScrolled
+                  className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${isScrolled
                       ? "text-foreground/80 hover:text-primary"
                       : "text-foreground hover:text-primary"
-                  } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2`}
+                    } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2`}
                 >
                   Entrar
                 </Link>
@@ -278,11 +281,10 @@ export default function Header() {
             {/* Mobile Menu Button */}
             <button
               type="button"
-              className={`inline-flex h-10 w-10 items-center justify-center rounded-xl transition-colors md:hidden ${
-                isScrolled
+              className={`inline-flex h-10 w-10 items-center justify-center rounded-xl transition-colors md:hidden ${isScrolled
                   ? "bg-muted-bg text-foreground hover:bg-muted-bg/80"
                   : "bg-white/20 text-foreground backdrop-blur-sm hover:bg-white/30"
-              } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2`}
+                } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2`}
               onClick={() => setMobileMenuOpen((prev) => !prev)}
               aria-label={
                 mobileMenuOpen ? "Fechar menu de navegação" : "Abrir menu de navegação"
