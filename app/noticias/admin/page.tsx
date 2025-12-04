@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Noticia } from "@/types";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { getBrowserClient } from "@/lib/db";
-import NewsImage from "@/app/components/NewsImage";
+import { NewsImage } from "@/app/components/shared";
 
 type DestaquesUpdateResult = {
   status?: "success" | "error" | "skipped";
@@ -438,10 +438,9 @@ export default function AdminDestaques() {
                       className={`
                         ${statusDestaques?.status === "updated" ? "text-success" : ""}
                         ${statusDestaques?.status === "pending" ? "text-warning" : ""}
-                        ${
-                          statusDestaques?.status === "error" || statusDestaques?.status === "never"
-                            ? "text-danger"
-                            : ""
+                        ${statusDestaques?.status === "error" || statusDestaques?.status === "never"
+                          ? "text-danger"
+                          : ""
                         }
                       `}
                     >

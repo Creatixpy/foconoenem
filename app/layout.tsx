@@ -1,16 +1,14 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import { Metadata, Viewport } from "next";
-import "./globals.css";
-import Header from "./components/Header";
-import Footer from "./components/Footer";
-import ThemeToggle from "./components/ThemeToggle";
-import CookieConsent from "./components/CookieConsent";
-import AdSenseLoader from "./components/AdSenseLoader";
+import "./styles/index.css";
+import { Header, Footer } from "./components/layout";
+import { ThemeToggle } from "./components/ui";
+import { CookieConsent, AdSenseLoader } from "./components/shared";
 import Providers from "./providers";
 import StructuredData from "./structured-data";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
-import { themeScript } from "./contexts/ThemeContext";
+import { themeScript } from "@/lib/contexts/ThemeContext";
 
 const siteTitle = "Foco no ENEM - Plataforma de Simulados e Redações";
 const siteDescription =

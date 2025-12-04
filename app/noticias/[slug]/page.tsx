@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Noticia } from "@/types";
-import NewsImage from "@/app/components/NewsImage";
+import { NewsImage } from "@/app/components/shared";
 
 export default function NoticiaDetalhePage() {
   const [noticia, setNoticia] = useState<Noticia | null>(null);
@@ -13,25 +13,25 @@ export default function NoticiaDetalhePage() {
   const [error, setError] = useState<string | null>(null);
   const params = useParams();
   const slug = params?.slug as string;
-  
+
   // Carregar a notícia
   useEffect(() => {
     const carregarNoticia = async () => {
       if (!slug) return;
-      
+
       try {
         setIsLoading(true);
         setError(null);
-        
+
         const resultado = await fetchNoticiaPorSlug(slug);
-        
+
         if (!resultado) {
           setError("Notícia não encontrada");
           return;
         }
-        
+
         setNoticia(resultado);
-        
+
         // Carregar notícias relacionadas usando a primeira tag
         if (resultado.tags && resultado.tags.length > 0) {
           const relacionadas = await fetchNoticiasPorTag(resultado.tags[0], 3);
@@ -40,7 +40,7 @@ export default function NoticiaDetalhePage() {
             relacionadas.filter(item => item.id !== resultado.id)
           );
         }
-        
+
       } catch (erro) {
         console.error("Erro ao carregar notícia:", erro);
         setError("Não foi possível carregar a notícia. Tente novamente mais tarde.");
@@ -48,10 +48,10 @@ export default function NoticiaDetalhePage() {
         setIsLoading(false);
       }
     };
-    
+
     carregarNoticia();
   }, [slug]);
-  
+
   // Formatar data para padrão brasileiro
   const formatarData = (dataString: string) => {
     const data = new Date(dataString);
@@ -61,12 +61,12 @@ export default function NoticiaDetalhePage() {
       year: 'numeric'
     });
   };
-  
+
   // Renderizar conteúdo da notícia - suporte básico para formatação em HTML
   const renderizarConteudo = (conteudo: string) => {
     return { __html: conteudo };
   };
-  
+
   if (isLoading) {
     return (
       <main className="flex min-h-[60vh] flex-col items-center justify-center px-4 py-12">
@@ -74,7 +74,7 @@ export default function NoticiaDetalhePage() {
       </main>
     );
   }
-  
+
   if (error || !noticia) {
     return (
       <main className="flex-grow">
@@ -92,7 +92,7 @@ export default function NoticiaDetalhePage() {
       </main>
     );
   }
-  
+
   return (
     <main className="flex-grow">
       <div className="container mx-auto p-4 md:p-8">
@@ -104,12 +104,12 @@ export default function NoticiaDetalhePage() {
             Voltar para notícias
           </Link>
         </div>
-        
+
         <article className="card p-6 md:p-8 border-0">
           {/* Cabeçalho da notícia */}
           <header className="mb-8">
             <h1 className="text-3xl md:text-4xl font-bold mb-4">{noticia.titulo}</h1>
-            
+
             <div className="flex flex-wrap justify-between items-center text-sm text-gray-600 dark:text-gray-300 mb-6">
               <div className="flex items-center">
                 <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -117,7 +117,7 @@ export default function NoticiaDetalhePage() {
                 </svg>
                 <span>{formatarData(noticia.data_publicacao)}</span>
               </div>
-              
+
               <div className="flex items-center">
                 <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -125,14 +125,14 @@ export default function NoticiaDetalhePage() {
                 <span>Por {noticia.autor}</span>
               </div>
             </div>
-            
+
             {/* Imagem principal */}
             {noticia.imagem_url && (
               <div className="relative w-full h-[300px] md:h-[400px] rounded-lg overflow-hidden mb-6">
                 <NewsImage src={noticia.imagem_url} alt={noticia.titulo} fill className="object-cover" />
               </div>
             )}
-            
+
             {noticia.tags && noticia.tags.length > 0 && (
               <div className="mb-4 flex flex-wrap gap-2">
                 {noticia.tags.map((tag) => (
@@ -150,10 +150,10 @@ export default function NoticiaDetalhePage() {
               </details>
             )}
           </header>
-          
+
           {/* Conteúdo da notícia */}
-          <div 
-            className="prose dark:prose-invert max-w-none" 
+          <div
+            className="prose dark:prose-invert max-w-none"
             dangerouslySetInnerHTML={renderizarConteudo(noticia.conteudo)}
           />
 
@@ -176,7 +176,7 @@ export default function NoticiaDetalhePage() {
             <p className="text-sm text-gray-600 dark:text-gray-300">
               Publicado em {formatarData(noticia.data_publicacao)} por {noticia.autor}
             </p>
-            
+
             {/* Compartilhamento */}
             <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-foreground/70">
               <span className="uppercase tracking-[0.2em] text-foreground/75">Compartilhar</span>
@@ -211,7 +211,7 @@ export default function NoticiaDetalhePage() {
             </div>
           </footer>
         </article>
-        
+
         {/* Notícias relacionadas */}
         {noticiasRelacionadas.length > 0 && (
           <section className="mt-12">
@@ -221,7 +221,7 @@ export default function NoticiaDetalhePage() {
               </svg>
               Notícias Relacionadas
             </h2>
-            
+
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {noticiasRelacionadas.map((noticia) => (
                 <Link
