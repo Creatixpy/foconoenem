@@ -4,7 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { getUserStatistics, recalculateUserStatistics } from "@/lib/auth/service";
 import type { UserStatistics } from "@/lib/auth/types";
+import { getBrowserClient } from "@/lib/db";
 import {
   LineChart,
   Line,
@@ -30,28 +32,9 @@ interface EssayData {
   id: string;
 }
 
-interface AccountData {
-  statistics: UserStatistics | null;
-  essays: EssayData[];
-}
-
-// Fetch account data via API route (more reliable than direct Supabase calls)
-async function fetchAccountData(signal?: AbortSignal): Promise<AccountData> {
-  const response = await fetch('/api/conta/dados', {
-    signal,
-    cache: 'no-store',
-  });
-
-  if (!response.ok) {
-    throw new Error(`API respondeu ${response.status}`);
-  }
-
-  return response.json();
-}
-
 export default function ContaPageClient() {
   const router = useRouter();
-  const { user, profile, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading, session } = useAuth();
   const [statistics, setStatistics] = useState<UserStatistics | null>(null);
   const [essays, setEssays] = useState<EssayData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,36 +51,46 @@ export default function ContaPageClient() {
 
   // Load data when authenticated
   const loadData = useCallback(async () => {
-    if (!user) return;
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    if (!user || !session) return;
 
     try {
       setLoading(true);
       setErrorMessage(null);
 
-      const data = await fetchAccountData(controller.signal);
-      setStatistics(data.statistics);
-      setEssays(data.essays);
-    } catch (error) {
-      if (error instanceof DOMException && error.name === 'AbortError') {
-        setErrorMessage('Conexão lenta. Tente atualizar a página.');
-      } else {
-        console.error('Erro ao carregar dados:', error);
-        setErrorMessage('Não foi possível carregar seus dados. Tente novamente.');
+      // Fetch statistics and essays in parallel
+      const supabase = getBrowserClient();
+
+      const [statsResult, essaysResult] = await Promise.all([
+        getUserStatistics(user.id),
+        supabase
+          .from('essay_results')
+          .select('id, nota, created_at')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(10)
+      ]);
+
+      setStatistics(statsResult);
+      setEssays(essaysResult.data || []);
+
+      if (essaysResult.error) {
+        console.warn('Erro ao buscar redações:', essaysResult.error);
       }
+    } catch (error) {
+      console.error('Erro ao carregar dados:', error);
+      setErrorMessage('Não foi possível carregar seus dados. Tente novamente.');
     } finally {
-      clearTimeout(timeoutId);
       setLoading(false);
     }
-  }, [user]);
+  }, [user, session]);
 
   useEffect(() => {
-    if (user && !authLoading) {
+    if (user && session && !authLoading) {
       void loadData();
+    } else if (!authLoading && !user) {
+      setLoading(false);
     }
-  }, [user, authLoading, loadData]);
+  }, [user, session, authLoading, loadData]);
 
   // Recalculate statistics
   const handleRecalculate = async () => {
@@ -107,16 +100,7 @@ export default function ContaPageClient() {
     setErrorMessage(null);
 
     try {
-      const response = await fetch('/api/conta/recalcular', {
-        method: 'POST',
-        cache: 'no-store',
-      });
-
-      if (!response.ok) {
-        throw new Error('Erro ao recalcular');
-      }
-
-      // Reload data
+      await recalculateUserStatistics(user.id);
       await loadData();
     } catch (error) {
       console.error('Erro ao recalcular:', error);
@@ -268,7 +252,6 @@ export default function ContaPageClient() {
     { id: 'questoes' as const, label: 'Questões', icon: '🎯' },
   ];
 
-  const displayName = profile?.nome_completo?.split(' ')[0] || user.email?.split('@')[0] || 'Estudante';
   const initial = profile?.nome_completo?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || 'E';
 
   return (
