@@ -1,13 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
-import {
-  getUserStatistics,
-  recalculateUserStatistics,
-} from "@/lib/auth/service";
 import type { UserStatistics } from "@/lib/auth/types";
 import {
   LineChart,
@@ -25,8 +21,6 @@ import {
   Tooltip,
   ResponsiveContainer
 } from "recharts";
-import { getBrowserClient, withTimeout } from "@/lib/db";
-import { isAbortError } from "@/lib/errors";
 
 type TabType = 'visao-geral' | 'redacoes' | 'questoes';
 
@@ -36,248 +30,103 @@ interface EssayData {
   id: string;
 }
 
+interface AccountData {
+  statistics: UserStatistics | null;
+  essays: EssayData[];
+}
+
+// Fetch account data via API route (more reliable than direct Supabase calls)
+async function fetchAccountData(signal?: AbortSignal): Promise<AccountData> {
+  const response = await fetch('/api/conta/dados', {
+    signal,
+    cache: 'no-store',
+  });
+
+  if (!response.ok) {
+    throw new Error(`API respondeu ${response.status}`);
+  }
+
+  return response.json();
+}
+
 export default function ContaPageClient() {
   const router = useRouter();
   const { user, profile, loading: authLoading } = useAuth();
-  const userId = user?.id ?? null;
   const [statistics, setStatistics] = useState<UserStatistics | null>(null);
   const [essays, setEssays] = useState<EssayData[]>([]);
   const [loading, setLoading] = useState(true);
   const [recalculating, setRecalculating] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('visao-geral');
-  const statsRequestRef = useRef<Promise<UserStatistics | null> | null>(null);
-  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const hasLoadedRef = useRef<string | null>(null);
 
-  useEffect(() => {
-    return () => {
-      if (retryTimeoutRef.current) {
-        clearTimeout(retryTimeoutRef.current);
-        retryTimeoutRef.current = null;
-      }
-      statsRequestRef.current = null;
-    };
-  }, []);
-
-  const fetchLatestStatistics = useCallback(async () => {
-    if (!userId) return null;
-    if (statsRequestRef.current) {
-      return statsRequestRef.current;
-    }
-
-    const request = getUserStatistics(userId)
-      .then((stats) => {
-        setStatistics(stats);
-        setErrorMessage(null);
-        return stats;
-      })
-      .catch((error) => {
-        if (isAbortError(error)) {
-          setErrorMessage("Conexão instável. Tentaremos novamente em instantes.");
-        }
-        throw error;
-      })
-      .finally(() => {
-        statsRequestRef.current = null;
-      });
-    statsRequestRef.current = request;
-    return request;
-  }, [userId]);
-
-  const scheduleStatisticsRetry = useCallback(() => {
-    if (retryTimeoutRef.current || statsRequestRef.current) {
-      return;
-    }
-
-    retryTimeoutRef.current = setTimeout(() => {
-      retryTimeoutRef.current = null;
-      void fetchLatestStatistics().catch((error) => {
-        if (isAbortError(error)) {
-          scheduleStatisticsRetry();
-        } else {
-          console.error('Erro ao atualizar estatísticas após nova tentativa:', error);
-          setErrorMessage('Não foi possível atualizar suas estatísticas em tempo real.');
-        }
-      });
-    }, 5000);
-  }, [fetchLatestStatistics]);
-
-  const triggerStatisticsRefresh = useCallback(() => {
-    void fetchLatestStatistics().catch((error) => {
-      console.error('Erro ao atualizar estatísticas:', error);
-      if (isAbortError(error)) {
-        scheduleStatisticsRetry();
-      } else {
-        setErrorMessage('Não foi possível atualizar suas estatísticas em tempo real.');
-      }
-    });
-  }, [fetchLatestStatistics, scheduleStatisticsRetry]);
-
-  const triggerRefreshRef = useRef<() => void>(() => { });
-
-  useEffect(() => {
-    triggerRefreshRef.current = triggerStatisticsRefresh;
-  }, [triggerStatisticsRefresh]);
-
-  useEffect(() => {
-    if (!userId) {
-      setLoading(false);
-      hasLoadedRef.current = null;
-      return;
-    }
-
-    if (hasLoadedRef.current === userId) {
-      return;
-    }
-
-    const loadData = async () => {
-      hasLoadedRef.current = userId;
-      setLoading(true);
-      setErrorMessage(null);
-
-      try {
-        await fetchLatestStatistics();
-
-        const supabase = getBrowserClient();
-        const essaysResponse = await withTimeout(
-          async (signal) =>
-            await supabase
-              .from('essay_results')
-              .select('id, nota, created_at')
-              .eq('user_id', userId)
-              .order('created_at', { ascending: false })
-              .limit(10)
-              .abortSignal(signal),
-          'default'
-        );
-
-        const { data: essaysData, error: essaysError } = essaysResponse;
-
-        if (essaysError) {
-          throw essaysError;
-        }
-
-        setEssays(essaysData || []);
-      } catch (error) {
-        console.error('Erro ao carregar dados:', error);
-        if (isAbortError(error)) {
-          setErrorMessage('Conexão instável. Tentaremos novamente em instantes.');
-          scheduleStatisticsRetry();
-        } else {
-          setErrorMessage('Não foi possível carregar seus dados agora. Tente novamente em instantes.');
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId]);
-
-  useEffect(() => {
-    if (!userId) return;
-
-    const supabase = getBrowserClient();
-    const channel = supabase
-      .channel(`account-updates-${userId}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'user_statistics', filter: `user_id=eq.${userId}` },
-        () => {
-          triggerRefreshRef.current();
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'essay_results', filter: `user_id=eq.${userId}` },
-        (payload) => {
-          const newEssay = payload.new as EssayData;
-          setEssays((previous) => {
-            const filtered = previous.filter((essay) => essay.id !== newEssay.id);
-            return [{ id: newEssay.id, nota: newEssay.nota, created_at: newEssay.created_at }, ...filtered].slice(0, 10);
-          });
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'essay_results', filter: `user_id=eq.${userId}` },
-        (payload) => {
-          const updatedEssay = payload.new as EssayData;
-          setEssays((previous) => {
-            const filtered = previous.filter((essay) => essay.id !== updatedEssay.id);
-            return [{ id: updatedEssay.id, nota: updatedEssay.nota, created_at: updatedEssay.created_at }, ...filtered].slice(0, 10);
-          });
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: 'DELETE', schema: 'public', table: 'essay_results', filter: `user_id=eq.${userId}` },
-        (payload) => {
-          const removedEssay = payload.old as { id: string };
-          setEssays((previous) => previous.filter((essay) => essay.id !== removedEssay.id));
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'quiz_results', filter: `user_id=eq.${userId}` },
-        () => {
-          triggerRefreshRef.current();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [userId]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || typeof document === 'undefined') {
-      return;
-    }
-
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible') {
-        triggerRefreshRef.current();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibility);
-    window.addEventListener('focus', handleVisibility);
-    window.addEventListener('online', handleVisibility);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibility);
-      window.removeEventListener('focus', handleVisibility);
-      window.removeEventListener('online', handleVisibility);
-    };
-  }, []);
-
-  const handleRecalculate = async () => {
-    if (!userId) return;
-
-    setRecalculating(true);
-    setErrorMessage(null);
-    try {
-      await recalculateUserStatistics(userId);
-      await fetchLatestStatistics();
-    } catch (error) {
-      console.error('Erro ao recalcular:', error);
-      setErrorMessage('Não foi possível atualizar suas estatísticas agora. Tente novamente.');
-    } finally {
-      setRecalculating(false);
-    }
-  };
-
+  // Redirect if not authenticated
   useEffect(() => {
     if (!authLoading && !user) {
       router.replace(`/auth/login?next=${encodeURIComponent('/conta')}`);
     }
   }, [authLoading, user, router]);
 
-  if (authLoading || loading || !user || !profile) {
+  // Load data when authenticated
+  const loadData = useCallback(async () => {
+    if (!user) return;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+    try {
+      setLoading(true);
+      setErrorMessage(null);
+
+      const data = await fetchAccountData(controller.signal);
+      setStatistics(data.statistics);
+      setEssays(data.essays);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        setErrorMessage('Conexão lenta. Tente atualizar a página.');
+      } else {
+        console.error('Erro ao carregar dados:', error);
+        setErrorMessage('Não foi possível carregar seus dados. Tente novamente.');
+      }
+    } finally {
+      clearTimeout(timeoutId);
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user && !authLoading) {
+      void loadData();
+    }
+  }, [user, authLoading, loadData]);
+
+  // Recalculate statistics
+  const handleRecalculate = async () => {
+    if (!user) return;
+
+    setRecalculating(true);
+    setErrorMessage(null);
+
+    try {
+      const response = await fetch('/api/conta/recalcular', {
+        method: 'POST',
+        cache: 'no-store',
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao recalcular');
+      }
+
+      // Reload data
+      await loadData();
+    } catch (error) {
+      console.error('Erro ao recalcular:', error);
+      setErrorMessage('Não foi possível atualizar suas estatísticas.');
+    } finally {
+      setRecalculating(false);
+    }
+  };
+
+  if (authLoading) {
     return (
       <main className="flex min-h-[60vh] items-center justify-center px-4 py-12">
         <div className="loader" />
@@ -285,7 +134,22 @@ export default function ContaPageClient() {
     );
   }
 
-  // Preparar dados para gráficos
+  if (!user) {
+    return null;
+  }
+
+  if (loading) {
+    return (
+      <main className="flex min-h-[60vh] items-center justify-center px-4 py-12">
+        <div className="text-center space-y-4">
+          <div className="loader" />
+          <p className="text-sm text-foreground/60">Carregando sua conta...</p>
+        </div>
+      </main>
+    );
+  }
+
+  // Prepare chart data
   const competenciasData = statistics ? [
     { competencia: 'C1', nota: statistics.media_competencia1 || 0, fullName: 'Norma Padrão' },
     { competencia: 'C2', nota: statistics.media_competencia2 || 0, fullName: 'Compreensão' },
@@ -343,7 +207,7 @@ export default function ContaPageClient() {
     data: new Date(essay.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
   })).reverse();
 
-  // Análise e recomendações
+  // Analysis and recommendations
   const analises: string[] = [];
   const recomendacoes: string[] = [];
 
@@ -404,6 +268,9 @@ export default function ContaPageClient() {
     { id: 'questoes' as const, label: 'Questões', icon: '🎯' },
   ];
 
+  const displayName = profile?.nome_completo?.split(' ')[0] || user.email?.split('@')[0] || 'Estudante';
+  const initial = profile?.nome_completo?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || 'E';
+
   return (
     <main className="flex-grow bg-background">
       <div className="container mx-auto max-w-6xl px-4 py-6 sm:py-8">
@@ -413,7 +280,7 @@ export default function ContaPageClient() {
             <div className="flex items-center gap-3 sm:gap-4">
               <div className="relative">
                 <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-xl sm:text-2xl font-bold text-white shadow-lg">
-                  {profile.nome_completo?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
+                  {initial}
                 </div>
                 <span className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-success border-2 border-background flex items-center justify-center">
                   <svg className="h-3 w-3 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -423,10 +290,10 @@ export default function ContaPageClient() {
               </div>
               <div className="min-w-0">
                 <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">
-                  {profile.nome_completo || 'Estudante'}
+                  {profile?.nome_completo || 'Estudante'}
                 </h1>
                 <p className="text-sm text-foreground/60 truncate">{user.email}</p>
-                {profile.objetivo && (
+                {profile?.objetivo && (
                   <p className="text-xs sm:text-sm text-primary mt-0.5 truncate">🎯 {profile.objetivo}</p>
                 )}
               </div>
@@ -452,8 +319,14 @@ export default function ContaPageClient() {
         </section>
 
         {errorMessage && (
-          <div className="mb-4 rounded-xl border border-danger/20 bg-danger/10 p-3 text-sm text-danger">
-            {errorMessage}
+          <div className="mb-4 rounded-xl border border-danger/20 bg-danger/10 p-3 text-sm text-danger flex items-center justify-between">
+            <span>{errorMessage}</span>
+            <button
+              onClick={loadData}
+              className="text-xs font-medium underline hover:no-underline"
+            >
+              Tentar novamente
+            </button>
           </div>
         )}
 
@@ -735,7 +608,7 @@ export default function ContaPageClient() {
   );
 }
 
-// Componente StatCard
+// StatCard component
 function StatCard({
   icon,
   label,
@@ -770,7 +643,7 @@ function StatCard({
   );
 }
 
-// Componente EmptyState principal
+// EmptyState component
 function EmptyState() {
   return (
     <div className="rounded-xl bg-card-bg p-8 sm:p-12 text-center shadow-sm">
@@ -793,7 +666,7 @@ function EmptyState() {
   );
 }
 
-// Componente EmptyState para seções
+// EmptyStateSection component
 function EmptyStateSection({
   icon,
   title,
