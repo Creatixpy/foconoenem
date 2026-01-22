@@ -258,44 +258,47 @@ export default function ContaPageClient() {
     <main className="flex-grow bg-background">
       <div className="container mx-auto max-w-6xl px-4 py-6 sm:py-8">
         {/* Header do Perfil */}
-        <section className="mb-6 rounded-2xl bg-gradient-to-br from-primary/10 via-accent/5 to-transparent p-4 sm:p-6 shadow-sm animate-fadeIn">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3 sm:gap-4">
+        <section className="mb-8 rounded-2xl bg-card-bg p-6 shadow-sm border border-border-color/50 animate-fade-in">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div className="flex items-center gap-5">
               <div className="relative">
-                <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-xl sm:text-2xl font-bold text-white shadow-lg">
+                <div className="h-20 w-20 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-3xl font-bold text-white shadow-lg ring-4 ring-background">
                   {initial}
                 </div>
-                <span className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-success border-2 border-background flex items-center justify-center">
+                <span className="absolute bottom-0 right-0 h-6 w-6 rounded-full bg-success border-4 border-background flex items-center justify-center">
                   <svg className="h-3 w-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                 </span>
               </div>
-              <div className="min-w-0">
-                <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">
                   {profile?.nome_completo || 'Estudante'}
                 </h1>
-                <p className="text-sm text-foreground/60 truncate">{user.email}</p>
+                <p className="text-sm text-foreground/60 font-medium">{user.email}</p>
                 {profile?.objetivo && (
-                  <p className="text-xs sm:text-sm text-primary mt-0.5 truncate">🎯 {profile.objetivo}</p>
+                  <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                    <span className="text-sm">🎯</span> {profile.objetivo}
+                  </div>
                 )}
               </div>
             </div>
-            <div className="flex gap-2 self-start sm:self-center">
+            <div className="flex items-center gap-3">
               <button
                 onClick={handleRecalculate}
                 disabled={recalculating}
-                className="btn btn-outline text-sm px-3 py-2 flex items-center gap-1.5"
-                aria-label="Atualizar estatísticas"
+                className="group flex items-center gap-2 rounded-xl border border-border-color bg-transparent px-4 py-2 text-sm font-semibold text-foreground transition-all hover:border-primary hover:text-primary disabled:opacity-50"
               >
-                <svg className={`w-4 h-4 ${recalculating ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className={`h-4 w-4 ${recalculating ? 'animate-spin' : 'text-foreground/40 group-hover:text-primary'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                <span className="hidden sm:inline">{recalculating ? 'Atualizando...' : 'Atualizar'}</span>
+                {recalculating ? 'Atualizando...' : 'Atualizar Dados'}
               </button>
-              <Link href="/conta/editar" className="btn btn-primary text-sm px-3 py-2">
-                <span className="sm:hidden">Editar</span>
-                <span className="hidden sm:inline">Editar Perfil</span>
+              <Link
+                href="/conta/editar"
+                className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary/20 transition-all hover:bg-primary-dark hover:shadow-primary/30 active:scale-95"
+              >
+                Editar Perfil
               </Link>
             </div>
           </div>
@@ -606,21 +609,21 @@ function StatCard({
   color: 'primary' | 'accent' | 'success' | 'warning';
 }) {
   const colorClasses = {
-    primary: 'from-primary/20 to-primary/5',
-    accent: 'from-accent/20 to-accent/5',
-    success: 'from-success/20 to-success/5',
-    warning: 'from-warning/20 to-warning/5',
+    primary: 'border-l-4 border-l-primary bg-card-bg shadow-sm',
+    accent: 'border-l-4 border-l-accent bg-card-bg shadow-sm',
+    success: 'border-l-4 border-l-success bg-card-bg shadow-sm',
+    warning: 'border-l-4 border-l-warning bg-card-bg shadow-sm',
   };
 
   return (
-    <div className={`rounded-xl bg-gradient-to-br ${colorClasses[color]} p-3 sm:p-4`}>
-      <div className="flex items-center gap-2 mb-1">
-        <span className="text-lg sm:text-xl">{icon}</span>
-        <span className="text-xs sm:text-sm text-foreground/60">{label}</span>
+    <div className={`rounded-xl p-4 sm:p-5 transition-transform hover:-translate-y-1 ${colorClasses[color]}`}>
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-sm font-medium text-foreground/60 uppercase tracking-wide">{label}</span>
+        <span className="text-xl">{icon}</span>
       </div>
-      <p className="text-xl sm:text-2xl font-bold text-foreground">{value}</p>
+      <p className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">{value}</p>
       {subtext && (
-        <p className="text-xs text-foreground/50 mt-0.5">{subtext}</p>
+        <p className="text-xs font-medium text-foreground/50 mt-1">{subtext}</p>
       )}
     </div>
   );
