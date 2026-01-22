@@ -1,6 +1,7 @@
 'use server';
 
-import { createAdminClient, type EventType } from '@/lib/db';
+import { type EventType } from '@/lib/db';
+import { createAdminClient } from '@/lib/db/server';
 import type { Json } from '@/types/supabase';
 
 type TrackEventParams = {

@@ -5,7 +5,8 @@
  * Handles all authentication operations with security best practices
  */
 
-import { supabase, withTimeout } from './client';
+import { createClient } from '@/lib/supabase/client';
+import { withTimeout } from '@/lib/db/client';
 import { SESSION_CONFIG, AUTH_ERROR_CODES, COMMUNITY_TERMS_VERSION } from './constants';
 import { validatePassword, validateEmail, sanitizeInput } from './validation';
 import {
@@ -16,6 +17,8 @@ import {
   updateLastActivity,
   clearAuthStorage,
 } from './security';
+
+const supabase = createClient();
 import type {
   UserProfile,
   UserStatistics,
@@ -64,6 +67,7 @@ export async function signUp(data: SignUpData): Promise<AuthResult<{ needsConfir
       email: data.email.trim().toLowerCase(),
       password: data.password,
       options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
         data: {
           nome_completo: nomeCompleto,
           objetivo,

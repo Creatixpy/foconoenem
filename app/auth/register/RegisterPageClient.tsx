@@ -5,7 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signUp, signInWithGoogle } from "@/lib/auth/service";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { supabase } from "@/lib/auth/client";
+import { createClient } from "@/lib/supabase/client";
+
+const supabase = createClient();
 
 type RegisterPageClientProps = {
   redirectTo: string;

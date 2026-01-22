@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authorizeAdmin } from "@/lib/admin-auth";
-import { createAdminClient } from '@/lib/db';
+import { createAdminClient } from '@/lib/db/server';
 import { buildGroqProviders, GROQ_MAX_ATTEMPTS, GroqProvider, isRateLimitError } from "@/lib/ai/groq";
 
 const MAX_NEWS_TO_REVIEW = 25;
