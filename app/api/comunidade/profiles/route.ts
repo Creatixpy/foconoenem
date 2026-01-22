@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/db';
+import { createAdminClient } from '@/lib/db/server';
 
 const PROFILE_FIELDS =
   'user_id,nome_completo,avatar_url,community_tagline,community_show_statistics';

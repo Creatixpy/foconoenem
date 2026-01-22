@@ -1,6 +1,6 @@
 'use server';
 
-import { createAdminClient } from '@/lib/db';
+import { createAdminClient } from '@/lib/db/server';
 
 export type RateLimitResult = {
   allowed: boolean;

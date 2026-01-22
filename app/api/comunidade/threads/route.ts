@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from '@/lib/db';
+import { createAdminClient } from '@/lib/db/server';
 import type { Database } from "@/types/supabase";
 
 type CommunityCommentRow = Database["public"]["Tables"]["community_comments"]["Row"];

@@ -4,21 +4,23 @@ import { createClient } from '@supabase/supabase-js';
 import type { User } from '@supabase/supabase-js';
 import { NextRequest } from 'next/server';
 
-const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Supabase URL ou anon key não configurados. Defina SUPABASE_URL/SUPABASE_ANON_KEY.');
-}
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: { persistSession: false },
-});
-
 const allowedEmails = (process.env.ADMIN_ALLOWED_EMAILS ?? '')
   .split(',')
   .map((email) => email.trim().toLowerCase())
   .filter(Boolean);
+
+function getAdminClient() {
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Supabase URL ou anon key não configurados. Defina SUPABASE_URL/SUPABASE_ANON_KEY.');
+  }
+
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    auth: { persistSession: false },
+  });
+}
 
 type AdminAuthSuccess = { authorized: true; mode: 'user' | 'cron'; user?: User };
 type AdminAuthFailure = { authorized: false; status: number; message: string };
@@ -49,6 +51,7 @@ export async function authorizeAdmin(
   }
 
   try {
+    const supabase = getAdminClient();
     const { data, error } = await supabase.auth.getUser(token);
     if (error || !data?.user) {
       return { authorized: false, status: 401, message: 'Sessão inválida ou expirada.' };

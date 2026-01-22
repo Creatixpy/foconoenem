@@ -8,7 +8,9 @@ import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { validateEmail } from '@/lib/auth/validation';
 import { AUTH_PATHS } from '@/lib/auth/constants';
-import { supabase } from '@/lib/auth/client';
+import { createClient } from '@/lib/supabase/client';
+
+const supabase = createClient();
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');

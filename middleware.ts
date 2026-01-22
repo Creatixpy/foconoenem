@@ -1,20 +1,8 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { type NextRequest } from 'next/server'
+import { updateSession } from '@/lib/supabase/middleware'
 
 export async function middleware(request: NextRequest) {
-  const response = NextResponse.next();
-
-  // Sentinel Security: Headers Reinforcement
-  // Ensure headers are present even if next.config.ts misses them for some edge cases
-  response.headers.set('X-Frame-Options', 'SAMEORIGIN');
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-
-  // Sentinel Security: Cookie Hardening
-  // Note: Actual Auth logic is likely handled by Supabase Auth Helpers in a separate file or lib,
-  // but here we ensure that if we touch cookies, we're aware of the context.
-
-  return response;
+  return await updateSession(request)
 }
 
 export const config = {
@@ -24,7 +12,8 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * Feel free to modify this pattern to include more paths.
      */
-    '/((?!_next/static|_next/image|favicon.ico).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
-};
+}

@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { SupabaseClient, User } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
-import { createAdminClient } from '@/lib/db';
+import { createAdminClient } from '@/lib/db/server';
 
 type AuthSuccess = {
   supabase: SupabaseClient<Database>;
