@@ -3,55 +3,51 @@
    Design Tokens (CSS Custom Properties)
    ============================================================================ */
 
-/* ============================================================================
-   1. CSS CUSTOM PROPERTIES (DESIGN TOKENS)
-   ============================================================================ */
-
 :root {
   /* --- Color Palette --- */
 
   /* Backgrounds */
-  --color-bg-base: #ffffff;
-  --color-bg-subtle: #f8fafc;
-  --color-bg-muted: #f1f5f9;
-  --color-bg-elevated: #ffffff;
+  --color-bg-base: #f8fafc; /* Slate 50 - Softer white for main background */
+  --color-bg-subtle: #f1f5f9; /* Slate 100 */
+  --color-bg-muted: #e2e8f0; /* Slate 200 */
+  --color-bg-elevated: #ffffff; /* White for cards/surfaces */
   --color-bg-overlay: rgba(255, 255, 255, 0.95);
 
   /* Foregrounds */
-  --color-fg-base: #0f172a;
-  --color-fg-muted: #475569;
-  --color-fg-subtle: #64748b;
-  --color-fg-disabled: #94a3b8;
+  --color-fg-base: #0f172a; /* Slate 900 */
+  --color-fg-muted: #334155; /* Slate 700 */
+  --color-fg-subtle: #64748b; /* Slate 500 */
+  --color-fg-disabled: #94a3b8; /* Slate 400 */
   --color-fg-inverse: #ffffff;
 
-  /* Primary Brand */
-  --color-primary-50: #eff6ff;
-  --color-primary-100: #dbeafe;
-  --color-primary-200: #bfdbfe;
-  --color-primary-300: #93c5fd;
-  --color-primary-400: #60a5fa;
-  --color-primary-500: #3b82f6;
-  --color-primary-600: #2563eb;
-  --color-primary-700: #1d4ed8;
-  --color-primary-800: #1e40af;
-  --color-primary-900: #1e3a8a;
+  /* Primary Brand - Deep Blue/Indigo */
+  --color-primary-50: #eef2ff;
+  --color-primary-100: #e0e7ff;
+  --color-primary-200: #c7d2fe;
+  --color-primary-300: #a5b4fc;
+  --color-primary-400: #818cf8;
+  --color-primary-500: #6366f1;
+  --color-primary-600: #4f46e5; /* Main Brand Color */
+  --color-primary-700: #4338ca;
+  --color-primary-800: #3730a3;
+  --color-primary-900: #312e81;
 
-  /* Accent */
+  /* Accent - Soft Purple/Violet */
   --color-accent-50: #f5f3ff;
   --color-accent-100: #ede9fe;
   --color-accent-200: #ddd6fe;
   --color-accent-300: #c4b5fd;
   --color-accent-400: #a78bfa;
-  --color-accent-500: #8b5cf6;
+  --color-accent-500: #8b5cf6; /* Main Accent Color */
   --color-accent-600: #7c3aed;
   --color-accent-700: #6d28d9;
 
   /* Semantic Colors */
-  --color-success-50: #ecfdf5;
-  --color-success-100: #d1fae5;
-  --color-success-500: #10b981;
-  --color-success-600: #059669;
-  --color-success-700: #047857;
+  --color-success-50: #f0fdf4;
+  --color-success-100: #dcfce7;
+  --color-success-500: #22c55e;
+  --color-success-600: #16a34a;
+  --color-success-700: #15803d;
 
   --color-warning-50: #fffbeb;
   --color-warning-100: #fef3c7;
@@ -74,8 +70,8 @@
   /* --- Semantic Mappings --- */
   --background: var(--color-bg-base);
   --foreground: var(--color-fg-base);
-  --primary: var(--color-primary-500);
-  --primary-dark: var(--color-primary-600);
+  --primary: var(--color-primary-600);
+  --primary-dark: var(--color-primary-700);
   --primary-light: var(--color-primary-50);
   --secondary: var(--color-bg-subtle);
   --card-bg: var(--color-bg-elevated);
@@ -109,35 +105,16 @@
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
-  --text-xs: 0.75rem;
-  --text-sm: 0.875rem;
-  --text-base: 1rem;
-  --text-lg: 1.125rem;
-  --text-xl: 1.25rem;
-  --text-2xl: 1.5rem;
-  --text-3xl: 1.875rem;
-  --text-4xl: 2.25rem;
-  --text-5xl: 3rem;
-
-  --leading-tight: 1.25;
-  --leading-normal: 1.5;
-  --leading-relaxed: 1.625;
-  --leading-loose: 2;
-
-  --tracking-tight: -0.025em;
-  --tracking-normal: 0;
-  --tracking-wide: 0.025em;
-
-  /* --- Border Radius --- */
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  --radius-2xl: 1.25rem;
-  --radius-3xl: 1.5rem;
+  /* --- Border Radius (Rounded aesthetics) --- */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+  --radius-3xl: 2.5rem;
   --radius-full: 9999px;
 
-  /* --- Shadows --- */
+  /* --- Shadows (Depth) --- */
   --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
@@ -161,15 +138,6 @@
   --easing-out: cubic-bezier(0, 0, 0.2, 1);
   --easing-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
-  /* --- Z-Index Scale --- */
-  --z-dropdown: 10;
-  --z-sticky: 20;
-  --z-fixed: 30;
-  --z-modal-backdrop: 40;
-  --z-modal: 50;
-  --z-popover: 60;
-  --z-tooltip: 70;
-
   /* --- Layout --- */
   --header-height: 4.5rem;
   --container-max: 80rem;
@@ -185,24 +153,24 @@
 
 [data-theme="dark"] {
   /* Backgrounds */
-  --color-bg-base: #0a0a0f;
-  --color-bg-subtle: #111118;
-  --color-bg-muted: #18181f;
-  --color-bg-elevated: #141419;
-  --color-bg-overlay: rgba(10, 10, 15, 0.95);
+  --color-bg-base: #0f172a; /* Slate 900 - Deep dark blue base */
+  --color-bg-subtle: #1e293b; /* Slate 800 */
+  --color-bg-muted: #334155; /* Slate 700 */
+  --color-bg-elevated: #1e293b; /* Slate 800 for cards */
+  --color-bg-overlay: rgba(15, 23, 42, 0.95);
 
   /* Foregrounds */
-  --color-fg-base: #f1f5f9;
-  --color-fg-muted: #94a3b8;
-  --color-fg-subtle: #64748b;
-  --color-fg-disabled: #475569;
+  --color-fg-base: #f8fafc; /* Slate 50 */
+  --color-fg-muted: #cbd5e1; /* Slate 300 */
+  --color-fg-subtle: #94a3b8; /* Slate 400 */
+  --color-fg-disabled: #475569; /* Slate 600 */
   --color-fg-inverse: #0f172a;
 
-  /* Primary - Slightly brighter for dark mode */
-  --color-primary-50: #172554;
-  --color-primary-100: #1e3a8a;
-  --color-primary-500: #60a5fa;
-  --color-primary-600: #3b82f6;
+  /* Primary - Slightly lighter for better contrast in dark mode */
+  --color-primary-50: #1e1b4b;
+  --color-primary-100: #312e81;
+  --color-primary-500: #6366f1;
+  --color-primary-600: #818cf8; /* Lighter Indigo */
 
   /* Accent */
   --color-accent-50: #2e1065;
@@ -222,16 +190,16 @@
   --color-danger-600: #ef4444;
 
   /* Borders */
-  --color-border-base: rgba(255, 255, 255, 0.08);
-  --color-border-subtle: rgba(255, 255, 255, 0.04);
-  --color-border-strong: rgba(255, 255, 255, 0.12);
+  --color-border-base: #334155; /* Slate 700 */
+  --color-border-subtle: #1e293b;
+  --color-border-strong: #475569;
 
   /* Updated semantic mappings */
   --background: var(--color-bg-base);
   --foreground: var(--color-fg-base);
-  --primary: var(--color-primary-500);
-  --primary-dark: var(--color-primary-600);
-  --primary-light: var(--color-primary-50);
+  --primary: var(--color-primary-600);
+  --primary-dark: var(--color-primary-500);
+  --primary-light: var(--color-primary-100);
   --secondary: var(--color-bg-subtle);
   --card-bg: var(--color-bg-elevated);
   --muted-bg: var(--color-bg-muted);
@@ -245,14 +213,13 @@
   --danger: var(--color-danger-500);
   --danger-light: var(--color-danger-50);
 
-  /* Shadows - adjusted for dark mode */
+  /* Shadows - Adjusted for dark mode (mostly diffuse glow) */
   --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
   --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px -1px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
   --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.2);
 
   --step-number-color: #475569;
 }
@@ -260,75 +227,75 @@
 /* System preference dark mode fallback */
 @media (prefers-color-scheme: dark) {
   [data-theme="system"] {
-    /* Backgrounds */
-    --color-bg-base: #0a0a0f;
-    --color-bg-subtle: #111118;
-    --color-bg-muted: #18181f;
-    --color-bg-elevated: #141419;
-    --color-bg-overlay: rgba(10, 10, 15, 0.95);
+     /* Backgrounds */
+     --color-bg-base: #0f172a;
+     --color-bg-subtle: #1e293b;
+     --color-bg-muted: #334155;
+     --color-bg-elevated: #1e293b;
+     --color-bg-overlay: rgba(15, 17, 42, 0.95);
 
-    /* Foregrounds */
-    --color-fg-base: #f1f5f9;
-    --color-fg-muted: #94a3b8;
-    --color-fg-subtle: #64748b;
-    --color-fg-disabled: #475569;
-    --color-fg-inverse: #0f172a;
+     /* Foregrounds */
+     --color-fg-base: #f8fafc;
+     --color-fg-muted: #cbd5e1;
+     --color-fg-subtle: #94a3b8;
+     --color-fg-disabled: #475569;
+     --color-fg-inverse: #0f172a;
 
-    /* Primary */
-    --color-primary-50: #172554;
-    --color-primary-100: #1e3a8a;
-    --color-primary-500: #60a5fa;
-    --color-primary-600: #3b82f6;
+     /* Primary */
+     --color-primary-50: #1e1b4b;
+     --color-primary-100: #312e81;
+     --color-primary-500: #6366f1;
+     --color-primary-600: #818cf8;
 
-    /* Accent */
-    --color-accent-50: #2e1065;
-    --color-accent-500: #a78bfa;
+     /* Accent */
+     --color-accent-50: #2e1065;
+     --color-accent-500: #a78bfa;
 
-    /* Semantic */
-    --color-success-50: #052e16;
-    --color-success-500: #34d399;
-    --color-success-600: #10b981;
+     /* Semantic */
+     --color-success-50: #052e16;
+     --color-success-500: #34d399;
+     --color-success-600: #10b981;
 
-    --color-warning-50: #422006;
-    --color-warning-500: #fbbf24;
-    --color-warning-600: #f59e0b;
+     --color-warning-50: #422006;
+     --color-warning-500: #fbbf24;
+     --color-warning-600: #f59e0b;
 
-    --color-danger-50: #450a0a;
-    --color-danger-500: #f87171;
-    --color-danger-600: #ef4444;
+     --color-danger-50: #450a0a;
+     --color-danger-500: #f87171;
+     --color-danger-600: #ef4444;
 
-    /* Borders */
-    --color-border-base: rgba(255, 255, 255, 0.08);
-    --color-border-subtle: rgba(255, 255, 255, 0.04);
-    --color-border-strong: rgba(255, 255, 255, 0.12);
+     /* Borders */
+     --color-border-base: #334155;
+     --color-border-subtle: #1e293b;
+     --color-border-strong: #475569;
 
-    /* Semantic mappings */
-    --background: var(--color-bg-base);
-    --foreground: var(--color-fg-base);
-    --primary: var(--color-primary-500);
-    --primary-dark: var(--color-primary-600);
-    --primary-light: var(--color-primary-50);
-    --secondary: var(--color-bg-subtle);
-    --card-bg: var(--color-bg-elevated);
-    --muted-bg: var(--color-bg-muted);
-    --border-color: var(--color-border-base);
-    --accent: var(--color-accent-500);
-    --accent-light: var(--color-accent-50);
-    --success: var(--color-success-500);
-    --success-light: var(--color-success-50);
-    --warning: var(--color-warning-500);
-    --warning-light: var(--color-warning-50);
-    --danger: var(--color-danger-500);
-    --danger-light: var(--color-danger-50);
+     /* Semantic mappings */
+     --background: var(--color-bg-base);
+     --foreground: var(--color-fg-base);
+     --primary: var(--color-primary-600);
+     --primary-dark: var(--color-primary-500);
+     --primary-light: var(--color-primary-100);
+     --secondary: var(--color-bg-subtle);
+     --card-bg: var(--color-bg-elevated);
+     --muted-bg: var(--color-bg-muted);
+     --border-color: var(--color-border-base);
+     --accent: var(--color-accent-500);
+     --accent-light: var(--color-accent-50);
+     --success: var(--color-success-500);
+     --success-light: var(--color-success-50);
+     --warning: var(--color-warning-500);
+     --warning-light: var(--color-warning-50);
+     --danger: var(--color-danger-500);
+     --danger-light: var(--color-danger-50);
 
-    /* Shadows */
-    --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px -1px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
-    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
-    --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+     /* Shadows */
+     --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+     --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px -1px rgba(0, 0, 0, 0.3);
+     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+     --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+     --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 
-    --step-number-color: #475569;
+     --step-number-color: #475569;
   }
 }
