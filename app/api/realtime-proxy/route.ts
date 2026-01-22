@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { RealtimeChannel } from '@supabase/supabase-js';
-import { createAdminClient } from '@/lib/db';
+import { createAdminClient } from '@/lib/db/server';
 
 export const runtime = 'nodejs';
 

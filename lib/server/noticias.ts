@@ -1,6 +1,6 @@
 'use server';
 
-import { createAdminClient } from '@/lib/db';
+import { createAdminClient } from '@/lib/db/server';
 
 const NOTICIA_FIELDS =
   'id,titulo,slug,resumo,conteudo,imagem_url,autor,data_publicacao,tags,destaque,created_at,fonte_url';

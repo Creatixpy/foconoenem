@@ -1,10 +1,11 @@
 /**
- * Supabase Database Client
- * Centralized client management for all database operations
+ * Supabase Database Client (Browser/Client-side)
+ * This file contains client-side specific logic and types.
  */
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
+import { createClient as createBrowserSupabaseClient } from '@/lib/supabase/client';
 
 // ============================================================================
 // Configuration
@@ -20,98 +21,15 @@ const CONFIG = {
 } as const;
 
 // ============================================================================
-// Environment validation
+// Client Accessors
 // ============================================================================
-
-function getSupabaseUrl(): string {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (!url) {
-    throw new Error(
-      'Environment variable NEXT_PUBLIC_SUPABASE_URL is not configured. ' +
-      'Please add it to your Vercel environment variables or .env.local file.'
-    );
-  }
-  return url;
-}
-
-function getSupabaseAnonKey(): string {
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!key) {
-    throw new Error(
-      'Environment variable NEXT_PUBLIC_SUPABASE_ANON_KEY is not configured. ' +
-      'Please add it to your Vercel environment variables or .env.local file.'
-    );
-  }
-  return key;
-}
-
-// ============================================================================
-// Client Singleton (Browser/Client-side)
-// ============================================================================
-
-let browserClient: SupabaseClient<Database> | null = null;
 
 /**
- * Gets the browser Supabase client (singleton pattern)
+ * Gets the browser Supabase client (singleton pattern handled internally)
  * Uses anon key for client-side operations with RLS
  */
 export function getBrowserClient(): SupabaseClient<Database> {
-  if (browserClient) return browserClient;
-
-  const url = getSupabaseUrl();
-  const anonKey = getSupabaseAnonKey();
-
-  browserClient = createClient<Database>(url, anonKey, {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: true,
-      flowType: 'pkce',
-    },
-  });
-
-  return browserClient;
-}
-
-// ============================================================================
-// Server Client Factory
-// ============================================================================
-
-/**
- * Creates a server-side Supabase client
- * Uses anon key with RLS enabled
- */
-export function createServerClient(): SupabaseClient<Database> {
-  const url = getSupabaseUrl();
-  const anonKey = getSupabaseAnonKey();
-
-  return createClient<Database>(url, anonKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
-}
-
-/**
- * Creates an admin Supabase client
- * Uses service role key - bypasses RLS (use with caution)
- */
-export function createAdminClient(): SupabaseClient<Database> | null {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!url || !serviceKey) {
-    console.warn('Admin client not available: missing SUPABASE_SERVICE_ROLE_KEY');
-    return null;
-  }
-
-  return createClient<Database>(url, serviceKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
+  return createBrowserSupabaseClient();
 }
 
 // ============================================================================

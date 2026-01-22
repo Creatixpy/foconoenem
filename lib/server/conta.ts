@@ -1,6 +1,6 @@
 'use server';
 
-import { createAdminClient } from '@/lib/db';
+import { createAdminClient } from '@/lib/db/server';
 import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';

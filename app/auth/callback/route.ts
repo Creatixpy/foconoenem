@@ -1,100 +1,66 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
 
-const AUTH_PATHS = {
-  DEFAULT_REDIRECT: '/conta',
-  ERROR: '/auth/auth-code-error',
-};
+export async function GET(request: Request) {
+  const { searchParams, origin } = new URL(request.url)
+  const code = searchParams.get('code')
+  // if "next" is in param, use it as the redirect URL
+  const next = searchParams.get('next') ?? '/conta'
 
-function sanitizeRedirectPath(value: string | undefined | null, fallback: string = '/conta'): string {
-  if (!value) return fallback;
-  if (!value.startsWith('/')) return fallback;
-  if (value.startsWith('//')) return fallback;
-  if (value.toLowerCase().includes('javascript:')) return fallback;
-  return value;
-}
+  if (code) {
+    const supabase = await createClient()
+    const { error } = await supabase.auth.exchangeCodeForSession(code)
 
-/**
- * Creates a Supabase client for server-side auth callback
- */
-function getSupabaseClient() {
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!error) {
+      // Create user profile if it doesn't exist
+      // Note: We use the same supabase client which now has the session
+      const { data: { user } } = await supabase.auth.getUser()
 
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Variáveis de ambiente do Supabase não configuradas');
-  }
-
-  return createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      flowType: 'pkce',
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
-}
-
-export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url);
-  const code = searchParams.get('code');
-  const next = sanitizeRedirectPath(
-    searchParams.get('next'),
-    AUTH_PATHS.DEFAULT_REDIRECT
-  );
-
-  if (!code) {
-    console.error('OAuth callback sem código de autorização');
-    return NextResponse.redirect(`${origin}${AUTH_PATHS.ERROR}`);
-  }
-
-  try {
-    const supabase = getSupabaseClient();
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-
-    if (error) {
-      console.error('Erro ao trocar código por sessão:', error.message);
-      return NextResponse.redirect(`${origin}${AUTH_PATHS.ERROR}`);
-    }
-
-    if (data.user) {
-      // Create profile directly without importing client-side code
-      try {
-        // Check if profile exists
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('id')
-          .eq('user_id', data.user.id)
-          .single();
-
-        if (!profile) {
-          const nomeCompleto = data.user.user_metadata?.nome_completo ||
-                              data.user.user_metadata?.full_name ||
-                              data.user.email?.split('@')[0] || 'Usuário';
-          const objetivo = data.user.user_metadata?.objetivo;
-          
-          // Create user profile
-          await supabase
+      if (user) {
+        try {
+          const { data: profile } = await supabase
             .from('user_profiles')
-            .upsert({
-              user_id: data.user.id,
-              nome_completo: nomeCompleto,
-              objetivo: objetivo || null,
-            }, { onConflict: 'user_id' });
+            .select('id')
+            .eq('user_id', user.id)
+            .single()
 
-          // Create user statistics
-          await supabase
-            .from('user_statistics')
-            .upsert({ user_id: data.user.id }, { onConflict: 'user_id' });
+          if (!profile) {
+            const nomeCompleto = user.user_metadata?.nome_completo ||
+                                user.user_metadata?.full_name ||
+                                user.email?.split('@')[0] || 'Usuário';
+            const objetivo = user.user_metadata?.objetivo;
+
+            await supabase
+              .from('user_profiles')
+              .upsert({
+                user_id: user.id,
+                nome_completo: nomeCompleto,
+                objetivo: objetivo || null,
+              }, { onConflict: 'user_id' });
+
+            await supabase
+              .from('user_statistics')
+              .upsert({ user_id: user.id }, { onConflict: 'user_id' });
+          }
+        } catch (profileError) {
+          console.warn('Profile creation failed (non-critical):', profileError)
         }
-      } catch (profileError) {
-        // Log but don't fail - profile can be created later
-        console.warn('Não foi possível criar perfil no callback:', profileError);
+      }
+
+      const forwardedHost = request.headers.get('x-forwarded-host') // original origin before load balancer
+      const isLocalEnv = process.env.NODE_ENV === 'development'
+
+      if (isLocalEnv) {
+        // we can be sure that there is no load balancer in between, so no need to watch for X-Forwarded-Host
+        return NextResponse.redirect(`${origin}${next}`)
+      } else if (forwardedHost) {
+        return NextResponse.redirect(`https://${forwardedHost}${next}`)
+      } else {
+        return NextResponse.redirect(`${origin}${next}`)
       }
     }
-
-    return NextResponse.redirect(`${origin}${next}`);
-  } catch (error) {
-    console.error('Erro no callback OAuth:', error);
-    return NextResponse.redirect(`${origin}${AUTH_PATHS.ERROR}`);
   }
+
+  // return the user to an error page with instructions
+  return NextResponse.redirect(`${origin}/auth/auth-code-error`)
 }

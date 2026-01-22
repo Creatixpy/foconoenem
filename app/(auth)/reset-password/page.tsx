@@ -8,7 +8,9 @@ import { useState, useEffect, type FormEvent } from 'react';
 import Link from 'next/link';
 import { validatePassword } from '@/lib/auth/validation';
 import { AUTH_PATHS } from '@/lib/auth/constants';
-import { supabase } from '@/lib/auth/client';
+import { createClient } from '@/lib/supabase/client';
+
+const supabase = createClient();
 
 function getPasswordStrengthColor(strength: 'weak' | 'fair' | 'good' | 'strong'): string {
   switch (strength) {
