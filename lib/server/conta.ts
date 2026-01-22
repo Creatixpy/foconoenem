@@ -60,6 +60,7 @@ async function getAuthenticatedUserId(): Promise<string | null> {
         const { data: { user } } = await client.auth.getUser();
         return user?.id || null;
     } catch (error) {
+        // Sentinel Deep Auditor: Silent logging for security.
         console.error('Erro ao obter usuário autenticado:', error);
         return null;
     }
@@ -89,7 +90,7 @@ export async function fetchContaData(userId: string) {
     ]);
 
     // Parse numeric fields
-    let statistics = statsResponse.data;
+    const statistics = statsResponse.data;
     if (statistics) {
         const numericFields = [
             'media_nota_redacao',

@@ -22,9 +22,8 @@ function getStripe() {
   }
 
   stripeClient = new Stripe(secretKey, {
-    // Original code had '2025-11-17.clover' which seems futuristic or custom.
-    // I will revert to the original string to avoid breaking changes, assuming it's valid in this context.
-    apiVersion: '2025-11-17.clover' as string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    apiVersion: '2025-11-17.clover' as any,
   });
 
   return stripeClient;
