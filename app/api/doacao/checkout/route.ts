@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { z } from 'zod';
+import { handleApiError } from '@/lib/security';
+
+// Sentinel Security: Validates the request body strictly
+const checkoutSchema = z.object({
+  amount: z.number().min(5, { message: 'Valor mínimo de doação é R$ 5,00' }).max(10000, { message: 'Valor excede o limite permitido por transação.' })
+});
 
 let stripeClient: Stripe | null = null;
 
@@ -10,11 +17,14 @@ function getStripe() {
 
   const secretKey = process.env.STRIPE_SECRET_KEY;
   if (!secretKey) {
+    // Sentinel Security: Log this internally, but do not crash the request visibly with stack trace if possible in production (caught by wrapper)
     throw new Error('STRIPE_SECRET_KEY não configurada.');
   }
 
   stripeClient = new Stripe(secretKey, {
-    apiVersion: '2025-11-17.clover',
+    // Original code had '2025-11-17.clover' which seems futuristic or custom.
+    // I will revert to the original string to avoid breaking changes, assuming it's valid in this context.
+    apiVersion: '2025-11-17.clover' as string,
   });
 
   return stripeClient;
@@ -22,18 +32,24 @@ function getStripe() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { amount } = await request.json();
+    const body = await request.json();
 
-    // Validar o valor da doação (mínimo R$ 5)
-    if (!amount || amount < 5) {
-      return NextResponse.json(
-        { error: 'Valor mínimo de doação é R$ 5,00' },
-        { status: 400 }
-      );
-    }
+    // Sentinel Security: Input Hardening via Zod
+    const { amount } = checkoutSchema.parse(body);
 
     // Criar sessão de checkout do Stripe
     const stripe = getStripe();
+
+    // Sentinel Security: Strict Origin Validation
+    // Prevent open redirect vulnerabilities by whitelisting the origin.
+    const allowedOrigin = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    let origin = request.headers.get('origin') || allowedOrigin;
+
+    if (origin !== allowedOrigin) {
+      // If origin doesn't match our site, fallback to safe internal URL (or reject, but fallback preserves flow for some setups)
+      origin = allowedOrigin;
+    }
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -50,8 +66,8 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: 'payment',
-      success_url: `${request.headers.get('origin')}/doacao/sucesso?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${request.headers.get('origin')}/doacao?canceled=true`,
+      success_url: `${origin}/doacao/sucesso?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/doacao?canceled=true`,
       metadata: {
         type: 'donation',
       },
@@ -59,10 +75,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ url: session.url, sessionId: session.id });
   } catch (error) {
-    console.error('Erro ao criar sessão de checkout:', error);
-    return NextResponse.json(
-      { error: 'Erro ao processar pagamento' },
-      { status: 500 }
-    );
+    // Sentinel Security: Blind Error Handling
+    return handleApiError(error);
   }
 }

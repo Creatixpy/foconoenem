@@ -7,14 +7,19 @@ import { getOperatingHoursInfo } from '@/lib/server/operating-hours';
 import { checkRateLimit } from '@/lib/server/rate-limit';
 import { trackEvent } from '@/lib/server/analytics';
 import { resolveRequestUser } from '@/lib/server/auth-request';
+import { z } from 'zod';
+import { handleApiError, sanitizeString } from '@/lib/security';
 
-type EssaySubmission = {
-  redacao: string;
-  usarTemaPadrao?: boolean;
-  tema?: string;
-  textoApoio1?: string;
-  textoApoio2?: string;
-};
+// Sentinel Security: Define input schema with Zod
+const submissionSchema = z.object({
+  redacao: z.string().min(50, 'A redação deve ter no mínimo 50 caracteres').max(5000, 'A redação não pode exceder 5000 caracteres'),
+  usarTemaPadrao: z.boolean().optional(),
+  tema: z.string().min(5).optional(),
+  textoApoio1: z.string().optional(),
+  textoApoio2: z.string().optional()
+});
+
+type EssaySubmission = z.infer<typeof submissionSchema>;
 
 type EssayCompetence = {
   nota: number;
@@ -47,8 +52,8 @@ type ThemeAlignmentResult = {
   justification: string;
 };
 
-const MAX_ESSAY_LENGTH = 5000;
-const MIN_ESSAY_LENGTH = 50;
+// const MAX_ESSAY_LENGTH = 5000; // Handled by Zod
+// const MIN_ESSAY_LENGTH = 50; // Handled by Zod
 
 const DEFAULT_THEME = 'Os desafios da educação digital no Brasil contemporâneo';
 const DEFAULT_TEXT_1 =
@@ -374,216 +379,221 @@ async function analyseEssay(input: {
 }
 
 export async function GET(request: NextRequest) {
-  const auth = await resolveRequestUser(request);
-  if ('error' in auth) {
-    return auth.error;
+  try {
+    const auth = await resolveRequestUser(request);
+    if ('error' in auth) {
+      return auth.error;
+    }
+
+    const supabase = auth.supabase as SupabaseClient<Database>;
+    const userId = auth.userId;
+    const id = request.nextUrl.searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ error: 'ID não fornecido' }, { status: 400 });
+    }
+
+    // Sentinel Security: Basic input check for ID format (UUID)
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+       return NextResponse.json({ error: 'Formato de ID inválido' }, { status: 400 });
+    }
+
+    const result = await getResultById(supabase, id, userId);
+    if (!result) {
+      return NextResponse.json({ error: 'Resultado não encontrado' }, { status: 404 });
+    }
+
+    await trackEvent({
+      eventType: 'essay_viewed',
+      metadata: { essay_id: id },
+      userIp: request.headers.get('x-forwarded-for') ?? undefined,
+      userAgent: request.headers.get('user-agent') ?? undefined,
+      userId,
+    });
+
+    return NextResponse.json({ result });
+  } catch (error) {
+    // Sentinel Security: Blind Error Handling
+    return handleApiError(error);
   }
-
-  const supabase = auth.supabase as SupabaseClient<Database>;
-  const userId = auth.userId;
-  const id = request.nextUrl.searchParams.get('id');
-
-  if (!id) {
-    return NextResponse.json({ error: 'ID não fornecido' }, { status: 400 });
-  }
-
-  const result = await getResultById(supabase, id, userId);
-  if (!result) {
-    return NextResponse.json({ error: 'Resultado não encontrado' }, { status: 404 });
-  }
-
-  await trackEvent({
-    eventType: 'essay_viewed',
-    metadata: { essay_id: id },
-    userIp: request.headers.get('x-forwarded-for') ?? undefined,
-    userAgent: request.headers.get('user-agent') ?? undefined,
-    userId,
-  });
-
-  return NextResponse.json({ result });
 }
 
 export async function POST(request: NextRequest) {
-  const auth = await resolveRequestUser(request);
-  if ('error' in auth) {
-    return auth.error;
-  }
-
-  const supabase = auth.supabase as SupabaseClient<Database>;
-  const userId = auth.userId;
-  const forwardedFor = request.headers.get('x-forwarded-for');
-  const ip = forwardedFor?.split(',')[0].trim() ?? request.headers.get('x-real-ip') ?? 'unknown';
-  const userAgent = request.headers.get('user-agent') ?? 'unknown';
-
-  const rateIdentifier = userId || ip;
-  const rateResult = await checkRateLimit(rateIdentifier, '/api/corrigir', 5, 1);
-  if (!rateResult.allowed) {
-    return NextResponse.json(
-      {
-        error: 'Muitas requisições',
-        message: `Você atingiu o limite de requisições. Tente novamente após ${rateResult.resetAt.toISOString()}.`,
-        resetAt: rateResult.resetAt.toISOString(),
-      },
-      { status: 429 }
-    );
-  }
-
-  const operatingInfo = await getOperatingHoursInfo();
-  if (!operatingInfo.isOpen) {
-    return NextResponse.json(
-      {
-        error: 'Sistema fora do horário de funcionamento',
-        message: operatingInfo.message,
-        horarioFuncionamento: `${operatingInfo.opensAt} - ${operatingInfo.closesAt}`,
-      },
-      { status: 403 }
-    );
-  }
-
-  let submission: EssaySubmission;
   try {
-    submission = (await request.json()) as EssaySubmission;
-  } catch {
-    return NextResponse.json({ error: 'JSON inválido' }, { status: 400 });
-  }
+    const auth = await resolveRequestUser(request);
+    if ('error' in auth) {
+      return auth.error;
+    }
 
-  if (!submission.redacao || typeof submission.redacao !== 'string') {
-    return NextResponse.json({ error: 'Redação inválida' }, { status: 400 });
-  }
+    const supabase = auth.supabase as SupabaseClient<Database>;
+    const userId = auth.userId;
+    const forwardedFor = request.headers.get('x-forwarded-for');
+    const ip = forwardedFor?.split(',')[0].trim() ?? request.headers.get('x-real-ip') ?? 'unknown';
+    const userAgent = request.headers.get('user-agent') ?? 'unknown';
 
-  const trimmedEssay = submission.redacao.trim();
-  const essayLength = trimmedEssay.length;
+    const rateIdentifier = userId || ip;
+    const rateResult = await checkRateLimit(rateIdentifier, '/api/corrigir', 5, 1);
+    if (!rateResult.allowed) {
+      return NextResponse.json(
+        {
+          error: 'Muitas requisições',
+          message: `Você atingiu o limite de requisições. Tente novamente após ${rateResult.resetAt.toISOString()}.`,
+          resetAt: rateResult.resetAt.toISOString(),
+        },
+        { status: 429 }
+      );
+    }
 
-  if (essayLength < MIN_ESSAY_LENGTH) {
-    return NextResponse.json(
-      { error: `A redação deve ter no mínimo ${MIN_ESSAY_LENGTH} caracteres` },
-      { status: 400 }
-    );
-  }
+    const operatingInfo = await getOperatingHoursInfo();
+    if (!operatingInfo.isOpen) {
+      return NextResponse.json(
+        {
+          error: 'Sistema fora do horário de funcionamento',
+          message: operatingInfo.message,
+          horarioFuncionamento: `${operatingInfo.opensAt} - ${operatingInfo.closesAt}`,
+        },
+        { status: 403 }
+      );
+    }
 
-  if (essayLength > MAX_ESSAY_LENGTH) {
-    return NextResponse.json(
-      { error: `A redação não pode exceder ${MAX_ESSAY_LENGTH} caracteres` },
-      { status: 400 }
-    );
-  }
+    let submission: EssaySubmission;
+    try {
+      const json = await request.json();
+      // Sentinel Security: Zod Validation
+      submission = submissionSchema.parse(json);
+    } catch (e) {
+      if (e instanceof z.ZodError) throw e;
+      return NextResponse.json({ error: 'JSON inválido' }, { status: 400 });
+    }
 
-  if (submission.usarTemaPadrao === false && (!submission.tema || submission.tema.trim().length < 5)) {
-    return NextResponse.json(
-      { error: 'É necessário fornecer um tema personalizado válido' },
-      { status: 400 }
-    );
-  }
+    // Sentinel Security: Sanitization (although Zod validates, trimming and cleaning is good practice)
+    submission.redacao = sanitizeString(submission.redacao);
+    if (submission.tema) submission.tema = sanitizeString(submission.tema);
 
-  const essayId = randomUUID();
-  const temaFinal = submission.usarTemaPadrao !== false ? DEFAULT_THEME : submission.tema ?? DEFAULT_THEME;
-  const textoApoio1Final = submission.usarTemaPadrao !== false ? DEFAULT_TEXT_1 : submission.textoApoio1 ?? '';
-  const textoApoio2Final = submission.usarTemaPadrao !== false ? DEFAULT_TEXT_2 : submission.textoApoio2 ?? '';
+    const trimmedEssay = submission.redacao;
+    const essayLength = trimmedEssay.length;
+    // Length checks handled by Zod now, but keeping local var for logging
 
-  let alignmentResult: ThemeAlignmentResult | null = null;
-  try {
-    alignmentResult = await verifyThemeAlignment({ ...submission, redacao: trimmedEssay }, temaFinal);
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    const attempts =
-      error && typeof error === 'object' && 'attemptsLog' in error
-        ? ((error as { attemptsLog?: string[] }).attemptsLog ?? undefined)
-        : undefined;
+    if (submission.usarTemaPadrao === false && (!submission.tema || submission.tema.trim().length < 5)) {
+      return NextResponse.json(
+        { error: 'É necessário fornecer um tema personalizado válido' },
+        { status: 400 }
+      );
+    }
 
-    console.error('Erro ao validar alinhamento de tema:', error);
-    return NextResponse.json(
-      {
-        error: 'Erro ao validar o tema',
-        message: 'Não foi possível confirmar se a redação aborda o tema. Tente novamente em instantes.',
-        diagnostics: { stage: 'verifyThemeAlignment', detail, attempts },
-      },
-      { status: 503 }
-    );
-  }
+    const essayId = randomUUID();
+    const temaFinal = submission.usarTemaPadrao !== false ? DEFAULT_THEME : submission.tema ?? DEFAULT_THEME;
+    const textoApoio1Final = submission.usarTemaPadrao !== false ? DEFAULT_TEXT_1 : submission.textoApoio1 ?? '';
+    const textoApoio2Final = submission.usarTemaPadrao !== false ? DEFAULT_TEXT_2 : submission.textoApoio2 ?? '';
 
-  if (!alignmentResult.aligned) {
+    let alignmentResult: ThemeAlignmentResult | null = null;
+    try {
+      alignmentResult = await verifyThemeAlignment({ ...submission, redacao: trimmedEssay }, temaFinal);
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      const attempts =
+        error && typeof error === 'object' && 'attemptsLog' in error
+          ? ((error as { attemptsLog?: string[] }).attemptsLog ?? undefined)
+          : undefined;
+
+      console.error('Erro ao validar alinhamento de tema:', error);
+      return NextResponse.json(
+        {
+          error: 'Erro ao validar o tema',
+          message: 'Não foi possível confirmar se a redação aborda o tema. Tente novamente em instantes.',
+          diagnostics: { stage: 'verifyThemeAlignment', detail, attempts },
+        },
+        { status: 503 }
+      );
+    }
+
+    if (!alignmentResult.aligned) {
+      await trackEvent({
+        eventType: 'error_occurred',
+        metadata: {
+          error_type: 'essay_rejected_theme',
+          theme_type: submission.usarTemaPadrao !== false ? 'padrao' : submission.tema ? 'personalizado' : 'gerado',
+          justification: alignmentResult.justification,
+          tema: temaFinal,
+        },
+        userIp: ip,
+        userAgent,
+        userId,
+      });
+
+      return NextResponse.json(
+        {
+          error: 'Tema não abordado',
+          message: 'Sua redação não trata do tema solicitado. Revise antes de reenviar.',
+          justification: alignmentResult.justification,
+        },
+        { status: 400 }
+      );
+    }
+
+    let aiAnalysis: { analysis: Omit<EssayResult, 'createdAt' | 'origem'>; provider: string } | null = null;
+    try {
+      aiAnalysis = await analyseEssay({
+        submission: { ...submission, redacao: trimmedEssay },
+        temaFinal,
+        textoApoio1Final,
+        textoApoio2Final,
+        essayId,
+      });
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      const attempts =
+        error && typeof error === 'object' && 'attemptsLog' in error
+          ? ((error as { attemptsLog?: string[] }).attemptsLog ?? undefined)
+          : undefined;
+
+      console.error('Erro ao analisar redação com IA:', error);
+      return NextResponse.json(
+        {
+          error: 'Erro ao gerar correção',
+          message: 'Nossa IA demorou mais do que o esperado. Tente novamente em instantes.',
+          diagnostics: { stage: 'analyseEssay', detail, attempts },
+        },
+        { status: 503 }
+      );
+    }
+
+    const result: EssayResult = {
+      ...aiAnalysis.analysis,
+      id: essayId,
+      redacaoOriginal: trimmedEssay,
+      createdAt: new Date().toISOString(),
+      origem: 'IA',
+    };
+
+    try {
+      await storeResult(supabase, result, userId);
+    } catch (error) {
+      console.error('Erro ao salvar correção de redação:', error);
+      return NextResponse.json(
+        { error: 'Erro ao salvar o resultado desta redação.' },
+        { status: 500 }
+      );
+    }
+
     await trackEvent({
-      eventType: 'error_occurred',
+      eventType: 'essay_submitted',
       metadata: {
-        error_type: 'essay_rejected_theme',
         theme_type: submission.usarTemaPadrao !== false ? 'padrao' : submission.tema ? 'personalizado' : 'gerado',
-        justification: alignmentResult.justification,
+        essay_length: essayLength,
+        score: result.nota,
         tema: temaFinal,
+        provider: aiAnalysis.provider,
+        alignment_justification: alignmentResult.justification,
       },
       userIp: ip,
       userAgent,
       userId,
     });
 
-    return NextResponse.json(
-      {
-        error: 'Tema não abordado',
-        message: 'Sua redação não trata do tema solicitado. Revise antes de reenviar.',
-        justification: alignmentResult.justification,
-      },
-      { status: 400 }
-    );
-  }
-
-  let aiAnalysis: { analysis: Omit<EssayResult, 'createdAt' | 'origem'>; provider: string } | null = null;
-  try {
-    aiAnalysis = await analyseEssay({
-      submission: { ...submission, redacao: trimmedEssay },
-      temaFinal,
-      textoApoio1Final,
-      textoApoio2Final,
-      essayId,
-    });
+    return NextResponse.json({ id: essayId });
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    const attempts =
-      error && typeof error === 'object' && 'attemptsLog' in error
-        ? ((error as { attemptsLog?: string[] }).attemptsLog ?? undefined)
-        : undefined;
-
-    console.error('Erro ao analisar redação com IA:', error);
-    return NextResponse.json(
-      {
-        error: 'Erro ao gerar correção',
-        message: 'Nossa IA demorou mais do que o esperado. Tente novamente em instantes.',
-        diagnostics: { stage: 'analyseEssay', detail, attempts },
-      },
-      { status: 503 }
-    );
+    // Sentinel Security: Blind Error Handling
+    return handleApiError(error);
   }
-
-  const result: EssayResult = {
-    ...aiAnalysis.analysis,
-    id: essayId,
-    redacaoOriginal: trimmedEssay,
-    createdAt: new Date().toISOString(),
-    origem: 'IA',
-  };
-
-  try {
-    await storeResult(supabase, result, userId);
-  } catch (error) {
-    console.error('Erro ao salvar correção de redação:', error);
-    return NextResponse.json(
-      { error: 'Erro ao salvar o resultado desta redação.' },
-      { status: 500 }
-    );
-  }
-
-  await trackEvent({
-    eventType: 'essay_submitted',
-    metadata: {
-      theme_type: submission.usarTemaPadrao !== false ? 'padrao' : submission.tema ? 'personalizado' : 'gerado',
-      essay_length: essayLength,
-      score: result.nota,
-      tema: temaFinal,
-      provider: aiAnalysis.provider,
-      alignment_justification: alignmentResult.justification,
-    },
-    userIp: ip,
-    userAgent,
-    userId,
-  });
-
-  return NextResponse.json({ id: essayId });
 }
