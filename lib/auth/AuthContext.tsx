@@ -15,10 +15,12 @@ import {
   type ReactNode,
 } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
-import { supabase } from './client';
+import { createClient } from '@/lib/supabase/client';
 import { SESSION_CONFIG } from './constants';
 import { updateLastActivity, isSessionIdle, clearAuthStorage } from './security';
 import type { UserProfile, OAuthSignupContext } from './types';
+
+const supabase = createClient();
 
 // Import profile functions directly to avoid circular deps
 async function getUserProfile(userId: string): Promise<UserProfile | null> {

@@ -21,8 +21,6 @@
 
 export {
   getBrowserClient,
-  createServerClient,
-  createAdminClient,
   withTimeout,
   DatabaseError,
   isNotFoundError,
@@ -128,13 +126,11 @@ export const analytics = analyticsRepo;
 // Convenience namespace export
 // ============================================================================
 
-import { getBrowserClient, createServerClient, createAdminClient } from './client';
+import { getBrowserClient } from './client';
 
 export const db = {
   // Clients
   getBrowserClient,
-  createServerClient,
-  createAdminClient,
   
   // Repositories
   users: usersRepo,

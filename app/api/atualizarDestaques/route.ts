@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authorizeAdmin } from '@/lib/admin-auth';
-import { createAdminClient, type SupabaseClient, type Database } from '@/lib/db';
+import { type SupabaseClient, type Database } from '@/lib/db';
+import { createAdminClient } from '@/lib/db/server';
 import { buildGroqProviders, GROQ_MAX_ATTEMPTS, isRateLimitError } from '@/lib/ai/groq';
 
 type NoticiaResumo = {
