@@ -16,8 +16,8 @@ const navLinks: NavLink[] = [
   { href: "/redacao", label: "REDAÇÃO" },
   { href: "/questoes", label: "QUESTÕES" },
   { href: "/noticias", label: "NOTÍCIAS" },
-  { href: "/comunidade", label: "GUILDA" },
-  { href: "/sobre", label: "TUTORIAL" },
+  { href: "/comunidade", label: "COMUNIDADE" },
+  { href: "/sobre", label: "SOBRE" },
 ];
 
 export default function Header() {
@@ -80,7 +80,7 @@ export default function Header() {
     if (profile?.nome_completo) {
       return profile.nome_completo.split(" ")[0];
     }
-    return user?.email?.split("@")[0] ?? "PLAYER 1";
+    return user?.email?.split("@")[0] ?? "ESTUDANTE";
   }, [profile?.nome_completo, user?.email]);
 
   const handleSignOut = useCallback(async () => {
@@ -184,7 +184,7 @@ export default function Header() {
                         onClick={() => setShowUserMenu(false)}
                         role="menuitem"
                       >
-                        👤 STATUS
+                        👤 MEU PERFIL
                       </Link>
                       <button
                         type="button"
@@ -195,7 +195,7 @@ export default function Header() {
                         className="flex w-full items-center gap-3 px-3 py-2 text-left text-xs font-pixel text-danger hover:bg-danger hover:text-white transition-colors border border-transparent hover:border-foreground"
                         role="menuitem"
                       >
-                        💀 QUIT GAME
+                        💀 SAIR
                       </button>
                     </motion.div>
                   )}
@@ -207,13 +207,13 @@ export default function Header() {
                   href="/auth/login"
                   className="btn btn-outline text-[10px]"
                 >
-                  INSERT COIN
+                  ENTRAR
                 </Link>
                 <Link
                   href="/auth/register"
                   className="btn btn-primary text-[10px]"
                 >
-                  START GAME
+                  CADASTRAR
                 </Link>
               </div>
             )}
@@ -256,12 +256,12 @@ export default function Header() {
                     className="fixed inset-y-0 right-0 z-50 w-[80%] max-w-sm border-l-4 border-foreground bg-card-bg p-6 shadow-2xl md:hidden overflow-y-auto"
                 >
                     <div className="flex items-center justify-between mb-8 border-b-2 border-foreground pb-4">
-                        <span className="text-lg font-pixel text-primary">PAUSE MENU</span>
+                        <span className="text-lg font-pixel text-primary">MENU</span>
                         <button
                             onClick={closeMobileMenu}
                             className="p-2 text-foreground hover:bg-muted-bg border-2 border-transparent hover:border-foreground transition-all"
                         >
-                            <span className="font-pixel">CLOSE</span>
+                            <span className="font-pixel">FECHAR</span>
                         </button>
                     </div>
 
@@ -286,14 +286,14 @@ export default function Header() {
                                 onClick={closeMobileMenu}
                                 className="btn btn-outline w-full justify-center"
                             >
-                                INSERT COIN (LOGIN)
+                                ENTRAR
                             </Link>
                             <Link
                                 href="/auth/register"
                                 onClick={closeMobileMenu}
                                 className="btn btn-primary w-full justify-center"
                             >
-                                START GAME (SIGN UP)
+                                CADASTRAR
                             </Link>
                         </div>
                     )}
@@ -318,14 +318,14 @@ export default function Header() {
                                     onClick={closeMobileMenu}
                                     className="btn btn-glass w-full justify-start"
                                 >
-                                    👤 MY STATS
+                                    👤 MEUS DADOS
                                 </Link>
                                 <button
                                     type="button"
                                     onClick={handleSignOut}
                                     className="btn btn-outline w-full justify-start text-danger border-danger hover:bg-danger hover:text-white"
                                 >
-                                    💀 QUIT GAME
+                                    💀 SAIR
                                 </button>
                             </div>
                         </div>
