@@ -8,12 +8,14 @@
 
  ✓ Starting...
  ○ Compiling middleware ...
- ✓ Compiled middleware in 581ms
- ✓ Ready in 2.2s
+ ✓ Compiled middleware in 637ms
+ ✓ Ready in 2.3s
  ○ Compiling / ...
- ✓ Compiled / in 8.4s
- GET / 200 in 9733ms
- GET / 200 in 277ms
+ ✓ Compiled / in 8.5s
+ GET / 200 in 9922ms
+ GET / 200 in 387ms
  ○ Compiling /auth/login ...
- ✓ Compiled /auth/login in 1060ms
- GET /auth/login 200 in 1350ms
+ ✓ Compiled /auth/login in 960ms
+ GET /auth/login 200 in 1223ms
+ GET / 200 in 345ms
+ GET /auth/login 200 in 305ms

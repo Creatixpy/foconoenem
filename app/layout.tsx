@@ -133,7 +133,7 @@ export default function RootLayout({
 
             <main
               id="main-content"
-              className="flex-1"
+              className="flex-1 pt-[4.5rem]"
             >
               {children}
             </main>
