@@ -138,20 +138,20 @@ export default function LoginPageClient({ redirectTo }: LoginPageClientProps) {
                             onChange={(e) => setEmail(e.target.value)}
                             required
                             className="block w-full border-2 border-foreground bg-muted-bg px-4 py-3 text-foreground shadow-sm transition-all placeholder:text-foreground/40 focus:border-primary focus:bg-background focus:outline-none focus:shadow-[4px_4px_0px_var(--primary)]"
-                            placeholder="PLAYER@EMAIL.COM"
+                            placeholder="SEU@EMAIL.COM"
                         />
                     </div>
 
                     <div>
                         <div className="flex items-center justify-between mb-2">
                             <label htmlFor="password" className="block text-xs font-pixel text-foreground/80">
-                                PASSWORD
+                                SENHA
                             </label>
                             <Link
                                 href="/auth/forgot-password"
                                 className="text-[10px] font-pixel text-primary hover:text-primary-dark"
                             >
-                                FORGOT PASS?
+                                ESQUECEU A SENHA?
                             </Link>
                         </div>
                         <input
