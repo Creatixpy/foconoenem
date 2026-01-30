@@ -1,4 +1,4 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Press_Start_2P } from "next/font/google";
 import { Metadata, Viewport } from "next";
 import "./styles/index.css";
 import { Header, Footer } from "./components/layout";
@@ -81,6 +81,13 @@ const geistMono = Geist_Mono({
   display: "swap",
 });
 
+const pressStart2P = Press_Start_2P({
+  weight: "400",
+  variable: "--font-pixel",
+  subsets: ["latin"],
+  display: "swap",
+});
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -109,7 +116,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/foconoenemicon.png" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${pressStart2P.variable} antialiased`}
       >
         <Providers>
           {/* Skip to main content link for accessibility */}
