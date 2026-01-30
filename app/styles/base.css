@@ -30,34 +30,12 @@ body {
         color var(--duration-slow) var(--easing-default);
 }
 
-/* Background decorations */
+/*
+   Retro Background Pattern (Optional Grid or Dots)
+   For now, we keep it clean solid color defined in tokens.
+*/
 body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: -1;
-    background:
-        radial-gradient(ellipse 80% 50% at 20% 0%, var(--color-primary-100), transparent 50%),
-        radial-gradient(ellipse 60% 40% at 80% 10%, var(--color-accent-100), transparent 40%);
-    opacity: 0.4;
-    transition: opacity var(--duration-slow) var(--easing-default);
-}
-
-[data-theme="dark"] body::before {
-    background:
-        radial-gradient(ellipse 80% 50% at 20% 0%, rgba(37, 99, 235, 0.15), transparent 50%),
-        radial-gradient(ellipse 60% 40% at 80% 10%, rgba(139, 92, 246, 0.1), transparent 40%);
-    opacity: 1;
-}
-
-@media (prefers-color-scheme: dark) {
-    [data-theme="system"] body::before {
-        background:
-            radial-gradient(ellipse 80% 50% at 20% 0%, rgba(37, 99, 235, 0.15), transparent 50%),
-            radial-gradient(ellipse 60% 40% at 80% 10%, rgba(139, 92, 246, 0.1), transparent 40%);
-        opacity: 1;
-    }
+    display: none;
 }
 
 /* ============================================================================
@@ -71,10 +49,12 @@ h4,
 h5,
 h6 {
     margin: 0;
-    font-weight: 700;
-    line-height: var(--leading-tight);
+    font-family: var(--font-pixel), var(--font-sans); /* ARCADE FONT */
+    font-weight: 400; /* Pixel fonts usually don't need bold weight */
+    line-height: 1.4;
     letter-spacing: var(--tracking-tight);
     color: var(--foreground);
+    text-transform: uppercase; /* Retro feel */
 }
 
 p {
@@ -121,7 +101,8 @@ a {
     }
 }
 
-/* Page gradient background */
+/* Page gradient background - Disabled/Reset */
 .bg-page-gradient {
     background-color: var(--background);
+    background-image: none;
 }
