@@ -95,9 +95,9 @@ export default function LoginPageClient({ redirectTo }: LoginPageClientProps) {
             </p>
         </div>
 
-        <div className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-xl sm:p-8">
+        <div className="border-2 border-foreground bg-card-bg p-6 shadow-[8px_8px_0px_var(--foreground)] sm:p-8">
             {formError && (
-                <div className="mb-6 rounded-lg border border-danger/20 bg-danger/10 p-4 text-sm font-medium text-danger animate-slide-down">
+                <div className="mb-6 border-2 border-danger bg-danger/10 p-4 text-sm font-pixel text-danger animate-slide-down">
                     {formError}
                 </div>
             )}
@@ -106,7 +106,7 @@ export default function LoginPageClient({ redirectTo }: LoginPageClientProps) {
                 <button
                     onClick={handleGoogleSignIn}
                     disabled={submitting}
-                    className="flex w-full items-center justify-center gap-3 rounded-xl border border-border-color bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700"
+                    className="flex w-full items-center justify-center gap-3 border-2 border-foreground bg-white px-4 py-3 text-sm font-pixel text-gray-700 shadow-[4px_4px_0px_var(--foreground)] transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_var(--foreground)] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700"
                 >
                     <svg className="h-5 w-5" viewBox="0 0 533.5 544.3" aria-hidden="true">
                         <path fill="#4285f4" d="M533.5 278.4c0-17.4-1.4-34.1-4-50.4H272v95.4h147.4c-6.4 34.9-25.7 64.4-54.7 84.2v69.8h88.4c51.7-47.6 80.4-117.8 80.4-199z" />
@@ -128,8 +128,8 @@ export default function LoginPageClient({ redirectTo }: LoginPageClientProps) {
 
                 <form onSubmit={handleSubmit} className="space-y-5">
                     <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-foreground/80">
-                            Email
+                        <label htmlFor="email" className="block text-xs font-pixel text-foreground/80 mb-2">
+                            EMAIL
                         </label>
                         <input
                             id="email"
@@ -137,21 +137,21 @@ export default function LoginPageClient({ redirectTo }: LoginPageClientProps) {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
-                            className="mt-2 block w-full rounded-xl border border-border-color bg-muted-bg/50 px-4 py-3 text-foreground shadow-sm transition-all placeholder:text-foreground/40 focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
-                            placeholder="seu@email.com"
+                            className="block w-full border-2 border-foreground bg-muted-bg px-4 py-3 text-foreground shadow-sm transition-all placeholder:text-foreground/40 focus:border-primary focus:bg-background focus:outline-none focus:shadow-[4px_4px_0px_var(--primary)]"
+                            placeholder="PLAYER@EMAIL.COM"
                         />
                     </div>
 
                     <div>
-                        <div className="flex items-center justify-between">
-                            <label htmlFor="password" className="block text-sm font-medium text-foreground/80">
-                                Senha
+                        <div className="flex items-center justify-between mb-2">
+                            <label htmlFor="password" className="block text-xs font-pixel text-foreground/80">
+                                PASSWORD
                             </label>
                             <Link
                                 href="/auth/forgot-password"
-                                className="text-xs font-medium text-primary hover:text-primary-dark"
+                                className="text-[10px] font-pixel text-primary hover:text-primary-dark"
                             >
-                                Esqueceu a senha?
+                                FORGOT PASS?
                             </Link>
                         </div>
                         <input
@@ -160,15 +160,15 @@ export default function LoginPageClient({ redirectTo }: LoginPageClientProps) {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
-                            className="mt-2 block w-full rounded-xl border border-border-color bg-muted-bg/50 px-4 py-3 text-foreground shadow-sm transition-all placeholder:text-foreground/40 focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
-                            placeholder="Sua senha"
+                            className="block w-full border-2 border-foreground bg-muted-bg px-4 py-3 text-foreground shadow-sm transition-all placeholder:text-foreground/40 focus:border-primary focus:bg-background focus:outline-none focus:shadow-[4px_4px_0px_var(--primary)]"
+                            placeholder="********"
                         />
                     </div>
 
                     <button
                         type="submit"
                         disabled={submitting}
-                        className="flex w-full items-center justify-center rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-primary/20 transition-all hover:bg-primary-dark hover:shadow-primary/30 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
+                        className="flex w-full items-center justify-center bg-primary px-4 py-3 text-sm font-pixel text-white border-2 border-foreground shadow-[4px_4px_0px_var(--foreground)] transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_var(--foreground)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
                     >
                         {submitting ? (
                             <div className="flex items-center gap-2">
