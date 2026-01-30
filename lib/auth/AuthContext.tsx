@@ -39,39 +39,6 @@ async function getUserProfile(userId: string): Promise<UserProfile | null> {
   }
 }
 
-async function createUserProfile(
-  userId: string,
-  nomeCompleto?: string,
-  objetivo?: string | null
-): Promise<UserProfile | null> {
-  try {
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .upsert(
-        {
-          user_id: userId,
-          nome_completo: nomeCompleto || null,
-          objetivo: objetivo || null,
-        },
-        { onConflict: 'user_id' }
-      )
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    // Create statistics record
-    await supabase
-      .from('user_statistics')
-      .upsert({ user_id: userId }, { onConflict: 'user_id' });
-
-    return data as UserProfile;
-  } catch (error) {
-    console.error('Erro ao criar perfil:', error);
-    throw error;
-  }
-}
-
 async function updateUserProfile(
   userId: string,
   updates: Partial<UserProfile>
@@ -182,11 +149,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       let existingProfile = await getUserProfile(sessionUser.id);
 
-      if (!existingProfile) {
-        // Create new profile
-        await createUserProfile(sessionUser.id, storedNome ?? undefined, storedObjetivo ?? undefined);
-        existingProfile = await getUserProfile(sessionUser.id);
-      } else {
+      if (existingProfile) {
         // Update missing fields if we have stored values
         let needsUpdate = false;
         const updates: Partial<UserProfile> = {};
@@ -205,6 +168,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
           await updateUserProfile(sessionUser.id, updates);
           existingProfile = await getUserProfile(sessionUser.id);
         }
+      } else {
+        console.warn('Profile not found for user', sessionUser.id);
       }
 
       if (isMountedRef.current) {
