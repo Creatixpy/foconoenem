@@ -206,9 +206,8 @@ export async function signInWithGoogle(options?: {
 }): Promise<AuthResult> {
   try {
     // Build callback URL
-    const baseRedirect = process.env.NODE_ENV === 'production'
-      ? 'https://foconoenem.vercel.app/auth/callback'
-      : `${window.location.origin}/auth/callback`;
+    // Use window.location.origin to support Vercel Previews and any domain correctly
+    const baseRedirect = `${window.location.origin}/auth/callback`;
 
     const callbackUrl = new URL(baseRedirect);
     

@@ -72,7 +72,7 @@ export default function ContaPageClient() {
       }
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
-      setErrorMessage('GAME OVER on loading data. Try again?');
+      setErrorMessage('Erro ao carregar dados. Tentar novamente?');
     } finally {
       setLoading(false);
     }
@@ -98,7 +98,7 @@ export default function ContaPageClient() {
       await loadData();
     } catch (error) {
       console.error('Erro ao recalcular:', error);
-      setErrorMessage('Failed to update stats.');
+      setErrorMessage('Falha ao atualizar estatísticas.');
     } finally {
       setRecalculating(false);
     }
@@ -107,7 +107,7 @@ export default function ContaPageClient() {
   if (authLoading) {
     return (
       <main className="flex min-h-[60vh] items-center justify-center bg-background">
-        <div className="font-pixel text-xl animate-pulse text-primary">LOADING PLAYER DATA...</div>
+        <div className="font-pixel text-xl animate-pulse text-primary">CARREGANDO DADOS...</div>
       </main>
     );
   }
@@ -120,8 +120,8 @@ export default function ContaPageClient() {
     return (
       <main className="flex min-h-[60vh] items-center justify-center bg-background">
         <div className="text-center space-y-4">
-          <div className="font-pixel text-xl text-primary animate-bounce">INSERT COIN...</div>
-          <p className="text-sm font-mono text-foreground/60">Loading Dashboard...</p>
+          <div className="font-pixel text-xl text-primary animate-bounce">CARREGANDO...</div>
+          <p className="text-sm font-mono text-foreground/60">Preparando Painel...</p>
         </div>
       </main>
     );
@@ -169,7 +169,13 @@ export default function ContaPageClient() {
     data: new Date(essay.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
   })).reverse();
 
-  const initial = profile?.nome_completo?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || 'P1';
+  const initial = profile?.nome_completo?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || 'E1';
+
+  const tabs: { id: TabType; label: string }[] = [
+    { id: 'visao-geral', label: 'VISÃO GERAL' },
+    { id: 'redacoes', label: 'REDAÇÕES' },
+    { id: 'questoes', label: 'QUESTÕES' },
+  ];
 
   return (
     <div className="bg-background min-h-screen pb-12">
@@ -200,9 +206,9 @@ export default function ContaPageClient() {
            <div className="flex-grow text-center md:text-left space-y-2">
              <div className="flex flex-col md:flex-row items-center gap-4">
                <h1 className="text-2xl md:text-3xl font-pixel text-primary uppercase tracking-wide">
-                 {profile?.nome_completo || 'Player 1'}
+                 {profile?.nome_completo || 'Estudante'}
                </h1>
-               <span className="badge badge-purple">Lvl. 1 Scholar</span>
+               <span className="badge badge-purple">Estudante Nível 1</span>
              </div>
              <p className="font-mono text-sm text-foreground/70">{user.email}</p>
 
@@ -222,36 +228,36 @@ export default function ContaPageClient() {
                disabled={recalculating}
                className="btn btn-outline w-full md:w-auto"
              >
-               {recalculating ? 'SYNCING...' : '↻ SYNC DATA'}
+               {recalculating ? 'SINCRONIZANDO...' : '↻ ATUALIZAR'}
              </button>
              <Link href="/conta/editar" className="btn btn-primary w-full md:w-auto">
-               EDIT PROFILE
+               EDITAR PERFIL
              </Link>
            </div>
         </section>
 
         {errorMessage && (
           <div className="mb-6 p-4 border-2 border-danger bg-danger-light text-danger font-mono text-sm flex justify-between items-center shadow-sm">
-             <span>👾 ERROR: {errorMessage}</span>
-             <button onClick={loadData} className="underline hover:no-underline">RETRY</button>
+             <span>👾 ERRO: {errorMessage}</span>
+             <button onClick={loadData} className="underline hover:no-underline">TENTAR NOVAMENTE</button>
           </div>
         )}
 
         {/* CONTROLLER (Tabs) */}
         <div className="flex flex-wrap gap-4 mb-8 justify-center md:justify-start">
-          {['visao-geral', 'redacoes', 'questoes'].map((tab) => (
+          {tabs.map((tab) => (
             <button
-              key={tab}
-              onClick={() => setActiveTab(tab as TabType)}
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
               className={`
                 px-6 py-3 border-2 font-pixel text-xs uppercase tracking-wider transition-all
-                ${activeTab === tab
+                ${activeTab === tab.id
                   ? 'bg-primary text-white border-foreground shadow-[4px_4px_0px_var(--foreground)] translate-x-[-2px] translate-y-[-2px]'
                   : 'bg-card-bg text-foreground border-border-color hover:bg-muted-bg hover:shadow-[2px_2px_0px_var(--border-color)]'
                 }
               `}
             >
-              {tab.replace('-', ' ')}
+              {tab.label}
             </button>
           ))}
         </div>
@@ -263,25 +269,25 @@ export default function ContaPageClient() {
           {activeTab === 'visao-geral' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                <RetroStatCard
-                 label="ESSAYS"
+                 label="REDAÇÕES"
                  value={statistics?.total_redacoes || 0}
                  icon="📝"
                  color="primary"
                />
                <RetroStatCard
-                 label="BATTLES"
+                 label="SIMULADOS"
                  value={statistics?.total_simulados || 0}
                  icon="⚔️"
                  color="accent"
                />
                <RetroStatCard
-                 label="HIT RATE"
+                 label="TAXA DE ACERTO"
                  value={`${statistics?.taxa_acerto?.toFixed(0) || 0}%`}
                  icon="🎯"
                  color="success"
                />
                <RetroStatCard
-                 label="HIGHSCORE"
+                 label="MELHOR NOTA"
                  value={statistics?.melhor_nota_redacao || 0}
                  icon="🏆"
                  color="warning"
@@ -290,18 +296,20 @@ export default function ContaPageClient() {
                {/* RECENT ACTIVITY LOG */}
                <div className="col-span-1 md:col-span-2 lg:col-span-4 mt-6">
                  <div className="card">
-                   <h3 className="font-pixel text-sm mb-4 border-b-2 border-border-color pb-2">RECENT ACTIVITY</h3>
+                   <h3 className="font-pixel text-sm mb-4 border-b-2 border-border-color pb-2">ATIVIDADE RECENTE</h3>
                    {essays.length > 0 ? (
                      <div className="space-y-3 font-mono text-sm">
                        {essays.slice(0, 3).map((essay) => (
                          <div key={essay.id} className="flex justify-between items-center p-2 bg-muted-bg/50 border border-border-color/30">
-                           <span>Writing Mission Completed</span>
+                           <span>Redação Concluída</span>
                            <span className="text-primary font-bold">+{essay.nota} PTS</span>
                          </div>
                        ))}
                      </div>
                    ) : (
-                     <p className="text-foreground/50 font-mono text-center py-4">NO DATA FOUND.</p>
+                     <div className="text-foreground/50 font-mono text-center py-8 bg-muted-bg border-2 border-dashed border-border-color">
+                       NENHUM DADO ENCONTRADO.
+                     </div>
                    )}
                  </div>
                </div>
@@ -312,41 +320,47 @@ export default function ContaPageClient() {
           {activeTab === 'redacoes' && (
             <div className="space-y-8">
                <div className="card">
-                 <h2 className="font-pixel text-lg mb-6 text-center md:text-left">SCORE HISTORY</h2>
-                 <div className="h-[300px] w-full">
-                   <ResponsiveContainer width="100%" height="100%">
-                     <LineChart data={evolucaoRedacoes}>
-                        <XAxis
-                          dataKey="data"
-                          stroke="var(--foreground)"
-                          tick={{fontFamily: 'monospace', fontSize: 10}}
-                          tickLine={false}
-                          axisLine={false}
-                        />
-                        <YAxis
-                          stroke="var(--foreground)"
-                          tick={{fontFamily: 'monospace', fontSize: 10}}
-                          tickLine={false}
-                          axisLine={false}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                             backgroundColor: 'var(--card-bg)',
-                             border: '2px solid var(--foreground)',
-                             fontFamily: 'monospace'
-                          }}
-                        />
-                        <Line
-                          type="step"
-                          dataKey="nota"
-                          stroke="var(--primary)"
-                          strokeWidth={3}
-                          dot={{r: 4, fill: 'var(--foreground)', strokeWidth: 2, stroke: 'var(--primary)'}}
-                          activeDot={{r: 6}}
-                        />
-                     </LineChart>
-                   </ResponsiveContainer>
-                 </div>
+                 <h2 className="font-pixel text-lg mb-6 text-center md:text-left">HISTÓRICO DE NOTAS</h2>
+                 {essays.length > 0 ? (
+                    <div className="h-[300px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={evolucaoRedacoes}>
+                            <XAxis
+                            dataKey="data"
+                            stroke="var(--foreground)"
+                            tick={{fontFamily: 'monospace', fontSize: 10}}
+                            tickLine={false}
+                            axisLine={false}
+                            />
+                            <YAxis
+                            stroke="var(--foreground)"
+                            tick={{fontFamily: 'monospace', fontSize: 10}}
+                            tickLine={false}
+                            axisLine={false}
+                            />
+                            <Tooltip
+                            contentStyle={{
+                                backgroundColor: 'var(--card-bg)',
+                                border: '2px solid var(--foreground)',
+                                fontFamily: 'monospace'
+                            }}
+                            />
+                            <Line
+                            type="step"
+                            dataKey="nota"
+                            stroke="var(--primary)"
+                            strokeWidth={3}
+                            dot={{r: 4, fill: 'var(--foreground)', strokeWidth: 2, stroke: 'var(--primary)'}}
+                            activeDot={{r: 6}}
+                            />
+                        </LineChart>
+                    </ResponsiveContainer>
+                    </div>
+                 ) : (
+                    <div className="text-foreground/50 font-mono text-center py-8 bg-muted-bg border-2 border-dashed border-border-color">
+                       NENHUMA REDAÇÃO ENCONTRADA.
+                    </div>
+                 )}
                </div>
             </div>
           )}
@@ -355,7 +369,7 @@ export default function ContaPageClient() {
           {activeTab === 'questoes' && (
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                <div className="card">
-                 <h2 className="font-pixel text-lg mb-6">SKILL LEVELS</h2>
+                 <h2 className="font-pixel text-lg mb-6">NÍVEIS DE COMPETÊNCIA</h2>
                  <div className="h-[300px] w-full">
                    <ResponsiveContainer width="100%" height="100%">
                      <BarChart data={disciplinasData} layout="vertical">
