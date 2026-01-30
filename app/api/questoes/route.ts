@@ -5,6 +5,7 @@ import type { Json } from "@/types/supabase";
 import { buildGroqProviders, GroqProvider, isRateLimitError } from "@/lib/ai/groq";
 import { getOperatingHoursInfo } from "@/lib/server/operating-hours";
 import { resolveRequestUser } from "@/lib/server/auth-request";
+import { createAdminClient } from "@/lib/db/server";
 
 const DISCIPLINES: Question["discipline"][] = ["Matemática", "Português", "Química", "Física", "Geografia"];
 const QUESTIONS_PER_DISCIPLINE = 3;
@@ -77,48 +78,30 @@ function assertQuizPayload(payload: unknown): QuizRequestPayload {
   };
 }
 
-function buildInsertPayload(userId: string, payload: QuizRequestPayload) {
-  const { result, questions, selectedAnswers, disciplines } = payload;
-
-  return {
-    user_id: userId,
-    total_questions: Number.isFinite(result.totalQuestions) ? result.totalQuestions : questions.length,
-    correct_answers: Number.isFinite(result.correctAnswers) ? result.correctAnswers : 0,
-    wrong_answers: Number.isFinite(result.wrongAnswers) ? result.wrongAnswers : 0,
-    unanswered_questions: Number.isFinite(result.unansweredQuestions) ? result.unansweredQuestions : 0,
-    score: Number.isFinite(result.score) ? result.score : 0,
-    questions_data: questions as unknown as Json[],
-    answers_data: selectedAnswers as unknown as Json,
-    disciplines,
-    created_at: new Date().toISOString(),
-  };
-}
-
-type GenerationDiagnostics = Record<Question["discipline"], string>;
-
 async function requestQuestionsForDiscipline(provider: GroqProvider, discipline: Question["discipline"]): Promise<Question[]> {
   const prompt = `
-      Crie ${QUESTIONS_PER_DISCIPLINE} questões de múltipla escolha sobre ${discipline} de nível ENEM para estudantes do ensino médio.
+      Atue como um professor especialista no ENEM (Exame Nacional do Ensino Médio).
+      Crie ${QUESTIONS_PER_DISCIPLINE} questões de múltipla escolha INÉDITAS e DE ALTA QUALIDADE sobre ${discipline}.
       
-      Cada questão deve ter:
-      1. Um enunciado claro
-      2. Quatro alternativas (A, B, C, D)
-      3. Apenas uma alternativa correta
-      4. Uma breve explicação da resposta correta
+      Requisitos obrigatórios:
+      1. Nível de dificuldade: Desafiador (estilo ENEM).
+      2. Contextualização: As questões devem ter um texto base ou situação-problema, não apenas perguntas diretas.
+      3. Estrutura: Enunciado claro, 4 alternativas (A, B, C, D) onde APENAS UMA é correta.
+      4. Explicação: Forneça uma explicação detalhada (mini-aula) de por que a resposta correta é a certa e por que as outras estão erradas.
       
-      Responda no seguinte formato JSON:
+      Responda no seguinte formato JSON (sem markdown):
       {
         "questions": [
           {
             "discipline": "${discipline}",
-            "text": "Enunciado da questão",
+            "text": "Texto base + Enunciado da questão",
             "alternatives": [
-              {"id": "A", "text": "Alternativa A", "isCorrect": false},
-              {"id": "B", "text": "Alternativa B", "isCorrect": false},
-              {"id": "C", "text": "Alternativa C", "isCorrect": true},
-              {"id": "D", "text": "Alternativa D", "isCorrect": false}
+              {"id": "A", "text": "Texto da alternativa A", "isCorrect": false},
+              {"id": "B", "text": "Texto da alternativa B", "isCorrect": false},
+              {"id": "C", "text": "Texto da alternativa C", "isCorrect": true},
+              {"id": "D", "text": "Texto da alternativa D", "isCorrect": false}
             ],
-            "explanation": "Explicação da resposta correta"
+            "explanation": "Explicação detalhada."
           }
         ]
       }
@@ -198,7 +181,8 @@ async function requestQuestionsForDiscipline(provider: GroqProvider, discipline:
     }
 
     normalized.push({
-      id: randomUUID(),
+      id: randomUUID(), // Will be overwritten by DB ID if we insert, but actually we use this ID for now.
+      // Better to generate ID here, insert, and return SAME ID.
       discipline,
       text: question.text,
       explanation: question.explanation ?? "Sem explicação disponível.",
@@ -208,6 +192,8 @@ async function requestQuestionsForDiscipline(provider: GroqProvider, discipline:
 
   return normalized;
 }
+
+type GenerationDiagnostics = Record<Question["discipline"], string>;
 
 async function generateQuestionsWithDiagnostics(
   disciplines: Question["discipline"][]
@@ -269,6 +255,29 @@ async function generateQuestionsWithDiagnostics(
   return { questions, diagnostics, missing, providersUsed };
 }
 
+async function saveGeneratedQuestions(questions: Question[]) {
+  const supabase = createAdminClient();
+  if (!supabase) {
+    console.error("Admin client not available, skipping save generated questions.");
+    return;
+  }
+
+  const rows = questions.map(q => ({
+    id: q.id,
+    discipline: q.discipline,
+    content: q.text,
+    alternatives: q.alternatives as unknown as Json,
+    explanation: q.explanation,
+    created_at: new Date().toISOString()
+  }));
+
+  // JSONB in Supabase JS: pass the object/array directly.
+  const { error } = await supabase.from('generated_questions').insert(rows);
+  if (error) {
+    console.error("Error saving generated questions:", error);
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const operatingInfo = await getOperatingHoursInfo();
@@ -320,6 +329,9 @@ export async function GET(request: NextRequest) {
 
     const shuffled = [...selected].sort(() => Math.random() - 0.5);
 
+    // Save questions to DB
+    await saveGeneratedQuestions(shuffled);
+
     return NextResponse.json({
       questions: shuffled,
       totalQuestions: shuffled.length,
@@ -367,23 +379,51 @@ export async function POST(request: NextRequest) {
 
   const { supabase, userId } = auth;
 
-  const insertPayload = buildInsertPayload(userId, parsedPayload);
+  try {
+    // 1. Insert Attempt
+    const { data: attempt, error: attemptError } = await supabase.from("quiz_attempts").insert({
+      user_id: userId,
+      score: parsedPayload.result.score,
+      total_questions: parsedPayload.result.totalQuestions,
+      correct_answers: parsedPayload.result.correctAnswers,
+      disciplines: parsedPayload.disciplines,
+      started_at: new Date().toISOString(), // Approximation
+      completed_at: new Date().toISOString()
+    }).select().single();
 
-  const { error: insertError } = await supabase.from("quiz_results").insert(insertPayload);
-  if (insertError) {
-    console.error("Erro ao inserir quiz_results:", insertError);
+    if (attemptError) throw attemptError;
+
+    // 2. Insert Answers
+    const answersToInsert = parsedPayload.questions.map(q => {
+      const selectedId = parsedPayload.selectedAnswers[q.id];
+      const isCorrect = q.alternatives.find(a => a.id === selectedId)?.isCorrect || false;
+      return {
+        attempt_id: attempt.id,
+        question_id: q.id,
+        selected_alternative_id: selectedId,
+        is_correct: isCorrect
+      };
+    });
+
+    const { error: answersError } = await supabase.from("quiz_answers").insert(answersToInsert);
+    if (answersError) throw answersError;
+
+    // 3. Update Stats
+    const { error: statsError } = await supabase.rpc("recalculate_user_statistics", {
+      target_user_id: userId,
+    });
+
+    if (statsError) {
+      console.error("Erro ao recalcular estatísticas:", statsError);
+    }
+
+    return NextResponse.json({ success: true, saved: true });
+
+  } catch (error) {
+    console.error("Erro ao salvar resultado do simulado (nova estrutura):", error);
     return NextResponse.json(
-      { error: "Erro ao salvar resultado do simulado", message: insertError.message },
+      { error: "Erro ao salvar resultado do simulado", message: error instanceof Error ? error.message : "Erro desconhecido" },
       { status: 500 }
     );
   }
-
-  const { error: statsError } = await supabase.rpc("recalculate_user_statistics", {
-    target_user_id: userId,
-  });
-  if (statsError) {
-    console.error("Erro ao recalcular estatísticas:", statsError);
-  }
-
-  return NextResponse.json({ success: true, saved: true });
 }

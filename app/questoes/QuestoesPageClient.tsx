@@ -6,6 +6,7 @@ import { QuestionCard } from "../components/features/quiz";
 import { Question, QuizResult } from "@/types";
 import { getOperatingHoursInfo } from "@/lib/schedule";
 import { getBrowserClient } from "@/lib/db";
+import { Skeleton } from "@/app/components/ui/skeleton";
 
 const OperatingHoursIndicator = dynamic(() => import("../components/ui/OperatingHoursIndicator").then(mod => ({ default: mod.default })), {
   ssr: false,
@@ -452,11 +453,17 @@ export default function QuestoesPageClient() {
             )}
 
             {showResults && quizResult ? (
-              <div className="space-y-8">
+              <div className="space-y-8 animate-in fade-in duration-500">
                 <div className="card border-0 shadow-sm p-6 md:p-8">
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.18em] text-primary">Resultado do simulador</p>
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 dark:bg-green-900/30 px-2 py-0.5 text-xs font-medium text-green-700 dark:text-green-400">
+                          <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                          Concluído
+                        </span>
+                        <p className="text-xs uppercase tracking-[0.18em] text-primary">Resultado do simulador</p>
+                      </div>
                       <h2 className="mt-2 text-2xl font-semibold text-foreground">Confira os seus números e próximos passos</h2>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -468,7 +475,14 @@ export default function QuestoesPageClient() {
                       </button>
                     </div>
                   </div>
-                  {saveStatusMessage && <p className="text-sm text-foreground/60">{saveStatusMessage}</p>}
+                  {saveStatusMessage && (
+                    <p className="mt-4 flex items-center gap-2 text-sm text-foreground/60">
+                      {saveStatusMessage.includes("Salvando") && (
+                         <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                      )}
+                      {saveStatusMessage}
+                    </p>
+                  )}
                 </div>
                 <LazyQuizResults result={quizResult} onRetakeQuiz={handleRetakeQuiz} />
               </div>
@@ -551,8 +565,8 @@ export default function QuestoesPageClient() {
                       "Selecione pelo menos uma disciplina"
                     ) : loading ? (
                       <span className="flex items-center gap-2">
-                        <span className="inline-block h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                        Preparando questões...
+                         <span className="inline-block h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                        Iniciando simulado...
                       </span>
                     ) : (
                       <>
@@ -566,33 +580,34 @@ export default function QuestoesPageClient() {
                 </div>
               </div>
             ) : loading ? (
-              <div className="card border-0 shadow-sm p-8 md:p-12 space-y-6">
-                <div className="flex flex-col items-center justify-center text-center">
-                  <div className="relative mb-6">
-                    <div className="h-16 w-16 rounded-full border-4 border-primary/20" />
-                    <div className="absolute inset-0 h-16 w-16 rounded-full border-4 border-primary border-t-transparent animate-spin" />
-                  </div>
+              <div className="card border-0 shadow-sm p-8 md:p-12 space-y-8 animate-in fade-in duration-500">
+                <div className="flex flex-col items-center justify-center text-center space-y-4">
                   <h2 className="text-xl font-semibold text-foreground">Gerando suas questões...</h2>
-                  <p className="mt-2 max-w-md text-sm text-foreground/60">
-                    Nossa IA está criando {selectedDisciplines.size * QUESTIONS_PER_DISCIPLINE} questões personalizadas
-                    para {selectedDisciplines.size === 1 ? "a disciplina selecionada" : `as ${selectedDisciplines.size} disciplinas selecionadas`}.
-                    Isso pode levar alguns segundos.
+                  <p className="max-w-md text-sm text-foreground/60">
+                    Nossa IA está criando questões inéditas e personalizadas para você.
                   </p>
-                  <div className="mt-6 flex flex-wrap justify-center gap-2">
-                    {Array.from(selectedDisciplines).map((discipline) => (
-                      <span
-                        key={discipline}
-                        className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
-                      >
-                        {discipline}
-                      </span>
-                    ))}
+                  <div className="flex flex-wrap justify-center gap-2">
+                     {Array.from(selectedDisciplines).map((discipline) => (
+                       <Skeleton key={discipline} className="h-6 w-20 rounded-full" />
+                     ))}
                   </div>
+                </div>
+                <div className="space-y-6">
+                   {[1, 2, 3].map((i) => (
+                      <div key={i} className="space-y-3">
+                         <Skeleton className="h-6 w-1/4" />
+                         <Skeleton className="h-24 w-full rounded-xl" />
+                         <div className="space-y-2 pl-4">
+                           <Skeleton className="h-12 w-full rounded-lg" />
+                           <Skeleton className="h-12 w-full rounded-lg" />
+                         </div>
+                      </div>
+                   ))}
                 </div>
               </div>
             ) : (
               <div className="space-y-8">
-                {saveStatusMessage && (
+                {saveStatusMessage && !showResults && (
                   <div className="card border-0 shadow-sm p-4 text-sm text-foreground/60">
                     <strong>Status:</strong> {saveStatusMessage}
                   </div>

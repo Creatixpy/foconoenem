@@ -4,739 +4,828 @@ export type Json =
   | boolean
   | null
   | { [key: string]: Json | undefined }
-  | Json[];
+  | Json[]
 
-export interface Database {
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "13.0.5"
+  }
   public: {
     Tables: {
       achievements: {
         Row: {
-          id: string;
-          slug: string;
-          name: string;
-          description: string | null;
-          icon: string | null;
-          criteria: Json | null;
-          created_at: string;
-        };
+          created_at: string
+          criteria: Json | null
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+          slug: string
+        }
         Insert: {
-          id?: string;
-          slug: string;
-          name: string;
-          description?: string | null;
-          icon?: string | null;
-          criteria?: Json | null;
-          created_at?: string;
-        };
+          created_at?: string
+          criteria?: Json | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          slug: string
+        }
         Update: {
-          id?: string;
-          slug?: string;
-          name?: string;
-          description?: string | null;
-          icon?: string | null;
-          criteria?: Json | null;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
+          created_at?: string
+          criteria?: Json | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
       analytics_events: {
         Row: {
-          id: string;
-          event_type: Database["public"]["Enums"]["event_type_enum"];
-          metadata: Json;
-          user_ip: string | null;
-          user_agent: string | null;
-          created_at: string;
-          user_id: string | null;
-        };
+          created_at: string
+          event_type: Database["public"]["Enums"]["event_type_enum"]
+          id: string
+          metadata: Json
+          user_agent: string | null
+          user_id: string | null
+          user_ip: string | null
+        }
         Insert: {
-          id?: string;
-          event_type: Database["public"]["Enums"]["event_type_enum"];
-          metadata?: Json;
-          user_ip?: string | null;
-          user_agent?: string | null;
-          created_at?: string;
-          user_id?: string | null;
-        };
+          created_at?: string
+          event_type: Database["public"]["Enums"]["event_type_enum"]
+          id?: string
+          metadata?: Json
+          user_agent?: string | null
+          user_id?: string | null
+          user_ip?: string | null
+        }
         Update: {
-          id?: string;
-          event_type?: Database["public"]["Enums"]["event_type_enum"];
-          metadata?: Json;
-          user_ip?: string | null;
-          user_agent?: string | null;
-          created_at?: string;
-          user_id?: string | null;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "analytics_events_user_id_fkey";
-            columns: ["user_id"];
-            referencedRelation: "users";
-            referencedColumns: ["id"];
-          }
-        ];
-      };
+          created_at?: string
+          event_type?: Database["public"]["Enums"]["event_type_enum"]
+          id?: string
+          metadata?: Json
+          user_agent?: string | null
+          user_id?: string | null
+          user_ip?: string | null
+        }
+        Relationships: []
+      }
       cached_themes: {
         Row: {
-          id: string;
-          tema: string;
-          texto_apoio1: string;
-          texto_apoio2: string;
-          usado_count: number;
-          created_at: string;
-        };
+          created_at: string
+          id: string
+          tema: string
+          texto_apoio1: string
+          texto_apoio2: string
+          usado_count: number
+        }
         Insert: {
-          id?: string;
-          tema: string;
-          texto_apoio1: string;
-          texto_apoio2: string;
-          usado_count?: number;
-          created_at?: string;
-        };
+          created_at?: string
+          id?: string
+          tema: string
+          texto_apoio1: string
+          texto_apoio2: string
+          usado_count?: number
+        }
         Update: {
-          id?: string;
-          tema?: string;
-          texto_apoio1?: string;
-          texto_apoio2?: string;
-          usado_count?: number;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
+          created_at?: string
+          id?: string
+          tema?: string
+          texto_apoio1?: string
+          texto_apoio2?: string
+          usado_count?: number
+        }
+        Relationships: []
+      }
       community_comments: {
         Row: {
-          id: string;
-          post_id: string;
-          user_id: string;
-          content: string;
-          status: "visible" | "hidden";
-          created_at: string;
-          updated_at: string;
-        };
+          content: string
+          created_at: string
+          id: string
+          post_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
         Insert: {
-          id?: string;
-          post_id: string;
-          user_id: string;
-          content: string;
-          status?: "visible" | "hidden";
-          created_at?: string;
-          updated_at?: string;
-        };
+          content: string
+          created_at?: string
+          id?: string
+          post_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
         Update: {
-          id?: string;
-          post_id?: string;
-          user_id?: string;
-          content?: string;
-          status?: "visible" | "hidden";
-          created_at?: string;
-          updated_at?: string;
-        };
+          content?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
         Relationships: [
           {
-            foreignKeyName: "community_comments_post_id_fkey";
-            columns: ["post_id"];
-            referencedRelation: "community_posts";
-            referencedColumns: ["id"];
+            foreignKeyName: "community_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "community_comments_user_id_fkey";
-            columns: ["user_id"];
-            referencedRelation: "users";
-            referencedColumns: ["id"];
-          }
-        ];
-      };
+        ]
+      }
       community_post_likes: {
         Row: {
-          id: string;
-          post_id: string;
-          user_id: string;
-          created_at: string;
-        };
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
         Insert: {
-          id?: string;
-          post_id: string;
-          user_id: string;
-          created_at?: string;
-        };
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
         Update: {
-          id?: string;
-          post_id?: string;
-          user_id?: string;
-          created_at?: string;
-        };
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
         Relationships: [
           {
-            foreignKeyName: "community_post_likes_post_id_fkey";
-            columns: ["post_id"];
-            referencedRelation: "community_posts";
-            referencedColumns: ["id"];
+            foreignKeyName: "community_post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "community_post_likes_user_id_fkey";
-            columns: ["user_id"];
-            referencedRelation: "users";
-            referencedColumns: ["id"];
-          }
-        ];
-      };
+        ]
+      }
       community_posts: {
         Row: {
-          id: string;
-          topic_id: string;
-          user_id: string;
-          title: string;
-          content: string;
-          status: "published" | "archived";
-          created_at: string;
-          updated_at: string;
-          last_activity_at: string;
-        };
+          content: string
+          created_at: string
+          id: string
+          last_activity_at: string
+          status: string
+          title: string
+          topic_id: string
+          updated_at: string
+          user_id: string
+        }
         Insert: {
-          id?: string;
-          topic_id: string;
-          user_id: string;
-          title: string;
-          content: string;
-          status?: "published" | "archived";
-          created_at?: string;
-          updated_at?: string;
-          last_activity_at?: string;
-        };
+          content: string
+          created_at?: string
+          id?: string
+          last_activity_at?: string
+          status?: string
+          title: string
+          topic_id: string
+          updated_at?: string
+          user_id: string
+        }
         Update: {
-          id?: string;
-          topic_id?: string;
-          user_id?: string;
-          title?: string;
-          content?: string;
-          status?: "published" | "archived";
-          created_at?: string;
-          updated_at?: string;
-          last_activity_at?: string;
-        };
+          content?: string
+          created_at?: string
+          id?: string
+          last_activity_at?: string
+          status?: string
+          title?: string
+          topic_id?: string
+          updated_at?: string
+          user_id?: string
+        }
         Relationships: [
           {
-            foreignKeyName: "community_posts_topic_id_fkey";
-            columns: ["topic_id"];
-            referencedRelation: "community_topics";
-            referencedColumns: ["id"];
+            foreignKeyName: "community_posts_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "community_topics"
+            referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "community_posts_user_id_fkey";
-            columns: ["user_id"];
-            referencedRelation: "users";
-            referencedColumns: ["id"];
-          }
-        ];
-      };
+        ]
+      }
       community_topics: {
         Row: {
-          id: string;
-          slug: string;
-          title: string;
-          description: string | null;
-          created_at: string;
-          updated_at: string;
-        };
+          created_at: string
+          description: string | null
+          id: string
+          slug: string
+          title: string
+          updated_at: string
+        }
         Insert: {
-          id?: string;
-          slug: string;
-          title: string;
-          description?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
+          created_at?: string
+          description?: string | null
+          id?: string
+          slug: string
+          title: string
+          updated_at?: string
+        }
         Update: {
-          id?: string;
-          slug?: string;
-          title?: string;
-          description?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
+          created_at?: string
+          description?: string | null
+          id?: string
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       configuracoes: {
         Row: {
-          id: string;
-          chave: string;
-          valor: string;
-          created_at: string;
-          updated_at: string;
-        };
+          chave: string
+          created_at: string
+          id: string
+          updated_at: string
+          valor: string
+        }
         Insert: {
-          id?: string;
-          chave: string;
-          valor: string;
-          created_at?: string;
-          updated_at?: string;
-        };
+          chave: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          valor: string
+        }
         Update: {
-          id?: string;
-          chave?: string;
-          valor?: string;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
+          chave?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          valor?: string
+        }
+        Relationships: []
+      }
       essay_results: {
         Row: {
-          id: string;
-          user_id: string | null;
-          nota: number;
-          competencia1: Json;
-          competencia2: Json;
-          competencia3: Json;
-          competencia4: Json;
-          competencia5: Json;
-          feedback_geral: string;
-          ponto_fortes: string[];
-          pontos_a_melhorar: string[];
-          redacao_original: string;
-          origem: "IA" | "Simulação";
-          tema: string | null;
-          texto_apoio1: string | null;
-          texto_apoio2: string | null;
-          created_at: string;
-          updated_at: string;
-        };
+          competencia1: Json
+          competencia2: Json
+          competencia3: Json
+          competencia4: Json
+          competencia5: Json
+          created_at: string
+          feedback_geral: string
+          id: string
+          nota: number
+          origem: string
+          ponto_fortes: string[]
+          pontos_a_melhorar: string[]
+          redacao_original: string
+          tema: string | null
+          texto_apoio1: string | null
+          texto_apoio2: string | null
+          updated_at: string
+          user_id: string | null
+        }
         Insert: {
-          id?: string;
-          user_id?: string | null;
-          nota: number;
-          competencia1: Json;
-          competencia2: Json;
-          competencia3: Json;
-          competencia4: Json;
-          competencia5: Json;
-          feedback_geral: string;
-          ponto_fortes?: string[];
-          pontos_a_melhorar?: string[];
-          redacao_original: string;
-          origem: "IA" | "Simulação";
-          tema?: string | null;
-          texto_apoio1?: string | null;
-          texto_apoio2?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
+          competencia1: Json
+          competencia2: Json
+          competencia3: Json
+          competencia4: Json
+          competencia5: Json
+          created_at?: string
+          feedback_geral: string
+          id?: string
+          nota: number
+          origem: string
+          ponto_fortes?: string[]
+          pontos_a_melhorar?: string[]
+          redacao_original: string
+          tema?: string | null
+          texto_apoio1?: string | null
+          texto_apoio2?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
         Update: {
-          id?: string;
-          user_id?: string | null;
-          nota?: number;
-          competencia1?: Json;
-          competencia2?: Json;
-          competencia3?: Json;
-          competencia4?: Json;
-          competencia5?: Json;
-          feedback_geral?: string;
-          ponto_fortes?: string[];
-          pontos_a_melhorar?: string[];
-          redacao_original?: string;
-          origem?: "IA" | "Simulação";
-          tema?: string | null;
-          texto_apoio1?: string | null;
-          texto_apoio2?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "essay_results_user_id_fkey";
-            columns: ["user_id"];
-            referencedRelation: "users";
-            referencedColumns: ["id"];
-          }
-        ];
-      };
+          competencia1?: Json
+          competencia2?: Json
+          competencia3?: Json
+          competencia4?: Json
+          competencia5?: Json
+          created_at?: string
+          feedback_geral?: string
+          id?: string
+          nota?: number
+          origem?: string
+          ponto_fortes?: string[]
+          pontos_a_melhorar?: string[]
+          redacao_original?: string
+          tema?: string | null
+          texto_apoio1?: string | null
+          texto_apoio2?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      generated_questions: {
+        Row: {
+          alternatives: Json
+          content: string
+          created_at: string | null
+          difficulty: string | null
+          discipline: string
+          explanation: string | null
+          id: string
+          topic: string | null
+        }
+        Insert: {
+          alternatives: Json
+          content: string
+          created_at?: string | null
+          difficulty?: string | null
+          discipline: string
+          explanation?: string | null
+          id?: string
+          topic?: string | null
+        }
+        Update: {
+          alternatives?: Json
+          content?: string
+          created_at?: string | null
+          difficulty?: string | null
+          discipline?: string
+          explanation?: string | null
+          id?: string
+          topic?: string | null
+        }
+        Relationships: []
+      }
       noticias: {
         Row: {
-          id: string;
-          titulo: string;
-          slug: string;
-          resumo: string;
-          conteudo: string;
-          imagem_url: string | null;
-          autor: string | null;
-          data_publicacao: string;
-          tags: string[];
-          destaque: boolean;
-          fonte_url: string | null;
-          created_at: string;
-          updated_at: string;
-          search_vector: unknown;
-        };
+          autor: string | null
+          conteudo: string
+          created_at: string
+          data_publicacao: string
+          destaque: boolean
+          fonte_url: string | null
+          id: string
+          imagem_url: string | null
+          resumo: string
+          search_vector: unknown
+          slug: string
+          tags: string[]
+          titulo: string
+          updated_at: string
+        }
         Insert: {
-          id?: string;
-          titulo: string;
-          slug: string;
-          resumo: string;
-          conteudo: string;
-          imagem_url?: string | null;
-          autor?: string | null;
-          data_publicacao?: string;
-          tags?: string[];
-          destaque?: boolean;
-          fonte_url?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
+          autor?: string | null
+          conteudo: string
+          created_at?: string
+          data_publicacao?: string
+          destaque?: boolean
+          fonte_url?: string | null
+          id?: string
+          imagem_url?: string | null
+          resumo: string
+          search_vector?: unknown
+          slug: string
+          tags?: string[]
+          titulo: string
+          updated_at?: string
+        }
         Update: {
-          id?: string;
-          titulo?: string;
-          slug?: string;
-          resumo?: string;
-          conteudo?: string;
-          imagem_url?: string | null;
-          autor?: string | null;
-          data_publicacao?: string;
-          tags?: string[];
-          destaque?: boolean;
-          fonte_url?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
-      quiz_results: {
+          autor?: string | null
+          conteudo?: string
+          created_at?: string
+          data_publicacao?: string
+          destaque?: boolean
+          fonte_url?: string | null
+          id?: string
+          imagem_url?: string | null
+          resumo?: string
+          search_vector?: unknown
+          slug?: string
+          tags?: string[]
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      quiz_answers: {
         Row: {
-          id: string;
-          user_id: string | null;
-          total_questions: number;
-          correct_answers: number;
-          wrong_answers: number;
-          unanswered_questions: number;
-          score: number;
-          disciplines: string[];
-          questions_data: Json;
-          answers_data: Json;
-          created_at: string;
-        };
+          attempt_id: string | null
+          created_at: string | null
+          id: string
+          is_correct: boolean | null
+          question_id: string | null
+          selected_alternative_id: string | null
+        }
         Insert: {
-          id?: string;
-          user_id?: string | null;
-          total_questions: number;
-          correct_answers: number;
-          wrong_answers: number;
-          unanswered_questions: number;
-          score: number;
-          disciplines: string[];
-          questions_data: Json;
-          answers_data: Json;
-          created_at?: string;
-        };
+          attempt_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_correct?: boolean | null
+          question_id?: string | null
+          selected_alternative_id?: string | null
+        }
         Update: {
-          id?: string;
-          user_id?: string | null;
-          total_questions?: number;
-          correct_answers?: number;
-          wrong_answers?: number;
-          unanswered_questions?: number;
-          score?: number;
-          disciplines?: string[];
-          questions_data?: Json;
-          answers_data?: Json;
-          created_at?: string;
-        };
+          attempt_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_correct?: boolean | null
+          question_id?: string | null
+          selected_alternative_id?: string | null
+        }
         Relationships: [
           {
-            foreignKeyName: "quiz_results_user_id_fkey";
-            columns: ["user_id"];
-            referencedRelation: "users";
-            referencedColumns: ["id"];
-          }
-        ];
-      };
-      rate_limits: {
-        Row: {
-          id: string;
-          identifier: string;
-          endpoint: string;
-          request_count: number;
-          window_start: string;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          identifier: string;
-          endpoint: string;
-          request_count?: number;
-          window_start?: string;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          identifier?: string;
-          endpoint?: string;
-          request_count?: number;
-          window_start?: string;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
-      user_achievements: {
-        Row: {
-          id: string;
-          user_id: string;
-          achievement_id: string;
-          earned_at: string;
-          metadata: Json | null;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          achievement_id: string;
-          earned_at?: string;
-          metadata?: Json | null;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          achievement_id?: string;
-          earned_at?: string;
-          metadata?: Json | null;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "user_achievements_achievement_id_fkey";
-            columns: ["achievement_id"];
-            referencedRelation: "achievements";
-            referencedColumns: ["id"];
+            foreignKeyName: "quiz_answers_attempt_id_fkey"
+            columns: ["attempt_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_attempts"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "user_achievements_user_id_fkey";
-            columns: ["user_id"];
-            referencedRelation: "users";
-            referencedColumns: ["id"];
-          }
-        ];
-      };
+            foreignKeyName: "quiz_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "generated_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quiz_attempts: {
+        Row: {
+          completed_at: string | null
+          correct_answers: number | null
+          created_at: string | null
+          disciplines: string[] | null
+          id: string
+          score: number | null
+          started_at: string | null
+          total_questions: number | null
+          user_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          correct_answers?: number | null
+          created_at?: string | null
+          disciplines?: string[] | null
+          id?: string
+          score?: number | null
+          started_at?: string | null
+          total_questions?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          correct_answers?: number | null
+          created_at?: string | null
+          disciplines?: string[] | null
+          id?: string
+          score?: number | null
+          started_at?: string | null
+          total_questions?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      quiz_results: {
+        Row: {
+          answers_data: Json
+          correct_answers: number
+          created_at: string
+          disciplines: string[]
+          id: string
+          questions_data: Json
+          score: number
+          total_questions: number
+          unanswered_questions: number
+          user_id: string | null
+          wrong_answers: number
+        }
+        Insert: {
+          answers_data: Json
+          correct_answers: number
+          created_at?: string
+          disciplines: string[]
+          id?: string
+          questions_data: Json
+          score: number
+          total_questions: number
+          unanswered_questions: number
+          user_id?: string | null
+          wrong_answers: number
+        }
+        Update: {
+          answers_data?: Json
+          correct_answers?: number
+          created_at?: string
+          disciplines?: string[]
+          id?: string
+          questions_data?: Json
+          score?: number
+          total_questions?: number
+          unanswered_questions?: number
+          user_id?: string | null
+          wrong_answers?: number
+        }
+        Relationships: []
+      }
+      rate_limits: {
+        Row: {
+          created_at: string
+          endpoint: string
+          id: string
+          identifier: string
+          request_count: number
+          window_start: string
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          id?: string
+          identifier: string
+          request_count?: number
+          window_start?: string
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          id?: string
+          identifier?: string
+          request_count?: number
+          window_start?: string
+        }
+        Relationships: []
+      }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          earned_at: string
+          id: string
+          metadata: Json | null
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          earned_at?: string
+          id?: string
+          metadata?: Json | null
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          earned_at?: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_goals: {
         Row: {
-          id: string;
-          user_id: string;
-          tipo: "redacao_nota_minima" | "questoes_acerto_minimo" | "estudar_disciplina" | "praticar_competencia";
-          descricao: string;
-          valor_alvo: number | null;
-          disciplina: string | null;
-          competencia: number | null;
-          prazo: string | null;
-          concluida: boolean;
-          progresso: number;
-          created_at: string;
-          updated_at: string;
-        };
+          competencia: number | null
+          concluida: boolean
+          created_at: string
+          descricao: string
+          disciplina: string | null
+          id: string
+          prazo: string | null
+          progresso: number
+          tipo: string
+          updated_at: string
+          user_id: string
+          valor_alvo: number | null
+        }
         Insert: {
-          id?: string;
-          user_id: string;
-          tipo: "redacao_nota_minima" | "questoes_acerto_minimo" | "estudar_disciplina" | "praticar_competencia";
-          descricao: string;
-          valor_alvo?: number | null;
-          disciplina?: string | null;
-          competencia?: number | null;
-          prazo?: string | null;
-          concluida?: boolean;
-          progresso?: number;
-          created_at?: string;
-          updated_at?: string;
-        };
+          competencia?: number | null
+          concluida?: boolean
+          created_at?: string
+          descricao: string
+          disciplina?: string | null
+          id?: string
+          prazo?: string | null
+          progresso?: number
+          tipo: string
+          updated_at?: string
+          user_id: string
+          valor_alvo?: number | null
+        }
         Update: {
-          id?: string;
-          user_id?: string;
-          tipo?: "redacao_nota_minima" | "questoes_acerto_minimo" | "estudar_disciplina" | "praticar_competencia";
-          descricao?: string;
-          valor_alvo?: number | null;
-          disciplina?: string | null;
-          competencia?: number | null;
-          prazo?: string | null;
-          concluida?: boolean;
-          progresso?: number;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "user_goals_user_id_fkey";
-            columns: ["user_id"];
-            referencedRelation: "users";
-            referencedColumns: ["id"];
-          }
-        ];
-      };
+          competencia?: number | null
+          concluida?: boolean
+          created_at?: string
+          descricao?: string
+          disciplina?: string | null
+          id?: string
+          prazo?: string | null
+          progresso?: number
+          tipo?: string
+          updated_at?: string
+          user_id?: string
+          valor_alvo?: number | null
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
-          id: string;
-          user_id: string;
-          nome_completo: string | null;
-          avatar_url: string | null;
-          bio: string | null;
-          objetivo: string | null;
-          ano_enem: number | null;
-          community_tagline: string | null;
-          community_profile_theme: string | null;
-          community_show_statistics: boolean;
-          community_terms_version: string | null;
-          community_terms_accepted_at: string | null;
-          community_age_confirmed_at: string | null;
-          is_over_16: boolean | null;
-          created_at: string;
-          updated_at: string;
-        };
+          ano_enem: number | null
+          avatar_url: string | null
+          bio: string | null
+          community_age_confirmed_at: string | null
+          community_profile_theme: string | null
+          community_show_statistics: boolean
+          community_tagline: string | null
+          community_terms_accepted_at: string | null
+          community_terms_version: string | null
+          created_at: string
+          id: string
+          is_over_16: boolean | null
+          nome_completo: string | null
+          objetivo: string | null
+          updated_at: string
+          user_id: string
+        }
         Insert: {
-          id?: string;
-          user_id: string;
-          nome_completo?: string | null;
-          avatar_url?: string | null;
-          bio?: string | null;
-          objetivo?: string | null;
-          ano_enem?: number | null;
-          community_tagline?: string | null;
-          community_profile_theme?: string | null;
-          community_show_statistics?: boolean;
-          community_terms_version?: string | null;
-          community_terms_accepted_at?: string | null;
-          community_age_confirmed_at?: string | null;
-          is_over_16?: boolean | null;
-          created_at?: string;
-          updated_at?: string;
-        };
+          ano_enem?: number | null
+          avatar_url?: string | null
+          bio?: string | null
+          community_age_confirmed_at?: string | null
+          community_profile_theme?: string | null
+          community_show_statistics?: boolean
+          community_tagline?: string | null
+          community_terms_accepted_at?: string | null
+          community_terms_version?: string | null
+          created_at?: string
+          id?: string
+          is_over_16?: boolean | null
+          nome_completo?: string | null
+          objetivo?: string | null
+          updated_at?: string
+          user_id: string
+        }
         Update: {
-          id?: string;
-          user_id?: string;
-          nome_completo?: string | null;
-          avatar_url?: string | null;
-          bio?: string | null;
-          objetivo?: string | null;
-          ano_enem?: number | null;
-          community_tagline?: string | null;
-          community_profile_theme?: string | null;
-          community_show_statistics?: boolean;
-          community_terms_version?: string | null;
-          community_terms_accepted_at?: string | null;
-          community_age_confirmed_at?: string | null;
-          is_over_16?: boolean | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "user_profiles_user_id_fkey";
-            columns: ["user_id"];
-            referencedRelation: "users";
-            referencedColumns: ["id"];
-          }
-        ];
-      };
+          ano_enem?: number | null
+          avatar_url?: string | null
+          bio?: string | null
+          community_age_confirmed_at?: string | null
+          community_profile_theme?: string | null
+          community_show_statistics?: boolean
+          community_tagline?: string | null
+          community_terms_accepted_at?: string | null
+          community_terms_version?: string | null
+          created_at?: string
+          id?: string
+          is_over_16?: boolean | null
+          nome_completo?: string | null
+          objetivo?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_statistics: {
         Row: {
-          id: string;
-          user_id: string;
-          total_redacoes: number;
-          media_nota_redacao: number | null;
-          melhor_nota_redacao: number | null;
-          pior_nota_redacao: number | null;
-          media_competencia1: number | null;
-          media_competencia2: number | null;
-          media_competencia3: number | null;
-          media_competencia4: number | null;
-          media_competencia5: number | null;
-          total_simulados: number;
-          total_questoes_respondidas: number;
-          total_acertos: number;
-          total_erros: number;
-          taxa_acerto: number | null;
-          acertos_matematica: number;
-          total_matematica: number;
-          acertos_portugues: number;
-          total_portugues: number;
-          acertos_quimica: number;
-          total_quimica: number;
-          acertos_fisica: number;
-          total_fisica: number;
-          acertos_geografia: number;
-          total_geografia: number;
-          ultima_atualizacao: string;
-        };
+          acertos_fisica: number
+          acertos_geografia: number
+          acertos_matematica: number
+          acertos_portugues: number
+          acertos_quimica: number
+          id: string
+          media_competencia1: number | null
+          media_competencia2: number | null
+          media_competencia3: number | null
+          media_competencia4: number | null
+          media_competencia5: number | null
+          media_nota_redacao: number | null
+          melhor_nota_redacao: number | null
+          pior_nota_redacao: number | null
+          taxa_acerto: number | null
+          total_acertos: number
+          total_erros: number
+          total_fisica: number
+          total_geografia: number
+          total_matematica: number
+          total_portugues: number
+          total_questoes_respondidas: number
+          total_quimica: number
+          total_redacoes: number
+          total_simulados: number
+          ultima_atualizacao: string
+          user_id: string
+        }
         Insert: {
-          id?: string;
-          user_id: string;
-          total_redacoes?: number;
-          media_nota_redacao?: number | null;
-          melhor_nota_redacao?: number | null;
-          pior_nota_redacao?: number | null;
-          media_competencia1?: number | null;
-          media_competencia2?: number | null;
-          media_competencia3?: number | null;
-          media_competencia4?: number | null;
-          media_competencia5?: number | null;
-          total_simulados?: number;
-          total_questoes_respondidas?: number;
-          total_acertos?: number;
-          total_erros?: number;
-          taxa_acerto?: number | null;
-          acertos_matematica?: number;
-          total_matematica?: number;
-          acertos_portugues?: number;
-          total_portugues?: number;
-          acertos_quimica?: number;
-          total_quimica?: number;
-          acertos_fisica?: number;
-          total_fisica?: number;
-          acertos_geografia?: number;
-          total_geografia?: number;
-          ultima_atualizacao?: string;
-        };
+          acertos_fisica?: number
+          acertos_geografia?: number
+          acertos_matematica?: number
+          acertos_portugues?: number
+          acertos_quimica?: number
+          id?: string
+          media_competencia1?: number | null
+          media_competencia2?: number | null
+          media_competencia3?: number | null
+          media_competencia4?: number | null
+          media_competencia5?: number | null
+          media_nota_redacao?: number | null
+          melhor_nota_redacao?: number | null
+          pior_nota_redacao?: number | null
+          taxa_acerto?: number | null
+          total_acertos?: number
+          total_erros?: number
+          total_fisica?: number
+          total_geografia?: number
+          total_matematica?: number
+          total_portugues?: number
+          total_questoes_respondidas?: number
+          total_quimica?: number
+          total_redacoes?: number
+          total_simulados?: number
+          ultima_atualizacao?: string
+          user_id: string
+        }
         Update: {
-          id?: string;
-          user_id?: string;
-          total_redacoes?: number;
-          media_nota_redacao?: number | null;
-          melhor_nota_redacao?: number | null;
-          pior_nota_redacao?: number | null;
-          media_competencia1?: number | null;
-          media_competencia2?: number | null;
-          media_competencia3?: number | null;
-          media_competencia4?: number | null;
-          media_competencia5?: number | null;
-          total_simulados?: number;
-          total_questoes_respondidas?: number;
-          total_acertos?: number;
-          total_erros?: number;
-          taxa_acerto?: number | null;
-          acertos_matematica?: number;
-          total_matematica?: number;
-          acertos_portugues?: number;
-          total_portugues?: number;
-          acertos_quimica?: number;
-          total_quimica?: number;
-          acertos_fisica?: number;
-          total_fisica?: number;
-          acertos_geografia?: number;
-          total_geografia?: number;
-          ultima_atualizacao?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "user_statistics_user_id_fkey";
-            columns: ["user_id"];
-            referencedRelation: "users";
-            referencedColumns: ["id"];
-          }
-        ];
-      };
-    };
-    Views: Record<string, never>;
+          acertos_fisica?: number
+          acertos_geografia?: number
+          acertos_matematica?: number
+          acertos_portugues?: number
+          acertos_quimica?: number
+          id?: string
+          media_competencia1?: number | null
+          media_competencia2?: number | null
+          media_competencia3?: number | null
+          media_competencia4?: number | null
+          media_competencia5?: number | null
+          media_nota_redacao?: number | null
+          melhor_nota_redacao?: number | null
+          pior_nota_redacao?: number | null
+          taxa_acerto?: number | null
+          total_acertos?: number
+          total_erros?: number
+          total_fisica?: number
+          total_geografia?: number
+          total_matematica?: number
+          total_portugues?: number
+          total_questoes_respondidas?: number
+          total_quimica?: number
+          total_redacoes?: number
+          total_simulados?: number
+          ultima_atualizacao?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
     Functions: {
+      cleanup_old_rate_limits: { Args: never; Returns: undefined }
       recalculate_user_statistics: {
-        Args: { target_user_id: string };
-        Returns: Database["public"]["Tables"]["user_statistics"]["Row"];
-      };
-      cleanup_old_rate_limits: {
-        Args: Record<string, never>;
-        Returns: void;
-      };
-    };
+        Args: { target_user_id: string }
+        Returns: {
+          acertos_fisica: number
+          acertos_geografia: number
+          acertos_matematica: number
+          acertos_portugues: number
+          acertos_quimica: number
+          id: string
+          media_competencia1: number | null
+          media_competencia2: number | null
+          media_competencia3: number | null
+          media_competencia4: number | null
+          media_competencia5: number | null
+          media_nota_redacao: number | null
+          melhor_nota_redacao: number | null
+          pior_nota_redacao: number | null
+          taxa_acerto: number | null
+          total_acertos: number
+          total_erros: number
+          total_fisica: number
+          total_geografia: number
+          total_matematica: number
+          total_portugues: number
+          total_questoes_respondidas: number
+          total_quimica: number
+          total_redacoes: number
+          total_simulados: number
+          ultima_atualizacao: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "user_statistics"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+    }
     Enums: {
       event_type_enum:
         | "essay_submitted"
@@ -746,7 +835,144 @@ export interface Database {
         | "quiz_started"
         | "quiz_completed"
         | "page_view"
-        | "error_occurred";
-    };
-  };
+        | "error_occurred"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
 }
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      event_type_enum: [
+        "essay_submitted",
+        "essay_viewed",
+        "theme_generated",
+        "theme_cached",
+        "quiz_started",
+        "quiz_completed",
+        "page_view",
+        "error_occurred",
+      ],
+    },
+  },
+} as const
