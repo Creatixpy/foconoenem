@@ -1,0 +1,28 @@
+
+> foco-no-enem@0.1.0 dev
+> next dev --turbopack
+
+   ▲ Next.js 15.5.9 (Turbopack)
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.0.2:3000
+
+ ✓ Starting...
+ ○ Compiling middleware ...
+ ✓ Compiled middleware in 661ms
+ ✓ Ready in 2.3s
+ ○ Compiling /questoes ...
+ ✓ Compiled /questoes in 7.3s
+ GET /questoes 200 in 8771ms
+ ○ Compiling /api/schedule/time ...
+ ✓ Compiled /api/schedule/time in 885ms
+ GET /api/schedule/time 200 in 2160ms
+ GET /api/schedule/time 200 in 2163ms
+ GET /api/schedule/time 200 in 2286ms
+ GET /questoes 200 in 400ms
+ GET /api/schedule/time 200 in 781ms
+ GET /api/schedule/time 200 in 837ms
+ GET /api/schedule/time 200 in 821ms
+ GET /api/schedule/time 200 in 535ms
+ ○ Compiling /api/questoes ...
+ ✓ Compiled /api/questoes in 1020ms
+ GET /api/questoes?disciplines=Matem%C3%A1tica%2CPortugu%C3%AAs%2CQu%C3%ADmica%2CF%C3%ADsica%2CGeografia 200 in 11754ms
