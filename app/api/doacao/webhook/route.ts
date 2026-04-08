@@ -14,7 +14,7 @@ function getStripe() {
   }
 
   stripeClient = new Stripe(secretKey, {
-    apiVersion: '2025-11-17.clover',
+    apiVersion: '2026-03-25.dahlia',
   });
 
   return stripeClient;
