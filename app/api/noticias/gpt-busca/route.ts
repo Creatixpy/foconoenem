@@ -35,9 +35,6 @@ Seja claro, objetivo e use linguagem acessível para estudantes.`;
             max_completion_tokens: 8192,
             top_p: 1,
             stream: false,
-            reasoning_effort: "medium",
-            stop: null,
-            tools: [{ type: "browser_search" }],
           });
 
           const aiContent = completion.choices?.[0]?.message?.content?.trim() ?? "";

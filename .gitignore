@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# VS Code workspace settings (contains secrets)
+.vscode/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
