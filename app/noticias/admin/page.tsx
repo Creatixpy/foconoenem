@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Noticia } from "@/types";
-import { useAuth } from "@/lib/auth/AuthContext";
+import { useAuth } from "@/lib/auth/context";
 import { getBrowserClient } from "@/lib/db";
 import { NewsImage } from "@/app/components/shared";
 

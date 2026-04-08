@@ -44,8 +44,6 @@ export {
 // Security
 export {
   generateSecureToken,
-  generateCSRFToken,
-  validateCSRFToken,
   sanitizeRedirectPath,
   checkRateLimit,
   recordRateLimitAttempt,
@@ -59,7 +57,6 @@ export {
 
 // Auth Service
 export {
-  // Authentication
   signUp,
   signIn,
   signInWithGoogle,
@@ -69,27 +66,37 @@ export {
   refreshSession,
   requestPasswordReset,
   updatePassword,
-  
-  // Profile
+} from './service';
+
+// Profile Service
+export {
   getUserProfile,
   createUserProfile,
   updateUserProfile,
-  
-  // Statistics
+} from './profile-service';
+
+// Statistics Service
+export {
   getUserStatistics,
   recalculateUserStatistics,
-  
-  // Goals
+} from './stats-service';
+
+// Goals Service
+export {
   getUserGoals,
   createUserGoal,
   updateUserGoal,
   deleteUserGoal,
-  
-  // Achievements
+} from './goals-service';
+
+// Achievements Service
+export {
   getUserAchievements,
-  
-  // Community
+} from './achievements-service';
+
+// Community Service
+export {
   confirmCommunityAge,
   acceptCommunityTerms,
   updateCommunitySettings,
-} from './service';
+} from './community-service';

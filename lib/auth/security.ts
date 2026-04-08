@@ -19,35 +19,6 @@ export function generateSecureToken(length: number = 32): string {
 }
 
 /**
- * Generates a CSRF token and stores it
- */
-export function generateCSRFToken(): string {
-  const token = generateSecureToken(32);
-  if (typeof window !== 'undefined') {
-    try {
-      sessionStorage.setItem('foconoenem_csrf_token', token);
-    } catch {
-      // Ignore storage errors
-    }
-  }
-  return token;
-}
-
-/**
- * Validates a CSRF token
- */
-export function validateCSRFToken(token: string): boolean {
-  if (typeof window === 'undefined') return true;
-  
-  try {
-    const storedToken = sessionStorage.getItem('foconoenem_csrf_token');
-    return storedToken === token && token.length > 0;
-  } catch {
-    return false;
-  }
-}
-
-/**
  * Sanitizes redirect path to prevent open redirect vulnerabilities
  */
 export function sanitizeRedirectPath(value: string | undefined | null, fallback: string = '/conta'): string {
@@ -208,7 +179,6 @@ export function clearAuthStorage(): void {
       localStorage.removeItem(key);
       sessionStorage.removeItem(key);
     });
-    sessionStorage.removeItem('foconoenem_csrf_token');
   } catch {
     // Ignore storage errors
   }
