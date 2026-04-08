@@ -2,15 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
 import { randomUUID } from 'crypto';
-import { buildGroqProviders, GROQ_MAX_ATTEMPTS, GroqProvider, isRateLimitError } from '@/lib/ai/groq';
+import type { GroqProvider } from '@/lib/ai/groq';
+import { withGroqRetry } from '@/lib/ai/retry';
+import { extractJson } from '@/lib/ai/parse-json';
 import { getOperatingHoursInfo } from '@/lib/server/operating-hours';
 import { checkRateLimit } from '@/lib/server/rate-limit';
 import { trackEvent } from '@/lib/server/analytics';
 import { resolveRequestUser } from '@/lib/server/auth-request';
 import { z } from 'zod';
 import { handleApiError, sanitizeString } from '@/lib/security';
+import { getEssayById, createEssayResult, type NormalizedEssayResult } from '@/lib/db/repositories/essays';
 
-// Sentinel Security: Define input schema with Zod
 const submissionSchema = z.object({
   redacao: z.string().min(50, 'A redação deve ter no mínimo 50 caracteres').max(5000, 'A redação não pode exceder 5000 caracteres'),
   usarTemaPadrao: z.boolean().optional(),
@@ -26,112 +28,16 @@ type EssayCompetence = {
   comentario: string;
 };
 
-type EssayResult = {
-  id: string;
-  nota: number;
-  competencia1: EssayCompetence;
-  competencia2: EssayCompetence;
-  competencia3: EssayCompetence;
-  competencia4: EssayCompetence;
-  competencia5: EssayCompetence;
-  feedbackGeral: string;
-  pontoFortes: string[];
-  pontosAMelhorar: string[];
-  redacaoOriginal: string;
-  createdAt: string;
-  origem: 'IA' | 'Simulação';
-  tema?: string;
-  textoApoio1?: string;
-  textoApoio2?: string;
-};
-
-type EssayRow = Database['public']['Tables']['essay_results']['Row'];
-
 type ThemeAlignmentResult = {
   aligned: boolean;
   justification: string;
 };
-
-// const MAX_ESSAY_LENGTH = 5000; // Handled by Zod
-// const MIN_ESSAY_LENGTH = 50; // Handled by Zod
 
 const DEFAULT_THEME = 'Os desafios da educação digital no Brasil contemporâneo';
 const DEFAULT_TEXT_1 =
   'Segundo dados do IBGE, em 2021, 85% dos domicílios brasileiros possuíam acesso à internet, porém com grande disparidade regional e socioeconômica. Nas regiões Norte e Nordeste, e em famílias de baixa renda, o acesso é significativamente menor.';
 const DEFAULT_TEXT_2 =
   'A pandemia de COVID-19 evidenciou a necessidade de integração digital no ensino, mas também mostrou que muitos estudantes e professores não estão preparados para o uso efetivo das tecnologias educacionais.';
-
-function normalizeEssayRow(row: EssayRow): EssayResult {
-  return {
-    id: row.id,
-    nota: row.nota,
-    competencia1: row.competencia1 as EssayCompetence,
-    competencia2: row.competencia2 as EssayCompetence,
-    competencia3: row.competencia3 as EssayCompetence,
-    competencia4: row.competencia4 as EssayCompetence,
-    competencia5: row.competencia5 as EssayCompetence,
-    feedbackGeral: row.feedback_geral,
-    pontoFortes: (row.ponto_fortes as string[] | null) ?? [],
-    pontosAMelhorar: (row.pontos_a_melhorar as string[] | null) ?? [],
-    redacaoOriginal: row.redacao_original,
-    createdAt: row.created_at,
-    origem: row.origem as EssayResult['origem'],
-    tema: row.tema ?? undefined,
-    textoApoio1: row.texto_apoio1 ?? undefined,
-    textoApoio2: row.texto_apoio2 ?? undefined,
-  };
-}
-
-async function getResultById(client: SupabaseClient<Database>, id: string, userId: string): Promise<EssayResult | null> {
-  const { data, error } = await client
-    .from('essay_results')
-    .select('*')
-    .eq('id', id)
-    .eq('user_id', userId)
-    .maybeSingle();
-
-  if (error) {
-    console.error('Erro ao buscar redação corrigida:', error);
-    return null;
-  }
-
-  if (!data) {
-    return null;
-  }
-
-  return normalizeEssayRow(data as EssayRow);
-}
-
-async function storeResult(
-  client: SupabaseClient<Database>,
-  result: EssayResult,
-  userId: string
-): Promise<void> {
-  const payload: Database['public']['Tables']['essay_results']['Insert'] = {
-    id: result.id,
-    nota: result.nota,
-    competencia1: result.competencia1,
-    competencia2: result.competencia2,
-    competencia3: result.competencia3,
-    competencia4: result.competencia4,
-    competencia5: result.competencia5,
-    feedback_geral: result.feedbackGeral,
-    ponto_fortes: result.pontoFortes,
-    pontos_a_melhorar: result.pontosAMelhorar,
-    redacao_original: result.redacaoOriginal,
-    created_at: result.createdAt,
-    origem: result.origem,
-    tema: result.tema ?? null,
-    texto_apoio1: result.textoApoio1 ?? null,
-    texto_apoio2: result.textoApoio2 ?? null,
-    user_id: userId,
-  };
-
-  const { error } = await client.from('essay_results').insert(payload);
-  if (error) {
-    throw error;
-  }
-}
 
 async function requestEssayAnalysis(
   provider: GroqProvider,
@@ -142,7 +48,7 @@ async function requestEssayAnalysis(
     textoApoio2Final: string;
     essayId: string;
   }
-): Promise<Omit<EssayResult, 'createdAt' | 'origem'>> {
+): Promise<Omit<NormalizedEssayResult, 'createdAt' | 'origem'>> {
   const { submission, temaFinal, textoApoio1Final, textoApoio2Final, essayId } = input;
 
   let prompt = `
@@ -208,35 +114,22 @@ async function requestEssayAnalysis(
   });
 
   const aiContent = response.choices?.[0]?.message?.content ?? '';
-
-  let parsed: Partial<EssayResult>;
-  try {
-    parsed = JSON.parse(aiContent);
-  } catch (parseError) {
-    console.error('Falha ao parsear JSON diretamente:', parseError);
-    const jsonMatch =
-      aiContent.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/) ||
-      aiContent.match(/(\{[\s\S]*\})/);
-
-    if (!jsonMatch || !jsonMatch[1]) {
-      throw new Error('Formato de resposta inválido da API');
-    }
-
-    parsed = JSON.parse(jsonMatch[1].trim());
-  }
+  const parsed = extractJson<Partial<NormalizedEssayResult>>(aiContent);
 
   if (typeof parsed.nota !== 'number' || !parsed.feedbackGeral) {
     throw new Error('A resposta da IA está incompleta.');
   }
 
+  const defaultCompetence: EssayCompetence = { nota: 0, comentario: 'Não foi possível avaliar' };
+
   return {
     id: essayId,
     nota: parsed.nota,
-    competencia1: parsed.competencia1 ?? { nota: 0, comentario: 'Não foi possível avaliar' },
-    competencia2: parsed.competencia2 ?? { nota: 0, comentario: 'Não foi possível avaliar' },
-    competencia3: parsed.competencia3 ?? { nota: 0, comentario: 'Não foi possível avaliar' },
-    competencia4: parsed.competencia4 ?? { nota: 0, comentario: 'Não foi possível avaliar' },
-    competencia5: parsed.competencia5 ?? { nota: 0, comentario: 'Não foi possível avaliar' },
+    competencia1: parsed.competencia1 ?? defaultCompetence,
+    competencia2: parsed.competencia2 ?? defaultCompetence,
+    competencia3: parsed.competencia3 ?? defaultCompetence,
+    competencia4: parsed.competencia4 ?? defaultCompetence,
+    competencia5: parsed.competencia5 ?? defaultCompetence,
     feedbackGeral: parsed.feedbackGeral ?? 'Não foi possível gerar feedback',
     pontoFortes: parsed.pontoFortes ?? [],
     pontosAMelhorar: parsed.pontosAMelhorar ?? [],
@@ -285,13 +178,7 @@ Regras:
   });
 
   const raw = response.choices?.[0]?.message?.content ?? '';
-  let parsed: { alinhado?: boolean; justificativa?: string };
-  try {
-    parsed = JSON.parse(raw);
-  } catch (error) {
-    console.error('Falha ao interpretar verificação de alinhamento:', error, raw);
-    throw new Error('Resposta inválida da IA ao verificar o tema.');
-  }
+  const parsed = extractJson<{ alinhado?: boolean; justificativa?: string }>(raw);
 
   if (typeof parsed.alinhado !== 'boolean') {
     throw new Error('A verificação de tema não retornou o campo "alinhado".');
@@ -301,81 +188,6 @@ Regras:
     aligned: parsed.alinhado,
     justification: parsed.justificativa?.trim() || (parsed.alinhado ? 'Alinhado ao tema.' : 'Não aborda o tema proposto.'),
   };
-}
-
-async function verifyThemeAlignment(submission: EssaySubmission, temaFinal: string): Promise<ThemeAlignmentResult> {
-  const providers = buildGroqProviders();
-  const attemptsLog: string[] = [];
-
-  for (let providerIndex = 0; providerIndex < providers.length; providerIndex++) {
-    const provider = providers[providerIndex];
-    let attempt = 0;
-
-    while (attempt < GROQ_MAX_ATTEMPTS) {
-      attempt++;
-      try {
-        return await requestThemeAlignment(provider, submission, temaFinal);
-      } catch (error) {
-        const detail =
-          error instanceof Error
-            ? error.message
-            : typeof error === 'string'
-              ? error
-              : JSON.stringify(error);
-        attemptsLog.push(`(tema:${provider.name}) tentativa ${attempt}: ${detail}`);
-        console.error('Erro ao verificar alinhamento de tema:', error);
-
-        if (isRateLimitError(error) && providerIndex < providers.length - 1) {
-          break;
-        }
-      }
-    }
-  }
-
-  const finalError = new Error(attemptsLog.join(' | ') || 'Falha ao verificar alinhamento de tema');
-  (finalError as Error & { attemptsLog?: string[] }).attemptsLog = attemptsLog;
-  throw finalError;
-}
-
-async function analyseEssay(input: {
-  submission: EssaySubmission;
-  temaFinal: string;
-  textoApoio1Final: string;
-  textoApoio2Final: string;
-  essayId: string;
-}): Promise<{ analysis: Omit<EssayResult, 'createdAt' | 'origem'>; provider: string }> {
-  const providers = buildGroqProviders();
-  const attemptsLog: string[] = [];
-
-  for (let providerIndex = 0; providerIndex < providers.length; providerIndex++) {
-    const provider = providers[providerIndex];
-    let attempt = 0;
-
-    while (attempt < GROQ_MAX_ATTEMPTS) {
-      attempt++;
-      try {
-        const analysis = await requestEssayAnalysis(provider, input);
-        return { analysis, provider: provider.name };
-      } catch (error) {
-        const detail =
-          error instanceof Error
-            ? error.message
-            : typeof error === 'string'
-              ? error
-              : JSON.stringify(error);
-        attemptsLog.push(`(${provider.name}) tentativa ${attempt}: ${detail}`);
-        console.error(`Erro ao analisar redação com ${provider.name} (tentativa ${attempt}):`, error);
-
-        if (isRateLimitError(error) && providerIndex < providers.length - 1) {
-          break;
-        }
-      }
-    }
-  }
-
-  const finalError = new Error(attemptsLog.join(' | ') || 'Falha ao analisar redação');
-  (finalError as Error & { attemptsLog?: string[] }).attemptsLog = attemptsLog;
-  throw finalError;
 }
 
 export async function GET(request: NextRequest) {
@@ -393,12 +205,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'ID não fornecido' }, { status: 400 });
     }
 
-    // Sentinel Security: Basic input check for ID format (UUID)
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
        return NextResponse.json({ error: 'Formato de ID inválido' }, { status: 400 });
     }
 
-    const result = await getResultById(supabase, id, userId);
+    const result = await getEssayById(supabase, id, userId);
     if (!result) {
       return NextResponse.json({ error: 'Resultado não encontrado' }, { status: 404 });
     }
@@ -413,7 +224,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ result });
   } catch (error) {
-    // Sentinel Security: Blind Error Handling
     return handleApiError(error);
   }
 }
@@ -459,20 +269,17 @@ export async function POST(request: NextRequest) {
     let submission: EssaySubmission;
     try {
       const json = await request.json();
-      // Sentinel Security: Zod Validation
       submission = submissionSchema.parse(json);
     } catch (e) {
       if (e instanceof z.ZodError) throw e;
       return NextResponse.json({ error: 'JSON inválido' }, { status: 400 });
     }
 
-    // Sentinel Security: Sanitization (although Zod validates, trimming and cleaning is good practice)
     submission.redacao = sanitizeString(submission.redacao);
     if (submission.tema) submission.tema = sanitizeString(submission.tema);
 
     const trimmedEssay = submission.redacao;
     const essayLength = trimmedEssay.length;
-    // Length checks handled by Zod now, but keeping local var for logging
 
     if (submission.usarTemaPadrao === false && (!submission.tema || submission.tema.trim().length < 5)) {
       return NextResponse.json(
@@ -488,7 +295,10 @@ export async function POST(request: NextRequest) {
 
     let alignmentResult: ThemeAlignmentResult | null = null;
     try {
-      alignmentResult = await verifyThemeAlignment({ ...submission, redacao: trimmedEssay }, temaFinal);
+      const { result } = await withGroqRetry('verifyThemeAlignment', (provider) =>
+        requestThemeAlignment(provider, { ...submission, redacao: trimmedEssay }, temaFinal)
+      );
+      alignmentResult = result;
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
       const attempts =
@@ -531,15 +341,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let aiAnalysis: { analysis: Omit<EssayResult, 'createdAt' | 'origem'>; provider: string } | null = null;
+    let aiAnalysis: { result: Omit<NormalizedEssayResult, 'createdAt' | 'origem'>; provider: string } | null = null;
     try {
-      aiAnalysis = await analyseEssay({
-        submission: { ...submission, redacao: trimmedEssay },
-        temaFinal,
-        textoApoio1Final,
-        textoApoio2Final,
-        essayId,
-      });
+      aiAnalysis = await withGroqRetry('analyseEssay', (provider) =>
+        requestEssayAnalysis(provider, {
+          submission: { ...submission, redacao: trimmedEssay },
+          temaFinal,
+          textoApoio1Final,
+          textoApoio2Final,
+          essayId,
+        })
+      );
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
       const attempts =
@@ -558,8 +370,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result: EssayResult = {
-      ...aiAnalysis.analysis,
+    const result: NormalizedEssayResult = {
+      ...aiAnalysis.result,
       id: essayId,
       redacaoOriginal: trimmedEssay,
       createdAt: new Date().toISOString(),
@@ -567,7 +379,7 @@ export async function POST(request: NextRequest) {
     };
 
     try {
-      await storeResult(supabase, result, userId);
+      await createEssayResult(supabase, result, userId);
     } catch (error) {
       console.error('Erro ao salvar correção de redação:', error);
       return NextResponse.json(
@@ -593,7 +405,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ id: essayId });
   } catch (error) {
-    // Sentinel Security: Blind Error Handling
     return handleApiError(error);
   }
 }
