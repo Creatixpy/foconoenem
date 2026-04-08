@@ -95,12 +95,9 @@ export type {
 export {
   toUserProfile,
   toUserStatistics,
-  toEssayResult,
-  toQuizResult,
   toNoticia,
   toCommunityPost,
   fromUserProfileUpdate,
-  fromEssayResult,
   fromNoticiaInsert,
 } from './transformers';
 

@@ -8,11 +8,6 @@ import type {
   UserProfile,
   UserStatisticsRow,
   UserStatistics,
-  EssayResultRow,
-  EssayResult,
-  EssayCompetence,
-  QuizResultRow,
-  QuizResult,
   NoticiaRow,
   Noticia,
   CommunityPostRow,
@@ -111,73 +106,6 @@ export function toUserStatistics(row: UserStatisticsRow): UserStatistics {
       geografia: { acertos: row.acertos_geografia, total: row.total_geografia },
     },
     ultimaAtualizacao: row.ultima_atualizacao,
-  };
-}
-
-// ============================================================================
-// Essay Result Transformers
-// ============================================================================
-
-export function toEssayResult(row: EssayResultRow): EssayResult {
-  return {
-    id: row.id,
-    userId: row.user_id,
-    nota: row.nota,
-    competencia1: row.competencia1 as unknown as EssayCompetence,
-    competencia2: row.competencia2 as unknown as EssayCompetence,
-    competencia3: row.competencia3 as unknown as EssayCompetence,
-    competencia4: row.competencia4 as unknown as EssayCompetence,
-    competencia5: row.competencia5 as unknown as EssayCompetence,
-    feedbackGeral: row.feedback_geral,
-    pontosFortes: row.ponto_fortes ?? [],
-    pontosAMelhorar: row.pontos_a_melhorar ?? [],
-    redacaoOriginal: row.redacao_original,
-    origem: row.origem as EssayResult['origem'],
-    tema: row.tema,
-    textoApoio1: row.texto_apoio1,
-    textoApoio2: row.texto_apoio2,
-    createdAt: row.created_at,
-  };
-}
-
-export function fromEssayResult(
-  result: Omit<EssayResult, 'id' | 'createdAt'> & { id?: string }
-): Record<string, unknown> {
-  return {
-    ...(result.id && { id: result.id }),
-    user_id: result.userId,
-    nota: result.nota,
-    competencia1: result.competencia1,
-    competencia2: result.competencia2,
-    competencia3: result.competencia3,
-    competencia4: result.competencia4,
-    competencia5: result.competencia5,
-    feedback_geral: result.feedbackGeral,
-    ponto_fortes: result.pontosFortes,
-    pontos_a_melhorar: result.pontosAMelhorar,
-    redacao_original: result.redacaoOriginal,
-    origem: result.origem,
-    tema: result.tema,
-    texto_apoio1: result.textoApoio1,
-    texto_apoio2: result.textoApoio2,
-  };
-}
-
-// ============================================================================
-// Quiz Result Transformers
-// ============================================================================
-
-export function toQuizResult(row: QuizResultRow): QuizResult {
-  return {
-    id: row.id,
-    userId: row.user_id,
-    totalQuestions: row.total_questions,
-    correctAnswers: row.correct_answers,
-    wrongAnswers: row.wrong_answers,
-    unansweredQuestions: row.unanswered_questions,
-    score: row.score,
-    disciplines: row.disciplines,
-    createdAt: row.created_at,
   };
 }
 

@@ -181,7 +181,9 @@ export default function QuestoesPageClient() {
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
         setHasStarted(false);
-        const diagnostics = errorData?.diagnostics as Record<string, string> | undefined;
+        const diagnostics = errorData?.diagnostics && typeof errorData.diagnostics === "object"
+          ? (errorData.diagnostics as Record<string, string>)
+          : undefined;
         const diagMessage = diagnostics
           ? Object.entries(diagnostics)
             .map(([disc, msg]) => `${disc}: ${msg}`)
@@ -197,7 +199,7 @@ export default function QuestoesPageClient() {
       setQuestions(data.questions);
 
       if (data.diagnostics && Object.keys(data.diagnostics).length > 0) {
-        const diagSummary = Object.entries(data.diagnostics as Record<string, string>)
+        const diagSummary = Object.entries(data.diagnostics as Record<string, string> ?? {})
           .map(([disc, msg]) => `${disc}: ${msg}`)
           .join(" | ");
         setInfoMessage(
@@ -323,10 +325,10 @@ export default function QuestoesPageClient() {
         parsed = null;
       }
 
-      const saved = parsed && typeof parsed === "object" ? (parsed.saved as boolean | undefined) : undefined;
-      const reason = parsed && typeof parsed === "object" ? (parsed.reason as string | undefined) : undefined;
-      const message = parsed && typeof parsed === "object" ? (parsed.message as string | undefined) : undefined;
-      const errorMessage = parsed && typeof parsed === "object" ? (parsed.error as string | undefined) : undefined;
+      const saved = parsed && typeof parsed === "object" ? Boolean(parsed.saved) : undefined;
+      const reason = parsed && typeof parsed === "object" && typeof parsed.reason === "string" ? parsed.reason : undefined;
+      const message = parsed && typeof parsed === "object" && typeof parsed.message === "string" ? parsed.message : undefined;
+      const errorMessage = parsed && typeof parsed === "object" && typeof parsed.error === "string" ? parsed.error : undefined;
 
       if (!response.ok) {
         throw new Error(errorMessage || message || "Falha ao salvar resultado do simulado");

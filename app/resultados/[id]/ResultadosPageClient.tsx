@@ -61,17 +61,17 @@ export default function ResultadosPageClient({ essayId }: ResultadosPageClientPr
   }, [essayId, authLoading, user]);
 
   const getGradeColor = (grade: number) => {
-    if (grade >= 800) return "text-green-600";
-    if (grade >= 600) return "text-blue-600";
-    if (grade >= 400) return "text-yellow-600";
-    return "text-red-600";
+    if (grade >= 800) return { text: "text-green-600", bg: "bg-green-600" };
+    if (grade >= 600) return { text: "text-blue-600", bg: "bg-blue-600" };
+    if (grade >= 400) return { text: "text-yellow-600", bg: "bg-yellow-600" };
+    return { text: "text-red-600", bg: "bg-red-600" };
   };
 
   const getCompetenceGradeColor = (grade: number) => {
-    if (grade >= 160) return "text-green-600";
-    if (grade >= 120) return "text-blue-600";
-    if (grade >= 80) return "text-yellow-600";
-    return "text-red-600";
+    if (grade >= 160) return { text: "text-green-600", bg: "bg-green-600" };
+    if (grade >= 120) return { text: "text-blue-600", bg: "bg-blue-600" };
+    if (grade >= 80) return { text: "text-yellow-600", bg: "bg-yellow-600" };
+    return { text: "text-red-600", bg: "bg-red-600" };
   };
 
   if (loading) {
@@ -142,14 +142,14 @@ export default function ResultadosPageClient({ essayId }: ResultadosPageClientPr
           <div className="text-center py-8 mb-8 border-b border-border-color">
             <p className="text-gray-600 dark:text-gray-300 mb-2">Sua nota final</p>
             <div className="flex items-center justify-center">
-              <h3 className={`text-6xl font-bold mb-2 ${getGradeColor(result.nota)}`}>
+              <h3 className={`text-6xl font-bold mb-2 ${getGradeColor(result.nota).text}`}>
                 {result.nota}
               </h3>
               <div className="ml-4 text-left">
                 <div className="text-xs text-gray-500 mb-1">escala ENEM</div>
                 <div className="w-32 h-2 bg-gray-200 rounded overflow-hidden">
                   <div 
-                    className={`h-full ${getGradeColor(result.nota).replace('text-', 'bg-')}`} 
+                    className={`h-full ${getGradeColor(result.nota).bg}`} 
                     style={{width: `${result.nota/10}%`}}
                   ></div>
                 </div>
@@ -226,11 +226,11 @@ export default function ResultadosPageClient({ essayId }: ResultadosPageClientPr
                     <div className="flex items-center">
                       <div className="w-16 h-2 bg-gray-200 rounded-full mr-2 overflow-hidden">
                         <div 
-                          className={`h-full ${getCompetenceGradeColor(result.competencia1.nota).replace('text-', 'bg-')}`} 
+                          className={`h-full ${getCompetenceGradeColor(result.competencia1.nota).bg}`} 
                           style={{width: `${(result.competencia1.nota/200)*100}%`}}
                         ></div>
                       </div>
-                      <span className={`font-bold ${getCompetenceGradeColor(result.competencia1.nota)}`}>
+                      <span className={`font-bold ${getCompetenceGradeColor(result.competencia1.nota).text}`}>
                         {result.competencia1.nota}/200
                       </span>
                     </div>
@@ -249,11 +249,11 @@ export default function ResultadosPageClient({ essayId }: ResultadosPageClientPr
                     <div className="flex items-center">
                       <div className="w-16 h-2 bg-gray-200 rounded-full mr-2 overflow-hidden">
                         <div 
-                          className={`h-full ${getCompetenceGradeColor(result.competencia2.nota).replace('text-', 'bg-')}`} 
+                          className={`h-full ${getCompetenceGradeColor(result.competencia2.nota).bg}`} 
                           style={{width: `${(result.competencia2.nota/200)*100}%`}}
                         ></div>
                       </div>
-                      <span className={`font-bold ${getCompetenceGradeColor(result.competencia2.nota)}`}>
+                      <span className={`font-bold ${getCompetenceGradeColor(result.competencia2.nota).text}`}>
                         {result.competencia2.nota}/200
                       </span>
                     </div>
@@ -272,11 +272,11 @@ export default function ResultadosPageClient({ essayId }: ResultadosPageClientPr
                     <div className="flex items-center">
                       <div className="w-16 h-2 bg-gray-200 rounded-full mr-2 overflow-hidden">
                         <div 
-                          className={`h-full ${getCompetenceGradeColor(result.competencia3.nota).replace('text-', 'bg-')}`} 
+                          className={`h-full ${getCompetenceGradeColor(result.competencia3.nota).bg}`} 
                           style={{width: `${(result.competencia3.nota/200)*100}%`}}
                         ></div>
                       </div>
-                      <span className={`font-bold ${getCompetenceGradeColor(result.competencia3.nota)}`}>
+                      <span className={`font-bold ${getCompetenceGradeColor(result.competencia3.nota).text}`}>
                         {result.competencia3.nota}/200
                       </span>
                     </div>
@@ -295,11 +295,11 @@ export default function ResultadosPageClient({ essayId }: ResultadosPageClientPr
                     <div className="flex items-center">
                       <div className="w-16 h-2 bg-gray-200 rounded-full mr-2 overflow-hidden">
                         <div 
-                          className={`h-full ${getCompetenceGradeColor(result.competencia4.nota).replace('text-', 'bg-')}`} 
+                          className={`h-full ${getCompetenceGradeColor(result.competencia4.nota).bg}`} 
                           style={{width: `${(result.competencia4.nota/200)*100}%`}}
                         ></div>
                       </div>
-                      <span className={`font-bold ${getCompetenceGradeColor(result.competencia4.nota)}`}>
+                      <span className={`font-bold ${getCompetenceGradeColor(result.competencia4.nota).text}`}>
                         {result.competencia4.nota}/200
                       </span>
                     </div>
@@ -318,11 +318,11 @@ export default function ResultadosPageClient({ essayId }: ResultadosPageClientPr
                     <div className="flex items-center">
                       <div className="w-16 h-2 bg-gray-200 rounded-full mr-2 overflow-hidden">
                         <div 
-                          className={`h-full ${getCompetenceGradeColor(result.competencia5.nota).replace('text-', 'bg-')}`} 
+                          className={`h-full ${getCompetenceGradeColor(result.competencia5.nota).bg}`} 
                           style={{width: `${(result.competencia5.nota/200)*100}%`}}
                         ></div>
                       </div>
-                      <span className={`font-bold ${getCompetenceGradeColor(result.competencia5.nota)}`}>
+                      <span className={`font-bold ${getCompetenceGradeColor(result.competencia5.nota).text}`}>
                         {result.competencia5.nota}/200
                       </span>
                     </div>
