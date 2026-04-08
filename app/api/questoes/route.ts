@@ -117,7 +117,7 @@ async function requestQuestionsForDiscipline(provider: GroqProvider, discipline:
     messages: [{ role: "user", content: prompt }],
     model: provider.model,
     temperature: 0.7,
-    max_completion_tokens: 8050,
+    max_completion_tokens: 4096,
     top_p: 1,
     stream: false,
     response_format: { type: "json_object" },
