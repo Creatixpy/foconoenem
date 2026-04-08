@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useAuth } from '@/lib/auth/AuthContext';
+import { useAuth } from '@/lib/auth/context';
 
 interface AccountLinkButtonProps {
     className?: string;
@@ -18,7 +18,7 @@ export default function AccountLinkButton({
 
     return (
         <Link
-            href={user ? '/conta' : '/auth/register'}
+            href={user ? '/conta' : '/register'}
             className={className}
         >
             {user ? loggedInLabel : loggedOutLabel}

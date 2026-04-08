@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth/AuthContext";
-import { updateUserProfile } from "@/lib/auth/service";
+import { useAuth } from "@/lib/auth/context";
+import { updateUserProfile } from "@/lib/auth/profile-service";
 import type { UserProfile } from "@/lib/auth/types";
 
 export default function ContaEditarPageClient() {
@@ -57,7 +57,7 @@ export default function ContaEditarPageClient() {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      router.replace(`/auth/login?next=${encodeURIComponent('/conta/editar')}`);
+      router.replace(`/login?next=${encodeURIComponent('/conta/editar')}`);
     }
   }, [authLoading, user, router]);
 

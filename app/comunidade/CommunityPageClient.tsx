@@ -6,13 +6,13 @@ import { COMMUNITY_TERMS_VERSION } from "@/lib/auth/constants";
 import {
   acceptCommunityTerms,
   confirmCommunityAge,
-  getUserAchievements,
-  getUserStatistics,
   updateCommunitySettings,
-} from "@/lib/auth/service";
+} from "@/lib/auth/community-service";
+import { getUserAchievements } from "@/lib/auth/achievements-service";
+import { getUserStatistics } from "@/lib/auth/stats-service";
 import type { UserAchievement, UserStatistics } from "@/lib/auth/types";
 import { getBrowserClient } from "@/lib/db";
-import { useAuth } from "@/lib/auth/AuthContext";
+import { useAuth } from "@/lib/auth/context";
 import {
   useCommunityThreads,
   type CommunityComment,
@@ -781,10 +781,10 @@ export default function CommunityPageClient() {
             Os fóruns e comentários ficam disponíveis apenas para estudantes autenticados para manter o espaço seguro.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <Link href="/auth/login?redirect=/comunidade" className="btn btn-primary px-8 py-3 text-base">
+            <Link href="/login?redirect=/comunidade" className="btn btn-primary px-8 py-3 text-base">
               Entrar na minha conta
             </Link>
-            <Link href="/auth/register" className="btn btn-outline px-8 py-3 text-base font-semibold text-primary">
+            <Link href="/register" className="btn btn-outline px-8 py-3 text-base font-semibold text-primary">
               Criar conta gratuita
             </Link>
           </div>
