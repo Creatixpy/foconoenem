@@ -11,7 +11,7 @@ import { validateEmail, validatePassword } from '@/lib/auth/validation';
 import { sanitizeRedirectPath } from '@/lib/auth/security';
 import { AUTH_PATHS } from '@/lib/auth/constants';
 import { signUp, signInWithGoogle } from '@/lib/auth/service';
-import { useAuth } from '@/lib/auth/AuthContext';
+import { useAuth } from '@/lib/auth/context';
 
 function getPasswordStrengthColor(strength: 'weak' | 'fair' | 'good' | 'strong'): string {
   switch (strength) {

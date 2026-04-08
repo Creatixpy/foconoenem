@@ -20,9 +20,9 @@ export const ROUTES = {
     DONATION: '/doacao',
 
     // Auth
-    LOGIN: '/auth/login',
-    REGISTER: '/auth/register',
-    FORGOT_PASSWORD: '/auth/forgot-password',
+    LOGIN: '/login',
+    REGISTER: '/register',
+    FORGOT_PASSWORD: '/forgot-password',
 
     // Legal
     PRIVACY: '/privacidade',

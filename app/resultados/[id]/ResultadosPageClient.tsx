@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { EssayResult } from "@/types";
 import Link from "next/link";
 import { getBrowserClient } from "@/lib/db";
-import { useAuth } from "@/lib/auth/AuthContext";
+import { useAuth } from "@/lib/auth/context";
 
 type ResultadosPageClientProps = {
   essayId: string;

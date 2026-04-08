@@ -1,5 +1,5 @@
-import LoginPageClient from './LoginPageClient';
+import { redirect } from 'next/navigation';
 
 export default function LoginPage() {
-  return <LoginPageClient redirectTo="/conta" />;
+  redirect('/login');
 }

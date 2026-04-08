@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useAuth } from "@/lib/auth/AuthContext";
+import { useAuth } from "@/lib/auth/context";
 import { motion, AnimatePresence } from "motion/react";
 
 interface NavLink {
@@ -204,13 +204,13 @@ export default function Header() {
             ) : (
               <div className="hidden items-center gap-3 sm:flex">
                 <Link
-                  href="/auth/login"
+                  href="/login"
                   className="btn btn-outline text-[10px]"
                 >
                   ENTRAR
                 </Link>
                 <Link
-                  href="/auth/register"
+                  href="/register"
                   className="btn btn-primary text-[10px]"
                 >
                   CADASTRAR
@@ -282,14 +282,14 @@ export default function Header() {
                     {!user && (
                         <div className="mt-8 space-y-4">
                             <Link
-                                href="/auth/login"
+                                href="/login"
                                 onClick={closeMobileMenu}
                                 className="btn btn-outline w-full justify-center"
                             >
                                 ENTRAR
                             </Link>
                             <Link
-                                href="/auth/register"
+                                href="/register"
                                 onClick={closeMobileMenu}
                                 className="btn btn-primary w-full justify-center"
                             >

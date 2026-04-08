@@ -1,5 +1,5 @@
-import RegisterPageClient from './RegisterPageClient';
+import { redirect } from 'next/navigation';
 
 export default function RegisterPage() {
-  return <RegisterPageClient redirectTo="/conta" />;
+  redirect('/register');
 }
