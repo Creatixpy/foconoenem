@@ -7,8 +7,8 @@
 export const SESSION_CONFIG = {
   // Maximum session duration (7 days in seconds)
   MAX_SESSION_DURATION: 7 * 24 * 60 * 60,
-  // Session refresh threshold (refresh when 1 hour remaining)
-  REFRESH_THRESHOLD: 60 * 60,
+  // Session refresh threshold (refresh when 5 minutes remaining)
+  REFRESH_THRESHOLD: 5 * 60,
   // Idle timeout (30 minutes of inactivity)
   IDLE_TIMEOUT: 30 * 60 * 1000,
   // Storage keys
