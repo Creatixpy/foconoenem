@@ -21,8 +21,8 @@ export async function getUserStatistics(userId: string): Promise<UserStatistics 
         .from('user_statistics')
         .select('*')
         .eq('user_id', userId)
-        .single()
-        .abortSignal(signal);
+        .abortSignal(signal)
+        .single();
 
       if (error && error.code !== 'PGRST116') throw error;
       return data as UserStatistics | null;

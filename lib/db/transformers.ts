@@ -18,6 +18,7 @@ import type {
   CommunityPostRow,
   CommunityPost,
 } from './types';
+import type { Database } from '@/types/supabase';
 
 // ============================================================================
 // Utility Functions
@@ -61,8 +62,8 @@ export function toUserProfile(row: UserProfileRow): UserProfile {
   };
 }
 
-export function fromUserProfileUpdate(profile: Partial<UserProfile>): Record<string, unknown> {
-  const updates: Record<string, unknown> = {};
+export function fromUserProfileUpdate(profile: Partial<UserProfile>): Database['public']['Tables']['user_profiles']['Update'] {
+  const updates: Database['public']['Tables']['user_profiles']['Update'] = {};
   
   if (profile.nomeCompleto !== undefined) updates.nome_completo = profile.nomeCompleto;
   if (profile.avatarUrl !== undefined) updates.avatar_url = profile.avatarUrl;

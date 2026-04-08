@@ -28,7 +28,7 @@ export async function getEssayById(
       query = query.eq('user_id', userId);
     }
 
-    const { data, error } = await query.maybeSingle().abortSignal(signal);
+    const { data, error } = await query.abortSignal(signal).maybeSingle();
 
     if (error && !isNotFoundError(error)) throw DatabaseError.fromPostgrestError(error);
     return data;
@@ -72,8 +72,8 @@ export async function createEssayResult(
       .from('essay_results')
       .insert(payload as Database['public']['Tables']['essay_results']['Insert'])
       .select()
-      .single()
-      .abortSignal(signal);
+      .abortSignal(signal)
+      .single();
 
     if (error) throw DatabaseError.fromPostgrestError(error);
     return data;
@@ -173,8 +173,8 @@ export async function createCachedTheme(
         usado_count: 0,
       })
       .select()
-      .single()
-      .abortSignal(signal);
+      .abortSignal(signal)
+      .single();
 
     if (error) throw DatabaseError.fromPostgrestError(error);
     return data;

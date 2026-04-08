@@ -27,8 +27,8 @@ export async function confirmCommunityAge(userId: string): Promise<UserProfile |
         })
         .eq('user_id', userId)
         .select()
-        .single()
-        .abortSignal(signal);
+        .abortSignal(signal)
+        .single();
 
       if (error) throw error;
       return data as UserProfile;
@@ -58,8 +58,8 @@ export async function acceptCommunityTerms(
         })
         .eq('user_id', userId)
         .select()
-        .single()
-        .abortSignal(signal);
+        .abortSignal(signal)
+        .single();
 
       if (error) throw error;
       return data as UserProfile;
@@ -95,8 +95,8 @@ export async function updateCommunitySettings(
         .update(sanitizedSettings)
         .eq('user_id', userId)
         .select()
-        .single()
-        .abortSignal(signal);
+        .abortSignal(signal)
+        .single();
 
       if (error) throw error;
       return data as UserProfile;
