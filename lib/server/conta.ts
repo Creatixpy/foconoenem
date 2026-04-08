@@ -1,66 +1,16 @@
 'use server';
 
-import { createAdminClient } from '@/lib/db/server';
-import { cookies } from 'next/headers';
-import { createClient } from '@supabase/supabase-js';
-import type { Database } from '@/types/supabase';
+import { createAdminClient, createServerClient } from '@/lib/db/server';
 
 /**
  * Gets the authenticated user's ID from cookie session
  */
 async function getAuthenticatedUserId(): Promise<string | null> {
     try {
-        const cookieStore = await cookies();
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-        if (!supabaseUrl || !supabaseAnonKey) {
-            return null;
-        }
-
-        // Get access token from cookies
-        const accessToken = cookieStore.get('sb-access-token')?.value
-            || cookieStore.get(`sb-${new URL(supabaseUrl).hostname.split('.')[0]}-auth-token`)?.value;
-
-        if (!accessToken) {
-            // Try to parse the auth token cookie
-            const authCookieName = cookieStore.getAll().find(c => c.name.includes('auth-token'))?.name;
-            if (authCookieName) {
-                const authCookie = cookieStore.get(authCookieName);
-                if (authCookie?.value) {
-                    try {
-                        const parsed = JSON.parse(authCookie.value);
-                        if (parsed?.access_token) {
-                            const client = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-                                global: {
-                                    headers: {
-                                        Authorization: `Bearer ${parsed.access_token}`,
-                                    },
-                                },
-                            });
-                            const { data: { user } } = await client.auth.getUser();
-                            return user?.id || null;
-                        }
-                    } catch {
-                        // Invalid JSON, continue
-                    }
-                }
-            }
-            return null;
-        }
-
-        const client = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-            global: {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
-            },
-        });
-
-        const { data: { user } } = await client.auth.getUser();
+        const supabase = await createServerClient();
+        const { data: { user } } = await supabase.auth.getUser();
         return user?.id || null;
     } catch (error) {
-        // Sentinel Deep Auditor: Silent logging for security.
         console.error('Erro ao obter usuário autenticado:', error);
         return null;
     }

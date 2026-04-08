@@ -380,35 +380,33 @@ export async function POST(request: NextRequest) {
   const { supabase, userId } = auth;
 
   try {
-    // 1. Insert Attempt
-    const { data: attempt, error: attemptError } = await supabase.from("quiz_attempts").insert({
-      user_id: userId,
-      score: parsedPayload.result.score,
-      total_questions: parsedPayload.result.totalQuestions,
-      correct_answers: parsedPayload.result.correctAnswers,
-      disciplines: parsedPayload.disciplines,
-      started_at: new Date().toISOString(), // Approximation
-      completed_at: new Date().toISOString()
-    }).select().single();
-
-    if (attemptError) throw attemptError;
-
-    // 2. Insert Answers
-    const answersToInsert = parsedPayload.questions.map(q => {
+    // Build answers map for storage
+    const answersData = parsedPayload.questions.map(q => {
       const selectedId = parsedPayload.selectedAnswers[q.id];
       const isCorrect = q.alternatives.find(a => a.id === selectedId)?.isCorrect || false;
       return {
-        attempt_id: attempt.id,
         question_id: q.id,
         selected_alternative_id: selectedId,
-        is_correct: isCorrect
+        is_correct: isCorrect,
       };
     });
 
-    const { error: answersError } = await supabase.from("quiz_answers").insert(answersToInsert);
-    if (answersError) throw answersError;
+    // Insert into quiz_results (single table, replaces old quiz_attempts + quiz_answers)
+    const { error: insertError } = await supabase.from("quiz_results").insert({
+      user_id: userId,
+      total_questions: parsedPayload.result.totalQuestions,
+      correct_answers: parsedPayload.result.correctAnswers,
+      wrong_answers: parsedPayload.result.wrongAnswers,
+      unanswered_questions: parsedPayload.result.unansweredQuestions,
+      score: parsedPayload.result.score,
+      disciplines: parsedPayload.disciplines,
+      questions_data: parsedPayload.questions as unknown as Json,
+      answers_data: answersData as unknown as Json,
+    });
 
-    // 3. Update Stats
+    if (insertError) throw insertError;
+
+    // Recalculate statistics
     const { error: statsError } = await supabase.rpc("recalculate_user_statistics", {
       target_user_id: userId,
     });
@@ -420,7 +418,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, saved: true });
 
   } catch (error) {
-    console.error("Erro ao salvar resultado do simulado (nova estrutura):", error);
+    console.error("Erro ao salvar resultado do simulado:", error);
     return NextResponse.json(
       { error: "Erro ao salvar resultado do simulado", message: error instanceof Error ? error.message : "Erro desconhecido" },
       { status: 500 }
