@@ -134,7 +134,7 @@ export interface EssayResult {
   competencia4: EssayCompetence;
   competencia5: EssayCompetence;
   feedbackGeral: string;
-  pontosFortes: string[];
+  pontoFortes: string[];
   pontosAMelhorar: string[];
   redacaoOriginal: string;
   origem: EssayOrigin;

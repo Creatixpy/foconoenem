@@ -291,7 +291,6 @@ export default function RedacaoPageClient() {
         throw new Error("Resposta do servidor não contém o identificador da redação.");
       }
 
-      localStorage.setItem("lastEssayId", essayId);
       router.push(`/resultados/${essayId}`);
     } catch (error) {
       console.error("Erro:", error);

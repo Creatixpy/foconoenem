@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import type { Question, QuizResult } from "@/types";
-import type { Json } from "@/types/supabase";
-import { buildGroqProviders, GroqProvider, isRateLimitError } from "@/lib/ai/groq";
+import type { GroqProvider } from "@/lib/ai/groq";
+import { isRateLimitError, buildGroqProviders } from "@/lib/ai/groq";
+import { extractJson } from "@/lib/ai/parse-json";
 import { getOperatingHoursInfo } from "@/lib/server/operating-hours";
 import { resolveRequestUser } from "@/lib/server/auth-request";
 import { createAdminClient } from "@/lib/db/server";
+import { createQuizResult, saveGeneratedQuestions } from "@/lib/db/repositories/quizzes";
+import type { Database } from "@/types/supabase";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 const DISCIPLINES: Question["discipline"][] = ["Matemática", "Português", "Química", "Física", "Geografia"];
 const QUESTIONS_PER_DISCIPLINE = 3;
@@ -122,43 +126,15 @@ async function requestQuestionsForDiscipline(provider: GroqProvider, discipline:
   const aiContent = response.choices?.[0]?.message?.content ?? "";
   let rawQuestions: RawQuestion[] = [];
 
-  try {
-    const parsed = JSON.parse(aiContent);
-    if (Array.isArray(parsed)) {
-      rawQuestions = parsed;
-    } else if (Array.isArray(parsed.questions)) {
-      rawQuestions = parsed.questions;
-    } else if (Array.isArray(parsed.data)) {
-      rawQuestions = parsed.data;
-    } else {
-      throw new Error("Estrutura inesperada");
-    }
-  } catch (parseError) {
-    console.error("Falha ao parsear JSON direto:", parseError);
-    const blockMatch =
-      aiContent.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/) ||
-      aiContent.match(/(\{[\s\S]*\})/);
-
-    if (blockMatch?.[1]) {
-      const extracted = JSON.parse(blockMatch[1].trim());
-      if (Array.isArray(extracted)) {
-        rawQuestions = extracted;
-      } else if (Array.isArray(extracted.questions)) {
-        rawQuestions = extracted.questions;
-      } else if (Array.isArray(extracted.data)) {
-        rawQuestions = extracted.data;
-      } else {
-        throw new Error("Estrutura inesperada");
-      }
-    } else {
-      const arrayMatch =
-        aiContent.match(/```(?:json)?\s*(\[[\s\S]*?\])\s*```/) ||
-        aiContent.match(/(\[[\s\S]*\])/);
-      if (!arrayMatch?.[1]) {
-        throw new Error("Não foi possível extrair JSON das questões.");
-      }
-      rawQuestions = JSON.parse(arrayMatch[1].trim());
-    }
+  const parsed = extractJson<Record<string, unknown>>(aiContent);
+  if (Array.isArray(parsed)) {
+    rawQuestions = parsed;
+  } else if (Array.isArray(parsed.questions)) {
+    rawQuestions = parsed.questions;
+  } else if (Array.isArray(parsed.data)) {
+    rawQuestions = parsed.data;
+  } else {
+    throw new Error("Estrutura inesperada na resposta da IA");
   }
 
   const normalized: Question[] = [];
@@ -181,8 +157,7 @@ async function requestQuestionsForDiscipline(provider: GroqProvider, discipline:
     }
 
     normalized.push({
-      id: randomUUID(), // Will be overwritten by DB ID if we insert, but actually we use this ID for now.
-      // Better to generate ID here, insert, and return SAME ID.
+      id: randomUUID(),
       discipline,
       text: question.text,
       explanation: question.explanation ?? "Sem explicação disponível.",
@@ -255,29 +230,6 @@ async function generateQuestionsWithDiagnostics(
   return { questions, diagnostics, missing, providersUsed };
 }
 
-async function saveGeneratedQuestions(questions: Question[]) {
-  const supabase = createAdminClient();
-  if (!supabase) {
-    console.error("Admin client not available, skipping save generated questions.");
-    return;
-  }
-
-  const rows = questions.map(q => ({
-    id: q.id,
-    discipline: q.discipline,
-    content: q.text,
-    alternatives: q.alternatives as unknown as Json,
-    explanation: q.explanation,
-    created_at: new Date().toISOString()
-  }));
-
-  // JSONB in Supabase JS: pass the object/array directly.
-  const { error } = await supabase.from('generated_questions').insert(rows);
-  if (error) {
-    console.error("Error saving generated questions:", error);
-  }
-}
-
 export async function GET(request: NextRequest) {
   try {
     const operatingInfo = await getOperatingHoursInfo();
@@ -329,8 +281,13 @@ export async function GET(request: NextRequest) {
 
     const shuffled = [...selected].sort(() => Math.random() - 0.5);
 
-    // Save questions to DB
-    await saveGeneratedQuestions(shuffled);
+    // Save questions to DB (fire and forget)
+    const adminClient = createAdminClient();
+    if (adminClient) {
+      saveGeneratedQuestions(adminClient, shuffled).catch((err) => {
+        console.error("Error saving generated questions:", err);
+      });
+    }
 
     return NextResponse.json({
       questions: shuffled,
@@ -377,10 +334,10 @@ export async function POST(request: NextRequest) {
     return auth.error;
   }
 
-  const { supabase, userId } = auth;
+  const supabase = auth.supabase as SupabaseClient<Database>;
+  const { userId } = auth;
 
   try {
-    // Build answers map for storage
     const answersData = parsedPayload.questions.map(q => {
       const selectedId = parsedPayload.selectedAnswers[q.id];
       const isCorrect = q.alternatives.find(a => a.id === selectedId)?.isCorrect || false;
@@ -391,20 +348,16 @@ export async function POST(request: NextRequest) {
       };
     });
 
-    // Insert into quiz_results (single table, replaces old quiz_attempts + quiz_answers)
-    const { error: insertError } = await supabase.from("quiz_results").insert({
-      user_id: userId,
-      total_questions: parsedPayload.result.totalQuestions,
-      correct_answers: parsedPayload.result.correctAnswers,
-      wrong_answers: parsedPayload.result.wrongAnswers,
-      unanswered_questions: parsedPayload.result.unansweredQuestions,
+    await createQuizResult(supabase, userId, {
+      totalQuestions: parsedPayload.result.totalQuestions,
+      correctAnswers: parsedPayload.result.correctAnswers,
+      wrongAnswers: parsedPayload.result.wrongAnswers,
+      unansweredQuestions: parsedPayload.result.unansweredQuestions,
       score: parsedPayload.result.score,
       disciplines: parsedPayload.disciplines,
-      questions_data: parsedPayload.questions as unknown as Json,
-      answers_data: answersData as unknown as Json,
+      questionsData: parsedPayload.questions,
+      answersData: answersData,
     });
-
-    if (insertError) throw insertError;
 
     // Recalculate statistics
     const { error: statsError } = await supabase.rpc("recalculate_user_statistics", {
