@@ -22,8 +22,8 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
         .from('user_profiles')
         .select('*')
         .eq('user_id', userId)
-        .single()
-        .abortSignal(signal);
+        .abortSignal(signal)
+        .single();
 
       if (error && error.code !== 'PGRST116') throw error;
       return data as UserProfile | null;
@@ -58,8 +58,8 @@ export async function createUserProfile(
           { onConflict: 'user_id' }
         )
         .select()
-        .single()
-        .abortSignal(signal);
+        .abortSignal(signal)
+        .single();
 
       if (error) throw error;
       return data as UserProfile;
@@ -108,8 +108,8 @@ export async function updateUserProfile(
         .update(sanitizedUpdates)
         .eq('user_id', userId)
         .select()
-        .single()
-        .abortSignal(signal);
+        .abortSignal(signal)
+        .single();
 
       if (error) throw error;
       return data as UserProfile;

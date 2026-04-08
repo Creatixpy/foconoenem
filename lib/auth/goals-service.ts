@@ -55,8 +55,8 @@ export async function createUserGoal(userId: string, goal: Partial<UserGoal>): P
         progresso: goal.progresso ?? 0,
       })
       .select()
-      .single()
-      .abortSignal(signal);
+      .abortSignal(signal)
+      .single();
 
     if (error) throw error;
     return data;
@@ -80,8 +80,8 @@ export async function updateUserGoal(goalId: string, updates: Partial<UserGoal>)
       .update(sanitizedUpdates)
       .eq('id', goalId)
       .select()
-      .single()
-      .abortSignal(signal);
+      .abortSignal(signal)
+      .single();
 
     if (error) throw error;
     return data;

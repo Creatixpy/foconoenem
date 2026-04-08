@@ -1,15 +1,4 @@
-import '@supabase/postgrest-js';
-
-declare module '@supabase/postgrest-js' {
-  interface PostgrestBuilder<Row = Record<string, unknown>, Result = Row[], Relationships = Record<string, unknown>> {
-    abortSignal(signal: AbortSignal): PostgrestBuilder<Row, Result, Relationships>;
-    single(): PostgrestBuilder<Row, Row, Relationships>;
-    maybeSingle(): PostgrestBuilder<Row | null, Row | null, Relationships>;
-    limit(count: number, options?: { foreignTable?: keyof Relationships }): PostgrestBuilder<Row, Result, Relationships>;
-    eq(column: string, value: unknown): PostgrestBuilder<Row, Result, Relationships>;
-    order(
-      column: string,
-      options?: { ascending?: boolean; nullsFirst?: boolean; referencedTable?: keyof Relationships }
-    ): PostgrestBuilder<Row, Result, Relationships>;
-  }
-}
+// This file intentionally left empty.
+// The @supabase/postgrest-js SDK (v2.102.1) provides all required types.
+// abortSignal() calls are placed before single()/maybeSingle() in the chain
+// to avoid the need for augmenting PostgrestBuilder.
