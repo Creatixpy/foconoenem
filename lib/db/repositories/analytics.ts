@@ -99,8 +99,8 @@ export async function checkRateLimit(
       .gte('window_start', windowStart.toISOString())
       .order('window_start', { ascending: false })
       .limit(1)
-      .maybeSingle()
-      .abortSignal(signal);
+      .abortSignal(signal)
+      .maybeSingle();
 
     if (error) throw DatabaseError.fromPostgrestError(error);
     return data;
@@ -132,8 +132,8 @@ export async function incrementRateLimit(
       .eq('identifier', identifier)
       .eq('endpoint', endpoint)
       .gte('window_start', windowStart.toISOString())
-      .maybeSingle()
-      .abortSignal(signal);
+      .abortSignal(signal)
+      .maybeSingle();
 
     if (existing) {
       // Update existing record
@@ -187,8 +187,8 @@ export async function getConfig(
       .from('configuracoes')
       .select('valor')
       .eq('chave', key)
-      .maybeSingle()
-      .abortSignal(signal);
+      .abortSignal(signal)
+      .maybeSingle();
 
     if (error) throw DatabaseError.fromPostgrestError(error);
     return data?.valor ?? null;

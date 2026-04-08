@@ -28,7 +28,7 @@ export async function getQuizById(
       query = query.eq('user_id', userId);
     }
 
-    const { data, error } = await query.maybeSingle().abortSignal(signal);
+    const { data, error } = await query.abortSignal(signal).maybeSingle();
 
     if (error) throw DatabaseError.fromPostgrestError(error);
     return data;
@@ -90,8 +90,8 @@ export async function createQuizResult(
         answers_data: quiz.answersData as Json,
       })
       .select()
-      .single()
-      .abortSignal(signal);
+      .abortSignal(signal)
+      .single();
 
     if (error) throw DatabaseError.fromPostgrestError(error);
     return data;

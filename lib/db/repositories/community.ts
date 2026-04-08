@@ -45,8 +45,8 @@ export async function getTopicBySlug(
       .from('community_topics')
       .select('*')
       .eq('slug', slug)
-      .maybeSingle()
-      .abortSignal(signal);
+      .abortSignal(signal)
+      .maybeSingle();
 
     if (error && !isNotFoundError(error)) throw DatabaseError.fromPostgrestError(error);
     return data;
@@ -148,8 +148,8 @@ export async function getPostById(
       .from('community_posts')
       .select('*')
       .eq('id', postId)
-      .maybeSingle()
-      .abortSignal(signal);
+      .abortSignal(signal)
+      .maybeSingle();
 
     if (error && !isNotFoundError(error)) throw DatabaseError.fromPostgrestError(error);
     return data;
@@ -207,8 +207,8 @@ export async function createPost(
         status: 'published',
       })
       .select('*')
-      .single()
-      .abortSignal(signal);
+      .abortSignal(signal)
+      .single();
 
     if (error) throw DatabaseError.fromPostgrestError(error);
     return data;
@@ -309,8 +309,8 @@ export async function createComment(
         status: 'visible',
       })
       .select()
-      .single()
-      .abortSignal(signal);
+      .abortSignal(signal)
+      .single();
 
     if (error) throw DatabaseError.fromPostgrestError(error);
 
@@ -379,8 +379,8 @@ export async function togglePostLike(
       .select('id')
       .eq('post_id', postId)
       .eq('user_id', userId)
-      .maybeSingle()
-      .abortSignal(signal);
+      .abortSignal(signal)
+      .maybeSingle();
 
     if (existing) {
       // Unlike
@@ -442,8 +442,8 @@ export async function hasUserLikedPost(
       .select('id')
       .eq('post_id', postId)
       .eq('user_id', userId)
-      .maybeSingle()
-      .abortSignal(signal);
+      .abortSignal(signal)
+      .maybeSingle();
 
     if (error) throw DatabaseError.fromPostgrestError(error);
     return !!data;

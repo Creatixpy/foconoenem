@@ -22,8 +22,8 @@ export async function getNoticiaBySlug(
       .from('noticias')
       .select('*')
       .eq('slug', slug)
-      .maybeSingle()
-      .abortSignal(signal);
+      .abortSignal(signal)
+      .maybeSingle();
 
     if (error && !isNotFoundError(error)) throw DatabaseError.fromPostgrestError(error);
     return data;
@@ -41,8 +41,8 @@ export async function getNoticiaById(
       .from('noticias')
       .select('*')
       .eq('id', id)
-      .maybeSingle()
-      .abortSignal(signal);
+      .abortSignal(signal)
+      .maybeSingle();
 
     if (error && !isNotFoundError(error)) throw DatabaseError.fromPostgrestError(error);
     return data;
@@ -149,8 +149,8 @@ export async function createNoticia(
       .from('noticias')
       .insert(payload as Database['public']['Tables']['noticias']['Insert'])
       .select()
-      .single()
-      .abortSignal(signal);
+      .abortSignal(signal)
+      .single();
 
     if (error) throw DatabaseError.fromPostgrestError(error);
     return data;
@@ -164,7 +164,7 @@ export async function updateNoticia(
   id: string,
   updates: Partial<Omit<Noticia, 'id' | 'createdAt' | 'updatedAt'>>
 ): Promise<Noticia> {
-  const dbUpdates: Record<string, unknown> = {};
+  const dbUpdates: Database['public']['Tables']['noticias']['Update'] = {};
   
   if (updates.titulo !== undefined) dbUpdates.titulo = updates.titulo;
   if (updates.slug !== undefined) dbUpdates.slug = updates.slug;
@@ -183,8 +183,8 @@ export async function updateNoticia(
       .update(dbUpdates)
       .eq('id', id)
       .select()
-      .single()
-      .abortSignal(signal);
+      .abortSignal(signal)
+      .single();
 
     if (error) throw DatabaseError.fromPostgrestError(error);
     return data;
