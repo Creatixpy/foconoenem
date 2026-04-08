@@ -296,6 +296,18 @@ export default function QuestoesPageClient() {
       setSaveStatusMessage("Salvando resultado na sua conta...");
 
       const supabase = getBrowserClient();
+
+      // Use getUser() instead of getSession() — getUser() validates the token
+      // with the server and triggers a refresh if expired, preventing stale
+      // tokens from causing silent save failures.
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+
+      if (userError || !userData?.user) {
+        setSaveStatusMessage("Faça login para salvar seus simulados no histórico da conta.");
+        return;
+      }
+
+      // After getUser() succeeds, getSession() is guaranteed to have a fresh token
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData?.session?.access_token;
 

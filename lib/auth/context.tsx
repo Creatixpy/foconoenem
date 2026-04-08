@@ -167,6 +167,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setSession(data.session);
         setUser(data.session.user);
       }
+    } else {
+      // Refresh failed — session may be invalid. Clear state to prevent
+      // stale user/session from blocking downstream UI (e.g. /conta loading).
+      const { data } = await supabase.auth.getSession();
+      if (isMountedRef.current && !data.session) {
+        setUser(null);
+        setSession(null);
+        setProfile(null);
+      }
     }
   }, []);
 
@@ -180,44 +189,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, []);
 
-  // Activity tracking and session refresh
+  // Activity tracking and idle timeout
   useEffect(() => {
     if (!session) return;
 
-    // Update activity on user interactions
     const handleActivity = () => {
       updateLastActivity();
     };
 
-    // Check for idle timeout and session refresh periodically
-    const checkSession = async () => {
+    // Only check idle timeout — token refresh is handled by Supabase's
+    // built-in autoRefreshToken. The manual refresh in refreshAuth() is
+    // only called on-demand (e.g. before saving quiz results).
+    const checkIdleTimeout = async () => {
       if (isSessionIdle()) {
         console.log('Sessão inativa, fazendo logout...');
         await handleSignOut();
-        return;
-      }
-
-      // Refresh session if needed (within 1 hour of expiry)
-      if (session.expires_at) {
-        const expiresAt = session.expires_at * 1000;
-        const refreshThreshold = SESSION_CONFIG.REFRESH_THRESHOLD * 1000;
-        
-        if (expiresAt - Date.now() < refreshThreshold) {
-          await refreshAuth();
-        }
       }
     };
 
-    // Add activity listeners
     const events = ['mousedown', 'keydown', 'touchstart', 'scroll'];
     events.forEach(event => {
       window.addEventListener(event, handleActivity, { passive: true });
     });
 
-    // Check session every minute
-    activityIntervalRef.current = setInterval(checkSession, 60 * 1000);
+    activityIntervalRef.current = setInterval(checkIdleTimeout, 60 * 1000);
 
-    // Initial activity update
     updateLastActivity();
 
     return () => {
@@ -228,7 +224,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         clearInterval(activityIntervalRef.current);
       }
     };
-  }, [session, handleSignOut, refreshAuth]);
+  }, [session, handleSignOut]);
 
   // Bootstrap auth on mount
   useEffect(() => {
@@ -270,12 +266,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (!isMountedRef.current) return;
 
         const sessionUser = newSession?.user ?? null;
-        setUser(sessionUser);
-        setSession(newSession);
 
-        if (event === 'SIGNED_OUT') {
+        // Keep user and session atomic — never allow user without session
+        setSession(newSession);
+        setUser(newSession ? sessionUser : null);
+
+        if (event === 'SIGNED_OUT' || !newSession) {
           setProfile(null);
-          clearAuthStorage();
+          if (event === 'SIGNED_OUT') {
+            clearAuthStorage();
+          }
         } else if (sessionUser) {
           await resolveProfile(sessionUser);
           updateLastActivity();
