@@ -40,6 +40,14 @@ export default function ResetPasswordPage() {
   const [success, setSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState<ReturnType<typeof validatePassword> | null>(null);
+  const [hasSession, setHasSession] = useState<boolean | null>(null);
+
+  // Check for a valid recovery session
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setHasSession(!!data.session);
+    });
+  }, []);
 
   // Validate password on change
   useEffect(() => {
@@ -85,6 +93,35 @@ export default function ResetPasswordPage() {
       setLoading(false);
     }
   };
+
+  if (hasSession === null) {
+    return (
+      <div className="w-full max-w-md flex items-center justify-center py-20">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!hasSession) {
+    return (
+      <div className="w-full max-w-md">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 p-8 sm:p-10 text-center">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">
+            Link inválido ou expirado
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400 mb-8">
+            Solicite um novo link de redefinição de senha.
+          </p>
+          <Link
+            href={AUTH_PATHS.FORGOT_PASSWORD}
+            className="block w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors text-center"
+          >
+            Solicitar novo link
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (success) {
     return (

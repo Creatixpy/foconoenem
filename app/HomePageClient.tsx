@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { useAuth } from "@/lib/auth/AuthContext";
+import { useAuth } from "@/lib/auth/context";
 import { AccountLinkButton } from "./components/ui";
 
 type Highlight = {

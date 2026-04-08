@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getOperatingHoursInfo, type OperatingHoursInfo } from "@/lib/schedule";
 import { getBrowserClient } from "@/lib/db";
-import { useAuth } from "@/lib/auth/AuthContext";
+import { useAuth } from "@/lib/auth/context";
 
 const guidanceSteps = [
   "Leia o tema e destaque o problema central.",
@@ -620,10 +620,10 @@ export default function RedacaoPageClient() {
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-3">
-                      <Link href="/auth/login" className="btn btn-primary text-sm">
+                      <Link href="/login" className="btn btn-primary text-sm">
                         Fazer login
                       </Link>
-                      <Link href="/auth/register" className="btn btn-outline text-sm">
+                      <Link href="/register" className="btn btn-outline text-sm">
                         Criar conta
                       </Link>
                     </div>

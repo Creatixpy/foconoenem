@@ -18,79 +18,10 @@ import type { User, Session } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
 import { SESSION_CONFIG } from './constants';
 import { updateLastActivity, isSessionIdle, clearAuthStorage } from './security';
+import { getUserProfile, createUserProfile, updateUserProfile } from './profile-service';
 import type { UserProfile, OAuthSignupContext } from './types';
 
 const supabase = createClient();
-
-// Import profile functions directly to avoid circular deps
-async function getUserProfile(userId: string): Promise<UserProfile | null> {
-  try {
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
-
-    if (error && error.code !== 'PGRST116') throw error;
-    return data as UserProfile | null;
-  } catch (error) {
-    console.error('Erro ao buscar perfil:', error);
-    return null;
-  }
-}
-
-async function createUserProfile(
-  userId: string,
-  nomeCompleto?: string,
-  objetivo?: string | null
-): Promise<UserProfile | null> {
-  try {
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .upsert(
-        {
-          user_id: userId,
-          nome_completo: nomeCompleto || null,
-          objetivo: objetivo || null,
-        },
-        { onConflict: 'user_id' }
-      )
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    // Create statistics record
-    await supabase
-      .from('user_statistics')
-      .upsert({ user_id: userId }, { onConflict: 'user_id' });
-
-    return data as UserProfile;
-  } catch (error) {
-    console.error('Erro ao criar perfil:', error);
-    throw error;
-  }
-}
-
-async function updateUserProfile(
-  userId: string,
-  updates: Partial<UserProfile>
-): Promise<UserProfile | null> {
-  try {
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .update(updates)
-      .eq('user_id', userId)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data as UserProfile;
-  } catch (error) {
-    console.error('Erro ao atualizar perfil:', error);
-    throw error;
-  }
-}
 
 async function refreshSession(): Promise<{ success: boolean }> {
   try {
@@ -405,7 +336,7 @@ export function useRequireAuth(): {
   const { user, profile, loading } = useAuth();
   
   if (loading) {
-    return { user: null as unknown as User, profile: null, loading: true };
+    return null;
   }
   
   if (!user) {

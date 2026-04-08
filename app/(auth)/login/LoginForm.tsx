@@ -11,7 +11,7 @@ import { validateEmail } from '@/lib/auth/validation';
 import { sanitizeRedirectPath } from '@/lib/auth/security';
 import { AUTH_PATHS } from '@/lib/auth/constants';
 import { signIn, signInWithGoogle } from '@/lib/auth/service';
-import { useAuth } from '@/lib/auth/AuthContext';
+import { useAuth } from '@/lib/auth/context';
 
 export default function LoginForm() {
   const router = useRouter();
@@ -166,7 +166,7 @@ export default function LoginForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                minLength={6}
+                minLength={8}
                 autoComplete="current-password"
                 disabled={loading}
                 className="w-full px-4 py-3 pr-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"

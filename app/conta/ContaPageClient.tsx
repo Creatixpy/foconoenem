@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth/AuthContext";
-import { getUserStatistics, recalculateUserStatistics } from "@/lib/auth/service";
+import { useAuth } from "@/lib/auth/context";
+import { getUserStatistics, recalculateUserStatistics } from "@/lib/auth/stats-service";
 import type { UserStatistics } from "@/lib/auth/types";
 import { getBrowserClient } from "@/lib/db";
 import {
@@ -39,7 +39,7 @@ export default function ContaPageClient() {
   // Redirect if not authenticated
   useEffect(() => {
     if (!authLoading && !user) {
-      router.replace(`/auth/login?next=${encodeURIComponent('/conta')}`);
+      router.replace(`/login?next=${encodeURIComponent('/conta')}`);
     }
   }, [authLoading, user, router]);
 

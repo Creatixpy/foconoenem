@@ -50,12 +50,12 @@ export const OAUTH_CONFIG = {
 
 // Redirect paths
 export const AUTH_PATHS = {
-  LOGIN: '/auth/login',
-  REGISTER: '/auth/register',
+  LOGIN: '/login',
+  REGISTER: '/register',
   CALLBACK: '/auth/callback',
   ERROR: '/auth/auth-code-error',
-  FORGOT_PASSWORD: '/auth/forgot-password',
-  RESET_PASSWORD: '/auth/reset-password',
+  FORGOT_PASSWORD: '/forgot-password',
+  RESET_PASSWORD: '/reset-password',
   DEFAULT_REDIRECT: '/conta',
 } as const;
 
