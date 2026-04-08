@@ -28,7 +28,7 @@ interface EssayData {
 
 export default function ContaPageClient() {
   const router = useRouter();
-  const { user, profile, loading: authLoading, session } = useAuth();
+  const { user, profile, loading: authLoading, session, refreshAuth } = useAuth();
   const [statistics, setStatistics] = useState<UserStatistics | null>(null);
   const [essays, setEssays] = useState<EssayData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,8 +83,16 @@ export default function ContaPageClient() {
       void loadData();
     } else if (!authLoading && !user) {
       setLoading(false);
+    } else if (!authLoading && user && !session) {
+      // Session became stale while user exists — attempt to recover
+      void refreshAuth().then(() => {
+        // If refreshAuth clears user (failed refresh), the redirect effect
+        // will handle it. If it succeeds, this effect re-runs with a valid session.
+      }).catch(() => {
+        setLoading(false);
+      });
     }
-  }, [user, session, authLoading, loadData]);
+  }, [user, session, authLoading, loadData, refreshAuth]);
 
   // Recalculate statistics
   const handleRecalculate = async () => {
