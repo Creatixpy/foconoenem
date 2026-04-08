@@ -30,8 +30,8 @@ export async function getProfile(
       .from('user_profiles')
       .select('*')
       .eq('user_id', userId)
-      .maybeSingle()
-      .abortSignal(signal);
+      .abortSignal(signal)
+      .maybeSingle();
 
     if (error && !isNotFoundError(error)) throw DatabaseError.fromPostgrestError(error);
     return data;
@@ -60,8 +60,8 @@ export async function createProfile(
         { onConflict: 'user_id' }
       )
       .select()
-      .single()
-      .abortSignal(signal);
+      .abortSignal(signal)
+      .single();
 
     if (error) throw DatabaseError.fromPostgrestError(error);
     return profile;
@@ -93,8 +93,8 @@ export async function updateProfile(
       .update(dbUpdates)
       .eq('user_id', userId)
       .select()
-      .single()
-      .abortSignal(signal);
+      .abortSignal(signal)
+      .single();
 
     if (error) throw DatabaseError.fromPostgrestError(error);
     return data;
@@ -116,8 +116,8 @@ export async function getStatistics(
       .from('user_statistics')
       .select('*')
       .eq('user_id', userId)
-      .maybeSingle()
-      .abortSignal(signal);
+      .abortSignal(signal)
+      .maybeSingle();
 
     if (error && !isNotFoundError(error)) throw DatabaseError.fromPostgrestError(error);
     return data;
@@ -192,8 +192,8 @@ export async function createGoal(
         progresso: 0,
       })
       .select()
-      .single()
-      .abortSignal(signal);
+      .abortSignal(signal)
+      .single();
 
     if (error) throw DatabaseError.fromPostgrestError(error);
     return data;
@@ -213,7 +213,7 @@ export async function updateGoal(
     progresso: number;
   }>
 ): Promise<UserGoalRow> {
-  const dbUpdates: Record<string, unknown> = {};
+  const dbUpdates: Database['public']['Tables']['user_goals']['Update'] = {};
   if (updates.descricao !== undefined) dbUpdates.descricao = updates.descricao;
   if (updates.valorAlvo !== undefined) dbUpdates.valor_alvo = updates.valorAlvo;
   if (updates.prazo !== undefined) dbUpdates.prazo = updates.prazo;
@@ -226,8 +226,8 @@ export async function updateGoal(
       .update(dbUpdates)
       .eq('id', goalId)
       .select()
-      .single()
-      .abortSignal(signal);
+      .abortSignal(signal)
+      .single();
 
     if (error) throw DatabaseError.fromPostgrestError(error);
     return data;
@@ -291,8 +291,8 @@ export async function confirmCommunityAge(
       })
       .eq('user_id', userId)
       .select()
-      .single()
-      .abortSignal(signal);
+      .abortSignal(signal)
+      .single();
 
     if (error) throw DatabaseError.fromPostgrestError(error);
     return data;
@@ -315,8 +315,8 @@ export async function acceptCommunityTerms(
       })
       .eq('user_id', userId)
       .select()
-      .single()
-      .abortSignal(signal);
+      .abortSignal(signal)
+      .single();
 
     if (error) throw DatabaseError.fromPostgrestError(error);
     return data;
