@@ -189,6 +189,43 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, []);
 
+  // Re-validate session when tab becomes visible again.
+  // Supabase's built-in autoRefreshToken pauses while the tab is hidden.
+  // When it resumes it may silently fail, leaving stale tokens in state.
+  // Calling getUser() validates server-side and triggers onAuthStateChange
+  // if the session changed, which updates user/session/profile above.
+  useEffect(() => {
+    if (!session) return;
+
+    let revalidating = false;
+
+    const revalidateSession = async () => {
+      if (revalidating) return;
+      revalidating = true;
+      try {
+        await supabase.auth.getUser();
+      } catch {
+        // Validation failed — onAuthStateChange will handle sign-out
+      } finally {
+        revalidating = false;
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void revalidateSession();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleVisibilityChange);
+    };
+  }, [session]);
+
   // Activity tracking and idle timeout
   useEffect(() => {
     if (!session) return;
