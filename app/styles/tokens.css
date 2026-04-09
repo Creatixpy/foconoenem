@@ -46,14 +46,17 @@
   --color-success-50: #F0FDF4;
   --color-success-500: #22C55E;
   --color-success-600: #16A34A;
+  --color-success-700: #15803D;
 
   --color-warning-50: #FFFBEB;
   --color-warning-500: #F59E0B;
   --color-warning-600: #D97706;
+  --color-warning-700: #B45309;
 
   --color-danger-50: #FEF2F2;
   --color-danger-500: #EF4444;
   --color-danger-600: #DC2626;
+  --color-danger-700: #B91C1C;
 
   /* Secondary - Hot Pink (Retro Pop) */
   --color-secondary: #FF0080;
@@ -103,23 +106,23 @@
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
   --font-pixel: "Press Start 2P", cursive, monospace;
 
-  /* --- Border Radius (Chunky/Retro) --- */
-  --radius-sm: 0.25rem;
+  /* --- Border Radius (Modern) --- */
+  --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
-  --radius-2xl: 1rem;
-  --radius-3xl: 1rem;
+  --radius-2xl: 1.25rem;
+  --radius-3xl: 1.5rem;
   --radius-full: 9999px;
 
-  /* --- Shadows (Hard / Pixelated) --- */
-  --shadow-xs: 2px 2px 0px 0px rgba(0, 0, 0, 0.1);
-  --shadow-sm: 2px 2px 0px 0px rgba(0, 0, 0, 1);
-  --shadow-md: 4px 4px 0px 0px rgba(0, 0, 0, 1);
-  --shadow-lg: 6px 6px 0px 0px rgba(0, 0, 0, 1);
-  --shadow-xl: 8px 8px 0px 0px rgba(0, 0, 0, 1);
-  --shadow-2xl: 12px 12px 0px 0px rgba(0, 0, 0, 1);
-  --shadow-inner: inset 2px 2px 4px 0 rgba(0, 0, 0, 0.05);
+  /* --- Shadows (Modern / Soft) --- */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
 
   /* Focus Ring */
   --ring-color: var(--color-primary-500);
@@ -136,8 +139,14 @@
   --easing-out: cubic-bezier(0, 0, 0.2, 1);
   --easing-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
+  /* --- Z-Index Scale --- */
+  --z-fixed: 100;
+  --z-dropdown: 110;
+  --z-overlay: 120;
+  --z-mobile-menu: 130;
+
   /* --- Layout --- */
-  --header-height: 4.5rem;
+  --header-height: 4rem;
   --container-max: 80rem;
   --container-padding: 1rem;
 
@@ -174,18 +183,25 @@
   --color-accent-50: #083344;
   --color-accent-500: #38BDF8;
 
+  /* Accent (Dark Mode overrides) */
+  --color-accent-600: #0EA5E9;
+  --color-accent-700: #0284C7;
+
   /* Semantic Colors (Adjusted for Dark Mode contrast) */
   --color-success-50: #052E16;
   --color-success-500: #4ADE80;
   --color-success-600: #22C55E;
+  --color-success-700: #16A34A;
 
   --color-warning-50: #422006;
   --color-warning-500: #FBBF24;
   --color-warning-600: #F59E0B;
+  --color-warning-700: #D97706;
 
   --color-danger-50: #450A0A;
   --color-danger-500: #F87171;
   --color-danger-600: #EF4444;
+  --color-danger-700: #DC2626;
 
   /* Borders */
   --color-border-base: #414868; /* Lighter Borders for visibility */
@@ -211,14 +227,13 @@
   --danger: var(--color-danger-500);
   --danger-light: var(--color-danger-50);
 
-  /* Shadows - Glow/Neumorphic for Dark Mode? Or keep Hard Shadows?
-     Let's keep hard shadows but use a darker color or accent color */
-  --shadow-xs: 2px 2px 0px 0px rgba(0, 0, 0, 0.5);
-  --shadow-sm: 2px 2px 0px 0px rgba(0, 0, 0, 0.8);
-  --shadow-md: 4px 4px 0px 0px rgba(0, 0, 0, 0.8);
-  --shadow-lg: 6px 6px 0px 0px rgba(0, 0, 0, 0.8);
-  --shadow-xl: 8px 8px 0px 0px rgba(0, 0, 0, 0.8);
-  --shadow-2xl: 12px 12px 0px 0px rgba(0, 0, 0, 0.8);
+  /* Shadows - Subtle for Dark Mode */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px -1px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 
   --step-number-color: var(--color-fg-muted);
 }
@@ -246,18 +261,23 @@
 
      --color-accent-50: #083344;
      --color-accent-500: #38BDF8;
+     --color-accent-600: #0EA5E9;
+     --color-accent-700: #0284C7;
 
      --color-success-50: #052E16;
      --color-success-500: #4ADE80;
      --color-success-600: #22C55E;
+     --color-success-700: #16A34A;
 
      --color-warning-50: #422006;
      --color-warning-500: #FBBF24;
      --color-warning-600: #F59E0B;
+     --color-warning-700: #D97706;
 
      --color-danger-50: #450A0A;
      --color-danger-500: #F87171;
      --color-danger-600: #EF4444;
+     --color-danger-700: #DC2626;
 
      --color-border-base: #414868;
      --color-border-subtle: #24283B;
@@ -281,12 +301,12 @@
      --danger: var(--color-danger-500);
      --danger-light: var(--color-danger-50);
 
-     --shadow-xs: 2px 2px 0px 0px rgba(0, 0, 0, 0.5);
-     --shadow-sm: 2px 2px 0px 0px rgba(0, 0, 0, 0.8);
-     --shadow-md: 4px 4px 0px 0px rgba(0, 0, 0, 0.8);
-     --shadow-lg: 6px 6px 0px 0px rgba(0, 0, 0, 0.8);
-     --shadow-xl: 8px 8px 0px 0px rgba(0, 0, 0, 0.8);
-     --shadow-2xl: 12px 12px 0px 0px rgba(0, 0, 0, 0.8);
+     --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+     --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px -1px rgba(0, 0, 0, 0.3);
+     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+     --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+     --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 
      --step-number-color: var(--color-fg-muted);
   }
