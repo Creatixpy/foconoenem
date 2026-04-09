@@ -49,25 +49,25 @@ export default function ForgotPasswordPage() {
   if (success) {
     return (
       <div className="w-full max-w-md">
-        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 p-8 sm:p-10 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900/30 mb-6">
-            <svg className="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="bg-card-bg rounded-2xl shadow-xl p-8 sm:p-10 text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-6">
+            <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
           </div>
           
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">
+          <h1 className="text-2xl font-bold text-foreground mb-3">
             Verifique seu email
           </h1>
           
-          <p className="text-slate-500 dark:text-slate-400 mb-8">
-            Se existe uma conta com o email <strong className="text-slate-700 dark:text-slate-300">{email}</strong>,
+          <p className="text-foreground/60 mb-8">
+            Se existe uma conta com o email <strong className="text-foreground">{email}</strong>,
             você receberá um link para redefinir sua senha.
           </p>
 
           <Link
             href={AUTH_PATHS.LOGIN}
-            className="block w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors text-center"
+            className="block w-full py-3 px-4 rounded-xl bg-primary hover:bg-primary-dark text-white font-medium transition-colors text-center"
           >
             Voltar ao login
           </Link>
@@ -78,7 +78,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="w-full max-w-md">
-      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 p-8 sm:p-10">
+      <div className="bg-card-bg rounded-2xl shadow-xl p-8 sm:p-10">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-amber-100 dark:bg-amber-900/30 mb-4">
@@ -86,18 +86,18 @@ export default function ForgotPasswordPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+          <h1 className="text-2xl font-bold text-foreground">
             Esqueceu a senha?
           </h1>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-2 text-sm text-foreground/60">
             Sem problemas! Digite seu email e enviaremos um link para redefinir sua senha.
           </p>
         </div>
 
         {/* Error Alert */}
         {error && (
-          <div className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30">
-            <p className="text-sm text-red-600 dark:text-red-400 text-center">
+          <div className="mb-6 p-4 rounded-xl bg-danger/10 border border-danger/20">
+            <p className="text-sm text-danger text-center">
               {error}
             </p>
           </div>
@@ -106,7 +106,7 @@ export default function ForgotPasswordPage() {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
               Email
             </label>
             <input
@@ -118,7 +118,7 @@ export default function ForgotPasswordPage() {
               autoComplete="email"
               autoFocus
               disabled={loading}
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors disabled:opacity-50"
+              className="w-full px-4 py-3 rounded-xl border border-border-color bg-background text-foreground placeholder-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors disabled:opacity-50"
               placeholder="seu@email.com"
             />
           </div>
@@ -126,7 +126,7 @@ export default function ForgotPasswordPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 px-4 rounded-xl bg-primary hover:bg-primary-dark text-white font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">
@@ -140,11 +140,11 @@ export default function ForgotPasswordPage() {
         </form>
 
         {/* Back to login */}
-        <p className="mt-8 text-center text-sm text-slate-500 dark:text-slate-400">
+        <p className="mt-8 text-center text-sm text-foreground/60">
           Lembrou a senha?{' '}
           <Link
             href={AUTH_PATHS.LOGIN}
-            className="font-medium text-blue-600 dark:text-blue-400 hover:underline"
+            className="font-medium text-primary hover:underline"
           >
             Fazer login
           </Link>

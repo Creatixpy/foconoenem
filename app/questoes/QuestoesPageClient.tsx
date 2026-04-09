@@ -472,8 +472,8 @@ export default function QuestoesPageClient() {
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 dark:bg-green-900/30 px-2 py-0.5 text-xs font-medium text-green-700 dark:text-green-400">
-                          <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
+                          <span className="h-1.5 w-1.5 rounded-full bg-success" />
                           Concluído
                         </span>
                         <p className="text-xs uppercase tracking-[0.18em] text-primary">Resultado do simulador</p>

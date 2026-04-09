@@ -34,7 +34,7 @@ export default function OperatingHoursIndicator() {
 
     if (!operatingInfo) {
         return (
-            <div className="py-2 px-4 text-xs md:text-sm text-center bg-blue-900/20 text-blue-100">
+            <div className="py-2 px-4 text-xs md:text-sm text-center bg-primary/10 text-primary">
                 Sincronizando horário de funcionamento...
             </div>
         );
