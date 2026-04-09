@@ -1,13 +1,8 @@
-import { Geist, Geist_Mono, Press_Start_2P } from "next/font/google";
 import { Metadata, Viewport } from "next";
 import "./styles/index.css";
-import { Header, Footer } from "./components/layout";
-import { CookieConsent, AdSenseLoader } from "./components/shared";
 import Providers from "./providers";
-import StructuredData from "./structured-data";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
-import { themeScript } from "@/lib/contexts/ThemeContext";
 
 const siteTitle = "Foco no ENEM - Plataforma de Simulados e Redações";
 const siteDescription =
@@ -68,25 +63,6 @@ export const viewport: Viewport = {
   ],
 };
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const pressStart2P = Press_Start_2P({
-  weight: "400",
-  variable: "--font-pixel",
-  subsets: ["latin"],
-  display: "swap",
-});
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -95,59 +71,10 @@ export default function RootLayout({
   const isTelemetryEnabled = process.env.NODE_ENV === "production";
 
   return (
-    <html
-      lang="pt-BR"
-      data-theme="system"
-      suppressHydrationWarning
-    >
-      <head>
-        {/* Theme script to prevent FOUC */}
-        <script
-          dangerouslySetInnerHTML={{ __html: themeScript }}
-        />
-        <meta name="google-adsense-account" content="ca-pub-8449266040565561" />
-        <link
-          rel="icon"
-          href="/foconoenemicon.png"
-          type="image/png"
-          sizes="any"
-        />
-        <link rel="apple-touch-icon" href="/foconoenemicon.png" />
-      </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} ${pressStart2P.variable} antialiased`}
-      >
+    <html lang="pt-BR" suppressHydrationWarning>
+      <body>
         <Providers>
-          {/* Skip to main content link for accessibility */}
-          <a
-            href="#main-content"
-            className="skip-link"
-          >
-            Pular para o conteúdo principal
-          </a>
-
-          {/* Main layout wrapper */}
-          <div className="flex min-h-screen flex-col">
-            <Header />
-
-            <main
-              id="main-content"
-              className="flex-1"
-              style={{ paddingTop: 'var(--header-height)' }}
-            >
-              {children}
-            </main>
-
-            <Footer />
-          </div>
-
-          {/* Floating elements */}
-          <CookieConsent />
-
-          {/* SEO and analytics */}
-          <StructuredData />
-          <AdSenseLoader />
-
+          {children}
           {isTelemetryEnabled && (
             <>
               <SpeedInsights debug={false} />
