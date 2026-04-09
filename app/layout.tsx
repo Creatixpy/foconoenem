@@ -133,7 +133,8 @@ export default function RootLayout({
 
             <main
               id="main-content"
-              className="flex-1 pt-[4.5rem]"
+              className="flex-1"
+              style={{ paddingTop: 'var(--header-height)' }}
             >
               {children}
             </main>
