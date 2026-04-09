@@ -47,7 +47,7 @@ export default function QuestionCard({
             case 'Geografia':
                 return 'text-amber-600 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-300';
             default:
-                return 'text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-300';
+            return 'text-foreground/60 bg-muted-bg/50';
         }
     };
     const totalAlternatives = question.alternatives.length;

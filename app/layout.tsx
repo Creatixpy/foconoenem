@@ -2,7 +2,6 @@ import { Geist, Geist_Mono, Press_Start_2P } from "next/font/google";
 import { Metadata, Viewport } from "next";
 import "./styles/index.css";
 import { Header, Footer } from "./components/layout";
-import { ThemeToggle } from "./components/ui";
 import { CookieConsent, AdSenseLoader } from "./components/shared";
 import Providers from "./providers";
 import StructuredData from "./structured-data";
@@ -143,7 +142,6 @@ export default function RootLayout({
           </div>
 
           {/* Floating elements */}
-          <ThemeToggle />
           <CookieConsent />
 
           {/* SEO and analytics */}

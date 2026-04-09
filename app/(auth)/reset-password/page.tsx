@@ -18,7 +18,7 @@ function getPasswordStrengthColor(strength: 'weak' | 'fair' | 'good' | 'strong')
     case 'fair': return 'text-warning';
     case 'good': return 'text-warning';
     case 'strong': return 'text-success';
-    default: return 'text-gray-500';
+    default: return 'text-foreground/50';
   }
 }
 
