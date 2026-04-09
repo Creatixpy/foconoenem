@@ -1,7 +1,19 @@
 {
-  "status": "init",
-  "scope": "codebase",
+  "status": "commited",
   "type": "frontend",
-  "localEndpoint": "http://localhost:3000/",
-  "serverPort": 46085
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:3000",
+  "backendAuthType": "public",
+  "executionArgs": {
+    "projectName": "foconoenem",
+    "projectPath": "/home/gabriel/Documentos/Projeto/foconoenem",
+    "testIds": [],
+    "additionalInstruction": "",
+    "serverMode": "development",
+    "envs": {
+      "API_KEY": "sk-user-p001OPAsyspW6OTWsNyQ_00tzhR8bNqeAppyrJrhDbBE08xYjPzCneRjccPo2lFtCzB_9tS1Kcu9GuOyae3byDun0XA-E02WDs1wRIXJPExvd7OKqNqlac3WW6UJ0aVdTrY"
+    }
+  },
+  "serverPort": 41955,
+  "proxy": "http://33ca5a15-182a-4b2d-9375-fce46e5a00c5:MKVijlPu2cj26cf317QQctL6d0aWJCbp@tun.testsprite.com:8080"
 }

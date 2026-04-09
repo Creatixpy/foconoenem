@@ -1,1 +1,51 @@
-nohup: ignoring input
+
+> foco-no-enem@0.1.0 dev
+> next dev --turbopack
+
+▲ Next.js 16.2.3 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.3:3000
+- Environments: .env
+✓ Ready in 1986ms
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+
+ GET / 200 in 5.4s (next.js: 1135ms, proxy.ts: 706ms, application-code: 3.6s)
+ GET / 200 in 415ms (next.js: 15ms, proxy.ts: 63ms, application-code: 337ms)
+ GET / 200 in 4.4s (next.js: 172ms, proxy.ts: 155ms, application-code: 4.0s)
+ GET / 200 in 2.8s (next.js: 548ms, proxy.ts: 199ms, application-code: 2.1s)
+ GET / 200 in 8.8s (next.js: 4.4s, proxy.ts: 420ms, application-code: 4.0s)
+ GET / 200 in 12.1s (next.js: 3.4s, proxy.ts: 1169ms, application-code: 7.5s)
+ GET / 200 in 10.9s (next.js: 4.4s, proxy.ts: 395ms, application-code: 6.1s)
+ GET / 200 in 10.7s (next.js: 5.1s, proxy.ts: 513ms, application-code: 5.1s)
+ GET / 200 in 10.8s (next.js: 4.7s, proxy.ts: 477ms, application-code: 5.6s)
+ GET / 200 in 12.2s (next.js: 3.7s, proxy.ts: 57ms, application-code: 8.5s)
+ GET / 200 in 10.9s (next.js: 4.4s, proxy.ts: 476ms, application-code: 6.0s)
+ GET / 200 in 9.7s (next.js: 6.9s, proxy.ts: 766ms, application-code: 2.0s)
+ GET / 200 in 12.3s (next.js: 3.3s, proxy.ts: 98ms, application-code: 8.9s)
+ GET / 200 in 2.4s (next.js: 1368ms, proxy.ts: 381ms, application-code: 616ms)
+ GET / 200 in 3.4s (next.js: 1480ms, proxy.ts: 325ms, application-code: 1637ms)
+ GET / 200 in 3.0s (next.js: 1382ms, proxy.ts: 400ms, application-code: 1220ms)
+ GET / 200 in 18.5s (next.js: 197ms, proxy.ts: 33ms, application-code: 18.2s)
+ GET / 200 in 18.5s (next.js: 1996ms, proxy.ts: 65ms, application-code: 16.4s)
+ GET / 200 in 18.5s (next.js: 2.3s, proxy.ts: 69ms, application-code: 16.1s)
+ GET / 200 in 5.8s (next.js: 320ms, proxy.ts: 67ms, application-code: 5.4s)
+ GET / 200 in 6.1s (next.js: 137ms, proxy.ts: 224ms, application-code: 5.7s)
+ GET / 200 in 5.8s (next.js: 505ms, proxy.ts: 27ms, application-code: 5.3s)
+ GET / 200 in 5.9s (next.js: 857ms, proxy.ts: 27ms, application-code: 5.0s)
+ GET / 200 in 5.8s (next.js: 1178ms, proxy.ts: 144ms, application-code: 4.5s)
+ GET / 200 in 5.6s (next.js: 1323ms, proxy.ts: 133ms, application-code: 4.1s)
+ GET / 200 in 5.4s (next.js: 1442ms, proxy.ts: 273ms, application-code: 3.7s)
+ GET / 200 in 4.8s (next.js: 1381ms, proxy.ts: 307ms, application-code: 3.2s)
+ GET / 200 in 4.5s (next.js: 1655ms, proxy.ts: 248ms, application-code: 2.6s)
+ GET / 200 in 11.4s (next.js: 70ms, proxy.ts: 31ms, application-code: 11.3s)
+ GET / 200 in 11.5s (next.js: 457ms, proxy.ts: 43ms, application-code: 11.0s)
+ GET / 200 in 12.0s (next.js: 1065ms, proxy.ts: 21ms, application-code: 10.9s)
+ GET / 200 in 9.8s (next.js: 498ms, proxy.ts: 80ms, application-code: 9.2s)
+ GET / 200 in 9.7s (next.js: 2.4s, proxy.ts: 51ms, application-code: 7.3s)
+ GET / 200 in 9.7s (next.js: 2.7s, proxy.ts: 204ms, application-code: 6.8s)
+ GET / 200 in 7.9s (next.js: 1062ms, proxy.ts: 599ms, application-code: 6.3s)
+ GET / 200 in 9.4s (next.js: 982ms, proxy.ts: 2.0s, application-code: 6.4s)
+ GET / 200 in 7.0s (next.js: 1800ms, proxy.ts: 206ms, application-code: 5.0s)
+ GET / 200 in 6.7s (next.js: 2.2s, proxy.ts: 170ms, application-code: 4.3s)
+ GET / 200 in 6.5s (next.js: 3.5s, proxy.ts: 70ms, application-code: 3.0s)
+ GET / 200 in 6.1s (next.js: 3.3s, proxy.ts: 1088ms, application-code: 1766ms)

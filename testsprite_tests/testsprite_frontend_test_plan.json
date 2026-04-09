@@ -1,104 +1,9 @@
 [
   {
     "id": "TC001",
-    "title": "Corrigir redação com tema gerado e texto dentro do limite",
-    "description": "Este teste verifica que o visitante consegue gerar um novo tema, escrever uma redação dentro de 50–5000 caracteres e enviar para correção sendo redirecionado para a página de resultados.",
-    "category": "Essay Writing and AI Correction",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /redacao"
-      },
-      {
-        "type": "action",
-        "description": "Request a new random theme"
-      },
-      {
-        "type": "action",
-        "description": "Fill a valid essay text within the allowed character range into the essay editor"
-      },
-      {
-        "type": "action",
-        "description": "Submit the essay for AI grading"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the user is redirected to an essay results page"
-      }
-    ],
-    "priority": "High"
-  },
-  {
-    "id": "TC002",
-    "title": "Generate and complete a quiz with results and explanations",
-    "description": "Verifies that a user can generate a quiz from selected disciplines, answer all questions, submit, and see accuracy results and explanations.",
-    "category": "Quiz Questions",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /questoes"
-      },
-      {
-        "type": "action",
-        "description": "Select one or more disciplines"
-      },
-      {
-        "type": "action",
-        "description": "Generate the quiz"
-      },
-      {
-        "type": "action",
-        "description": "Answer all multiple-choice questions"
-      },
-      {
-        "type": "action",
-        "description": "Submit the answers"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the results view shows overall accuracy and per-discipline breakdown"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify answer explanations are displayed for the questions"
-      }
-    ],
-    "priority": "High"
-  },
-  {
-    "id": "TC003",
-    "title": "Log in to reach the account dashboard",
-    "description": "Ensures a registered user can log in with valid credentials and is redirected to the account dashboard.",
-    "category": "User Login",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /login"
-      },
-      {
-        "type": "action",
-        "description": "Fill in the email field with {{LOGIN_USER}}"
-      },
-      {
-        "type": "action",
-        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
-      },
-      {
-        "type": "action",
-        "description": "Submit the login form"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the user lands on the account dashboard"
-      }
-    ],
-    "priority": "High"
-  },
-  {
-    "id": "TC004",
-    "title": "View account dashboard with profile, stats, achievements, streaks and charts",
-    "description": "Ensures a logged-in student can access the account dashboard and see profile info, performance stats, achievements/streaks, and progress charts displayed.",
-    "category": "Account Dashboard",
+    "title": "Load account dashboard data for an authenticated session",
+    "description": "Ensures an authenticated student can open the account page and see profile and progress data rendered.",
+    "category": "User Account",
     "steps": [
       {
         "type": "action",
@@ -118,211 +23,24 @@
       },
       {
         "type": "action",
-        "description": "Navigate to /conta"
+        "description": "Click the navigation entry to the account dashboard"
       },
       {
         "type": "assertion",
-        "description": "Verify the account dashboard displays the user profile area and performance statistics"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify achievements or streaks and at least one progress chart are displayed"
+        "description": "Verify account profile and progress sections are displayed"
       }
     ],
     "priority": "High"
   },
   {
-    "id": "TC005",
-    "title": "Register a new account and reach the dashboard",
-    "description": "Ensures a new user can complete registration with valid details and is redirected to the account dashboard.",
-    "category": "User Registration",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /register"
-      },
-      {
-        "type": "action",
-        "description": "Fill in the email field with new.user+{{RANDOM}}@example.com"
-      },
-      {
-        "type": "action",
-        "description": "Fill in the password field with a strong valid password"
-      },
-      {
-        "type": "action",
-        "description": "Fill optional profile fields with valid values"
-      },
-      {
-        "type": "action",
-        "description": "Submit the registration form"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the user lands on the account dashboard"
-      }
-    ],
-    "priority": "High"
-  },
-  {
-    "id": "TC006",
-    "title": "Protected access redirects unauthenticated user from News Admin",
-    "description": "Verifies that a visitor who is not logged in cannot access the news admin page and is redirected to login.",
-    "category": "News Admin",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /noticias/admin"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the user lands on the login page"
-      }
-    ],
-    "priority": "High"
-  },
-  {
-    "id": "TC007",
-    "title": "Access essay writing from the landing page",
-    "description": "Ensures a visitor can navigate from the home page to the essay writing experience and the essay editor loads.",
-    "category": "Home Page",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /"
-      },
-      {
-        "type": "action",
-        "description": "Click the call-to-action to start writing an essay"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the user lands on the essay writing page"
-      }
-    ],
-    "priority": "High"
-  },
-  {
-    "id": "TC008",
-    "title": "Redefinir senha com confirmação correta",
-    "description": "Este teste verifica que o usuário consegue definir uma nova senha com confirmação válida e vê uma confirmação de sucesso com navegação para login.",
-    "category": "Reset Password",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /reset-password"
-      },
-      {
-        "type": "action",
-        "description": "Fill a valid new password into the new password field"
-      },
-      {
-        "type": "action",
-        "description": "Fill the same password into the confirmation password field"
-      },
-      {
-        "type": "action",
-        "description": "Submit the password update"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify a success confirmation is visible and the user is taken to the login page"
-      }
-    ],
-    "priority": "High"
-  },
-  {
-    "id": "TC009",
-    "title": "Open an article and see related content",
-    "description": "Verifies that a visitor can open a news article from the list and see the full article with related articles displayed.",
-    "category": "News",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /noticias"
-      },
-      {
-        "type": "action",
-        "description": "Open an article from the list"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the full article content is displayed"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify related articles are displayed"
-      }
-    ],
-    "priority": "High"
-  },
-  {
-    "id": "TC010",
-    "title": "Read essay grading report and start a new essay",
-    "description": "Verifies that a user can access an essay results page, view overall and competency scores with feedback and original text, and navigate back to write a new essay.",
+    "id": "TC002",
+    "title": "View a saved essay result from the results page",
+    "description": "Ensures an authenticated student can create an essay correction and open its detailed results page with the result content displayed.",
     "category": "Essay Results",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /redacao"
-      },
-      {
-        "type": "action",
-        "description": "Generate an essay theme"
-      },
-      {
-        "type": "action",
-        "description": "Fill a valid essay text within the allowed character range into the essay editor"
-      },
-      {
-        "type": "action",
-        "description": "Submit the essay for correction"
-      },
-      {
-        "type": "action",
-        "description": "Wait for the results view to load"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the results page displays an overall score and five competency scores with feedback and the original essay text"
-      },
-      {
-        "type": "action",
-        "description": "Click the action to write another essay"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the user is back on the essay writing page ready to start a new submission"
-      }
-    ],
-    "priority": "High"
-  },
-  {
-    "id": "TC011",
-    "title": "Browse the news list",
-    "description": "Verifies that a visitor can open the news page and see a list of articles.",
-    "category": "News",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /noticias"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify a list of news articles is displayed"
-      }
-    ],
-    "priority": "High"
-  },
-  {
-    "id": "TC012",
-    "title": "Solicitar recuperação de senha com email",
-    "description": "Este teste verifica que o usuário consegue solicitar a recuperação de senha informando um email e vê uma confirmação de próximos passos via email.",
-    "category": "Forgot Password",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /forgot-password"
+        "description": "Navigate to /login"
       },
       {
         "type": "action",
@@ -330,62 +48,344 @@
       },
       {
         "type": "action",
-        "description": "Submit the recovery request"
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation entry to the essay correction feature"
+      },
+      {
+        "type": "action",
+        "description": "Generate an essay theme"
+      },
+      {
+        "type": "action",
+        "description": "Fill a sufficiently long essay text into the essay input"
+      },
+      {
+        "type": "action",
+        "description": "Submit the essay for correction"
+      },
+      {
+        "type": "action",
+        "description": "Wait for the correction result to be available"
+      },
+      {
+        "type": "action",
+        "description": "Open the detailed results view for the generated correction"
       },
       {
         "type": "assertion",
-        "description": "Verify a confirmation message indicating next steps via email is visible"
+        "description": "Verify a detailed essay correction result is displayed with scores and feedback"
       }
     ],
     "priority": "High"
   },
   {
-    "id": "TC013",
-    "title": "Block anonymous access to account dashboard",
-    "description": "Ensures a visitor who is not logged in cannot access the account dashboard and is redirected to authenticate.",
-    "category": "Account Dashboard",
+    "id": "TC003",
+    "title": "Browse community threads for a topic",
+    "description": "A visitor can open the community area, select a topic, and see a list of posts with any available threaded comments displayed.",
+    "category": "Community Forum",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /conta"
+        "description": "Navigate to the community page"
+      },
+      {
+        "type": "action",
+        "description": "Select a topic to view its threads"
       },
       {
         "type": "assertion",
-        "description": "Verify the user lands on the login page"
+        "description": "Verify a list of posts is displayed for the selected topic"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify threaded comments are displayed for posts that have comments"
       }
     ],
     "priority": "High"
   },
   {
-    "id": "TC014",
-    "title": "Search news from the search page",
-    "description": "Verifies that a visitor can search for articles by keyword and see matching results.",
-    "category": "News",
+    "id": "TC004",
+    "title": "Create a new community post",
+    "description": "An authenticated user can create a new post and then see it appear in the topic thread list.",
+    "category": "Community Forum",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /noticias/pesquisa"
+        "description": "Navigate to the login page"
       },
       {
         "type": "action",
-        "description": "Fill \"enem\" into the search field"
+        "description": "Fill in the email field with {{LOGIN_USER}}"
       },
       {
         "type": "action",
-        "description": "Submit the search"
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click to open the community page"
+      },
+      {
+        "type": "action",
+        "description": "Select a topic to post in"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid post content into the new post field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the new post"
       },
       {
         "type": "assertion",
-        "description": "Verify search results are displayed"
+        "description": "Verify the newly created post appears in the thread list"
       }
     ],
     "priority": "High"
   },
   {
-    "id": "TC015",
-    "title": "Confirm donation amount using a preset and proceed to checkout",
-    "description": "Verifies that a user can choose a preset donation amount, see the corresponding impact details, and proceed to the checkout step.",
-    "category": "Donation",
+    "id": "TC005",
+    "title": "Generate quiz questions by discipline",
+    "description": "Ensures a visitor can select a discipline and receive a set of quiz questions with answer options.",
+    "category": "Quiz Questions",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /questoes"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid discipline in the discipline selector"
+      },
+      {
+        "type": "action",
+        "description": "Generate quiz questions"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify multiple quiz questions are displayed with answer options"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC006",
+    "title": "Submit quiz answers and receive scoring and explanations",
+    "description": "Ensures a visitor can answer the quiz and see scored results with explanations.",
+    "category": "Quiz Questions",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /questoes"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid discipline in the discipline selector"
+      },
+      {
+        "type": "action",
+        "description": "Generate quiz questions"
+      },
+      {
+        "type": "action",
+        "description": "Select one answer option for each question"
+      },
+      {
+        "type": "action",
+        "description": "Submit the quiz answers"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify quiz scoring results are displayed with explanations"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC007",
+    "title": "Comment on a community post",
+    "description": "An authenticated user can add a comment to an existing post and then see the comment appear under that post.",
+    "category": "Community Forum",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the login page"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click to open the community page"
+      },
+      {
+        "type": "action",
+        "description": "Select a topic to view its threads"
+      },
+      {
+        "type": "action",
+        "description": "Open the details of a post to view its comments"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid comment into the comment field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the comment"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new comment appears under the post"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC008",
+    "title": "Authenticated quiz submission updates account stats",
+    "description": "Ensures a logged-in student can complete a quiz and then see updated performance stats on the account dashboard.",
+    "category": "Quiz Questions",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation entry to the quiz feature"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid discipline in the discipline selector"
+      },
+      {
+        "type": "action",
+        "description": "Generate quiz questions"
+      },
+      {
+        "type": "action",
+        "description": "Select one answer option for each question"
+      },
+      {
+        "type": "action",
+        "description": "Submit the quiz answers"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation entry to the account dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the dashboard performance statistics reflect a recorded quiz attempt"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC009",
+    "title": "Access homepage and navigate to a core section",
+    "description": "Verifies an anonymous visitor can load the homepage and use navigation to reach another section of the app.",
+    "category": "Homepage",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click a link to go to the essay section"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the essay page is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC010",
+    "title": "Edit and save account profile information",
+    "description": "Ensures an authenticated student can update their account profile via the edit page and see the updated info reflected afterward.",
+    "category": "User Account",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /conta/editar"
+      },
+      {
+        "type": "action",
+        "description": "Fill a new display name into the name field"
+      },
+      {
+        "type": "action",
+        "description": "Save the account changes"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation entry to the account dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated display name is shown on the account dashboard"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC011",
+    "title": "Start a donation checkout from the donation page",
+    "description": "This test verifies that a visitor can start the donation checkout flow from the donation page and is taken to the checkout initiation step without errors.",
+    "category": "Donation (Stripe)",
     "steps": [
       {
         "type": "action",
@@ -396,46 +396,104 @@
         "description": "Select a preset donation amount"
       },
       {
-        "type": "assertion",
-        "description": "Verify the impact description updates to match the selected tier"
-      },
-      {
         "type": "action",
-        "description": "Confirm the donation to proceed to payment"
+        "description": "Submit the donation checkout"
       },
       {
         "type": "assertion",
-        "description": "Verify the user is taken to an external checkout step for payment"
+        "description": "Verify the user is redirected away from the donation page into the checkout flow"
       }
     ],
-    "priority": "High"
+    "priority": "Medium"
   },
   {
-    "id": "TC016",
-    "title": "Access quiz practice from the landing page",
-    "description": "Ensures a visitor can navigate from the home page to the quiz practice experience and the quiz setup loads.",
-    "category": "Home Page",
+    "id": "TC012",
+    "title": "Like count updates when liking a post",
+    "description": "A visitor can like a post and see the like count update for that post in the thread list.",
+    "category": "Community Forum",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /"
+        "description": "Navigate to the community page"
       },
       {
         "type": "action",
-        "description": "Click the call-to-action to practice quizzes"
+        "description": "Select a topic to view its threads"
+      },
+      {
+        "type": "action",
+        "description": "Note the current like count for a visible post"
+      },
+      {
+        "type": "action",
+        "description": "Click the like control for that post"
       },
       {
         "type": "assertion",
-        "description": "Verify the user lands on the quiz practice page"
+        "description": "Verify the like count for the post updates"
       }
     ],
-    "priority": "High"
+    "priority": "Medium"
   },
   {
-    "id": "TC017",
-    "title": "Edit profile details and save changes",
-    "description": "Ensures a logged-in student can update profile fields and save changes with a visible success confirmation.",
-    "category": "Edit Account",
+    "id": "TC013",
+    "title": "Browse news list with tag filtering and pagination",
+    "description": "A visitor can filter news by a tag and navigate pages while continuing to see a list of articles.",
+    "category": "News Section",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the news page"
+      },
+      {
+        "type": "action",
+        "description": "Select a tag filter for the news list"
+      },
+      {
+        "type": "action",
+        "description": "Scroll to the pagination controls"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to the next page of results"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a list of news articles is displayed for the selected tag on the new page"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC014",
+    "title": "Start a donation checkout with a custom amount",
+    "description": "This test verifies that a visitor can enter a custom donation amount and successfully start the checkout flow.",
+    "category": "Donation (Stripe)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /doacao"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid custom donation amount into the amount field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the donation checkout"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user is redirected away from the donation page into the checkout flow"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC015",
+    "title": "Prevent access to another user's essay result",
+    "description": "Ensures a student cannot view an essay result that belongs to a different user and is shown an access denied state.",
+    "category": "Essay Results",
     "steps": [
       {
         "type": "action",
@@ -455,259 +513,122 @@
       },
       {
         "type": "action",
-        "description": "Navigate to /conta/editar"
+        "description": "Click the navigation entry to the essay correction feature"
       },
       {
         "type": "action",
-        "description": "Fill Test User into the name field"
+        "description": "Generate an essay theme"
       },
       {
         "type": "action",
-        "description": "Fill This is a test bio into the bio field"
+        "description": "Fill a sufficiently long essay text into the essay input"
       },
       {
         "type": "action",
-        "description": "Select a valid ENEM year"
+        "description": "Submit the essay for correction"
       },
       {
         "type": "action",
-        "description": "Fill a valid numeric goal into the study goal field"
+        "description": "Wait for the correction result to be available"
       },
       {
         "type": "action",
-        "description": "Submit the profile updates form"
+        "description": "Log out"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill a different valid user email into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill a different valid user password into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to the previously created essay result URL in the same browser tab"
       },
       {
         "type": "assertion",
-        "description": "Verify a success confirmation is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the updated profile details are shown on the edit page after saving"
+        "description": "Verify an access denied state is displayed for the essay result"
       }
     ],
-    "priority": "High"
+    "priority": "Medium"
+  },
+  {
+    "id": "TC016",
+    "title": "Search news and open an article",
+    "description": "A visitor can search for a keyword, see search results, and open an article page successfully.",
+    "category": "News Section",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the news search page"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid keyword into the search field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the search"
+      },
+      {
+        "type": "action",
+        "description": "Open one article from the search results"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the article page displays the article content"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC017",
+    "title": "Real-time community feed updates while viewing threads",
+    "description": "A visitor can enable real-time updates and sees the feed update when a new post is created from another action within the same session.",
+    "category": "Community Forum",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the community page"
+      },
+      {
+        "type": "action",
+        "description": "Select a topic to view its threads"
+      },
+      {
+        "type": "action",
+        "description": "Enable real-time updates on the thread view if a control is available"
+      },
+      {
+        "type": "action",
+        "description": "Open a second community view within the same page context if the UI supports it"
+      },
+      {
+        "type": "action",
+        "description": "Create a new post from that second view if available, otherwise create a post using the same view’s new post form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the thread list updates without a full page reload to include the new activity"
+      }
+    ],
+    "priority": "Medium"
   },
   {
     "id": "TC018",
-    "title": "Filter news by tag",
-    "description": "Verifies that a visitor can apply a tag filter and see the news list update to the filtered results.",
-    "category": "News",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /noticias"
-      },
-      {
-        "type": "action",
-        "description": "Select a tag filter"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the news list reflects the selected tag filter"
-      }
-    ],
-    "priority": "High"
-  },
-  {
-    "id": "TC019",
-    "title": "View news admin article list as admin",
-    "description": "Verifies that an admin can log in and view the list of all articles with their statuses in the news admin panel.",
-    "category": "News Admin",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /login"
-      },
-      {
-        "type": "action",
-        "description": "Fill in the email field with {{LOGIN_USER}}"
-      },
-      {
-        "type": "action",
-        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
-      },
-      {
-        "type": "action",
-        "description": "Submit the login form"
-      },
-      {
-        "type": "action",
-        "description": "Click the navigation link to the news admin panel"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the admin article list is displayed"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify article status information is displayed"
-      }
-    ],
-    "priority": "High"
-  },
-  {
-    "id": "TC020",
-    "title": "Create a new community post",
-    "description": "Verifies that a visitor can create a new post and see it appear in the community feed.",
-    "category": "Community Forum",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /comunidade"
-      },
-      {
-        "type": "action",
-        "description": "Start creating a new post"
-      },
-      {
-        "type": "action",
-        "description": "Fill \"Post de teste UI\" into the post title field"
-      },
-      {
-        "type": "action",
-        "description": "Fill \"Conteúdo do post de teste para automação.\" into the post content field"
-      },
-      {
-        "type": "action",
-        "description": "Submit the new post"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the new post appears in the topic feed"
-      }
-    ],
-    "priority": "Medium"
-  },
-  {
-    "id": "TC021",
-    "title": "Block anonymous access to edit account",
-    "description": "Ensures a visitor who is not logged in cannot access the edit account page and is redirected to authenticate.",
-    "category": "Edit Account",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /conta/editar"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the user lands on the login page"
-      }
-    ],
-    "priority": "Medium"
-  },
-  {
-    "id": "TC022",
-    "title": "Prevent quiz submission with unanswered questions",
-    "description": "Verifies that attempting to submit a quiz with one or more unanswered questions is blocked and a validation prompt is shown.",
-    "category": "Quiz Questions",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /questoes"
-      },
-      {
-        "type": "action",
-        "description": "Select one or more disciplines"
-      },
-      {
-        "type": "action",
-        "description": "Generate the quiz"
-      },
-      {
-        "type": "action",
-        "description": "Answer at least one question and leave at least one question unanswered"
-      },
-      {
-        "type": "action",
-        "description": "Submit the answers"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify a validation prompt indicates there are unanswered questions and submission did not complete"
-      }
-    ],
-    "priority": "Medium"
-  },
-  {
-    "id": "TC023",
-    "title": "Create a news article as admin",
-    "description": "Verifies that an admin can create a new article and see it appear in the admin article list.",
-    "category": "News Admin",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /login"
-      },
-      {
-        "type": "action",
-        "description": "Fill in the email field with {{LOGIN_USER}}"
-      },
-      {
-        "type": "action",
-        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
-      },
-      {
-        "type": "action",
-        "description": "Submit the login form"
-      },
-      {
-        "type": "action",
-        "description": "Click the navigation link to the news admin panel"
-      },
-      {
-        "type": "action",
-        "description": "Start creating a new article"
-      },
-      {
-        "type": "action",
-        "description": "Fill \"Artigo UI Teste\" into the article title field"
-      },
-      {
-        "type": "action",
-        "description": "Fill \"resumo-teste-ui\" into the article slug field"
-      },
-      {
-        "type": "action",
-        "description": "Fill \"Conteúdo do artigo para teste de automação.\" into the article content field"
-      },
-      {
-        "type": "action",
-        "description": "Submit the article form"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the new article appears in the admin article list"
-      }
-    ],
-    "priority": "Medium"
-  },
-  {
-    "id": "TC024",
-    "title": "Browse topics and posts in the community",
-    "description": "Verifies that a visitor can open the community page and see a list of discussion topics and recent posts.",
-    "category": "Community Forum",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /comunidade"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify discussion topics are displayed"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify recent posts are displayed"
-      }
-    ],
-    "priority": "Medium"
-  },
-  {
-    "id": "TC025",
-    "title": "Navigate from dashboard to edit account",
-    "description": "Ensures a logged-in student can navigate from the account dashboard to the edit account page successfully.",
-    "category": "Account Dashboard",
+    "title": "Recalculate account statistics from the dashboard",
+    "description": "Ensures an authenticated student can trigger statistics recalculation and see refreshed charts or stats displayed.",
+    "category": "User Account",
     "steps": [
       {
         "type": "action",
@@ -731,85 +652,20 @@
       },
       {
         "type": "action",
-        "description": "Click the link to edit the user profile"
+        "description": "Trigger a statistics recalculation"
       },
       {
         "type": "assertion",
-        "description": "Verify the user lands on the edit account page"
+        "description": "Verify refreshed performance statistics or charts are displayed"
       }
     ],
     "priority": "Medium"
   },
   {
-    "id": "TC026",
-    "title": "Edit an existing news article as admin",
-    "description": "Verifies that an admin can edit an existing article and see the updated content reflected in the admin list or editor view.",
-    "category": "News Admin",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /login"
-      },
-      {
-        "type": "action",
-        "description": "Fill in the email field with {{LOGIN_USER}}"
-      },
-      {
-        "type": "action",
-        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
-      },
-      {
-        "type": "action",
-        "description": "Submit the login form"
-      },
-      {
-        "type": "action",
-        "description": "Click the navigation link to the news admin panel"
-      },
-      {
-        "type": "action",
-        "description": "Create a new article"
-      },
-      {
-        "type": "action",
-        "description": "Fill \"Artigo Para Editar\" into the article title field"
-      },
-      {
-        "type": "action",
-        "description": "Fill \"artigo-para-editar\" into the article slug field"
-      },
-      {
-        "type": "action",
-        "description": "Fill \"Conteúdo inicial.\" into the article content field"
-      },
-      {
-        "type": "action",
-        "description": "Submit the article form"
-      },
-      {
-        "type": "action",
-        "description": "Open the edit view for the newly created article"
-      },
-      {
-        "type": "action",
-        "description": "Fill \"Artigo Para Editar (Atualizado)\" into the article title field"
-      },
-      {
-        "type": "action",
-        "description": "Submit the changes"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the article shows the updated title in the admin view"
-      }
-    ],
-    "priority": "Medium"
-  },
-  {
-    "id": "TC027",
-    "title": "Access news from the landing page",
-    "description": "Ensures a visitor can navigate from the home page to the news listing and see available articles or an empty state.",
-    "category": "Home Page",
+    "id": "TC019",
+    "title": "Navigate from homepage to authentication entry point",
+    "description": "Verifies an anonymous visitor can reach the login page from the homepage navigation.",
+    "category": "Homepage",
     "steps": [
       {
         "type": "action",
@@ -817,49 +673,45 @@
       },
       {
         "type": "action",
-        "description": "Click the call-to-action to read news"
+        "description": "Click a link to go to the login page"
       },
       {
         "type": "assertion",
-        "description": "Verify the user lands on the news listing page"
+        "description": "Verify the login page is displayed"
       }
     ],
     "priority": "Medium"
   },
   {
-    "id": "TC028",
-    "title": "Impedir envio de redação abaixo do mínimo",
-    "description": "Este teste verifica que o visitante não consegue enviar uma redação abaixo do mínimo de caracteres e vê um erro de validação.",
-    "category": "Essay Writing and AI Correction",
+    "id": "TC020",
+    "title": "Admin maintenance and featured update endpoints are not exposed as navigable UI pages",
+    "description": "This test verifies that a visitor cannot access admin maintenance tools through normal site navigation UI.",
+    "category": "Admin Maintenance",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /redacao"
+        "description": "Navigate to /sobre"
       },
       {
         "type": "action",
-        "description": "Fill an essay text below the minimum character count into the essay editor"
-      },
-      {
-        "type": "action",
-        "description": "Submit the essay for AI grading"
+        "description": "Scroll through the page content"
       },
       {
         "type": "assertion",
-        "description": "Verify a minimum character count validation error is visible"
+        "description": "Verify no admin maintenance controls are present in the UI"
       }
     ],
     "priority": "Medium"
   },
   {
-    "id": "TC029",
-    "title": "Delete a news article as admin",
-    "description": "Verifies that an admin can delete an article and it no longer appears in the admin list.",
-    "category": "News Admin",
+    "id": "TC021",
+    "title": "Admin imports news into the system",
+    "description": "An authenticated admin can import news and sees a confirmation that articles were imported or updated.",
+    "category": "News Section",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /login"
+        "description": "Navigate to the login page"
       },
       {
         "type": "action",
@@ -875,143 +727,201 @@
       },
       {
         "type": "action",
-        "description": "Click the navigation link to the news admin panel"
+        "description": "Navigate to the news admin page"
       },
       {
         "type": "action",
-        "description": "Create a new article"
+        "description": "Fill valid import source configuration into the import form"
       },
       {
         "type": "action",
-        "description": "Fill \"Artigo Para Excluir\" into the article title field"
-      },
-      {
-        "type": "action",
-        "description": "Fill \"artigo-para-excluir\" into the article slug field"
-      },
-      {
-        "type": "action",
-        "description": "Fill \"Conteúdo para exclusão.\" into the article content field"
-      },
-      {
-        "type": "action",
-        "description": "Submit the article form"
-      },
-      {
-        "type": "action",
-        "description": "Delete the newly created article"
-      },
-      {
-        "type": "action",
-        "description": "Confirm the deletion"
+        "description": "Submit the import request"
       },
       {
         "type": "assertion",
-        "description": "Verify the deleted article no longer appears in the admin article list"
+        "description": "Verify an import success confirmation is visible"
       }
     ],
     "priority": "Medium"
+  },
+  {
+    "id": "TC022",
+    "title": "Navigate from homepage to registration entry point",
+    "description": "Verifies an anonymous visitor can reach the registration page from the homepage navigation.",
+    "category": "Homepage",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click a link to go to the registration page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the registration page is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC023",
+    "title": "Open About page",
+    "description": "This test verifies that a visitor can open the About page and see the page content.",
+    "category": "Static Pages",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /sobre"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the About page content is displayed"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC024",
+    "title": "Quiz generation requires selecting a discipline",
+    "description": "Ensures the UI blocks quiz generation when no discipline is selected and shows a validation prompt.",
+    "category": "Quiz Questions",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /questoes"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to generate quiz questions without selecting a discipline"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a discipline selection validation message is displayed"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC025",
+    "title": "Open Privacy Policy page",
+    "description": "This test verifies that a visitor can open the Privacy Policy page and see the page content.",
+    "category": "Static Pages",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /privacidade"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the Privacy Policy content is displayed"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC026",
+    "title": "View donation success page after returning from checkout",
+    "description": "This test verifies that the donation success page loads and shows a completed donation confirmation state.",
+    "category": "Donation (Stripe)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /doacao/sucesso"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a donation success confirmation is visible"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC027",
+    "title": "Explore feature overview from homepage",
+    "description": "Verifies an anonymous visitor can scroll through the homepage and see the platform feature overview sections.",
+    "category": "Homepage",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Scroll to the feature overview section"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a list or grid of platform features is displayed"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC028",
+    "title": "Open Terms of Service page",
+    "description": "This test verifies that a visitor can open the Terms of Service page and see the page content.",
+    "category": "Static Pages",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /termos"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the Terms of Service content is displayed"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC029",
+    "title": "Donation page shows available donation options",
+    "description": "This test verifies that the donation page renders donation amount options and a way to proceed to checkout.",
+    "category": "Donation (Stripe)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /doacao"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify donation amount selection controls are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an option to proceed to checkout is available"
+      }
+    ],
+    "priority": "Low"
   },
   {
     "id": "TC030",
-    "title": "Comment on a community post",
-    "description": "Verifies that a visitor can add a comment to a post and see it displayed in the post thread.",
-    "category": "Community Forum",
+    "title": "Reach community area from homepage navigation",
+    "description": "Verifies an anonymous visitor can use homepage navigation to reach the community/forum area.",
+    "category": "Homepage",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /comunidade"
+        "description": "Navigate to /"
       },
       {
         "type": "action",
-        "description": "Open a post from the feed"
-      },
-      {
-        "type": "action",
-        "description": "Start adding a comment"
-      },
-      {
-        "type": "action",
-        "description": "Fill \"Comentário de teste UI.\" into the comment field"
-      },
-      {
-        "type": "action",
-        "description": "Submit the comment"
+        "description": "Click a link to go to the community section"
       },
       {
         "type": "assertion",
-        "description": "Verify the new comment is displayed in the thread"
+        "description": "Verify the community page is displayed"
       }
     ],
-    "priority": "Medium"
+    "priority": "Low"
   },
   {
     "id": "TC031",
-    "title": "Prevent registration until password meets requirements",
-    "description": "Ensures a user cannot successfully submit registration with a weak password and can proceed after updating to a strong password.",
-    "category": "User Registration",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /register"
-      },
-      {
-        "type": "action",
-        "description": "Fill in the email field with requirements.fix+{{RANDOM}}@example.com"
-      },
-      {
-        "type": "action",
-        "description": "Fill in the password field with a weak password"
-      },
-      {
-        "type": "action",
-        "description": "Submit the registration form"
-      },
-      {
-        "type": "action",
-        "description": "Fill in the password field with a strong valid password"
-      },
-      {
-        "type": "action",
-        "description": "Submit the registration form"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the user lands on the account dashboard"
-      }
-    ],
-    "priority": "Medium"
-  },
-  {
-    "id": "TC032",
-    "title": "Like a community post",
-    "description": "Verifies that a visitor can like a post and see the like state update.",
-    "category": "Community Forum",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /comunidade"
-      },
-      {
-        "type": "action",
-        "description": "Open a post from the feed"
-      },
-      {
-        "type": "action",
-        "description": "Like the post"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the post is shown as liked"
-      }
-    ],
-    "priority": "Medium"
-  },
-  {
-    "id": "TC033",
-    "title": "Show validation error for invalid email format on edit account",
-    "description": "Ensures the edit account form blocks an invalid email and shows a validation error instead of saving.",
-    "category": "Edit Account",
+    "title": "Handle invalid essay result ID gracefully",
+    "description": "Ensures the essay results page shows a not found state when the result identifier is invalid.",
+    "category": "Essay Results",
     "steps": [
       {
         "type": "action",
@@ -1031,32 +941,65 @@
       },
       {
         "type": "action",
-        "description": "Navigate to /conta/editar"
-      },
-      {
-        "type": "action",
-        "description": "Fill invalid-email into the email field"
-      },
-      {
-        "type": "action",
-        "description": "Submit the profile updates form"
+        "description": "Navigate to an essay results page URL with an invalid ID value"
       },
       {
         "type": "assertion",
-        "description": "Verify an email validation error is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the changes are not saved"
+        "description": "Verify a not found state is displayed for the essay result"
       }
     ],
-    "priority": "Medium"
+    "priority": "Low"
   },
   {
-    "id": "TC034",
-    "title": "Validate minimum donation amount for custom value",
-    "description": "Verifies that entering a custom donation amount below the minimum is rejected with a validation error and the user cannot proceed.",
-    "category": "Donation",
+    "id": "TC032",
+    "title": "Prevent submitting an empty community post",
+    "description": "An authenticated user cannot submit a new post with empty content and sees a validation error.",
+    "category": "Community Forum",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the login page"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click to open the community page"
+      },
+      {
+        "type": "action",
+        "description": "Select a topic to post in"
+      },
+      {
+        "type": "action",
+        "description": "Clear the post content field so it is empty"
+      },
+      {
+        "type": "action",
+        "description": "Submit the new post"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a validation error is visible and the post is not created"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC033",
+    "title": "Block donation checkout when amount is below the minimum",
+    "description": "This test verifies that entering a donation amount below the minimum prevents checkout and shows a validation error.",
+    "category": "Donation (Stripe)",
     "steps": [
       {
         "type": "action",
@@ -1064,361 +1007,128 @@
       },
       {
         "type": "action",
-        "description": "Select the custom amount option"
+        "description": "Fill an amount below the minimum into the amount field"
       },
       {
         "type": "action",
-        "description": "Fill a value below the minimum allowed into the amount field"
-      },
-      {
-        "type": "action",
-        "description": "Confirm the donation to proceed to payment"
+        "description": "Submit the donation checkout"
       },
       {
         "type": "assertion",
-        "description": "Verify a minimum amount validation error is visible and checkout is not started"
+        "description": "Verify a donation amount validation error is visible"
       }
     ],
-    "priority": "Medium"
+    "priority": "Low"
+  },
+  {
+    "id": "TC034",
+    "title": "Reach quizzes area from homepage navigation",
+    "description": "Verifies an anonymous visitor can use homepage navigation to reach the quiz practice area.",
+    "category": "Homepage",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click a link to go to the quizzes section"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the quizzes page is displayed"
+      }
+    ],
+    "priority": "Low"
   },
   {
     "id": "TC035",
-    "title": "Share a news article via social links",
-    "description": "Verifies that a visitor can access share links from an article page.",
-    "category": "News",
+    "title": "Prevent searching news with empty query",
+    "description": "A visitor cannot submit a news search with an empty query and sees a validation error.",
+    "category": "News Section",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /noticias"
+        "description": "Navigate to the news search page"
       },
       {
         "type": "action",
-        "description": "Open an article from the list"
+        "description": "Clear the search field so it is empty"
       },
       {
         "type": "action",
-        "description": "Click a social share link"
+        "description": "Submit the search"
       },
       {
         "type": "assertion",
-        "description": "Verify a share option is initiated from the article page"
+        "description": "Verify a validation error is visible and no results are shown"
       }
     ],
-    "priority": "Medium"
+    "priority": "Low"
   },
   {
     "id": "TC036",
-    "title": "Show password strength feedback during registration",
-    "description": "Ensures the registration form provides visible password strength or requirement feedback when entering a weak password.",
-    "category": "User Registration",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /register"
-      },
-      {
-        "type": "action",
-        "description": "Fill in the email field with strength.check+{{RANDOM}}@example.com"
-      },
-      {
-        "type": "action",
-        "description": "Fill in the password field with a weak password"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify password strength or password requirements feedback is displayed"
-      }
-    ],
-    "priority": "Medium"
-  },
-  {
-    "id": "TC037",
-    "title": "Bloquear redefinição de senha quando confirmação não confere",
-    "description": "Este teste verifica que o usuário não consegue redefinir a senha quando a confirmação é diferente e vê um erro de validação.",
-    "category": "Reset Password",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /reset-password"
-      },
-      {
-        "type": "action",
-        "description": "Fill a valid new password into the new password field"
-      },
-      {
-        "type": "action",
-        "description": "Fill a different password into the confirmation password field"
-      },
-      {
-        "type": "action",
-        "description": "Submit the password update"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify a validation error indicating the passwords do not match is visible"
-      }
-    ],
-    "priority": "Medium"
-  },
-  {
-    "id": "TC038",
-    "title": "View a community user profile and reputation",
-    "description": "Verifies that a visitor can open a user profile from a post and see reputation information.",
-    "category": "Community Forum",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /comunidade"
-      },
-      {
-        "type": "action",
-        "description": "Open a post from the feed"
-      },
-      {
-        "type": "action",
-        "description": "Open the author profile from the post"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify a user profile view is displayed"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify reputation information is displayed"
-      }
-    ],
-    "priority": "Medium"
-  },
-  {
-    "id": "TC039",
-    "title": "Reject invalid login credentials",
-    "description": "Ensures the login form shows an invalid-credentials error and does not log the user in when credentials are incorrect.",
-    "category": "User Login",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /login"
-      },
-      {
-        "type": "action",
-        "description": "Fill in the email field with invalid.user@example.com"
-      },
-      {
-        "type": "action",
-        "description": "Fill in the password field with wrong-password"
-      },
-      {
-        "type": "action",
-        "description": "Submit the login form"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify an invalid credentials error is visible"
-      }
-    ],
-    "priority": "Low"
-  },
-  {
-    "id": "TC040",
-    "title": "Acessar e ler a Política de Privacidade",
-    "description": "Verifica que o visitante consegue acessar a política de privacidade e visualizar detalhes de tratamento de dados.",
-    "category": "Privacy Policy",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /"
-      },
-      {
-        "type": "action",
-        "description": "Click the link to view the privacy policy"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the privacy policy content is displayed"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify data collection, storage, and user rights information is displayed"
-      }
-    ],
-    "priority": "Low"
-  },
-  {
-    "id": "TC041",
-    "title": "Navigate from login to password recovery",
-    "description": "Ensures a user can reach the password recovery page from the login screen.",
-    "category": "User Login",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /login"
-      },
-      {
-        "type": "action",
-        "description": "Click the link to recover a forgotten password"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the user lands on the password recovery page"
-      }
-    ],
-    "priority": "Low"
-  },
-  {
-    "id": "TC042",
-    "title": "Acessar e ler os Termos de Serviço",
-    "description": "Verifica que o visitante consegue acessar a página de termos e visualizar o conteúdo de termos de serviço.",
-    "category": "Terms of Service",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /"
-      },
-      {
-        "type": "action",
-        "description": "Click the link to view the terms of service"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the terms of service content is displayed"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify usage rules and user responsibilities information is displayed"
-      }
-    ],
-    "priority": "Low"
-  },
-  {
-    "id": "TC043",
-    "title": "Navigate from login to registration",
-    "description": "Ensures a visitor can reach the registration page from the login screen.",
-    "category": "User Login",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /login"
-      },
-      {
-        "type": "action",
-        "description": "Click the link to create a new account"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the user lands on the registration page"
-      }
-    ],
-    "priority": "Low"
-  },
-  {
-    "id": "TC044",
-    "title": "Acessar Política de Privacidade via rota direta",
-    "description": "Verifica que a navegação direta para a rota de privacidade abre a página e exibe o conteúdo esperado.",
-    "category": "Privacy Policy",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /privacidade"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the privacy policy content is displayed"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the page is readable as a long-form document"
-      }
-    ],
-    "priority": "Low"
-  },
-  {
-    "id": "TC045",
-    "title": "Read about page content and feature overview",
-    "description": "Ensures a visitor can access the about page and see the mission/history content along with a feature overview or timeline section.",
-    "category": "About Page",
+    "title": "Static pages render without requiring authentication",
+    "description": "This test verifies that static informational pages are accessible to an unauthenticated visitor.",
+    "category": "Static Pages",
     "steps": [
       {
         "type": "action",
         "description": "Navigate to /sobre"
       },
       {
-        "type": "assertion",
-        "description": "Verify the about page displays mission or project history content"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify a feature overview or timeline section is displayed"
-      }
-    ],
-    "priority": "Low"
-  },
-  {
-    "id": "TC046",
-    "title": "Acessar Termos via rota direta",
-    "description": "Verifica que a navegação direta para a rota de termos abre a página e exibe o conteúdo esperado.",
-    "category": "Terms of Service",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /termos"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the terms of service content is displayed"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the page is readable as a long-form document"
-      }
-    ],
-    "priority": "Low"
-  },
-  {
-    "id": "TC047",
-    "title": "Manter leitura da Política de Privacidade ao rolar a página",
-    "description": "Verifica que o usuário consegue rolar a página de privacidade e continua vendo conteúdo sem que a página quebre.",
-    "category": "Privacy Policy",
-    "steps": [
-      {
         "type": "action",
         "description": "Navigate to /privacidade"
       },
       {
         "type": "action",
-        "description": "Scroll to the middle of the page"
-      },
-      {
-        "type": "action",
-        "description": "Scroll to the bottom of the page"
+        "description": "Navigate to /termos"
       },
       {
         "type": "assertion",
-        "description": "Verify the privacy policy content is displayed"
+        "description": "Verify the Terms of Service content is displayed"
       }
     ],
     "priority": "Low"
   },
   {
-    "id": "TC048",
-    "title": "Manter leitura de Termos ao rolar a página",
-    "description": "Verifica que o usuário consegue rolar a página de termos e continua vendo conteúdo sem que a página quebre.",
-    "category": "Terms of Service",
+    "id": "TC037",
+    "title": "Reach news area from homepage navigation",
+    "description": "Verifies an anonymous visitor can use homepage navigation to reach the news section.",
+    "category": "Homepage",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /termos"
+        "description": "Navigate to /"
       },
       {
         "type": "action",
-        "description": "Scroll to the middle of the page"
-      },
-      {
-        "type": "action",
-        "description": "Scroll to the bottom of the page"
+        "description": "Click a link to go to the news section"
       },
       {
         "type": "assertion",
-        "description": "Verify the terms of service content is displayed"
+        "description": "Verify the news page is displayed"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC038",
+    "title": "Reach donation area from homepage navigation",
+    "description": "Verifies an anonymous visitor can use homepage navigation to reach the donation section.",
+    "category": "Homepage",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click a link to go to the donation section"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the donation page is displayed"
       }
     ],
     "priority": "Low"
