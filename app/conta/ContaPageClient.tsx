@@ -1,12 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/context";
 import { getUserStatistics, recalculateUserStatistics } from "@/lib/auth/stats-service";
 import type { UserStatistics } from "@/lib/auth/types";
-import { getBrowserClient } from "@/lib/db";
+import { getBrowserClient, withTimeout } from "@/lib/db";
 import {
   LineChart,
   Line,
@@ -35,6 +35,7 @@ export default function ContaPageClient() {
   const [recalculating, setRecalculating] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('visao-geral');
+  const authTimeoutFired = useRef(false);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -42,6 +43,27 @@ export default function ContaPageClient() {
       router.replace(`/login?next=${encodeURIComponent('/conta')}`);
     }
   }, [authLoading, user, router]);
+
+  // Safety net: if auth stays loading for too long, force recovery so the
+  // page never gets stuck on the spinner indefinitely.
+  useEffect(() => {
+    if (!authLoading) {
+      authTimeoutFired.current = false;
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      if (authLoading) {
+        authTimeoutFired.current = true;
+        void refreshAuth().catch(() => {
+          // If recovery also fails, clear loading so redirect kicks in
+          setLoading(false);
+        });
+      }
+    }, 15_000);
+
+    return () => clearTimeout(timer);
+  }, [authLoading, refreshAuth]);
 
   // Load data when authenticated
   const loadData = useCallback(async () => {
@@ -56,12 +78,15 @@ export default function ContaPageClient() {
 
       const [statsResult, essaysResult] = await Promise.all([
         getUserStatistics(user.id),
-        supabase
-          .from('essay_results')
-          .select('id, nota, created_at')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(10)
+        withTimeout(async (signal) =>
+          supabase
+            .from('essay_results')
+            .select('id, nota, created_at')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(10)
+            .abortSignal(signal)
+        ),
       ]);
 
       setStatistics(statsResult);
