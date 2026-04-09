@@ -61,25 +61,25 @@ export default function ResultadosPageClient({ essayId }: ResultadosPageClientPr
   }, [essayId, authLoading, user]);
 
   const getGradeColor = (grade: number) => {
-    if (grade >= 800) return { text: "text-green-600", bg: "bg-green-600" };
-    if (grade >= 600) return { text: "text-blue-600", bg: "bg-blue-600" };
-    if (grade >= 400) return { text: "text-yellow-600", bg: "bg-yellow-600" };
-    return { text: "text-red-600", bg: "bg-red-600" };
+    if (grade >= 800) return { text: "text-success", bg: "bg-success" };
+    if (grade >= 600) return { text: "text-primary", bg: "bg-primary" };
+    if (grade >= 400) return { text: "text-warning", bg: "bg-warning" };
+    return { text: "text-danger", bg: "bg-danger" };
   };
 
   const getCompetenceGradeColor = (grade: number) => {
-    if (grade >= 160) return { text: "text-green-600", bg: "bg-green-600" };
-    if (grade >= 120) return { text: "text-blue-600", bg: "bg-blue-600" };
-    if (grade >= 80) return { text: "text-yellow-600", bg: "bg-yellow-600" };
-    return { text: "text-red-600", bg: "bg-red-600" };
+    if (grade >= 160) return { text: "text-success", bg: "bg-success" };
+    if (grade >= 120) return { text: "text-primary", bg: "bg-primary" };
+    if (grade >= 80) return { text: "text-warning", bg: "bg-warning" };
+    return { text: "text-danger", bg: "bg-danger" };
   };
 
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
         <div className="loader"></div>
-        <p className="mt-4 text-gray-600">Carregando sua avaliação...</p>
-        <p className="text-sm text-gray-500 mt-2">Isso pode levar alguns segundos</p>
+        <p className="mt-4 text-foreground/60">Carregando sua avaliação...</p>
+        <p className="text-sm text-foreground/50 mt-2">Isso pode levar alguns segundos</p>
       </div>
     );
   }
@@ -92,7 +92,7 @@ export default function ResultadosPageClient({ essayId }: ResultadosPageClientPr
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <h2 className="text-2xl font-bold text-danger mb-4">Erro</h2>
-          <p className="text-gray-700 mb-6">{error || "Resultado não encontrado"}</p>
+          <p className="text-foreground/70 mb-6">{error || "Resultado não encontrado"}</p>
           <Link 
             href="/redacao" 
             className="btn btn-primary inline-flex items-center"
@@ -140,20 +140,20 @@ export default function ResultadosPageClient({ essayId }: ResultadosPageClientPr
           </div>
           
           <div className="text-center py-8 mb-8 border-b border-border-color">
-            <p className="text-gray-600 dark:text-gray-300 mb-2">Sua nota final</p>
+            <p className="text-foreground/60 mb-2">Sua nota final</p>
             <div className="flex items-center justify-center">
               <h3 className={`text-6xl font-bold mb-2 ${getGradeColor(result.nota).text}`}>
                 {result.nota}
               </h3>
               <div className="ml-4 text-left">
-                <div className="text-xs text-gray-500 mb-1">escala ENEM</div>
-                <div className="w-32 h-2 bg-gray-200 rounded overflow-hidden">
+                <div className="text-xs text-foreground/50 mb-1">escala ENEM</div>
+                <div className="w-32 h-2 bg-muted-bg rounded overflow-hidden">
                   <div 
                     className={`h-full ${getGradeColor(result.nota).bg}`} 
                     style={{width: `${result.nota/10}%`}}
                   ></div>
                 </div>
-                <div className="text-xs text-gray-500 mt-1">0-1000 pontos</div>
+                <div className="text-xs text-foreground/50 mt-1">0-1000 pontos</div>
               </div>
             </div>
           </div>
@@ -224,7 +224,7 @@ export default function ResultadosPageClient({ essayId }: ResultadosPageClientPr
                   <div className="flex flex-wrap justify-between items-center gap-2">
                     <h4 className="font-semibold flex-grow">Competência 1: Domínio da norma culta</h4>
                     <div className="flex items-center">
-                      <div className="w-16 h-2 bg-gray-200 rounded-full mr-2 overflow-hidden">
+                      <div className="w-16 h-2 bg-muted-bg rounded-full mr-2 overflow-hidden">
                         <div 
                           className={`h-full ${getCompetenceGradeColor(result.competencia1.nota).bg}`} 
                           style={{width: `${(result.competencia1.nota/200)*100}%`}}
@@ -247,7 +247,7 @@ export default function ResultadosPageClient({ essayId }: ResultadosPageClientPr
                   <div className="flex flex-wrap justify-between items-center gap-2">
                     <h4 className="font-semibold flex-grow">Competência 2: Compreensão da proposta</h4>
                     <div className="flex items-center">
-                      <div className="w-16 h-2 bg-gray-200 rounded-full mr-2 overflow-hidden">
+                      <div className="w-16 h-2 bg-muted-bg rounded-full mr-2 overflow-hidden">
                         <div 
                           className={`h-full ${getCompetenceGradeColor(result.competencia2.nota).bg}`} 
                           style={{width: `${(result.competencia2.nota/200)*100}%`}}
@@ -270,7 +270,7 @@ export default function ResultadosPageClient({ essayId }: ResultadosPageClientPr
                   <div className="flex flex-wrap justify-between items-center gap-2">
                     <h4 className="font-semibold flex-grow">Competência 3: Capacidade argumentativa</h4>
                     <div className="flex items-center">
-                      <div className="w-16 h-2 bg-gray-200 rounded-full mr-2 overflow-hidden">
+                      <div className="w-16 h-2 bg-muted-bg rounded-full mr-2 overflow-hidden">
                         <div 
                           className={`h-full ${getCompetenceGradeColor(result.competencia3.nota).bg}`} 
                           style={{width: `${(result.competencia3.nota/200)*100}%`}}
@@ -293,7 +293,7 @@ export default function ResultadosPageClient({ essayId }: ResultadosPageClientPr
                   <div className="flex flex-wrap justify-between items-center gap-2">
                     <h4 className="font-semibold flex-grow">Competência 4: Mecanismos linguísticos</h4>
                     <div className="flex items-center">
-                      <div className="w-16 h-2 bg-gray-200 rounded-full mr-2 overflow-hidden">
+                      <div className="w-16 h-2 bg-muted-bg rounded-full mr-2 overflow-hidden">
                         <div 
                           className={`h-full ${getCompetenceGradeColor(result.competencia4.nota).bg}`} 
                           style={{width: `${(result.competencia4.nota/200)*100}%`}}
@@ -316,7 +316,7 @@ export default function ResultadosPageClient({ essayId }: ResultadosPageClientPr
                   <div className="flex flex-wrap justify-between items-center gap-2">
                     <h4 className="font-semibold flex-grow">Competência 5: Proposta de intervenção</h4>
                     <div className="flex items-center">
-                      <div className="w-16 h-2 bg-gray-200 rounded-full mr-2 overflow-hidden">
+                      <div className="w-16 h-2 bg-muted-bg rounded-full mr-2 overflow-hidden">
                         <div 
                           className={`h-full ${getCompetenceGradeColor(result.competencia5.nota).bg}`} 
                           style={{width: `${(result.competencia5.nota/200)*100}%`}}
@@ -343,7 +343,7 @@ export default function ResultadosPageClient({ essayId }: ResultadosPageClientPr
               Sua Redação
             </h3>
             <div className="bg-muted-bg p-5 rounded-lg border-0 whitespace-pre-line">
-              <div className="italic text-sm mb-2 text-gray-500">Texto original enviado:</div>
+              <div className="italic text-sm mb-2 text-foreground/50">Texto original enviado:</div>
               {result.redacaoOriginal}
             </div>
           </div>

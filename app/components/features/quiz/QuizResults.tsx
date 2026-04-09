@@ -12,8 +12,8 @@ export default function QuizResults({ result, onRetakeQuiz }: QuizResultsProps) 
     const getScoreColor = (score: number) => {
         const percentage = (score / result.totalQuestions) * 100;
         if (percentage >= 80) return "text-success";
-        if (percentage >= 60) return "text-blue-600 dark:text-blue-400";
-        if (percentage >= 40) return "text-yellow-600 dark:text-yellow-400";
+        if (percentage >= 60) return "text-primary";
+        if (percentage >= 40) return "text-warning";
         return "text-danger";
     };
 
