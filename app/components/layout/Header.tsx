@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth/context";
+import { useTheme } from "@/lib/contexts/ThemeContext";
 
 interface NavLink {
   href: string;
@@ -25,6 +26,7 @@ export default function Header() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const { user, profile, loading: authLoading, signOut } = useAuth();
+  const { resolvedTheme, toggleTheme } = useTheme();
   const pathname = usePathname();
   const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -136,7 +138,32 @@ export default function Header() {
         </nav>
 
         {/* Desktop Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          {/* Theme Toggle */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-foreground/70 transition-colors hover:bg-muted-bg hover:text-foreground"
+            aria-label={resolvedTheme === "light" ? "Ativar modo escuro" : "Ativar modo claro"}
+          >
+            {resolvedTheme === "light" ? (
+              <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+              </svg>
+            ) : (
+              <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="4" />
+                <path d="M12 2v2" />
+                <path d="M12 20v2" />
+                <path d="m4.93 4.93 1.41 1.41" />
+                <path d="m17.66 17.66 1.41 1.41" />
+                <path d="M2 12h2" />
+                <path d="M20 12h2" />
+                <path d="m6.34 17.66-1.41 1.41" />
+                <path d="m19.07 4.93-1.41 1.41" />
+              </svg>
+            )}
+          </button>
           {authLoading ? (
             <div className="hidden h-9 w-24 animate-pulse rounded-lg bg-muted-bg sm:block" />
           ) : user ? (
@@ -284,6 +311,35 @@ export default function Header() {
               </Link>
             ))}
           </nav>
+
+          {/* Mobile Theme Toggle */}
+          <div className="border-t border-border-color pt-4">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-foreground/70 transition-colors hover:bg-muted-bg hover:text-foreground"
+              aria-label={resolvedTheme === "light" ? "Ativar modo escuro" : "Ativar modo claro"}
+            >
+              {resolvedTheme === "light" ? (
+                <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+                </svg>
+              ) : (
+                <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="4" />
+                  <path d="M12 2v2" />
+                  <path d="M12 20v2" />
+                  <path d="m4.93 4.93 1.41 1.41" />
+                  <path d="m17.66 17.66 1.41 1.41" />
+                  <path d="M2 12h2" />
+                  <path d="M20 12h2" />
+                  <path d="m6.34 17.66-1.41 1.41" />
+                  <path d="m19.07 4.93-1.41 1.41" />
+                </svg>
+              )}
+              {resolvedTheme === "light" ? "Modo escuro" : "Modo claro"}
+            </button>
+          </div>
 
           {/* Mobile Auth */}
           <div className="mt-auto border-t border-border-color pt-6">

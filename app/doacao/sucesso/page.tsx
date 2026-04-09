@@ -36,10 +36,10 @@ function DoacaoSucessoContent() {
           {/* Ícone de sucesso animado */}
           <div className="mb-6 inline-block">
             <div className="relative">
-              <div className="absolute inset-0 bg-green-500/20 rounded-full animate-ping"></div>
-              <div className="relative bg-green-500/10 p-6 rounded-full">
+              <div className="absolute inset-0 bg-success/20 rounded-full animate-ping"></div>
+              <div className="relative bg-success/10 p-6 rounded-full">
                 <svg
-                  className="w-16 h-16 text-green-500"
+                  className="w-16 h-16 text-success"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
