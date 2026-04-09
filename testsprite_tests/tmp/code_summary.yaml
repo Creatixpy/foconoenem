@@ -1,0 +1,414 @@
+version: "2"
+type: frontend
+tech_stack:
+  - TypeScript
+  - Next.js 15 (App Router)
+  - React 19
+  - Tailwind CSS
+  - Supabase (PostgreSQL, Auth, Edge Functions)
+  - Groq AI SDK
+  - Stripe
+  - Zod
+  - Recharts
+  - Motion (Framer Motion)
+routes:
+  - path: /
+    file: app/page.tsx
+    auth_required: false
+    description: Landing page with hero section, platform stats, feature highlights, testimonials, and call-to-action buttons
+  - path: /login
+    file: app/(auth)/login/page.tsx
+    auth_required: false
+    description: User login page with email and password
+  - path: /register
+    file: app/(auth)/register/page.tsx
+    auth_required: false
+    description: User registration page with email, password, and optional profile info
+  - path: /forgot-password
+    file: app/(auth)/forgot-password/page.tsx
+    auth_required: false
+    description: Password recovery page via email
+  - path: /reset-password
+    file: app/(auth)/reset-password/page.tsx
+    auth_required: false
+    description: Set new password after recovery link
+  - path: /redacao
+    file: app/redacao/page.tsx
+    auth_required: false
+    description: Essay writing page with AI-powered grading, theme selection, and character counter
+  - path: /resultados/[id]
+    file: app/resultados/[id]/page.tsx
+    auth_required: false
+    description: Detailed AI-generated essay grading report with 5 competency scores
+  - path: /questoes
+    file: app/questoes/page.tsx
+    auth_required: false
+    description: AI-generated multiple-choice quiz simulator across 5 disciplines
+  - path: /doacao
+    file: app/doacao/page.tsx
+    auth_required: false
+    description: Stripe-powered donation page with preset and custom amounts
+  - path: /doacao/sucesso
+    file: app/doacao/sucesso/page.tsx
+    auth_required: false
+    description: Donation success confirmation page with transaction details
+  - path: /comunidade
+    file: app/comunidade/page.tsx
+    auth_required: false
+    description: Community discussion forum with topics, posts, likes, and reputation
+  - path: /noticias
+    file: app/noticias/page.tsx
+    auth_required: false
+    description: News listing page with tag filters and search
+  - path: /noticias/[slug]
+    file: app/noticias/[slug]/page.tsx
+    auth_required: false
+    description: Full news article page with related articles sidebar
+  - path: /noticias/pesquisa
+    file: app/noticias/pesquisa/page.tsx
+    auth_required: false
+    description: News search results page
+  - path: /noticias/admin
+    file: app/noticias/admin/page.tsx
+    auth_required: true
+    description: Admin panel for news CRUD, bulk import, and scheduled publishing
+  - path: /conta
+    file: app/conta/page.tsx
+    auth_required: true
+    description: User account dashboard with profile, stats, achievements, and charts
+  - path: /conta/editar
+    file: app/conta/editar/page.tsx
+    auth_required: true
+    description: Edit account page for profile, password, and account deletion
+  - path: /sobre
+    file: app/sobre/page.tsx
+    auth_required: false
+    description: About page with project history, mission, and values
+  - path: /termos
+    file: app/termos/page.tsx
+    auth_required: false
+    description: Terms of service page
+  - path: /privacidade
+    file: app/privacidade/page.tsx
+    auth_required: false
+    description: Privacy policy page (LGPD compliant)
+features:
+  - name: Home Page
+    description: Landing page showcasing platform features, stats, and call-to-action navigation
+    files:
+      - app/page.tsx
+      - app/HomePageClient.tsx
+    entry_route: /
+    user_interactions:
+      - Click START WRITING button to navigate to /redacao
+      - Click EXPLORE QUESTS button to navigate to /questoes
+      - Click CONTINUE GAME button (dynamic based on auth state)
+      - Click READ NEWS button to navigate to /noticias
+      - View platform statistics and testimonials
+    api_calls: []
+    auth_required: false
+  - name: User Login
+    description: Login with email and password using Supabase authentication
+    files:
+      - app/(auth)/login/page.tsx
+      - lib/auth/context.tsx
+      - lib/auth/validation.ts
+    entry_route: /login
+    user_interactions:
+      - Fill email input field
+      - Fill password input field
+      - Click Login button to submit
+      - See error message on invalid credentials
+      - Click link to navigate to forgot password
+      - Click link to navigate to register
+    api_calls:
+      - method: POST
+        endpoint: supabase.auth.signInWithPassword
+    auth_required: false
+  - name: User Registration
+    description: Create a new account with email, password, and optional profile information
+    files:
+      - app/(auth)/register/page.tsx
+      - lib/auth/context.tsx
+      - lib/auth/validation.ts
+    entry_route: /register
+    user_interactions:
+      - Fill email input field
+      - Fill password input field
+      - See password strength indicator
+      - Fill optional profile fields
+      - Click Register button to submit
+      - See success or error message
+    api_calls:
+      - method: POST
+        endpoint: supabase.auth.signUp
+    auth_required: false
+  - name: Forgot Password
+    description: Request password recovery email
+    files:
+      - app/(auth)/forgot-password/page.tsx
+      - lib/auth/context.tsx
+    entry_route: /forgot-password
+    user_interactions:
+      - Fill email input field
+      - Click submit button to request recovery email
+      - See confirmation message
+    api_calls:
+      - method: POST
+        endpoint: supabase.auth.resetPasswordForEmail
+    auth_required: false
+  - name: Reset Password
+    description: Set a new password using recovery link
+    files:
+      - app/(auth)/reset-password/page.tsx
+      - lib/auth/context.tsx
+    entry_route: /reset-password
+    user_interactions:
+      - Fill new password field
+      - See password strength meter
+      - Confirm new password
+      - Click submit to update password
+    api_calls:
+      - method: POST
+        endpoint: supabase.auth.updateUser
+    auth_required: false
+  - name: Essay Writing and AI Correction
+    description: Write essays with a rich text editor, select themes, and receive AI-powered grading across 5 ENEM competencies
+    files:
+      - app/redacao/page.tsx
+      - app/api/corrigir/route.ts
+      - app/api/gerar-tema/route.ts
+      - lib/ai/groq.ts
+      - lib/ai/retry.ts
+    entry_route: /redacao
+    user_interactions:
+      - View default theme and support texts
+      - Click button to generate a new random theme
+      - Type or paste essay text in editor
+      - Monitor character counter (50-5000 chars)
+      - Click submit button to send essay for AI grading
+      - Wait for processing and see redirect to results page
+    api_calls:
+      - method: POST
+        endpoint: /api/corrigir
+      - method: GET
+        endpoint: /api/gerar-tema
+    auth_required: false
+  - name: Essay Results
+    description: View detailed AI-generated grading report with scores for 5 ENEM competencies
+    files:
+      - app/resultados/[id]/page.tsx
+    entry_route: /resultados/[id]
+    user_interactions:
+      - View overall score (0-1000)
+      - View individual competency scores (0-200 each)
+      - Read per-competency comments, strengths, and improvements
+      - View original essay text
+      - Navigate back to write another essay
+    api_calls:
+      - method: GET
+        endpoint: /api/resultados/[id]
+    auth_required: false
+  - name: Quiz Questions
+    description: AI-generated multiple-choice quiz simulator with 5 disciplines and 3 questions each
+    files:
+      - app/questoes/page.tsx
+      - app/api/questoes/route.ts
+      - lib/ai/groq.ts
+    entry_route: /questoes
+    user_interactions:
+      - Select disciplines from checkboxes (Matemática, Português, Química, Física, Geografia)
+      - Click generate quiz button
+      - Answer multiple-choice questions
+      - Submit answers
+      - View results with accuracy percentage and per-discipline breakdown
+      - Read answer explanations
+    api_calls:
+      - method: GET
+        endpoint: /api/questoes?disciplines=...
+      - method: POST
+        endpoint: /api/questoes
+    auth_required: false
+  - name: Donation
+    description: Stripe-powered donation with preset and custom amounts
+    files:
+      - app/doacao/page.tsx
+      - app/doacao/sucesso/page.tsx
+      - app/api/doacao/checkout/route.ts
+      - app/api/doacao/webhook/route.ts
+    entry_route: /doacao
+    user_interactions:
+      - Select preset donation amount (R$ 5, 10, 25, 50, 100)
+      - Or enter custom amount (min R$ 5, max R$ 10,000)
+      - View impact description for selected tier
+      - Click Confirm Donation button
+      - Complete payment on Stripe checkout page
+      - View success page with transaction ID and impact cards
+    api_calls:
+      - method: POST
+        endpoint: /api/doacao/checkout
+    auth_required: false
+  - name: Community Forum
+    description: Moderated discussion forum with topics, posts, likes, and reputation system
+    files:
+      - app/comunidade/page.tsx
+      - app/api/comunidade/posts/route.ts
+      - app/api/comunidade/topics/route.ts
+      - app/api/comunidade/comments/route.ts
+      - app/api/comunidade/likes/route.ts
+    entry_route: /comunidade
+    user_interactions:
+      - Browse discussion topics
+      - Create new posts
+      - Like posts
+      - Comment on posts
+      - View user profiles and reputation
+    api_calls:
+      - method: GET
+        endpoint: /api/comunidade/topics
+      - method: GET
+        endpoint: /api/comunidade/posts
+      - method: POST
+        endpoint: /api/comunidade/posts
+      - method: POST
+        endpoint: /api/comunidade/likes
+      - method: POST
+        endpoint: /api/comunidade/comments
+    auth_required: false
+  - name: News
+    description: Browse and read curated ENEM-related news articles with search and tag filters
+    files:
+      - app/noticias/page.tsx
+      - app/noticias/[slug]/page.tsx
+      - app/noticias/pesquisa/page.tsx
+      - app/api/noticias/route.ts
+      - app/api/noticias/[slug]/route.ts
+      - app/api/noticias/busca/route.ts
+    entry_route: /noticias
+    user_interactions:
+      - Browse news article list
+      - Filter articles by tags
+      - Search for articles
+      - Click article to read full content
+      - View related articles in sidebar
+      - Share article via social links
+    api_calls:
+      - method: GET
+        endpoint: /api/noticias
+      - method: GET
+        endpoint: /api/noticias/[slug]
+      - method: GET
+        endpoint: /api/noticias/busca
+    auth_required: false
+  - name: News Admin
+    description: Admin panel for managing news articles including CRUD, bulk import, and scheduled publishing
+    files:
+      - app/noticias/admin/page.tsx
+      - app/api/noticias/admin/route.ts
+      - app/api/noticias/admin/moderar/route.ts
+      - app/api/noticias/admin/status/route.ts
+      - app/api/noticias/importar/route.ts
+    entry_route: /noticias/admin
+    user_interactions:
+      - View list of all articles
+      - Create new article with form
+      - Edit existing article
+      - Delete article
+      - Bulk import articles
+      - Schedule publishing
+      - Moderate submitted articles
+    api_calls:
+      - method: GET
+        endpoint: /api/noticias/admin
+      - method: POST
+        endpoint: /api/noticias/admin
+      - method: PUT
+        endpoint: /api/noticias/admin
+      - method: DELETE
+        endpoint: /api/noticias/admin
+      - method: POST
+        endpoint: /api/noticias/importar
+    auth_required: true
+  - name: Account Dashboard
+    description: User dashboard showing profile, performance stats, achievements, streaks, and charts
+    files:
+      - app/conta/page.tsx
+      - app/api/conta/dados/route.ts
+      - app/api/conquistas/route.ts
+    entry_route: /conta
+    user_interactions:
+      - View profile card with avatar and info
+      - View performance statistics (essays written, accuracy, level/XP)
+      - View achievement badges
+      - View streaks and study goals
+      - View performance charts over time
+      - Navigate to edit profile
+    api_calls:
+      - method: GET
+        endpoint: /api/conta/dados
+      - method: GET
+        endpoint: /api/conquistas
+    auth_required: true
+  - name: Edit Account
+    description: Edit profile information, change password, or delete account
+    files:
+      - app/conta/editar/page.tsx
+      - app/api/conta/dados/route.ts
+    entry_route: /conta/editar
+    user_interactions:
+      - Update name field
+      - Update email field
+      - Update bio text
+      - Select ENEM year
+      - Set goal
+      - Upload profile picture
+      - Change password with old/new fields
+      - Delete account with confirmation dialog
+    api_calls:
+      - method: PUT
+        endpoint: /api/conta/dados
+      - method: POST
+        endpoint: supabase.auth.updateUser
+    auth_required: true
+  - name: About Page
+    description: Static page with project history, mission, values, and timeline
+    files:
+      - app/sobre/page.tsx
+    entry_route: /sobre
+    user_interactions:
+      - Read about project mission and values
+      - View project timeline
+      - View available features
+    api_calls: []
+    auth_required: false
+  - name: Terms of Service
+    description: Static terms of service page with usage restrictions and policies
+    files:
+      - app/termos/page.tsx
+    entry_route: /termos
+    user_interactions:
+      - Read terms of service content
+    api_calls: []
+    auth_required: false
+  - name: Privacy Policy
+    description: LGPD-compliant privacy policy page detailing data collection, storage, and user rights
+    files:
+      - app/privacidade/page.tsx
+    entry_route: /privacidade
+    user_interactions:
+      - Read privacy policy content
+    api_calls: []
+    auth_required: false
+known_limitations:
+  - issue: No automated test suite exists yet
+    location: project root
+    impact: All testing is manual; no CI test coverage
+  - issue: API endpoints are restricted to operating hours 7h-23h30 Brasilia time
+    location: lib/server/operating-hours.ts
+    impact: Essay correction, theme generation, and quiz generation will fail outside operating hours
+  - issue: AI features depend on external Groq API availability and rate limits
+    location: lib/ai/groq.ts
+    impact: Essay grading and quiz generation may fail if Groq API is down or rate limited
+  - issue: Donation flow depends on Stripe test/live mode configuration
+    location: app/api/doacao/checkout/route.ts
+    impact: Checkout will fail without valid Stripe keys in environment

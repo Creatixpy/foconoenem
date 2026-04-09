@@ -1,0 +1,25 @@
+{
+	"servers": {
+		"supabase": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+				"-y",
+				"@supabase/mcp-server-supabase@latest"
+			],
+			"env": {
+				"SUPABASE_ACCESS_TOKEN": "sbp_16cc959cd9a9f3590d7fd038b9ac26f6d1c2be14"
+			}
+		},
+		"TestSprite": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+				"@testsprite/testsprite-mcp@latest"
+			],
+			"env": {
+				"API_KEY": "sk-user-p001OPAsyspW6OTWsNyQ_00tzhR8bNqeAppyrJrhDbBE08xYjPzCneRjccPo2lFtCzB_9tS1Kcu9GuOyae3byDun0XA-E02WDs1wRIXJPExvd7OKqNqlac3WW6UJ0aVdTrY"
+			}
+		}
+	}
+}
