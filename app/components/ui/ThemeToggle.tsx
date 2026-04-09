@@ -63,7 +63,7 @@ export default function ThemeToggle() {
     };
 
     return (
-        <div className="theme-toggle pointer-events-none fixed bottom-4 right-4 z-40 sm:bottom-6 sm:right-6">
+        <div className="theme-toggle pointer-events-none fixed bottom-4 right-4 z-40 sm:bottom-6 sm:right-6" style={{ zIndex: 90 }}>
             <button
                 type="button"
                 onClick={toggleTheme}
