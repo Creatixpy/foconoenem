@@ -140,7 +140,10 @@ export default function ContaPageClient() {
   if (authLoading) {
     return (
       <main className="flex min-h-[60vh] items-center justify-center bg-background">
-        <div className="font-pixel text-xl animate-pulse text-primary">CARREGANDO DADOS...</div>
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />
+          <span className="text-lg text-primary">Carregando dados...</span>
+        </div>
       </main>
     );
   }
@@ -153,8 +156,8 @@ export default function ContaPageClient() {
     return (
       <main className="flex min-h-[60vh] items-center justify-center bg-background">
         <div className="text-center space-y-4">
-          <div className="font-pixel text-xl text-primary animate-bounce">CARREGANDO...</div>
-          <p className="text-sm font-mono text-foreground/60">Preparando Painel...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent mx-auto" />
+          <p className="text-sm text-foreground/60">Carregando...</p>
         </div>
       </main>
     );
@@ -219,39 +222,26 @@ export default function ContaPageClient() {
 
         {/* PLAYER ID CARD */}
         <section className="mb-10 card flex flex-col md:flex-row gap-8 items-center md:items-start relative overflow-hidden">
-           {/* Retro Corner Deco */}
-           <div className="absolute top-0 left-0 w-4 h-4 border-t-4 border-l-4 border-primary"></div>
-           <div className="absolute top-0 right-0 w-4 h-4 border-t-4 border-r-4 border-primary"></div>
-           <div className="absolute bottom-0 left-0 w-4 h-4 border-b-4 border-l-4 border-primary"></div>
-           <div className="absolute bottom-0 right-0 w-4 h-4 border-b-4 border-r-4 border-primary"></div>
 
            {/* Avatar Area */}
            <div className="flex-shrink-0 relative">
-             <div className="w-24 h-24 bg-card-bg border-4 border-foreground shadow-[4px_4px_0px_var(--foreground)] flex items-center justify-center">
-                <span className="font-pixel text-4xl text-primary animate-pulse">{initial}</span>
+             <div className="w-24 h-24 bg-card-bg rounded-2xl border-2 border-border-color shadow-md flex items-center justify-center">
+                <span className="text-4xl text-primary font-bold">{initial}</span>
              </div>
-             <div className="absolute -bottom-3 -right-3 bg-success text-white text-[10px] font-pixel px-2 py-1 border-2 border-foreground shadow-sm">
-               ONLINE
+             <div className="absolute -bottom-3 -right-3 bg-success text-white rounded-full text-xs px-2 py-1 shadow-sm">
+               Online
              </div>
            </div>
 
            {/* Info Area */}
            <div className="flex-grow text-center md:text-left space-y-2">
              <div className="flex flex-col md:flex-row items-center gap-4">
-               <h1 className="text-2xl md:text-3xl font-pixel text-primary uppercase tracking-wide">
+               <h1 className="text-2xl md:text-3xl font-bold text-primary tracking-wide">
                  {profile?.nome_completo || 'Estudante'}
                </h1>
                <span className="badge badge-purple">Estudante Nível 1</span>
              </div>
              <p className="font-mono text-sm text-foreground/70">{user.email}</p>
-
-             {/* XP Bar (Visual Only) */}
-             <div className="mt-4 w-full max-w-md bg-muted-bg border-2 border-foreground h-6 relative mx-auto md:mx-0">
-               <div className="bg-gradient-to-r from-primary to-accent h-full w-[65%] border-r-2 border-foreground"></div>
-               <span className="absolute inset-0 flex items-center justify-center text-[10px] font-pixel text-foreground font-bold tracking-widest">
-                 XP: 1350 / 2000
-               </span>
-             </div>
            </div>
 
            {/* Actions */}
@@ -261,18 +251,18 @@ export default function ContaPageClient() {
                disabled={recalculating}
                className="btn btn-outline w-full md:w-auto"
              >
-               {recalculating ? 'SINCRONIZANDO...' : '↻ ATUALIZAR'}
+               {recalculating ? 'Sincronizando...' : '↻ Atualizar'}
              </button>
              <Link href="/conta/editar" className="btn btn-primary w-full md:w-auto">
-               EDITAR PERFIL
+               Editar perfil
              </Link>
            </div>
         </section>
 
         {errorMessage && (
           <div className="mb-6 p-4 border-2 border-danger bg-danger-light text-danger font-mono text-sm flex justify-between items-center shadow-sm">
-             <span>👾 ERRO: {errorMessage}</span>
-             <button onClick={loadData} className="underline hover:no-underline">TENTAR NOVAMENTE</button>
+             <span>{errorMessage}</span>
+             <button onClick={loadData} className="underline hover:no-underline">Tentar novamente</button>
           </div>
         )}
 
@@ -283,10 +273,10 @@ export default function ContaPageClient() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`
-                px-6 py-3 border-2 font-pixel text-xs uppercase tracking-wider transition-all
+                px-6 py-3 text-sm uppercase tracking-wider transition-all
                 ${activeTab === tab.id
-                  ? 'bg-primary text-white border-foreground shadow-[4px_4px_0px_var(--foreground)] translate-x-[-2px] translate-y-[-2px]'
-                  : 'bg-card-bg text-foreground border-border-color hover:bg-muted-bg hover:shadow-[2px_2px_0px_var(--border-color)]'
+                  ? 'bg-primary text-white rounded-xl shadow-md'
+                  : 'bg-card-bg text-foreground rounded-xl border border-border-color hover:bg-muted-bg'
                 }
               `}
             >
@@ -301,35 +291,35 @@ export default function ContaPageClient() {
           {/* --- DASHBOARD VIEW --- */}
           {activeTab === 'visao-geral' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-               <RetroStatCard
+               <StatCard
                  label="REDAÇÕES"
                  value={statistics?.total_redacoes || 0}
-                 icon="📝"
+                 icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>}
                  color="primary"
                />
-               <RetroStatCard
+               <StatCard
                  label="SIMULADOS"
                  value={statistics?.total_simulados || 0}
-                 icon="⚔️"
+                 icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>}
                  color="accent"
                />
-               <RetroStatCard
+               <StatCard
                  label="TAXA DE ACERTO"
                  value={`${statistics?.taxa_acerto?.toFixed(0) || 0}%`}
-                 icon="🎯"
+                 icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
                  color="success"
                />
-               <RetroStatCard
+               <StatCard
                  label="MELHOR NOTA"
                  value={statistics?.melhor_nota_redacao || 0}
-                 icon="🏆"
+                 icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>}
                  color="warning"
                />
 
                {/* RECENT ACTIVITY LOG */}
                <div className="col-span-1 md:col-span-2 lg:col-span-4 mt-6">
                  <div className="card">
-                   <h3 className="font-pixel text-sm mb-4 border-b-2 border-border-color pb-2">ATIVIDADE RECENTE</h3>
+                   <h3 className="text-sm font-semibold mb-4 border-b-2 border-border-color pb-2">Atividade recente</h3>
                    {essays.length > 0 ? (
                      <div className="space-y-3 font-mono text-sm">
                        {essays.slice(0, 3).map((essay) => (
@@ -341,7 +331,7 @@ export default function ContaPageClient() {
                      </div>
                    ) : (
                      <div className="text-foreground/50 font-mono text-center py-8 bg-muted-bg border-2 border-dashed border-border-color">
-                       NENHUM DADO ENCONTRADO.
+                       Nenhum dado encontrado.
                      </div>
                    )}
                  </div>
@@ -353,7 +343,7 @@ export default function ContaPageClient() {
           {activeTab === 'redacoes' && (
             <div className="space-y-8">
                <div className="card">
-                 <h2 className="font-pixel text-lg mb-6 text-center md:text-left">HISTÓRICO DE NOTAS</h2>
+                 <h2 className="text-lg font-semibold mb-6 text-center md:text-left">Histórico de notas</h2>
                  {essays.length > 0 ? (
                     <div className="h-[300px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
@@ -361,13 +351,13 @@ export default function ContaPageClient() {
                             <XAxis
                             dataKey="data"
                             stroke="var(--foreground)"
-                            tick={{fontFamily: 'monospace', fontSize: 10}}
+                            tick={{fontFamily: 'var(--font-sans)', fontSize: 11}}
                             tickLine={false}
                             axisLine={false}
                             />
                             <YAxis
                             stroke="var(--foreground)"
-                            tick={{fontFamily: 'monospace', fontSize: 10}}
+                            tick={{fontFamily: 'var(--font-sans)', fontSize: 11}}
                             tickLine={false}
                             axisLine={false}
                             />
@@ -375,7 +365,7 @@ export default function ContaPageClient() {
                             contentStyle={{
                                 backgroundColor: 'var(--card-bg)',
                                 border: '2px solid var(--foreground)',
-                                fontFamily: 'monospace'
+                                fontFamily: 'var(--font-sans)'
                             }}
                             />
                             <Line
@@ -391,7 +381,7 @@ export default function ContaPageClient() {
                     </div>
                  ) : (
                     <div className="text-foreground/50 font-mono text-center py-8 bg-muted-bg border-2 border-dashed border-border-color">
-                       NENHUMA REDAÇÃO ENCONTRADA.
+                       Nenhuma redação encontrada.
                     </div>
                  )}
                </div>
@@ -402,7 +392,7 @@ export default function ContaPageClient() {
           {activeTab === 'questoes' && (
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                <div className="card">
-                 <h2 className="font-pixel text-lg mb-6">NÍVEIS DE COMPETÊNCIA</h2>
+                 <h2 className="text-lg font-semibold mb-6">Níveis de competência</h2>
                  <div className="h-[300px] w-full">
                    <ResponsiveContainer width="100%" height="100%">
                      <BarChart data={disciplinasData} layout="vertical">
@@ -411,7 +401,7 @@ export default function ContaPageClient() {
                           dataKey="disciplina"
                           type="category"
                           width={40}
-                          tick={{fontFamily: 'var(--font-pixel)', fontSize: 10}}
+                          tick={{fontFamily: 'var(--font-sans)', fontSize: 11}}
                           axisLine={false}
                           tickLine={false}
                         />
@@ -420,7 +410,7 @@ export default function ContaPageClient() {
                            contentStyle={{
                              backgroundColor: 'var(--card-bg)',
                              border: '2px solid var(--foreground)',
-                             fontFamily: 'monospace'
+                             fontFamily: 'var(--font-sans)'
                            }}
                         />
                         <Bar
@@ -437,19 +427,12 @@ export default function ContaPageClient() {
                  {disciplinasData.map((d) => (
                     <div key={d.disciplina} className="card p-4 flex items-center justify-between group hover:border-primary transition-colors">
                        <div>
-                         <h4 className="font-bold font-pixel text-xs text-foreground/70 mb-1">{d.fullName}</h4>
-                         <div className="flex gap-1">
-                           {/* Pixel Health Bar */}
-                           {Array.from({length: 10}).map((_, i) => (
-                             <div
-                               key={i}
-                               className={`w-2 h-4 border border-foreground/20 ${i < (d.taxa / 10) ? 'bg-current text-primary' : 'bg-transparent'}`}
-                               style={{backgroundColor: i < (d.taxa / 10) ? d.fill : 'transparent'}}
-                             ></div>
-                           ))}
+                         <h4 className="font-bold text-xs text-foreground/70 mb-1">{d.fullName}</h4>
+                         <div className="w-full h-2 bg-muted-bg rounded-full overflow-hidden">
+                           <div className="h-full rounded-full" style={{width: `${d.taxa}%`, backgroundColor: d.fill}} />
                          </div>
                        </div>
-                       <span className="font-pixel text-xl">{d.taxa.toFixed(0)}%</span>
+                       <span className="text-xl font-bold">{d.taxa.toFixed(0)}%</span>
                     </div>
                  ))}
                </div>
@@ -462,16 +445,16 @@ export default function ContaPageClient() {
   );
 }
 
-function RetroStatCard({label, value, icon, color}: {label: string, value: string | number, icon: string, color: string}) {
-  const borderColor = `var(--color-${color}-500)`;
+function StatCard({label, value, icon, color}: {label: string, value: string | number, icon: React.ReactNode, color: string}) {
+  const accentColor = `var(--color-${color}-500)`;
 
   return (
-    <div className="bg-card-bg border-2 border-foreground p-4 shadow-[4px_4px_0px_var(--foreground)] relative overflow-hidden group hover:-translate-y-1 transition-transform">
-      <div className="absolute top-0 right-0 p-2 opacity-20 font-pixel text-4xl group-hover:scale-110 transition-transform group-hover:opacity-40">
+    <div className="card p-5 hover:-translate-y-0.5 transition-transform relative overflow-hidden group">
+      <div className="bg-primary/10 text-primary rounded-xl p-2 w-10 h-10 flex items-center justify-center mb-3" style={{color: accentColor, backgroundColor: `color-mix(in srgb, ${accentColor} 10%, transparent)`}}>
         {icon}
       </div>
-      <h3 className="font-pixel text-[10px] text-foreground/60 mb-2 uppercase tracking-widest">{label}</h3>
-      <p className="font-mono text-3xl font-bold text-foreground" style={{color: borderColor}}>
+      <h3 className="text-xs font-medium text-foreground/60 mb-2 uppercase tracking-widest">{label}</h3>
+      <p className="text-3xl font-bold text-foreground" style={{color: accentColor}}>
         {value}
       </p>
     </div>
