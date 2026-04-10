@@ -1,3 +1,5 @@
+import RedacaoPageClient from './RedacaoPageClient';
+
 export default function RedacaoPage() {
-  return <div>em manutenção</div>;
+  return <RedacaoPageClient />;
 }
