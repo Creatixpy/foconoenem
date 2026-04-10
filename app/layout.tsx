@@ -1,8 +1,18 @@
 import { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
 import "./styles/index.css";
 import Providers from "./providers";
+import Header from "./components/layout/Header";
+import Footer from "./components/layout/Footer";
+import { themeScript } from "@/lib/contexts/ThemeContext";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+});
 
 const siteTitle = "Foco no ENEM - Plataforma de Simulados e Redações";
 const siteDescription =
@@ -59,7 +69,7 @@ export const viewport: Viewport = {
   maximumScale: 5,
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a0a0f" },
+    { media: "(prefers-color-scheme: dark)", color: "#0A0F1E" },
   ],
 };
 
@@ -71,10 +81,15 @@ export default function RootLayout({
   const isTelemetryEnabled = process.env.NODE_ENV === "production";
 
   return (
-    <html lang="pt-BR" suppressHydrationWarning>
-      <body>
+    <html lang="pt-BR" className={inter.variable} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
+      <body className="flex flex-col min-h-dvh">
         <Providers>
-          {children}
+          <Header />
+          <main className="flex-1">{children}</main>
+          <Footer />
           {isTelemetryEnabled && (
             <>
               <SpeedInsights debug={false} />
