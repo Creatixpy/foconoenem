@@ -1,3 +1,5 @@
+import QuestoesPageClient from './QuestoesPageClient';
+
 export default function QuestoesPage() {
-  return <div>em manutenção</div>;
+  return <QuestoesPageClient />;
 }
