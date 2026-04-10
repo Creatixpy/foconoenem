@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import HomePageClient from "./HomePageClient";
 
 export const metadata: Metadata = {
   title: "Foco no ENEM - Simulados personalizados e redações com IA",
@@ -7,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function HomePage() {
-  return <div>em manutenção</div>;
+  return <HomePageClient />;
 }
