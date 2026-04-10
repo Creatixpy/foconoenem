@@ -1,0 +1,650 @@
+'use client';
+
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { motion } from 'motion/react';
+import {
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+  ResponsiveContainer,
+  Tooltip,
+} from 'recharts';
+import { useAuth } from '@/lib/auth/context';
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+interface EssayCompetence {
+  nota: number;
+  comentario: string;
+}
+
+interface EssayResult {
+  id: string;
+  nota: number;
+  tema?: string;
+  competencia1: EssayCompetence;
+  competencia2: EssayCompetence;
+  competencia3: EssayCompetence;
+  competencia4: EssayCompetence;
+  competencia5: EssayCompetence;
+  feedbackGeral: string;
+  pontoFortes: string[];
+  pontosAMelhorar: string[];
+  redacaoOriginal: string;
+  createdAt: string;
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+const COMPETENCY_LABELS: Record<string, string> = {
+  competencia1: 'Domínio da norma culta',
+  competencia2: 'Compreensão do tema',
+  competencia3: 'Argumentação',
+  competencia4: 'Coesão e coerência',
+  competencia5: 'Proposta de intervenção',
+};
+
+function scoreColor(score: number): string {
+  if (score < 400) return 'var(--danger)';
+  if (score < 600) return 'var(--warning)';
+  if (score < 800) return '#eab308';
+  if (score < 900) return 'var(--primary)';
+  return 'var(--accent)';
+}
+
+function scoreLabel(score: number): string {
+  if (score < 400) return 'Precisa melhorar';
+  if (score < 600) return 'Em desenvolvimento';
+  if (score < 800) return 'Bom';
+  if (score < 900) return 'Muito bom';
+  return 'Excelente';
+}
+
+function compScoreColor(score: number): string {
+  if (score < 80) return 'var(--danger)';
+  if (score < 120) return 'var(--warning)';
+  if (score < 160) return '#eab308';
+  if (score < 180) return 'var(--primary)';
+  return 'var(--accent)';
+}
+
+function wordCount(text: string): number {
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
+// ---------------------------------------------------------------------------
+// Animated circular progress
+// ---------------------------------------------------------------------------
+function CircularScore({
+  score,
+  maxScore = 1000,
+}: {
+  score: number;
+  maxScore?: number;
+}) {
+  const radius = 90;
+  const stroke = 8;
+  const normalizedRadius = radius - stroke / 2;
+  const circumference = 2 * Math.PI * normalizedRadius;
+  const pct = Math.min(score / maxScore, 1);
+  const color = scoreColor(score);
+
+  return (
+    <div className="relative inline-flex items-center justify-center">
+      <svg width={radius * 2} height={radius * 2} className="-rotate-90">
+        {/* background ring */}
+        <circle
+          cx={radius}
+          cy={radius}
+          r={normalizedRadius}
+          fill="none"
+          stroke="var(--border-color)"
+          strokeWidth={stroke}
+        />
+        {/* progress ring */}
+        <motion.circle
+          cx={radius}
+          cy={radius}
+          r={normalizedRadius}
+          fill="none"
+          stroke={color}
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          initial={{ strokeDashoffset: circumference }}
+          animate={{ strokeDashoffset: circumference * (1 - pct) }}
+          transition={{ duration: 1.4, ease: 'easeOut', delay: 0.3 }}
+        />
+      </svg>
+      {/* center text */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <motion.span
+          className="text-4xl sm:text-5xl font-bold"
+          style={{ color }}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+        >
+          {score}
+        </motion.span>
+        <span className="text-xs text-[var(--text-muted)] mt-1">/ {maxScore}</span>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Competency card
+// ---------------------------------------------------------------------------
+function CompetencyCard({
+  index,
+  label,
+  competency,
+  delay,
+}: {
+  index: number;
+  label: string;
+  competency: EssayCompetence;
+  delay: number;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const pct = (competency.nota / 200) * 100;
+  const color = compScoreColor(competency.nota);
+  const feedback = competency.comentario || '';
+  const isLong = feedback.length > 200;
+
+  return (
+    <motion.div
+      className="rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] p-5 transition-colors"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay }}
+    >
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <span
+            className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold text-white"
+            style={{ backgroundColor: color }}
+          >
+            {index}
+          </span>
+          <h3 className="text-sm font-semibold text-[var(--text-primary)] truncate">
+            {label}
+          </h3>
+        </div>
+        <span className="text-lg font-bold flex-shrink-0" style={{ color }}>
+          {competency.nota}
+          <span className="text-xs text-[var(--text-muted)] font-normal">/200</span>
+        </span>
+      </div>
+
+      {/* progress bar */}
+      <div className="h-2 rounded-full bg-[var(--bg-surface)] overflow-hidden mb-3">
+        <motion.div
+          className="h-full rounded-full"
+          style={{ backgroundColor: color }}
+          initial={{ width: 0 }}
+          animate={{ width: `${pct}%` }}
+          transition={{ duration: 0.8, ease: 'easeOut', delay: delay + 0.2 }}
+        />
+      </div>
+
+      {/* feedback */}
+      {feedback && (
+        <div>
+          <p
+            className={`text-sm text-[var(--text-secondary)] leading-relaxed ${
+              !expanded && isLong ? 'line-clamp-3' : ''
+            }`}
+          >
+            {feedback}
+          </p>
+          {isLong && (
+            <button
+              onClick={() => setExpanded(!expanded)}
+              className="text-xs text-[var(--primary)] hover:underline mt-1 cursor-pointer"
+            >
+              {expanded ? 'Ver menos' : 'Ver mais'}
+            </button>
+          )}
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Skeleton
+// ---------------------------------------------------------------------------
+function Skeleton() {
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-12 animate-pulse space-y-10">
+      {/* score hero */}
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-[180px] h-[180px] rounded-full bg-[var(--bg-surface)]" />
+        <div className="h-5 w-48 rounded bg-[var(--bg-surface)]" />
+        <div className="h-4 w-64 rounded bg-[var(--bg-surface)]" />
+      </div>
+      {/* competency cards */}
+      <div className="space-y-4">
+        <div className="h-6 w-56 rounded bg-[var(--bg-surface)]" />
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className="h-28 rounded-xl bg-[var(--bg-surface)]" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Main component
+// ---------------------------------------------------------------------------
+export default function ResultadosPageClient() {
+  const params = useParams();
+  const router = useRouter();
+  const { user, loading: authLoading, initialized } = useAuth();
+
+  const [result, setResult] = useState<EssayResult | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [essayExpanded, setEssayExpanded] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const id = typeof params.id === 'string' ? params.id : Array.isArray(params.id) ? params.id[0] : '';
+
+  // Auth guard
+  useEffect(() => {
+    if (initialized && !authLoading && !user) {
+      router.replace('/login');
+    }
+  }, [initialized, authLoading, user, router]);
+
+  // Fetch result
+  const fetchResult = useCallback(async () => {
+    if (!id) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/resultados/${id}`);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Resultado não encontrado');
+      }
+      const data = await res.json();
+      setResult(data.result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao carregar resultado');
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    if (user && id) fetchResult();
+  }, [user, id, fetchResult]);
+
+  // Radar chart data
+  const radarData = useMemo(() => {
+    if (!result) return [];
+    return [
+      { subject: 'Norma culta', value: result.competencia1.nota, fullMark: 200 },
+      { subject: 'Tema', value: result.competencia2.nota, fullMark: 200 },
+      { subject: 'Argumentação', value: result.competencia3.nota, fullMark: 200 },
+      { subject: 'Coesão', value: result.competencia4.nota, fullMark: 200 },
+      { subject: 'Intervenção', value: result.competencia5.nota, fullMark: 200 },
+    ];
+  }, [result]);
+
+  // Share handler
+  const handleShare = async () => {
+    const url = window.location.href;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // fallback
+    }
+  };
+
+  // -------------------------------------------------------------------------
+  // Render states
+  // -------------------------------------------------------------------------
+  if (authLoading || !initialized) return <Skeleton />;
+  if (!user) return null;
+  if (loading) return <Skeleton />;
+
+  if (error) {
+    return (
+      <div className="max-w-md mx-auto px-4 py-24 text-center">
+        <div className="w-16 h-16 rounded-full bg-[var(--danger-light)] flex items-center justify-center mx-auto mb-6">
+          <svg className="w-8 h-8 text-[var(--danger)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+          </svg>
+        </div>
+        <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Resultado não encontrado</h2>
+        <p className="text-[var(--text-muted)] mb-6">{error}</p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <button
+            onClick={fetchResult}
+            className="px-5 py-2.5 rounded-lg bg-[var(--primary)] text-white font-medium hover:bg-[var(--primary-hover)] transition-colors cursor-pointer"
+          >
+            Tentar novamente
+          </button>
+          <Link
+            href="/redacao"
+            className="px-5 py-2.5 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] font-medium hover:bg-[var(--bg-surface)] transition-colors text-center"
+          >
+            Voltar para redação
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!result) return null;
+
+  const competencies = [
+    { key: 'competencia1', data: result.competencia1 },
+    { key: 'competencia2', data: result.competencia2 },
+    { key: 'competencia3', data: result.competencia3 },
+    { key: 'competencia4', data: result.competencia4 },
+    { key: 'competencia5', data: result.competencia5 },
+  ];
+
+  const essayWords = wordCount(result.redacaoOriginal);
+
+  return (
+    <div className="min-h-[80vh] pb-20">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-12">
+        {/* ----------------------------------------------------------------
+            SCORE HERO
+        ---------------------------------------------------------------- */}
+        <motion.section
+          className="text-center space-y-5"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          {/* badge */}
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--border-color)] bg-[var(--bg-surface)] text-xs text-[var(--text-muted)]">
+            <svg className="w-3.5 h-3.5 text-[var(--primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Resultado da redação
+          </div>
+
+          {/* circular score */}
+          <CircularScore score={result.nota} />
+
+          {/* label */}
+          <div>
+            <p className="text-lg font-semibold text-[var(--text-primary)]">Nota Final</p>
+            <p className="text-sm font-medium mt-0.5" style={{ color: scoreColor(result.nota) }}>
+              {scoreLabel(result.nota)}
+            </p>
+          </div>
+
+          {/* theme */}
+          {result.tema && (
+            <p className="text-sm text-[var(--text-muted)] max-w-lg mx-auto leading-relaxed">
+              <span className="text-[var(--text-secondary)] font-medium">Tema: </span>
+              {result.tema}
+            </p>
+          )}
+        </motion.section>
+
+        {/* ----------------------------------------------------------------
+            RADAR CHART
+        ---------------------------------------------------------------- */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+        >
+          <div className="rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] p-5 sm:p-6">
+            <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4">
+              Visão geral das competências
+            </h2>
+            <div className="w-full h-[280px] sm:h-[320px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="75%">
+                  <PolarGrid stroke="var(--border-color)" />
+                  <PolarAngleAxis
+                    dataKey="subject"
+                    tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
+                  />
+                  <PolarRadiusAxis
+                    angle={90}
+                    domain={[0, 200]}
+                    tick={{ fill: 'var(--text-muted)', fontSize: 10 }}
+                    tickCount={5}
+                  />
+                  <Radar
+                    name="Nota"
+                    dataKey="value"
+                    stroke="var(--primary)"
+                    fill="var(--primary)"
+                    fillOpacity={0.2}
+                    strokeWidth={2}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'var(--card-bg)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '8px',
+                      fontSize: '13px',
+                    }}
+                    formatter={(value) => [`${value}/200`, 'Nota']}
+                  />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </motion.section>
+
+        {/* ----------------------------------------------------------------
+            COMPETENCY BREAKDOWN
+        ---------------------------------------------------------------- */}
+        <section>
+          <motion.h2
+            className="text-lg font-bold text-[var(--text-primary)] mb-5"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
+            Análise por Competência
+          </motion.h2>
+          <div className="space-y-4">
+            {competencies.map(({ key, data }, i) => (
+              <CompetencyCard
+                key={key}
+                index={i + 1}
+                label={COMPETENCY_LABELS[key]}
+                competency={data}
+                delay={0.35 + i * 0.08}
+              />
+            ))}
+          </div>
+        </section>
+
+        {/* ----------------------------------------------------------------
+            FEEDBACK SECTIONS
+        ---------------------------------------------------------------- */}
+        <motion.section
+          className="grid sm:grid-cols-2 gap-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.7 }}
+        >
+          {/* Pontos Fortes */}
+          {result.pontoFortes.length > 0 && (
+            <div className="rounded-xl border border-[var(--accent)]/20 bg-[var(--accent)]/5 p-5">
+              <h3 className="text-sm font-bold text-[var(--accent)] mb-3 flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Pontos Fortes
+              </h3>
+              <ul className="space-y-2">
+                {result.pontoFortes.map((p, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-[var(--text-secondary)] leading-relaxed">
+                    <svg className="w-4 h-4 text-[var(--accent)] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                    {p}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Pontos a Melhorar */}
+          {result.pontosAMelhorar.length > 0 && (
+            <div className="rounded-xl border border-[var(--primary)]/20 bg-[var(--primary)]/5 p-5">
+              <h3 className="text-sm font-bold text-[var(--primary)] mb-3 flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                </svg>
+                Pontos a Melhorar
+              </h3>
+              <ul className="space-y-2">
+                {result.pontosAMelhorar.map((p, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-[var(--text-secondary)] leading-relaxed">
+                    <svg className="w-4 h-4 text-[var(--primary)] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                    </svg>
+                    {p}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </motion.section>
+
+        {/* Feedback Geral */}
+        {result.feedbackGeral && (
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.8 }}
+          >
+            <div className="rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] p-5 sm:p-6">
+              <h3 className="text-sm font-bold text-[var(--text-primary)] mb-3 flex items-center gap-2">
+                <svg className="w-4 h-4 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+                </svg>
+                Feedback Geral
+              </h3>
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed whitespace-pre-line">
+                {result.feedbackGeral}
+              </p>
+            </div>
+          </motion.section>
+        )}
+
+        {/* ----------------------------------------------------------------
+            ORIGINAL ESSAY
+        ---------------------------------------------------------------- */}
+        {result.redacaoOriginal && (
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.9 }}
+          >
+            <div className="rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] overflow-hidden">
+              <button
+                onClick={() => setEssayExpanded(!essayExpanded)}
+                className="w-full flex items-center justify-between p-5 cursor-pointer hover:bg-[var(--bg-surface)] transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <svg className="w-5 h-5 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                  </svg>
+                  <span className="text-sm font-semibold text-[var(--text-primary)]">
+                    Ver redação original
+                  </span>
+                  <span className="text-xs text-[var(--text-muted)]">
+                    {essayWords} palavras
+                  </span>
+                </div>
+                <svg
+                  className={`w-5 h-5 text-[var(--text-muted)] transition-transform duration-200 ${
+                    essayExpanded ? 'rotate-180' : ''
+                  }`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                </svg>
+              </button>
+              {essayExpanded && (
+                <motion.div
+                  className="px-5 pb-5 border-t border-[var(--border-color)]"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <p className="text-sm text-[var(--text-secondary)] leading-[1.8] whitespace-pre-line mt-4">
+                    {result.redacaoOriginal}
+                  </p>
+                </motion.div>
+              )}
+            </div>
+          </motion.section>
+        )}
+
+        {/* ----------------------------------------------------------------
+            ACTION BUTTONS
+        ---------------------------------------------------------------- */}
+        <motion.section
+          className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 1 }}
+        >
+          <Link
+            href="/redacao"
+            className="w-full sm:w-auto px-6 py-3 rounded-lg bg-[var(--primary)] text-white font-medium hover:bg-[var(--primary-hover)] transition-colors text-center"
+          >
+            Fazer nova redação
+          </Link>
+          <Link
+            href="/conta"
+            className="w-full sm:w-auto px-6 py-3 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] font-medium hover:bg-[var(--bg-surface)] transition-colors text-center"
+          >
+            Ver meu perfil
+          </Link>
+          <button
+            onClick={handleShare}
+            className="w-full sm:w-auto px-6 py-3 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] font-medium hover:bg-[var(--bg-surface)] transition-colors cursor-pointer flex items-center justify-center gap-2"
+          >
+            {copied ? (
+              <>
+                <svg className="w-4 h-4 text-[var(--accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+                Copiado!
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
+                </svg>
+                Compartilhar
+              </>
+            )}
+          </button>
+        </motion.section>
+      </div>
+    </div>
+  );
+}

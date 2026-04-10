@@ -1,3 +1,5 @@
+import ResultadosPageClient from './ResultadosPageClient';
+
 export default function ResultadosPage() {
-  return <div>em manutenção</div>;
+  return <ResultadosPageClient />;
 }
