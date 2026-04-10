@@ -1,3 +1,5 @@
+import ContaEditarPageClient from './ContaEditarPageClient';
+
 export default function ContaEditarPage() {
-  return <div>em manutenção</div>;
+  return <ContaEditarPageClient />;
 }
