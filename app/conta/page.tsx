@@ -1,3 +1,5 @@
+import ContaPageClient from './ContaPageClient';
+
 export default function ContaPage() {
-  return <div>em manutenção</div>;
+  return <ContaPageClient />;
 }
