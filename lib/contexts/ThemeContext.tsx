@@ -31,15 +31,23 @@ const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 const STORAGE_KEY = 'theme';
 
-// Script to inject into <head> for preventing FOUC (Flash of Unstyled Content)
+// Script to inject into <head> for preventing FOUC (Flash of Unstyled Content).
+// Always resolves to 'dark' or 'light' on the DOM — never 'system'.
 export const themeScript = `
   (function() {
     try {
       var stored = localStorage.getItem('${STORAGE_KEY}');
-      var theme = stored === 'light' || stored === 'dark' ? stored : 'system';
-      document.documentElement.setAttribute('data-theme', theme);
+      var resolved;
+      if (stored === 'light') {
+        resolved = 'light';
+      } else if (stored === 'dark') {
+        resolved = 'dark';
+      } else {
+        resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      document.documentElement.setAttribute('data-theme', resolved);
     } catch (e) {
-      document.documentElement.setAttribute('data-theme', 'system');
+      document.documentElement.setAttribute('data-theme', 'dark');
     }
   })();
 `;
@@ -51,11 +59,11 @@ function getSystemTheme(): ResolvedTheme {
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
-function applyThemeToDocument(value: Theme): void {
+function applyThemeToDocument(resolved: ResolvedTheme): void {
     if (typeof document === 'undefined') {
         return;
     }
-    document.documentElement.setAttribute('data-theme', value);
+    document.documentElement.setAttribute('data-theme', resolved);
 }
 
 function readStoredTheme(): Theme | null {
@@ -151,14 +159,13 @@ export function ThemeProvider({
         return () => mediaQuery.removeListener(handleChange);
     }, []);
 
-    // Apply theme to document when it changes
+    // Apply resolved theme to document; persist the user-facing preference
     useEffect(() => {
         if (!mounted) return;
 
-        const activeTheme = forcedTheme ?? theme;
-        applyThemeToDocument(activeTheme);
-        saveTheme(activeTheme);
-    }, [theme, forcedTheme, mounted]);
+        applyThemeToDocument(resolvedTheme);
+        saveTheme(forcedTheme ?? theme);
+    }, [theme, resolvedTheme, forcedTheme, mounted]);
 
     // Theme setter with validation
     const setTheme = useCallback((value: Theme) => {
