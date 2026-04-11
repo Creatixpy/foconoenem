@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth/context';
 import { getOperatingHoursInfo, type OperatingHoursInfo } from '@/lib/schedule';
+import PhotoUpload from './PhotoUpload';
 
 /* ================================================================== */
 /*  Types                                                              */
@@ -563,6 +564,15 @@ export default function RedacaoPageClient() {
                   {wordCount} {wordCount === 1 ? 'palavra' : 'palavras'} · {charCount} caracteres
                 </span>
               </div>
+
+              {/* Photo upload */}
+              <PhotoUpload
+                onTextExtracted={(text) => {
+                  setEssay(text);
+                  setMobileTab('submit');
+                }}
+                disabled={correcting}
+              />
 
               {/* Textarea */}
               <textarea
