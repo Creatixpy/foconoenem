@@ -162,8 +162,9 @@ export async function fetchNewsApiArticles(options: {
   keywords: string[];
   endpoint: string;
   lookbackDays?: number;
+  signal?: AbortSignal;
 }): Promise<NewsApiArticle[]> {
-  const { apiKey, keywords, endpoint, lookbackDays = 7 } = options;
+  const { apiKey, keywords, endpoint, lookbackDays = 7, signal } = options;
 
   const fromDate = new Date();
   fromDate.setDate(fromDate.getDate() - lookbackDays);
@@ -180,6 +181,7 @@ export async function fetchNewsApiArticles(options: {
     const response = await fetch(url.toString(), {
       headers: { 'X-Api-Key': apiKey },
       cache: 'no-store',
+      signal,
     });
 
     const payload = (await response.json()) as NewsApiResponse;

@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authorizeAdmin } from '@/lib/admin-auth';
+import { authorizeAdmin, logAdminAction } from '@/lib/admin-auth';
 import { createAdminClient } from '@/lib/db/server';
 
 export async function POST(request: NextRequest) {
   const supabase = createAdminClient();
   if (!supabase) {
     return NextResponse.json(
-      { error: 'Supabase service role não configurado.' },
+      { error: 'Serviço indisponível.' },
       { status: 500 }
     );
   }
@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
   const auth = await authorizeAdmin(request, { allowCron: true });
   if (!auth.authorized) {
     return NextResponse.json(
-      { error: auth.message ?? 'Acesso negado.' },
+      { error: 'Acesso não autorizado.' },
       { status: auth.status ?? 401 }
     );
   }
@@ -37,6 +37,14 @@ export async function POST(request: NextRequest) {
     console.error('Erro ao remover destaque:', error);
     return NextResponse.json({ error: 'Erro ao remover destaque.' }, { status: 500 });
   }
+
+  const adminEmail = auth.mode === 'user' ? auth.user?.email ?? null : 'cron';
+  await logAdminAction(supabase, {
+    adminEmail,
+    action: 'highlights_remove',
+    targetType: 'noticia',
+    targetId: id,
+  });
 
   return NextResponse.json({ success: true, message: 'Destaque removido com sucesso.' });
 }

@@ -68,9 +68,7 @@ export default function AdminNoticiasPage() {
     if (!user) return;
     (async () => {
       try {
-        const res = await fetch('/api/noticias/admin', {
-          headers: { Authorization: `Bearer ${(await getToken()) || ''}` },
-        });
+        const res = await fetch('/api/noticias/admin/status');
         if (res.ok) {
           const data = await res.json();
           setAuthorized(data.authorized === true);
@@ -96,10 +94,7 @@ export default function AdminNoticiasPage() {
   // Fetch status
   const fetchStatus = useCallback(async () => {
     try {
-      const token = await getToken();
-      const res = await fetch('/api/noticias/destaques/status', {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      const res = await fetch('/api/noticias/destaques/status');
       if (res.ok) {
         setStatusData(await res.json());
       }
@@ -113,31 +108,13 @@ export default function AdminNoticiasPage() {
     }
   }, [authorized, fetchNoticias, fetchStatus]);
 
-  // Get auth token
-  async function getToken(): Promise<string | null> {
-    try {
-      const { createClient } = await import('@/lib/supabase/client');
-      const supabase = createClient();
-      const { data } = await supabase.auth.getUser();
-      if (!data.user) return null;
-      const { data: sessionData } = await supabase.auth.getSession();
-      return sessionData.session?.access_token ?? null;
-    } catch {
-      return null;
-    }
-  }
-
   // Import handler
   const handleImport = async () => {
     setImporting(true);
     setImportResult(null);
     setActionError(null);
     try {
-      const token = await getToken();
-      const res = await fetch('/api/noticias/importar', {
-        method: 'POST',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      const res = await fetch('/api/noticias/importar', { method: 'POST' });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || `Erro ${res.status}`);
@@ -156,11 +133,7 @@ export default function AdminNoticiasPage() {
     setModerateResult(null);
     setActionError(null);
     try {
-      const token = await getToken();
-      const res = await fetch('/api/noticias/admin/moderar', {
-        method: 'POST',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      const res = await fetch('/api/noticias/admin/moderar', { method: 'POST' });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || `Erro ${res.status}`);

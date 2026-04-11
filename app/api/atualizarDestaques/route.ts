@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authorizeAdmin } from '@/lib/admin-auth';
+import { authorizeAdmin, logAdminAction } from '@/lib/admin-auth';
 import { type SupabaseClient, type Database } from '@/lib/db';
 import { createAdminClient } from '@/lib/db/server';
 import { buildGroqProviders, GROQ_MAX_ATTEMPTS, isRateLimitError } from '@/lib/ai/groq';
+
+const GROQ_TIMEOUT_MS = 30_000;
+const MAX_NEWS_FOR_HIGHLIGHTS = 100;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 type NoticiaResumo = {
   id: string;
@@ -88,15 +92,23 @@ async function selectHighlightsWithGroq(noticias: NoticiaResumo[]) {
     while (attempt < GROQ_MAX_ATTEMPTS) {
       attempt++;
       try {
-        const response = await provider.client.chat.completions.create({
-          messages: [{ role: 'user', content: prompt }],
-          model: provider.model,
-          temperature: 0.3,
-          max_tokens: 8050,
-          top_p: 1,
-          stream: false,
-          response_format: { type: 'json_object' },
-        });
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), GROQ_TIMEOUT_MS);
+
+        const response = await provider.client.chat.completions.create(
+          {
+            messages: [{ role: 'user', content: prompt }],
+            model: provider.model,
+            temperature: 0.3,
+            max_tokens: 8050,
+            top_p: 1,
+            stream: false,
+            response_format: { type: 'json_object' },
+          },
+          { signal: controller.signal }
+        );
+
+        clearTimeout(timeout);
 
         const content = response.choices?.[0]?.message?.content ?? '';
         let parsed: { destaques?: string[] };
@@ -118,9 +130,11 @@ async function selectHighlightsWithGroq(noticias: NoticiaResumo[]) {
           throw new Error('Resposta da IA não contém array de destaques.');
         }
 
-        const destaques = parsed.destaques.slice(0, 5);
+        const destaques = parsed.destaques
+          .filter((id: string) => typeof id === 'string' && UUID_RE.test(id))
+          .slice(0, 5);
         if (destaques.length === 0) {
-          throw new Error('IA não selecionou nenhuma notícia.');
+          throw new Error('IA não selecionou nenhuma notícia válida.');
         }
 
         return { destaques, provider: provider.name };
@@ -157,8 +171,10 @@ async function processAutomaticUpdate(client: SupabaseClient<Database> | null) {
   const { data: noticias, error: noticiasError } = await client
     .from('noticias')
     .select('id, titulo, resumo, conteudo, data_publicacao, tags')
+    .eq('status', 'aprovado')
     .gte('data_publicacao', limitDate.toISOString())
-    .order('data_publicacao', { ascending: false });
+    .order('data_publicacao', { ascending: false })
+    .limit(MAX_NEWS_FOR_HIGHLIGHTS);
 
   if (noticiasError) {
     throw new Error(`Erro ao buscar notícias: ${noticiasError.message}`);
@@ -192,6 +208,12 @@ async function processAutomaticUpdate(client: SupabaseClient<Database> | null) {
   }
 
   await atualizarTimestamp(client);
+
+  await logAdminAction(client, {
+    adminEmail: 'cron',
+    action: 'highlights_update',
+    details: { destaques, provider },
+  });
 
   return {
     status: 'success' as const,
@@ -235,15 +257,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(resultado);
   } catch (error) {
     console.error('Erro ao atualizar destaques:', error);
-    const attempts =
-      error && typeof error === 'object' && 'attemptsLog' in error
-        ? ((error as { attemptsLog?: string[] }).attemptsLog ?? undefined)
-        : undefined;
     return NextResponse.json(
       {
-        error: 'Erro ao atualizar destaques',
-        message: error instanceof Error ? error.message : 'Erro desconhecido',
-        diagnostics: attempts ? { stage: 'processAutomaticUpdate', attempts } : undefined,
+        error: 'Erro ao atualizar destaques.',
       },
       { status: 500 }
     );
