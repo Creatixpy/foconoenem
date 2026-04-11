@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveRequestUser } from '@/lib/server/auth-request';
+import { z } from 'zod';
+import { sanitizeString } from '@/lib/security';
+
+const commentSchema = z.object({
+  postId: z.string().uuid(),
+  content: z.string().min(1).max(2000).transform((s) => sanitizeString(s.replace(/[<>]/g, ''))),
+});
 
 export async function POST(request: NextRequest) {
   const auth = await resolveRequestUser(request);
@@ -9,19 +16,19 @@ export async function POST(request: NextRequest) {
 
   const { supabase, userId } = auth;
 
-  let payload: { postId?: unknown; content?: unknown };
+  let payload: unknown;
   try {
     payload = await request.json();
   } catch {
     return NextResponse.json({ error: 'JSON inválido.' }, { status: 400 });
   }
 
-  const postId = typeof payload.postId === 'string' ? payload.postId : null;
-  const content = typeof payload.content === 'string' ? payload.content.trim() : '';
-
-  if (!postId || !content) {
+  const parsed = commentSchema.safeParse(payload);
+  if (!parsed.success) {
     return NextResponse.json({ error: 'Post e conteúdo são obrigatórios.' }, { status: 400 });
   }
+
+  const { postId, content } = parsed.data;
 
   const { data, error } = await supabase
     .from('community_comments')

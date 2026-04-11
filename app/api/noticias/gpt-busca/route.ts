@@ -1,15 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildGroqProviders, GROQ_MAX_ATTEMPTS, isRateLimitError } from "@/lib/ai/groq";
+import { checkRateLimit } from "@/lib/server/rate-limit";
 
 export async function POST(request: NextRequest) {
   try {
+    // C03: Add rate limiting to prevent AI cost abuse
+    const forwardedFor = request.headers.get("x-forwarded-for");
+    const ip = forwardedFor?.split(",")[0].trim() ?? request.headers.get("x-real-ip") ?? "unknown";
+    const rateResult = await checkRateLimit(ip, "/api/noticias/gpt-busca", 5, 1);
+    if (!rateResult.allowed) {
+      return NextResponse.json(
+        {
+          error: "Muitas requisições",
+          message: `Limite de buscas atingido. Tente novamente após ${rateResult.resetAt.toISOString()}.`,
+          resetAt: rateResult.resetAt.toISOString(),
+        },
+        { status: 429 }
+      );
+    }
+
     const { termo } = await request.json();
-    if (!termo) {
+    if (!termo || typeof termo !== 'string') {
       return NextResponse.json({ error: "Termo de busca não fornecido" }, { status: 400 });
     }
 
+    // Validate search term length
+    const sanitizedTermo = termo.trim().slice(0, 200);
+    if (sanitizedTermo.length < 2) {
+      return NextResponse.json({ error: "Termo de busca muito curto" }, { status: 400 });
+    }
+
     const providers = buildGroqProviders();
-    const prompt = `Busque informações atualizadas e relevantes sobre: "${termo}" relacionado ao ENEM (Exame Nacional do Ensino Médio) no Brasil.
+    const prompt = `Busque informações atualizadas e relevantes sobre: "${sanitizedTermo}" relacionado ao ENEM (Exame Nacional do Ensino Médio) no Brasil.
 
 Forneça uma resposta completa incluindo:
 - Notícias recentes e informações atualizadas
@@ -62,27 +84,15 @@ Seja claro, objetivo e use linguagem acessível para estudantes.`;
     return NextResponse.json(
       {
         error: "Não foi possível gerar conteúdo",
-        diagnostics: {
-          stage: "gpt-busca",
-          attempts: attemptsLog,
-        },
       },
       { status: 503 }
     );
   } catch (error) {
     console.error("Erro na API de busca de notícias com IA:", error);
-    const diagnostics =
-      error && typeof error === "object" && "attemptsLog" in error
-        ? ((error as { attemptsLog?: string[] }).attemptsLog ?? undefined)
-        : undefined;
-
-    const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
 
     return NextResponse.json(
       {
         error: "Erro ao processar a solicitação com busca na web.",
-        details: errorMessage,
-        diagnostics: diagnostics ? { stage: "gpt-busca", attempts: diagnostics } : undefined,
       },
       { status: 500 }
     );

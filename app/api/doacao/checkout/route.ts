@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { z } from 'zod';
+import { checkRateLimit } from '@/lib/server/rate-limit';
 import { handleApiError } from '@/lib/security';
 
 // Sentinel Security: Validates the request body strictly
@@ -22,8 +23,7 @@ function getStripe() {
   }
 
   stripeClient = new Stripe(secretKey, {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    apiVersion: '2025-11-17.clover' as any,
+    apiVersion: '2026-03-25.dahlia',
   });
 
   return stripeClient;
@@ -31,6 +31,17 @@ function getStripe() {
 
 export async function POST(request: NextRequest) {
   try {
+    // I18: Add rate limiting to checkout
+    const forwardedFor = request.headers.get("x-forwarded-for");
+    const ip = forwardedFor?.split(",")[0].trim() ?? request.headers.get("x-real-ip") ?? "unknown";
+    const rateResult = await checkRateLimit(ip, "/api/doacao/checkout", 5, 1);
+    if (!rateResult.allowed) {
+      return NextResponse.json(
+        { error: "Muitas tentativas. Tente novamente em instantes." },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
 
     // Sentinel Security: Input Hardening via Zod

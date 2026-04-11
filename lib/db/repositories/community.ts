@@ -91,12 +91,19 @@ export async function listPosts(
     return { data: data ?? [], total: count ?? 0 };
   });
 
-  // Get author info separately
+  // Get author info separately (wrapped in withTimeout for abort protection)
   const userIds = [...new Set(data.map((p) => p.user_id))];
-  const { data: profiles } = await client
-    .from('user_profiles')
-    .select('user_id, nome_completo, avatar_url')
-    .in('user_id', userIds);
+  const profiles = userIds.length > 0
+    ? await withTimeout(async (signal) => {
+        const { data: profileData, error: profileError } = await client
+          .from('user_profiles')
+          .select('user_id, nome_completo, avatar_url')
+          .in('user_id', userIds)
+          .abortSignal(signal);
+        if (profileError) console.warn('Failed to fetch profiles:', profileError);
+        return profileData;
+      }, 'fast').catch(() => null)
+    : null;
 
   const profileMap = new Map(
     profiles?.map((p) => [p.user_id, { nome_completo: p.nome_completo, avatar_url: p.avatar_url }]) ?? []
@@ -117,11 +124,16 @@ export async function listPosts(
   // Check if current user has liked each post
   if (options?.currentUserId && posts.length > 0) {
     const postIds = posts.map((p) => p.id);
-    const { data: userLikes } = await client
-      .from('community_post_likes')
-      .select('post_id')
-      .eq('user_id', options.currentUserId)
-      .in('post_id', postIds);
+    const userLikes = await withTimeout(async (signal) => {
+      const { data: likesData, error: likesError } = await client
+        .from('community_post_likes')
+        .select('post_id')
+        .eq('user_id', options.currentUserId!)
+        .in('post_id', postIds)
+        .abortSignal(signal);
+      if (likesError) console.warn('Failed to fetch user likes:', likesError);
+      return likesData;
+    }, 'fast').catch(() => null);
 
     const likedPostIds = new Set(userLikes?.map((l) => l.post_id) ?? []);
     posts.forEach((post) => {
@@ -160,11 +172,16 @@ export async function getPostById(
   const postRow = data as CommunityPostRow;
 
   // Get author info
-  const { data: profile } = await client
-    .from('user_profiles')
-    .select('nome_completo, avatar_url')
-    .eq('user_id', postRow.user_id)
-    .maybeSingle();
+  const profile = await withTimeout(async (signal) => {
+    const { data: profileData, error: profileError } = await client
+      .from('user_profiles')
+      .select('nome_completo, avatar_url')
+      .eq('user_id', postRow.user_id)
+      .abortSignal(signal)
+      .maybeSingle();
+    if (profileError) console.warn('Failed to fetch post author:', profileError);
+    return profileData;
+  }, 'fast').catch(() => null);
 
   const post = toCommunityPost(postRow, {
     author: profile ?? undefined,
@@ -174,12 +191,17 @@ export async function getPostById(
 
   // Check if current user has liked
   if (currentUserId) {
-    const { data: like } = await client
-      .from('community_post_likes')
-      .select('id')
-      .eq('post_id', postId)
-      .eq('user_id', currentUserId)
-      .maybeSingle();
+    const like = await withTimeout(async (signal) => {
+      const { data: likeData, error: likeError } = await client
+        .from('community_post_likes')
+        .select('id')
+        .eq('post_id', postId)
+        .eq('user_id', currentUserId)
+        .abortSignal(signal)
+        .maybeSingle();
+      if (likeError) console.warn('Failed to check user like:', likeError);
+      return likeData;
+    }, 'fast').catch(() => null);
 
     post.userHasLiked = !!like;
   }
@@ -217,11 +239,16 @@ export async function createPost(
   const postRow = result as CommunityPostRow;
 
   // Get author info
-  const { data: profile } = await client
-    .from('user_profiles')
-    .select('nome_completo, avatar_url')
-    .eq('user_id', userId)
-    .maybeSingle();
+  const profile = await withTimeout(async (signal) => {
+    const { data: profileData, error: profileError } = await client
+      .from('user_profiles')
+      .select('nome_completo, avatar_url')
+      .eq('user_id', userId)
+      .abortSignal(signal)
+      .maybeSingle();
+    if (profileError) console.warn('Failed to fetch author for new post:', profileError);
+    return profileData;
+  }, 'fast').catch(() => null);
 
   return toCommunityPost(postRow, {
     author: profile ?? undefined,
@@ -276,10 +303,17 @@ export async function listComments(
 
   // Get author info for all comments
   const userIds = [...new Set(data.map((c) => c.user_id))];
-  const { data: profiles } = await client
-    .from('user_profiles')
-    .select('user_id, nome_completo, avatar_url')
-    .in('user_id', userIds);
+  const profiles = userIds.length > 0
+    ? await withTimeout(async (signal) => {
+        const { data: profileData, error: profileError } = await client
+          .from('user_profiles')
+          .select('user_id, nome_completo, avatar_url')
+          .in('user_id', userIds)
+          .abortSignal(signal);
+        if (profileError) console.warn('Failed to fetch comment authors:', profileError);
+        return profileData;
+      }, 'fast').catch(() => null)
+    : null;
 
   const profileMap = new Map(
     profiles?.map((p) => [p.user_id, { nome_completo: p.nome_completo, avatar_url: p.avatar_url }]) ?? []
@@ -314,12 +348,16 @@ export async function createComment(
 
     if (error) throw DatabaseError.fromPostgrestError(error);
 
-    // Update post's last_activity_at
-    await client
+    // Update post's last_activity_at (check error)
+    const { error: activityError } = await client
       .from('community_posts')
       .update({ last_activity_at: new Date().toISOString() })
       .eq('id', comment.postId)
       .abortSignal(signal);
+
+    if (activityError) {
+      console.warn('Failed to update last_activity_at:', activityError);
+    }
 
     return data;
   });
@@ -373,39 +411,40 @@ export async function togglePostLike(
   userId: string
 ): Promise<{ liked: boolean; likesCount: number }> {
   const result = await withTimeout(async (signal) => {
-    // Check if already liked
-    const { data: existing } = await client
+    // Attempt to insert — if a unique constraint exists, the user already liked
+    const { error: insertError } = await client
       .from('community_post_likes')
-      .select('id')
-      .eq('post_id', postId)
-      .eq('user_id', userId)
-      .abortSignal(signal)
-      .maybeSingle();
+      .insert({ post_id: postId, user_id: userId })
+      .abortSignal(signal);
 
-    if (existing) {
-      // Unlike
-      await client
+    let liked: boolean;
+
+    if (insertError) {
+      // Constraint violation means already liked → unlike
+      const { error: deleteError } = await client
         .from('community_post_likes')
         .delete()
-        .eq('id', existing.id)
+        .eq('post_id', postId)
+        .eq('user_id', userId)
         .abortSignal(signal);
+
+      if (deleteError) throw DatabaseError.fromPostgrestError(deleteError);
+      liked = false;
     } else {
-      // Like
-      await client
-        .from('community_post_likes')
-        .insert({ post_id: postId, user_id: userId })
-        .abortSignal(signal);
+      liked = true;
     }
 
     // Get updated count
-    const { count } = await client
+    const { count, error: countError } = await client
       .from('community_post_likes')
       .select('*', { count: 'exact', head: true })
       .eq('post_id', postId)
       .abortSignal(signal);
 
+    if (countError) throw DatabaseError.fromPostgrestError(countError);
+
     return {
-      liked: !existing,
+      liked,
       likesCount: count ?? 0,
     };
   });

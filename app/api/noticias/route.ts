@@ -4,7 +4,7 @@ import { listNoticias } from '@/lib/server/noticias';
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const limit = Math.max(1, parseInt(searchParams.get('limit') || '10', 10));
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '10', 10)), 100);
     const offset = Math.max(0, parseInt(searchParams.get('offset') || '0', 10));
     const tag = searchParams.get('tag');
     const destaqueParam = searchParams.get('destaque');
