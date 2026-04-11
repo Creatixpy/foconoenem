@@ -8,6 +8,11 @@ export type RateLimitResult = {
   resetAt: Date;
 };
 
+/**
+ * Server-side DB-backed rate limiter.
+ * SECURITY: Fails **closed** — if the DB is unavailable, requests are denied
+ * to prevent abuse of expensive AI endpoints.
+ */
 export async function checkRateLimit(
   identifier: string,
   endpoint: string,
@@ -18,9 +23,10 @@ export async function checkRateLimit(
   const resetAt = new Date(Date.now() + windowMinutes * 60 * 1000);
 
   if (!supabase) {
+    console.error('Rate limiter: admin client unavailable — failing closed');
     return {
-      allowed: true,
-      remaining: maxRequests - 1,
+      allowed: false,
+      remaining: 0,
       resetAt,
     };
   }
@@ -36,10 +42,10 @@ export async function checkRateLimit(
     .order('window_start', { ascending: true });
 
   if (error) {
-    console.error('Erro ao consultar rate limit:', error);
+    console.error('Rate limiter: DB query failed — failing closed:', error);
     return {
-      allowed: true,
-      remaining: maxRequests - 1,
+      allowed: false,
+      remaining: 0,
       resetAt,
     };
   }

@@ -122,37 +122,52 @@ export async function incrementRateLimit(
   identifier: string,
   endpoint: string
 ): Promise<void> {
-  const windowStart = new Date(Date.now() - RATE_LIMIT_WINDOW_MS);
-
   await withTimeout(async (signal) => {
-    // Try to get existing record
-    const { data: existing } = await client
+    // C08: Use upsert to avoid check-then-act race condition.
+    // Insert a new row; on conflict (same identifier+endpoint in current window),
+    // increment the count atomically.
+    const { error } = await client
       .from('rate_limits')
-      .select('id, request_count')
-      .eq('identifier', identifier)
-      .eq('endpoint', endpoint)
-      .gte('window_start', windowStart.toISOString())
-      .abortSignal(signal)
-      .maybeSingle();
-
-    if (existing) {
-      // Update existing record
-      await client
-        .from('rate_limits')
-        .update({ request_count: existing.request_count + 1 })
-        .eq('id', existing.id)
-        .abortSignal(signal);
-    } else {
-      // Create new record
-      await client
-        .from('rate_limits')
-        .insert({
+      .upsert(
+        {
           identifier,
           endpoint,
           request_count: 1,
           window_start: new Date().toISOString(),
-        })
-        .abortSignal(signal);
+        },
+        { onConflict: 'identifier,endpoint' }
+      )
+      .abortSignal(signal);
+
+    if (error) {
+      // Fallback: try simple insert if upsert fails (no unique constraint)
+      const windowStart = new Date(Date.now() - RATE_LIMIT_WINDOW_MS);
+      const { data: existing } = await client
+        .from('rate_limits')
+        .select('id, request_count')
+        .eq('identifier', identifier)
+        .eq('endpoint', endpoint)
+        .gte('window_start', windowStart.toISOString())
+        .abortSignal(signal)
+        .maybeSingle();
+
+      if (existing) {
+        await client
+          .from('rate_limits')
+          .update({ request_count: existing.request_count + 1 })
+          .eq('id', existing.id)
+          .abortSignal(signal);
+      } else {
+        await client
+          .from('rate_limits')
+          .insert({
+            identifier,
+            endpoint,
+            request_count: 1,
+            window_start: new Date().toISOString(),
+          })
+          .abortSignal(signal);
+      }
     }
   }, 'fast').catch((err) => {
     console.warn('Failed to increment rate limit:', err);

@@ -124,7 +124,7 @@ export async function GET(request: NextRequest) {
       {
         error: 'Erro ao gerar tema',
         message: 'Nossa IA não respondeu a tempo. Tente novamente em instantes.',
-        diagnostics: { stage: 'generateThemeWithGroq', detail, attempts },
+        diagnostics: undefined,
       },
       { status: 503 }
     );

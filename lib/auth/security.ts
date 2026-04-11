@@ -14,8 +14,10 @@ export function generateSecureToken(length: number = 32): string {
     window.crypto.getRandomValues(array);
     return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
   }
-  // Fallback for server-side (should use crypto module)
-  return Math.random().toString(36).substring(2) + Date.now().toString(36);
+  // Server-side: use Node.js crypto for proper randomness
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const crypto = require('crypto');
+  return (crypto.randomBytes(length) as Buffer).toString('hex');
 }
 
 /**

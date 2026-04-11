@@ -21,8 +21,9 @@ export async function GET(
   const rawId = params.id;
   const id = Array.isArray(rawId) ? rawId[0] : rawId;
 
-  if (!id) {
-    return NextResponse.json({ error: 'ID não fornecido' }, { status: 400 });
+  // M10: Validate UUID format
+  if (!id || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+    return NextResponse.json({ error: 'ID inválido' }, { status: 400 });
   }
 
   const result = await getEssayById(supabase, id, userId);

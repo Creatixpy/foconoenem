@@ -1,14 +1,8 @@
 import { NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/db/server";
+import { createServerClient } from "@/lib/db/server";
 
 export async function GET() {
-  const supabase = createAdminClient();
-  if (!supabase) {
-    return NextResponse.json(
-      { error: "Supabase service role não configurado." },
-      { status: 500 }
-    );
-  }
+  const supabase = await createServerClient();
 
   const { data, error } = await supabase
     .from("community_topics")
