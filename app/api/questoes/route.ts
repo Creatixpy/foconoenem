@@ -328,11 +328,6 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader) {
-    return NextResponse.json({ success: true, saved: false, reason: "not_authenticated" });
-  }
-
   let parsedPayload: QuizRequestPayload;
   try {
     const raw = await request.json();
