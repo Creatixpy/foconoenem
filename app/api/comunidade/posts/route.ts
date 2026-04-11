@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveRequestUser } from '@/lib/server/auth-request';
+import { z } from 'zod';
+import { sanitizeString } from '@/lib/security';
+
+const postSchema = z.object({
+  title: z.string().min(1).max(200).transform((s) => sanitizeString(s.replace(/[<>]/g, ''))),
+  content: z.string().min(1).max(5000).transform((s) => sanitizeString(s.replace(/[<>]/g, ''))),
+  topicId: z.string().uuid(),
+});
 
 export async function POST(request: NextRequest) {
   const auth = await resolveRequestUser(request);
@@ -9,20 +17,19 @@ export async function POST(request: NextRequest) {
 
   const { supabase, userId } = auth;
 
-  let payload: { title?: unknown; content?: unknown; topicId?: unknown };
+  let payload: unknown;
   try {
     payload = await request.json();
   } catch {
     return NextResponse.json({ error: 'JSON inválido.' }, { status: 400 });
   }
 
-  const title = typeof payload.title === 'string' ? payload.title.trim() : '';
-  const content = typeof payload.content === 'string' ? payload.content.trim() : '';
-  const topicId = typeof payload.topicId === 'string' ? payload.topicId : null;
-
-  if (!title || !content || !topicId) {
+  const parsed = postSchema.safeParse(payload);
+  if (!parsed.success) {
     return NextResponse.json({ error: 'Título, conteúdo e tópico são obrigatórios.' }, { status: 400 });
   }
+
+  const { title, content, topicId } = parsed.data;
 
   const { data, error } = await supabase
     .from('community_posts')

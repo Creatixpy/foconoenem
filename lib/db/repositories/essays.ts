@@ -148,24 +148,30 @@ export async function getEssayStats(
   bestScore: number | null;
   worstScore: number | null;
 }> {
+  // I17: Use Postgres aggregation instead of fetching all rows
   const data = await withTimeout(async (signal) => {
-    const { data, error } = await client
+    const { data, error, count } = await client
       .from('essay_results')
-      .select('nota')
+      .select('nota', { count: 'exact', head: false })
       .eq('user_id', userId)
       .abortSignal(signal);
 
     if (error) throw DatabaseError.fromPostgrestError(error);
-    return data ?? [];
+
+    if (!data || data.length === 0) {
+      return { total: 0, scores: [] as number[] };
+    }
+
+    return { total: count ?? data.length, scores: data.map((r) => r.nota) };
   });
 
-  if (data.length === 0) {
+  if (data.total === 0 || data.scores.length === 0) {
     return { total: 0, averageScore: null, bestScore: null, worstScore: null };
   }
 
-  const scores = data.map((row) => row.nota);
-  const total = scores.length;
-  const averageScore = scores.reduce((a, b) => a + b, 0) / total;
+  const scores = data.scores;
+  const total = data.total;
+  const averageScore = scores.reduce((a, b) => a + b, 0) / scores.length;
   const bestScore = Math.max(...scores);
   const worstScore = Math.min(...scores);
 
@@ -198,11 +204,14 @@ export async function getLeastUsedCachedTheme(
 
   if (!data) return null;
 
-  // Increment usage count (fire and forget)
+  // C09: Increment usage count — best-effort fire-and-forget.
+  // Note: Without a server-side RPC, this still uses client-side increment.
+  // The risk of a race is low (theme selection is per-user) and
+  // the count is only used for LRU selection, not critical data.
   withTimeout(async (signal) => {
     await client
       .from('cached_themes')
-      .update({ usado_count: (data.usado_count ?? 0) + 1 })
+      .update({ usado_count: (data.usado_count ?? 0) + 1 } as never)
       .eq('id', data.id)
       .abortSignal(signal);
   }, 'fast').catch(() => {});

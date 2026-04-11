@@ -311,7 +311,7 @@ export async function POST(request: NextRequest) {
         {
           error: 'Erro ao validar o tema',
           message: 'Não foi possível confirmar se a redação aborda o tema. Tente novamente em instantes.',
-          diagnostics: { stage: 'verifyThemeAlignment', detail, attempts },
+          diagnostics: undefined,
         },
         { status: 503 }
       );
@@ -364,7 +364,7 @@ export async function POST(request: NextRequest) {
         {
           error: 'Erro ao gerar correção',
           message: 'Nossa IA demorou mais do que o esperado. Tente novamente em instantes.',
-          diagnostics: { stage: 'analyseEssay', detail, attempts },
+          diagnostics: undefined,
         },
         { status: 503 }
       );

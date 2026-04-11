@@ -162,16 +162,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const refreshAuth = useCallback(async () => {
     const result = await refreshSession();
     if (result.success) {
-      const { data } = await supabase.auth.getSession();
-      if (isMountedRef.current && data.session) {
-        setSession(data.session);
-        setUser(data.session.user);
+      // I07/I08: Use getUser() instead of getSession() for server validation
+      const { data } = await supabase.auth.getUser();
+      if (isMountedRef.current && data.user) {
+        setUser(data.user);
+        // Refresh session data too
+        const { data: sessionData } = await supabase.auth.getSession();
+        setSession(sessionData.session);
       }
     } else {
-      // Refresh failed — session may be invalid. Clear state to prevent
-      // stale user/session from blocking downstream UI (e.g. /conta loading).
-      const { data } = await supabase.auth.getSession();
-      if (isMountedRef.current && !data.session) {
+      // Refresh failed — validate server-side
+      const { data } = await supabase.auth.getUser();
+      if (isMountedRef.current && !data.user) {
         setUser(null);
         setSession(null);
         setProfile(null);
@@ -269,15 +271,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     const bootstrap = async () => {
       try {
-        const { data, error } = await supabase.auth.getSession();
+        // I07: Use getUser() for server-validated bootstrap instead of getSession()
+        const { data: userData, error: userError } = await supabase.auth.getUser();
         
-        if (error) throw error;
+        if (userError) throw userError;
 
         if (!isMountedRef.current) return;
 
-        const sessionUser = data.session?.user ?? null;
+        const sessionUser = userData.user ?? null;
         setUser(sessionUser);
-        setSession(data.session);
+        
+        // Still need session object for downstream consumers
+        const { data: sessionData } = await supabase.auth.getSession();
+        setSession(sessionData.session);
         
         await resolveProfile(sessionUser);
       } catch (error) {

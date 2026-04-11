@@ -1,14 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/db/server';
+import { createServerClient } from '@/lib/db/server';
 
 export async function POST(request: NextRequest) {
-  const supabase = createAdminClient();
-  if (!supabase) {
-    return NextResponse.json(
-      { error: 'Supabase service role não configurado.' },
-      { status: 500 }
-    );
-  }
+  const supabase = await createServerClient();
 
   let payload: { postIds?: unknown };
   try {
@@ -18,7 +12,7 @@ export async function POST(request: NextRequest) {
   }
 
   const postIds = Array.isArray(payload.postIds)
-    ? payload.postIds.filter((value): value is string => typeof value === 'string')
+    ? payload.postIds.filter((value): value is string => typeof value === 'string').slice(0, 100)
     : [];
 
   if (postIds.length === 0) {

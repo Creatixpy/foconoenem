@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from '@/lib/db/server';
+import { createServerClient } from '@/lib/db/server';
 import type { Database } from "@/types/supabase";
 
 type CommunityCommentRow = Database["public"]["Tables"]["community_comments"]["Row"];
@@ -7,19 +7,16 @@ type CommunityCommentRow = Database["public"]["Tables"]["community_comments"]["R
 export async function GET(request: NextRequest) {
   const topicId = request.nextUrl.searchParams.get("topicId");
   const limitParam = request.nextUrl.searchParams.get("limit");
-  const limit = Number.isFinite(Number(limitParam)) && Number(limitParam) > 0 ? Number(limitParam) : 25;
+  const limit = Math.min(
+    Number.isFinite(Number(limitParam)) && Number(limitParam) > 0 ? Number(limitParam) : 25,
+    100
+  );
 
   if (!topicId) {
     return NextResponse.json({ error: "topicId obrigatório" }, { status: 400 });
   }
 
-  const supabase = createAdminClient();
-  if (!supabase) {
-    return NextResponse.json(
-      { error: "Supabase service role não configurado." },
-      { status: 500 }
-    );
-  }
+  const supabase = await createServerClient();
 
   const { data: posts, error: postsError } = await supabase
     .from("community_posts")
