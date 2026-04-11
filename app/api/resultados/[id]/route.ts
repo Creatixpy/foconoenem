@@ -2,14 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
 import { trackEvent } from '@/lib/server/analytics';
-import { resolveRequestUser } from '@/lib/server/auth-request';
+import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
 import { getEssayById } from '@/lib/db/repositories/essays';
 
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id?: string | string[] }> }
 ) {
-  const auth = await resolveRequestUser(request);
+  const auth = await resolveRequestUserFromCookies();
   if ('error' in auth) {
     return auth.error;
   }
