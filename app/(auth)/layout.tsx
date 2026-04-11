@@ -51,11 +51,11 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           p-10 xl:p-12
           relative overflow-hidden shrink-0
         "
-        style={{ background: 'linear-gradient(135deg, #0A0F1E 0%, #111827 50%, #0A0F1E 100%)' }}
+        style={{ background: 'var(--auth-panel-bg)' }}
       >
         {/* Decorative gradient blurs */}
-        <div className="absolute top-[-10%] right-[-20%] w-[400px] h-[400px] rounded-full blur-[120px] opacity-20" style={{ background: '#3B82F6' }} aria-hidden="true" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[300px] h-[300px] rounded-full blur-[100px] opacity-15" style={{ background: '#10B981' }} aria-hidden="true" />
+        <div className="absolute top-[-10%] right-[-20%] w-[400px] h-[400px] rounded-full blur-[120px]" style={{ background: 'var(--auth-panel-glow-blue)' }} aria-hidden="true" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[300px] h-[300px] rounded-full blur-[100px]" style={{ background: 'var(--auth-panel-glow-green)' }} aria-hidden="true" />
 
         {/* Top: Logo */}
         <div className="relative z-10">
@@ -65,35 +65,35 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
               <rect x="8" y="8" width="12" height="12" rx="2" fill="#3B82F6" />
               <path d="M14 11L17 14L14 17L11 14Z" fill="white" />
             </svg>
-            <span className="text-xl font-bold tracking-tight text-white">
-              Foco no <span className="text-[#3B82F6]">ENEM</span>
+            <span className="text-xl font-bold tracking-tight" style={{ color: 'var(--auth-panel-text)' }}>
+              Foco no <span className="text-[var(--primary)]">ENEM</span>
             </span>
           </Link>
         </div>
 
         {/* Middle: Tagline + features */}
         <div className="relative z-10 -mt-8">
-          <h1 className="text-3xl xl:text-4xl font-bold text-white leading-tight tracking-tight">
+          <h1 className="text-3xl xl:text-4xl font-bold leading-tight tracking-tight" style={{ color: 'var(--auth-panel-text)' }}>
             Sua preparação para o ENEM começa aqui.
           </h1>
-          <p className="mt-4 text-[#9CA3AF] leading-relaxed">
+          <p className="mt-4 leading-relaxed" style={{ color: 'var(--auth-panel-text-secondary)' }}>
             Ferramentas inteligentes, feedback personalizado e uma comunidade de estudantes dedicados.
           </p>
 
           <ul className="mt-10 space-y-5">
             {FEATURES.map(({ icon, text }) => (
               <li key={text} className="flex items-center gap-3">
-                <span className="flex items-center justify-center w-9 h-9 rounded-lg bg-white/[0.06] text-[#3B82F6] shrink-0">
+                <span className="flex items-center justify-center w-9 h-9 rounded-lg text-[var(--primary)] shrink-0" style={{ background: 'var(--auth-panel-feature-bg)' }}>
                   {icon}
                 </span>
-                <span className="text-[#E5E7EB] font-medium">{text}</span>
+                <span className="font-medium" style={{ color: 'var(--auth-panel-feature-text)' }}>{text}</span>
               </li>
             ))}
           </ul>
         </div>
 
         {/* Bottom: Social proof */}
-        <p className="relative z-10 text-sm text-[#6B7280]">
+        <p className="relative z-10 text-sm" style={{ color: 'var(--auth-panel-text-muted)' }}>
           Usado por centenas de estudantes em todo o Brasil.
         </p>
       </div>
