@@ -150,6 +150,7 @@ function TermsGate({ onAccept, loading }: { onAccept: () => void; loading: boole
 function PostCard({
   thread,
   profile,
+  profiles,
   liked,
   likeCount,
   userId,
@@ -160,6 +161,7 @@ function PostCard({
 }: {
   thread: Thread;
   profile?: AuthorProfile;
+  profiles: Record<string, AuthorProfile>;
   liked: boolean;
   likeCount: number;
   userId: string | null;
@@ -267,15 +269,26 @@ function PostCard({
             transition={{ duration: 0.2 }}
           >
             <div className="p-4 space-y-3">
-              {visibleComments.map((c) => (
+              {visibleComments.map((c) => {
+                const commentAuthor = profiles[c.user_id];
+                const commentName = commentAuthor?.nome_completo || 'Estudante';
+                const commentInitials = commentName
+                  .split(' ')
+                  .filter(Boolean)
+                  .slice(0, 2)
+                  .map((w) => w[0])
+                  .join('')
+                  .toUpperCase();
+                return (
                 <div key={c.id} className="flex items-start gap-2">
                   <div
                     className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0 mt-0.5"
                     style={{ backgroundColor: avatarColor(c.user_id) }}
                   >
-                    •
+                    {commentInitials || '?'}
                   </div>
                   <div className="flex-1 min-w-0">
+                    <span className="text-xs font-semibold text-[var(--text-primary)]">{commentName}</span>
                     <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{c.content}</p>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-xs text-[var(--text-muted)]">{timeAgo(c.created_at)}</span>
@@ -290,7 +303,8 @@ function PostCard({
                     </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
 
               {/* comment input */}
               <div className="flex gap-2 mt-2">
@@ -705,6 +719,7 @@ export default function CommunityPageClient() {
               key={thread.id}
               thread={thread}
               profile={profiles[thread.user_id]}
+              profiles={profiles}
               liked={likedPosts.has(thread.id)}
               likeCount={likeCounts[thread.id] ?? 0}
               userId={user?.id ?? null}

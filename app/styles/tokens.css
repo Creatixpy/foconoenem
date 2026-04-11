@@ -71,6 +71,16 @@
   /* Focus ring */
   --ring-color: rgba(59, 130, 246, 0.5);
   --ring-offset-color: #0A0F1E;
+
+  /* Auth brand panel */
+  --auth-panel-bg: linear-gradient(135deg, #0A0F1E 0%, #111827 50%, #0A0F1E 100%);
+  --auth-panel-text: #F9FAFB;
+  --auth-panel-text-secondary: #9CA3AF;
+  --auth-panel-text-muted: #6B7280;
+  --auth-panel-feature-bg: rgba(255, 255, 255, 0.06);
+  --auth-panel-feature-text: #E5E7EB;
+  --auth-panel-glow-blue: rgba(59, 130, 246, 0.20);
+  --auth-panel-glow-green: rgba(16, 185, 129, 0.15);
 }
 
 /* ---- Light Theme ---- */
@@ -139,6 +149,16 @@
   /* Focus ring */
   --ring-color: rgba(59, 130, 246, 0.4);
   --ring-offset-color: #FFFFFF;
+
+  /* Auth brand panel */
+  --auth-panel-bg: linear-gradient(135deg, #E0E7FF 0%, #DBEAFE 50%, #EFF6FF 100%);
+  --auth-panel-text: #1E293B;
+  --auth-panel-text-secondary: #475569;
+  --auth-panel-text-muted: #64748B;
+  --auth-panel-feature-bg: rgba(59, 130, 246, 0.08);
+  --auth-panel-feature-text: #334155;
+  --auth-panel-glow-blue: rgba(59, 130, 246, 0.12);
+  --auth-panel-glow-green: rgba(16, 185, 129, 0.10);
 }
 
 /* ============================================================
