@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { resolveRequestUser } from '@/lib/server/auth-request';
+import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
 
 export async function GET(request: NextRequest) {
-  const auth = await resolveRequestUser(request);
+  const auth = await resolveRequestUserFromCookies();
   if ('error' in auth) {
     return auth.error;
   }

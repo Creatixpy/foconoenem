@@ -185,17 +185,13 @@ export default function QuestoesPageClient() {
       setQuizResult(result);
       setPhase('results');
 
-      // Save result (fire and forget)
+      // Save result (fire and forget — cookies sent automatically)
       try {
         const { data: { user: authUser } } = await (await import('@/lib/supabase/client')).createClient().auth.getUser();
         if (authUser) {
-          const token = (await (await import('@/lib/supabase/client')).createClient().auth.getSession()).data.session?.access_token;
           await fetch('/api/questoes', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               result,
               selectedAnswers,

@@ -6,7 +6,7 @@ import { isRateLimitError, buildGroqProviders } from "@/lib/ai/groq";
 import { extractJson } from "@/lib/ai/parse-json";
 import { getOperatingHoursInfo } from "@/lib/server/operating-hours";
 import { checkRateLimit } from "@/lib/server/rate-limit";
-import { resolveRequestUser } from "@/lib/server/auth-request";
+import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
 import { createAdminClient } from "@/lib/db/server";
 import { createQuizResult, saveGeneratedQuestions } from "@/lib/db/repositories/quizzes";
 import type { Database } from "@/types/supabase";
@@ -342,10 +342,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: message }, { status: 400 });
   }
 
-  const auth = await resolveRequestUser(request);
+  const auth = await resolveRequestUserFromCookies();
   if ('error' in auth) {
     if (auth.error.status === 401) {
-      return NextResponse.json({ success: true, saved: false, reason: "invalid_token" });
+      return NextResponse.json({ success: true, saved: false, reason: "not_authenticated" });
     }
     return auth.error;
   }
