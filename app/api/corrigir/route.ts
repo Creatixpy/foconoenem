@@ -8,7 +8,7 @@ import { extractJson } from '@/lib/ai/parse-json';
 import { getOperatingHoursInfo } from '@/lib/server/operating-hours';
 import { checkRateLimit } from '@/lib/server/rate-limit';
 import { trackEvent } from '@/lib/server/analytics';
-import { resolveRequestUser } from '@/lib/server/auth-request';
+import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
 import { z } from 'zod';
 import { handleApiError, sanitizeString } from '@/lib/security';
 import { getEssayById, createEssayResult, type NormalizedEssayResult } from '@/lib/db/repositories/essays';
@@ -192,7 +192,7 @@ Regras:
 
 export async function GET(request: NextRequest) {
   try {
-    const auth = await resolveRequestUser(request);
+    const auth = await resolveRequestUserFromCookies();
     if ('error' in auth) {
       return auth.error;
     }
@@ -230,7 +230,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const auth = await resolveRequestUser(request);
+    const auth = await resolveRequestUserFromCookies();
     if ('error' in auth) {
       return auth.error;
     }

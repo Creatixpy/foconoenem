@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, type SupabaseClient, type User } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
-import { createAdminClient } from '@/lib/db/server';
+import { createAdminClient, createServerClient } from '@/lib/db/server';
 
 type AuthSuccess = {
   supabase: SupabaseClient<Database>;
@@ -36,6 +36,48 @@ function createUserScopedClient(token: string): SupabaseClient<Database> | null 
   });
 }
 
+/**
+ * Resolves authenticated user from browser cookies (automatic).
+ * Preferred for all Route Handlers called by the frontend — the browser
+ * sends cookies automatically so no Authorization header is needed.
+ */
+export async function resolveRequestUserFromCookies(
+  options: ResolveRequestUserOptions = {}
+): Promise<AuthSuccess | AuthFailure> {
+  const { requireEmailConfirmed = false } = options;
+
+  try {
+    const supabase = await createServerClient();
+    const { data: { user }, error } = await supabase.auth.getUser();
+
+    if (error || !user) {
+      return {
+        error: NextResponse.json({ error: 'not_authenticated' }, { status: 401 }),
+      };
+    }
+
+    if (requireEmailConfirmed && !user.email_confirmed_at) {
+      return {
+        error: NextResponse.json({ error: 'email_not_verified' }, { status: 403 }),
+      };
+    }
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token ?? '';
+
+    return { supabase, userId: user.id, token, user };
+  } catch (err) {
+    console.error('Erro ao resolver usuário via cookies:', err);
+    return {
+      error: NextResponse.json({ error: 'auth_error' }, { status: 500 }),
+    };
+  }
+}
+
+/**
+ * Resolves authenticated user from an explicit Authorization Bearer header.
+ * Kept for external API consumers or situations where cookies are unavailable.
+ */
 export async function resolveRequestUser(
   request: NextRequest,
   options: ResolveRequestUserOptions = {}

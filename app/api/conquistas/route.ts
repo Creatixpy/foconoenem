@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { resolveRequestUser } from '@/lib/server/auth-request';
+import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
 
 const ACHIEVEMENT_SLUGS = ['primeira_redacao', 'maratona_questoes', 'nota_mil', 'mentor_comunitario'] as const;
 type AchievementSlug = (typeof ACHIEVEMENT_SLUGS)[number];
@@ -19,7 +19,7 @@ const checkConditions = (context: AwardContext): Record<AchievementSlug, boolean
 });
 
 export async function POST(request: NextRequest) {
-  const auth = await resolveRequestUser(request);
+  const auth = await resolveRequestUserFromCookies();
   if ('error' in auth) {
     return auth.error;
   }
