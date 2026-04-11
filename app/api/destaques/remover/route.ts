@@ -27,8 +27,8 @@ export async function POST(request: NextRequest) {
   }
 
   const id = payload?.id;
-  if (!id || typeof id !== 'string') {
-    return NextResponse.json({ error: 'ID não fornecido.' }, { status: 400 });
+  if (!id || typeof id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+    return NextResponse.json({ error: 'ID inválido.' }, { status: 400 });
   }
 
   const { error } = await supabase.from('noticias').update({ destaque: false }).eq('id', id);

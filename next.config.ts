@@ -5,13 +5,22 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   images: {
-    // Sentinel Security: Although wildcard is currently needed for flexibility,
-    // this should be locked down to specific domains (e.g., supabase.co) in production
-    // to prevent exfiltration via image rendering.
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: '**',
+        hostname: '*.supabase.co',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.supabase.in',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'avatars.githubusercontent.com',
       },
     ],
   },
@@ -45,7 +54,7 @@ const nextConfig: NextConfig = {
             // Default CSP, can be overridden by middleware or specific pages if needed.
             // Allows 'unsafe-inline' and 'unsafe-eval' for now to prevent breaking Next.js/React hydration,
             // but effectively blocks object/base-uri.
-            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https:; font-src 'self'; connect-src 'self' https://*.supabase.co https://api.stripe.com;"
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https:; font-src 'self'; connect-src 'self' https://*.supabase.co https://api.stripe.com; frame-ancestors 'self'; base-uri 'self'; object-src 'none';"
           }
         ],
       },

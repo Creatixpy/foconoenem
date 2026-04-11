@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
       console.error('Erro na verificação do webhook:', errorMessage);
       return NextResponse.json(
-        { error: `Webhook Error: ${errorMessage}` },
+        { error: 'Falha na verificação do webhook.' },
         { status: 400 }
       );
     }

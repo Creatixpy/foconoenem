@@ -5,6 +5,7 @@ import type { GroqProvider } from "@/lib/ai/groq";
 import { isRateLimitError, buildGroqProviders } from "@/lib/ai/groq";
 import { extractJson } from "@/lib/ai/parse-json";
 import { getOperatingHoursInfo } from "@/lib/server/operating-hours";
+import { checkRateLimit } from "@/lib/server/rate-limit";
 import { resolveRequestUser } from "@/lib/server/auth-request";
 import { createAdminClient } from "@/lib/db/server";
 import { createQuizResult, saveGeneratedQuestions } from "@/lib/db/repositories/quizzes";
@@ -244,6 +245,21 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // C02: Add rate limiting to prevent AI cost abuse
+    const forwardedFor = request.headers.get("x-forwarded-for");
+    const ip = forwardedFor?.split(",")[0].trim() ?? request.headers.get("x-real-ip") ?? "unknown";
+    const rateResult = await checkRateLimit(ip, "/api/questoes", 5, 1);
+    if (!rateResult.allowed) {
+      return NextResponse.json(
+        {
+          error: "Muitas requisições",
+          message: `Você atingiu o limite de requisições. Tente novamente após ${rateResult.resetAt.toISOString()}.`,
+          resetAt: rateResult.resetAt.toISOString(),
+        },
+        { status: 429 }
+      );
+    }
+
     const disciplinesParam = request.nextUrl.searchParams.get("disciplines");
     const disciplines = disciplinesParam
       ? disciplinesParam
@@ -304,7 +320,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         error: "Erro ao gerar questões",
-        message: error instanceof Error ? error.message : "Erro desconhecido",
+        message: "Ocorreu um erro interno. Tente novamente em instantes.",
       },
       { status: 500 }
     );
@@ -373,7 +389,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Erro ao salvar resultado do simulado:", error);
     return NextResponse.json(
-      { error: "Erro ao salvar resultado do simulado", message: error instanceof Error ? error.message : "Erro desconhecido" },
+      { error: "Erro ao salvar resultado do simulado" },
       { status: 500 }
     );
   }

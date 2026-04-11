@@ -33,7 +33,7 @@ export async function authorizeAdmin(
 
   if (allowCron && process.env.ADMIN_CRON_SECRET) {
     const cronSecret =
-      request.headers.get('x-cron-secret') ?? request.nextUrl.searchParams.get('secret') ?? undefined;
+      request.headers.get('x-cron-secret') ?? undefined;
 
     if (cronSecret && cronSecret === process.env.ADMIN_CRON_SECRET) {
       return { authorized: true, mode: 'cron' };
