@@ -388,6 +388,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Recalculate user statistics after essay save
+    const { error: statsError } = await supabase.rpc('recalculate_user_statistics', {
+      target_user_id: userId,
+    });
+    if (statsError) {
+      console.error('Erro ao recalcular estatísticas após redação:', statsError);
+    }
+
     await trackEvent({
       eventType: 'essay_submitted',
       metadata: {
