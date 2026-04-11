@@ -1,7 +1,7 @@
 import 'server-only';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const GEMINI_MODEL = 'gemini-2.0-flash';
+const GEMINI_MODEL = 'gemini-2.5-flash';
 const TIMEOUT_MS = 30_000;
 
 const OCR_PROMPT = `You are a specialized OCR system for Brazilian Portuguese handwritten text.
@@ -75,7 +75,19 @@ export async function extractTextFromImage(
     if (error instanceof Error && error.message.includes('identificar texto')) {
       throw error;
     }
-    console.error('[Gemini OCR] Erro:', error);
+
+    // Differentiate Gemini quota/rate errors from generic failures
+    const status = (error as { status?: number }).status;
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('[Gemini OCR] Erro:', { status, message, error });
+
+    if (status === 429 || message.includes('quota') || message.includes('rate limit')) {
+      throw new Error('Serviço de OCR temporariamente indisponível. Tente novamente em alguns minutos.');
+    }
+    if (status === 403 || message.includes('API key')) {
+      throw new Error('Serviço de OCR não configurado corretamente.');
+    }
+
     throw new Error('Falha ao extrair texto da imagem.');
   } finally {
     clearTimeout(timeout);
