@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { resolveRequestUser } from '@/lib/server/auth-request';
+import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
 import { z } from 'zod';
 import { sanitizeString } from '@/lib/security';
 
@@ -10,7 +10,7 @@ const postSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  const auth = await resolveRequestUser(request);
+  const auth = await resolveRequestUserFromCookies();
   if ('error' in auth) {
     return auth.error;
   }

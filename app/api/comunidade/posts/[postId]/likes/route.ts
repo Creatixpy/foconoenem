@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
-import { resolveRequestUser } from '@/lib/server/auth-request';
+import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
 
 async function getLikeCount(supabase: SupabaseClient<Database>, postId: string) {
   const { count } = await supabase
@@ -15,7 +15,7 @@ export async function POST(
   request: NextRequest,
   context: { params: Promise<{ postId: string | string[] }> }
 ) {
-  const auth = await resolveRequestUser(request);
+  const auth = await resolveRequestUserFromCookies();
   if ('error' in auth) {
     return auth.error;
   }
@@ -46,7 +46,7 @@ export async function DELETE(
   request: NextRequest,
   context: { params: Promise<{ postId: string | string[] }> }
 ) {
-  const auth = await resolveRequestUser(request);
+  const auth = await resolveRequestUserFromCookies();
   if ('error' in auth) {
     return auth.error;
   }
