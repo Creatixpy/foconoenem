@@ -1,97 +1,96 @@
 /* ============================================================
    BASE STYLES — FocoNoEnem
    Global resets, body defaults, and foundational styles.
+   Wrapped in @layer base so Tailwind utilities can override.
    ============================================================ */
 
-/* Smooth scrolling for anchors */
-html {
-  scroll-behavior: smooth;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-}
+@layer base {
+  /* Smooth scrolling for anchors */
+  html {
+    scroll-behavior: smooth;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-text-size-adjust: 100%;
+    scrollbar-gutter: stable;
+  }
 
-/* Base body styling */
-body {
-  font-family: var(--font-sans);
-  font-size: var(--text-base);
-  line-height: var(--leading-normal);
-  color: var(--text-primary);
-  background-color: var(--bg-base);
-  min-height: 100dvh;
-  transition:
-    background-color var(--duration-normal) var(--ease-default),
-    color var(--duration-normal) var(--ease-default);
-}
+  /* Base body styling */
+  body {
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+    color: var(--text-primary);
+    background-color: var(--bg-base);
+    min-height: 100dvh;
+    transition:
+      background-color var(--duration-normal) var(--ease-default),
+      color var(--duration-normal) var(--ease-default);
+  }
 
-/* Headings */
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-sans);
-  font-weight: 700;
-  line-height: var(--leading-tight);
-  letter-spacing: var(--tracking-tight);
-  color: var(--text-primary);
-}
+  /* Headings */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tight);
+    color: var(--text-primary);
+  }
 
-/* Paragraphs */
-p {
-  line-height: var(--leading-relaxed);
-  color: var(--text-secondary);
-}
+  /* Paragraphs */
+  p {
+    line-height: var(--leading-relaxed);
+    color: var(--text-secondary);
+  }
 
-/* Links */
-a {
-  color: var(--primary);
-  text-decoration: none;
-  transition: color var(--duration-fast) var(--ease-default);
-}
+  /* Links */
+  a {
+    color: var(--primary);
+    text-decoration: none;
+    transition: color var(--duration-fast) var(--ease-default);
+  }
 
-a:hover {
-  color: var(--primary-hover);
-}
+  a:hover {
+    color: var(--primary-hover);
+  }
 
-/* Focus visible */
-:focus-visible {
-  outline: 2px solid var(--ring-color);
-  outline-offset: 2px;
-  border-radius: var(--radius-sm);
-}
+  /* Focus visible */
+  :focus-visible {
+    outline: 2px solid var(--ring-color);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
 
-/* Selection */
-::selection {
-  background-color: var(--primary);
-  color: white;
-}
+  /* Selection */
+  ::selection {
+    background-color: var(--primary);
+    color: white;
+  }
 
-/* Remove default button styling */
-button {
-  font-family: inherit;
-  cursor: pointer;
-}
+  /* Remove default button styling */
+  button {
+    font-family: inherit;
+    cursor: pointer;
+  }
 
-/* Prevent layout shift from scrollbar */
-html {
-  scrollbar-gutter: stable;
-}
+  /* Scrollbar styling for dark/light themes */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
 
-/* Scrollbar styling for dark/light themes */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
 
-::-webkit-scrollbar-track {
-  background: transparent;
-}
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-color-strong);
+    border-radius: var(--radius-full);
+  }
 
-::-webkit-scrollbar-thumb {
-  background: var(--border-color-strong);
-  border-radius: var(--radius-full);
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+  }
 }
 
 /* ============================================================

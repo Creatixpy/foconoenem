@@ -265,6 +265,7 @@ export default function Header() {
   };
 
   return (
+    <>
     <header
       className={`
         sticky top-0 z-[var(--z-sticky)]
@@ -372,8 +373,9 @@ export default function Header() {
           </button>
         </div>
       </nav>
+    </header>
 
-      {/* ---- Mobile Menu ---- */}
+      {/* ---- Mobile Menu (outside header to avoid backdrop-filter containing block) ---- */}
       {/* Backdrop */}
       <div
         className={`
@@ -487,7 +489,7 @@ export default function Header() {
           )}
         </div>
       </div>
-    </header>
+    </>
   );
 }
 
