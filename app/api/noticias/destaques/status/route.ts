@@ -7,9 +7,7 @@ export async function GET(request: NextRequest) {
 
   if (!authResult.authorized) {
     return NextResponse.json(
-      {
-        error: authResult.message ?? "Acesso não autorizado.",
-      },
+      { error: "Acesso não autorizado." },
       { status: authResult.status ?? 401 }
     );
   }

@@ -3,6 +3,10 @@
     {
       "path": "/api/atualizarDestaques?automatic=true",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/admin/manutencao",
+      "schedule": "0 3 * * *"
     }
   ]
 }

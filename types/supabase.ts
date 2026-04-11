@@ -44,6 +44,39 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_audit_log: {
+        Row: {
+          action: string
+          admin_email: string
+          created_at: string
+          details: Json | null
+          id: string
+          ip_address: string | null
+          target_id: string | null
+          target_type: string | null
+        }
+        Insert: {
+          action: string
+          admin_email: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Update: {
+          action?: string
+          admin_email?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Relationships: []
+      }
       analytics_events: {
         Row: {
           created_at: string
@@ -372,6 +405,7 @@ export type Database = {
           resumo: string
           search_vector: unknown
           slug: string
+          status: string
           tags: string[]
           titulo: string
           updated_at: string
@@ -388,6 +422,7 @@ export type Database = {
           resumo: string
           search_vector?: unknown
           slug: string
+          status?: string
           tags?: string[]
           titulo: string
           updated_at?: string
@@ -404,6 +439,7 @@ export type Database = {
           resumo?: string
           search_vector?: unknown
           slug?: string
+          status?: string
           tags?: string[]
           titulo?: string
           updated_at?: string

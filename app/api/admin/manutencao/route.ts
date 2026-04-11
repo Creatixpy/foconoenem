@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authorizeAdmin } from '@/lib/admin-auth';
+import { authorizeAdmin, logAdminAction } from '@/lib/admin-auth';
 import { createAdminClient } from '@/lib/db/server';
 
 async function cleanupCachedThemes() {
@@ -65,7 +65,7 @@ async function handler(request: NextRequest) {
   const auth = await authorizeAdmin(request, { allowCron: true });
   if (!auth.authorized) {
     return NextResponse.json(
-      { error: auth.message ?? 'Acesso negado.' },
+      { error: 'Acesso não autorizado.' },
       { status: auth.status ?? 401 }
     );
   }
@@ -99,14 +99,21 @@ async function handler(request: NextRequest) {
       result.errors.push(analytics.error instanceof Error ? analytics.error.message : String(analytics.error));
     }
 
+    const supabaseAdmin = createAdminClient();
+    if (supabaseAdmin) {
+      const adminEmail = auth.mode === 'user' ? auth.user?.email ?? null : 'cron';
+      await logAdminAction(supabaseAdmin, {
+        adminEmail,
+        action: 'maintenance_run',
+        details: result.deleted,
+      });
+    }
+
     return NextResponse.json(result);
   } catch (error) {
     console.error('Erro ao executar manutenção:', error);
     return NextResponse.json(
-      {
-        error: 'Erro ao executar manutenção.',
-        message: error instanceof Error ? error.message : 'Erro desconhecido.',
-      },
+      { error: 'Erro ao executar manutenção.' },
       { status: 500 }
     );
   }
