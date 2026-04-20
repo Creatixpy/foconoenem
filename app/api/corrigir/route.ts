@@ -9,13 +9,21 @@ import { getOperatingHoursInfo } from '@/lib/server/operating-hours';
 import { checkRateLimit } from '@/lib/server/rate-limit';
 import { trackEvent } from '@/lib/server/analytics';
 import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
+import { createAdminClient } from '@/lib/db/server';
 import { z } from 'zod';
 import { handleApiError, sanitizeString } from '@/lib/security';
-import { getEssayById, createEssayResult, type NormalizedEssayResult } from '@/lib/db/repositories/essays';
+import {
+  createCachedThemes,
+  createEssayResult,
+  findCachedThemeByTema,
+  getEssayById,
+  type NormalizedEssayResult,
+} from '@/lib/db/repositories/essays';
 
 const submissionSchema = z.object({
   redacao: z.string().min(50, 'A redação deve ter no mínimo 50 caracteres').max(5000, 'A redação não pode exceder 5000 caracteres'),
   usarTemaPadrao: z.boolean().optional(),
+  themeMode: z.enum(['generated', 'manual']).optional(),
   tema: z.string().min(5).optional(),
   textoApoio1: z.string().optional(),
   textoApoio2: z.string().optional()
@@ -33,11 +41,132 @@ type ThemeAlignmentResult = {
   justification: string;
 };
 
+type SupportTexts = {
+  textoApoio1: string;
+  textoApoio2: string;
+};
+
+type ThemeContext = SupportTexts & {
+  tema: string;
+  themeType: 'padrao' | 'manual' | 'gerado';
+  supportSource: 'default' | 'request' | 'cache' | 'generated';
+  supportProvider?: string;
+};
+
+type RawEssayAnalysis = {
+  competencia1?: Partial<EssayCompetence>;
+  competencia2?: Partial<EssayCompetence>;
+  competencia3?: Partial<EssayCompetence>;
+  competencia4?: Partial<EssayCompetence>;
+  competencia5?: Partial<EssayCompetence>;
+  feedbackGeral?: string;
+  pontoFortes?: unknown;
+  pontosAMelhorar?: unknown;
+};
+
 const DEFAULT_THEME = 'Os desafios da educação digital no Brasil contemporâneo';
 const DEFAULT_TEXT_1 =
   'Segundo dados do IBGE, em 2021, 85% dos domicílios brasileiros possuíam acesso à internet, porém com grande disparidade regional e socioeconômica. Nas regiões Norte e Nordeste, e em famílias de baixa renda, o acesso é significativamente menor.';
 const DEFAULT_TEXT_2 =
   'A pandemia de COVID-19 evidenciou a necessidade de integração digital no ensino, mas também mostrou que muitos estudantes e professores não estão preparados para o uso efetivo das tecnologias educacionais.';
+const ENEM_COMPETENCE_SCORES = [0, 40, 80, 120, 160, 200] as const;
+
+function normalizeThemeKey(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function clampToEnemCompetenceScore(value: unknown): number {
+  const numericValue =
+    typeof value === 'number'
+      ? value
+      : typeof value === 'string'
+        ? Number(value)
+        : 0;
+
+  if (!Number.isFinite(numericValue)) return 0;
+
+  return ENEM_COMPETENCE_SCORES.reduce((closest, score) =>
+    Math.abs(score - numericValue) < Math.abs(closest - numericValue) ? score : closest
+  );
+}
+
+function normalizeEssayCompetence(
+  raw: Partial<EssayCompetence> | undefined,
+  fallbackComment: string
+): EssayCompetence {
+  return {
+    nota: clampToEnemCompetenceScore(raw?.nota),
+    comentario:
+      typeof raw?.comentario === 'string' && raw.comentario.trim()
+        ? raw.comentario.trim()
+        : fallbackComment,
+  };
+}
+
+function normalizeList(value: unknown, fallback: string[]): string[] {
+  if (!Array.isArray(value)) return fallback;
+
+  const unique = Array.from(
+    new Set(
+      value
+        .filter((item): item is string => typeof item === 'string')
+        .map((item) => item.trim())
+        .filter(Boolean)
+    )
+  );
+
+  return unique.length > 0 ? unique.slice(0, 4) : fallback;
+}
+
+async function requestSupportTexts(
+  provider: GroqProvider,
+  tema: string
+): Promise<SupportTexts> {
+  const response = await provider.client.chat.completions.create({
+    messages: [
+      {
+        role: 'user',
+        content: `
+          Crie dois textos de apoio curtos, complementares e úteis para uma redação do ENEM sobre o tema "${tema}".
+
+          Regras:
+          - O primeiro texto deve trazer contexto social ou dado relevante.
+          - O segundo texto deve explorar impacto, desafio ou consequência.
+          - Os textos precisam ser objetivos, informativos, sem inventar fonte específica e sem copiar a mesma ideia.
+          - Responda APENAS em JSON.
+
+          Formato:
+          {
+            "textoApoio1": "Texto de apoio 1",
+            "textoApoio2": "Texto de apoio 2"
+          }
+        `,
+      },
+    ],
+    model: provider.model,
+    temperature: 0.4,
+    max_completion_tokens: 1200,
+    top_p: 1,
+    stream: false,
+    response_format: { type: 'json_object' },
+  });
+
+  const content = response.choices?.[0]?.message?.content ?? '';
+  const parsed = extractJson<Partial<SupportTexts>>(content);
+  const textoApoio1 = parsed.textoApoio1?.trim();
+  const textoApoio2 = parsed.textoApoio2?.trim();
+
+  if (!textoApoio1 || !textoApoio2) {
+    throw new Error('A IA não retornou textos de apoio válidos.');
+  }
+
+  return { textoApoio1, textoApoio2 };
+}
 
 async function requestEssayAnalysis(
   provider: GroqProvider,
@@ -52,13 +181,13 @@ async function requestEssayAnalysis(
   const { submission, temaFinal, textoApoio1Final, textoApoio2Final, essayId } = input;
 
   let prompt = `
-    Você é um corretor especialista em redações do ENEM. Analise a seguinte redação sobre o tema "${temaFinal}" seguindo os 5 critérios de avaliação do ENEM:
+    Você é um corretor especialista em redações do ENEM. Analise a redação abaixo sobre o tema "${temaFinal}".
 
-    Competência 1: Domínio da norma padrão da língua escrita (0-200 pontos)
-    Competência 2: Compreensão da proposta e aplicação de conceitos de várias áreas do conhecimento (0-200 pontos)
-    Competência 3: Capacidade de selecionar, relacionar, organizar e interpretar informações em defesa de um ponto de vista (0-200 pontos)
-    Competência 4: Conhecimento dos mecanismos linguísticos para construção da argumentação (0-200 pontos)
-    Competência 5: Elaboração de proposta de intervenção para o problema, respeitando os direitos humanos (0-200 pontos)
+    Avalie rigorosamente as 5 competências do ENEM.
+    Cada competência deve receber APENAS um destes valores: 0, 40, 80, 120, 160 ou 200.
+    A nota total deve ser a soma das 5 competências.
+    Justifique a nota de cada competência de forma específica, citando forças e falhas reais do texto.
+    Seja exigente com repertório improdutivo, fuga parcial do tema, proposta de intervenção genérica e problemas graves de coesão.
   `;
 
   if (textoApoio1Final) {
@@ -72,67 +201,82 @@ async function requestEssayAnalysis(
     REDAÇÃO DO ESTUDANTE:
     ${submission.redacao}
 
-    Você deve responder APENAS com um objeto JSON válido, sem texto antes ou depois, com os seguintes campos, sem usar markdown:
+    Responda APENAS com JSON válido, sem markdown:
     {
-      "nota": número de 0 a 1000,
       "competencia1": {
-        "nota": número de 0 a 200,
-        "comentario": "análise detalhada da competência 1"
+        "nota": 0|40|80|120|160|200,
+        "comentario": "análise objetiva da competência 1"
       },
       "competencia2": {
-        "nota": número de 0 a 200,
-        "comentario": "análise detalhada da competência 2"
+        "nota": 0|40|80|120|160|200,
+        "comentario": "análise objetiva da competência 2"
       },
       "competencia3": {
-        "nota": número de 0 a 200,
-        "comentario": "análise detalhada da competência 3"
+        "nota": 0|40|80|120|160|200,
+        "comentario": "análise objetiva da competência 3"
       },
       "competencia4": {
-        "nota": número de 0 a 200,
-        "comentario": "análise detalhada da competência 4"
+        "nota": 0|40|80|120|160|200,
+        "comentario": "análise objetiva da competência 4"
       },
       "competencia5": {
-        "nota": número de 0 a 200,
-        "comentario": "análise detalhada da competência 5"
+        "nota": 0|40|80|120|160|200,
+        "comentario": "análise objetiva da competência 5"
       },
-      "feedbackGeral": "feedback geral sobre a redação",
+      "feedbackGeral": "síntese clara da redação, conectando tese, repertório e intervenção",
       "pontoFortes": ["ponto forte 1", "ponto forte 2", "ponto forte 3"],
-      "pontosAMelhorar": ["ponto a melhorar 1", "ponto a melhorar 2", "ponto a melhorar 3"]
+      "pontosAMelhorar": ["melhoria 1", "melhoria 2", "melhoria 3"]
     }
-    
-    LEMBRE-SE: Sua resposta deve ser apenas o objeto JSON, sem qualquer outro texto.
   `;
 
   const response = await provider.client.chat.completions.create({
     messages: [{ role: 'user', content: prompt }],
     model: provider.model,
     temperature: 0.1,
-    max_completion_tokens: 15000,
+    max_completion_tokens: 5000,
     top_p: 1,
     stream: false,
     response_format: { type: 'json_object' },
   });
 
   const aiContent = response.choices?.[0]?.message?.content ?? '';
-  const parsed = extractJson<Partial<NormalizedEssayResult>>(aiContent);
+  const parsed = extractJson<RawEssayAnalysis>(aiContent);
 
-  if (typeof parsed.nota !== 'number' || !parsed.feedbackGeral) {
-    throw new Error('A resposta da IA está incompleta.');
-  }
+  const competencia1 = normalizeEssayCompetence(parsed.competencia1, 'Não foi possível avaliar a competência 1 com precisão.');
+  const competencia2 = normalizeEssayCompetence(parsed.competencia2, 'Não foi possível avaliar a competência 2 com precisão.');
+  const competencia3 = normalizeEssayCompetence(parsed.competencia3, 'Não foi possível avaliar a competência 3 com precisão.');
+  const competencia4 = normalizeEssayCompetence(parsed.competencia4, 'Não foi possível avaliar a competência 4 com precisão.');
+  const competencia5 = normalizeEssayCompetence(parsed.competencia5, 'Não foi possível avaliar a competência 5 com precisão.');
 
-  const defaultCompetence: EssayCompetence = { nota: 0, comentario: 'Não foi possível avaliar' };
+  const notaTotal =
+    competencia1.nota +
+    competencia2.nota +
+    competencia3.nota +
+    competencia4.nota +
+    competencia5.nota;
 
   return {
     id: essayId,
-    nota: parsed.nota,
-    competencia1: parsed.competencia1 ?? defaultCompetence,
-    competencia2: parsed.competencia2 ?? defaultCompetence,
-    competencia3: parsed.competencia3 ?? defaultCompetence,
-    competencia4: parsed.competencia4 ?? defaultCompetence,
-    competencia5: parsed.competencia5 ?? defaultCompetence,
-    feedbackGeral: parsed.feedbackGeral ?? 'Não foi possível gerar feedback',
-    pontoFortes: parsed.pontoFortes ?? [],
-    pontosAMelhorar: parsed.pontosAMelhorar ?? [],
+    nota: notaTotal,
+    competencia1,
+    competencia2,
+    competencia3,
+    competencia4,
+    competencia5,
+    feedbackGeral:
+      typeof parsed.feedbackGeral === 'string' && parsed.feedbackGeral.trim()
+        ? parsed.feedbackGeral.trim()
+        : 'A redação apresenta potencial, mas precisa de ajustes para ganhar precisão argumentativa e consistência nas competências do ENEM.',
+    pontoFortes: normalizeList(parsed.pontoFortes, [
+      'Há um posicionamento identificável ao longo do texto.',
+      'O texto demonstra tentativa de organização argumentativa.',
+      'Existe repertório inicial para sustentar a discussão.',
+    ]),
+    pontosAMelhorar: normalizeList(parsed.pontosAMelhorar, [
+      'Aprofundar os argumentos com causas, consequências e exemplos mais específicos.',
+      'Melhorar a progressão lógica entre os parágrafos.',
+      'Tornar a proposta de intervenção mais detalhada e executável.',
+    ]),
     redacaoOriginal: submission.redacao,
     tema: temaFinal,
     textoApoio1: textoApoio1Final,
@@ -190,6 +334,83 @@ Regras:
   };
 }
 
+async function resolveThemeContext(
+  submission: EssaySubmission,
+  supabase: SupabaseClient<Database>,
+  adminClient: SupabaseClient<Database>
+): Promise<ThemeContext> {
+  const wantsDefaultTheme = submission.usarTemaPadrao === true;
+  const providedTheme = submission.tema?.trim();
+  const providedSupportTexts = {
+    textoApoio1: submission.textoApoio1?.trim() || '',
+    textoApoio2: submission.textoApoio2?.trim() || '',
+  };
+
+  if (wantsDefaultTheme) {
+    return {
+      tema: DEFAULT_THEME,
+      textoApoio1: DEFAULT_TEXT_1,
+      textoApoio2: DEFAULT_TEXT_2,
+      themeType: 'padrao',
+      supportSource: 'default',
+    };
+  }
+
+  if (!providedTheme || normalizeThemeKey(providedTheme).length < 5) {
+    throw new Error('É necessário fornecer um tema válido para corrigir a redação.');
+  }
+
+  if (providedSupportTexts.textoApoio1 && providedSupportTexts.textoApoio2) {
+    await createCachedThemes(adminClient, [{
+      tema: providedTheme,
+      textoApoio1: providedSupportTexts.textoApoio1,
+      textoApoio2: providedSupportTexts.textoApoio2,
+    }]).catch((error) => {
+      console.error('Erro ao armazenar tema enviado pelo cliente:', error);
+    });
+
+    return {
+      tema: providedTheme,
+      textoApoio1: providedSupportTexts.textoApoio1,
+      textoApoio2: providedSupportTexts.textoApoio2,
+      themeType: submission.themeMode === 'manual' ? 'manual' : 'gerado',
+      supportSource: 'request',
+    };
+  }
+
+  const cachedTheme = await findCachedThemeByTema(supabase, providedTheme).catch(() => null);
+  if (cachedTheme?.texto_apoio1?.trim() && cachedTheme.texto_apoio2?.trim()) {
+    return {
+      tema: cachedTheme.tema,
+      textoApoio1: cachedTheme.texto_apoio1.trim(),
+      textoApoio2: cachedTheme.texto_apoio2.trim(),
+      themeType: submission.themeMode === 'manual' ? 'manual' : 'gerado',
+      supportSource: 'cache',
+    };
+  }
+
+  const { result, provider } = await withGroqRetry('generateSupportTexts', (currentProvider) =>
+    requestSupportTexts(currentProvider, providedTheme)
+  );
+
+  await createCachedThemes(adminClient, [{
+    tema: providedTheme,
+    textoApoio1: result.textoApoio1,
+    textoApoio2: result.textoApoio2,
+  }]).catch((error) => {
+    console.error('Erro ao salvar novos textos de apoio:', error);
+  });
+
+  return {
+    tema: providedTheme,
+    textoApoio1: result.textoApoio1,
+    textoApoio2: result.textoApoio2,
+    themeType: submission.themeMode === 'manual' ? 'manual' : 'gerado',
+    supportSource: 'generated',
+    supportProvider: provider,
+  };
+}
+
 export async function GET(request: NextRequest) {
   try {
     const auth = await resolveRequestUserFromCookies();
@@ -235,6 +456,14 @@ export async function POST(request: NextRequest) {
       return auth.error;
     }
 
+    const adminClient = createAdminClient();
+    if (!adminClient) {
+      return NextResponse.json(
+        { error: 'Supabase service role não configurado.' },
+        { status: 500 }
+      );
+    }
+
     const supabase = auth.supabase as SupabaseClient<Database>;
     const userId = auth.userId;
     const forwardedFor = request.headers.get('x-forwarded-for');
@@ -277,41 +506,44 @@ export async function POST(request: NextRequest) {
 
     submission.redacao = sanitizeString(submission.redacao);
     if (submission.tema) submission.tema = sanitizeString(submission.tema);
+    if (submission.textoApoio1) submission.textoApoio1 = sanitizeString(submission.textoApoio1);
+    if (submission.textoApoio2) submission.textoApoio2 = sanitizeString(submission.textoApoio2);
 
     const trimmedEssay = submission.redacao;
     const essayLength = trimmedEssay.length;
+    const essayId = randomUUID();
 
-    if (submission.usarTemaPadrao === false && (!submission.tema || submission.tema.trim().length < 5)) {
+    let themeContext: ThemeContext;
+    try {
+      themeContext = await resolveThemeContext(submission, supabase, adminClient);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Não foi possível preparar o tema da redação.';
+      if (message.includes('tema válido')) {
+        return NextResponse.json({ error: message }, { status: 400 });
+      }
+
+      console.error('Erro ao resolver tema/textos de apoio:', error);
       return NextResponse.json(
-        { error: 'É necessário fornecer um tema personalizado válido' },
-        { status: 400 }
+        {
+          error: 'Erro ao preparar tema e textos de apoio',
+          message: 'Não foi possível preparar o material de apoio da redação. Tente novamente em instantes.',
+        },
+        { status: 503 }
       );
     }
 
-    const essayId = randomUUID();
-    const temaFinal = submission.usarTemaPadrao !== false ? DEFAULT_THEME : submission.tema ?? DEFAULT_THEME;
-    const textoApoio1Final = submission.usarTemaPadrao !== false ? DEFAULT_TEXT_1 : submission.textoApoio1 ?? '';
-    const textoApoio2Final = submission.usarTemaPadrao !== false ? DEFAULT_TEXT_2 : submission.textoApoio2 ?? '';
-
-    let alignmentResult: ThemeAlignmentResult | null = null;
+    let alignmentResult: ThemeAlignmentResult;
     try {
       const { result } = await withGroqRetry('verifyThemeAlignment', (provider) =>
-        requestThemeAlignment(provider, { ...submission, redacao: trimmedEssay }, temaFinal)
+        requestThemeAlignment(provider, { ...submission, redacao: trimmedEssay }, themeContext.tema)
       );
       alignmentResult = result;
     } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
-      const attempts =
-        error && typeof error === 'object' && 'attemptsLog' in error
-          ? ((error as { attemptsLog?: string[] }).attemptsLog ?? undefined)
-          : undefined;
-
       console.error('Erro ao validar alinhamento de tema:', error);
       return NextResponse.json(
         {
           error: 'Erro ao validar o tema',
           message: 'Não foi possível confirmar se a redação aborda o tema. Tente novamente em instantes.',
-          diagnostics: undefined,
         },
         { status: 503 }
       );
@@ -322,9 +554,9 @@ export async function POST(request: NextRequest) {
         eventType: 'error_occurred',
         metadata: {
           error_type: 'essay_rejected_theme',
-          theme_type: submission.usarTemaPadrao !== false ? 'padrao' : submission.tema ? 'personalizado' : 'gerado',
+          theme_type: themeContext.themeType,
           justification: alignmentResult.justification,
-          tema: temaFinal,
+          tema: themeContext.tema,
         },
         userIp: ip,
         userAgent,
@@ -341,30 +573,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let aiAnalysis: { result: Omit<NormalizedEssayResult, 'createdAt' | 'origem'>; provider: string } | null = null;
+    let aiAnalysis: { result: Omit<NormalizedEssayResult, 'createdAt' | 'origem'>; provider: string };
     try {
       aiAnalysis = await withGroqRetry('analyseEssay', (provider) =>
         requestEssayAnalysis(provider, {
           submission: { ...submission, redacao: trimmedEssay },
-          temaFinal,
-          textoApoio1Final,
-          textoApoio2Final,
+          temaFinal: themeContext.tema,
+          textoApoio1Final: themeContext.textoApoio1,
+          textoApoio2Final: themeContext.textoApoio2,
           essayId,
         })
       );
     } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
-      const attempts =
-        error && typeof error === 'object' && 'attemptsLog' in error
-          ? ((error as { attemptsLog?: string[] }).attemptsLog ?? undefined)
-          : undefined;
-
       console.error('Erro ao analisar redação com IA:', error);
       return NextResponse.json(
         {
           error: 'Erro ao gerar correção',
           message: 'Nossa IA demorou mais do que o esperado. Tente novamente em instantes.',
-          diagnostics: undefined,
         },
         { status: 503 }
       );
@@ -388,7 +613,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Recalculate user statistics after essay save
     const { error: statsError } = await supabase.rpc('recalculate_user_statistics', {
       target_user_id: userId,
     });
@@ -399,10 +623,12 @@ export async function POST(request: NextRequest) {
     await trackEvent({
       eventType: 'essay_submitted',
       metadata: {
-        theme_type: submission.usarTemaPadrao !== false ? 'padrao' : submission.tema ? 'personalizado' : 'gerado',
+        theme_type: themeContext.themeType,
+        support_source: themeContext.supportSource,
+        support_provider: themeContext.supportProvider ?? undefined,
         essay_length: essayLength,
         score: result.nota,
-        tema: temaFinal,
+        tema: themeContext.tema,
         provider: aiAnalysis.provider,
         alignment_justification: alignmentResult.justification,
       },

@@ -33,6 +33,7 @@ export type EssayResultInsert = Tables['essay_results']['Insert'];
 
 export type QuizResultRow = Tables['quiz_results']['Row'];
 export type QuizResultInsert = Tables['quiz_results']['Insert'];
+export type GeneratedQuestionRow = Tables['generated_questions']['Row'];
 
 export type NoticiaRow = Tables['noticias']['Row'];
 export type NoticiaInsert = Tables['noticias']['Insert'];

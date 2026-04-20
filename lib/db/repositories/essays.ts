@@ -9,6 +9,16 @@ import { withTimeout, DatabaseError, isNotFoundError } from '../client';
 import type { EssayResultRow, CachedThemeRow, EssayCompetence } from '../types';
 
 type EssayRow = Database['public']['Tables']['essay_results']['Row'];
+const THEME_LOOKBACK_DAYS = 90;
+
+function normalizeThemeKey(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
 /** Normalized essay result shape returned to API consumers */
 export type NormalizedEssayResult = {
@@ -230,10 +240,125 @@ export async function createCachedTheme(
         tema: theme.tema,
         texto_apoio1: theme.textoApoio1,
         texto_apoio2: theme.textoApoio2,
-        usado_count: 1,
+        usado_count: 0,
       })
       .abortSignal(signal);
 
     if (error) throw DatabaseError.fromPostgrestError(error);
+  }, 'fast');
+}
+
+export async function getCachedThemePool(
+  client: SupabaseClient<Database>,
+  options?: { daysBack?: number; limit?: number }
+): Promise<CachedThemeRow[]> {
+  const daysBack = options?.daysBack ?? THEME_LOOKBACK_DAYS;
+  const limit = options?.limit ?? 50;
+  const since = new Date(Date.now() - daysBack * 24 * 60 * 60 * 1000).toISOString();
+
+  return withTimeout(async (signal) => {
+    const { data, error } = await client
+      .from('cached_themes')
+      .select('*')
+      .gte('created_at', since)
+      .order('created_at', { ascending: false })
+      .limit(limit)
+      .abortSignal(signal);
+
+    if (error) throw DatabaseError.fromPostgrestError(error);
+    return (data ?? []) as CachedThemeRow[];
+  }, 'fast');
+}
+
+export async function getRecentUserEssayThemes(
+  client: SupabaseClient<Database>,
+  userId: string,
+  limit = 10
+): Promise<string[]> {
+  const data = await withTimeout(async (signal) => {
+    const { data, error } = await client
+      .from('essay_results')
+      .select('tema')
+      .eq('user_id', userId)
+      .not('tema', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(limit)
+      .abortSignal(signal);
+
+    if (error) throw DatabaseError.fromPostgrestError(error);
+    return data ?? [];
+  }, 'fast');
+
+  return data
+    .map((row) => row.tema?.trim())
+    .filter((tema): tema is string => Boolean(tema));
+}
+
+export async function findCachedThemeByTema(
+  client: SupabaseClient<Database>,
+  tema: string
+): Promise<CachedThemeRow | null> {
+  const normalizedTarget = normalizeThemeKey(tema);
+  if (!normalizedTarget) return null;
+
+  const pool = await getCachedThemePool(client, { daysBack: 3650, limit: 500 });
+  return (
+    pool.find((item) => normalizeThemeKey(item.tema) === normalizedTarget) ?? null
+  );
+}
+
+export async function markCachedThemeAsUsed(
+  client: SupabaseClient<Database>,
+  themeId: string,
+  currentUsageCount = 0
+): Promise<void> {
+  await withTimeout(async (signal) => {
+    const { error } = await client
+      .from('cached_themes')
+      .update({ usado_count: currentUsageCount + 1 } as never)
+      .eq('id', themeId)
+      .abortSignal(signal);
+
+    if (error) throw DatabaseError.fromPostgrestError(error);
+  }, 'fast');
+}
+
+export async function createCachedThemes(
+  client: SupabaseClient<Database>,
+  themes: Array<{ tema: string; textoApoio1: string; textoApoio2: string }>
+): Promise<CachedThemeRow[]> {
+  if (themes.length === 0) return [];
+
+  const existing = await getCachedThemePool(client, { daysBack: 3650, limit: 500 });
+  const existingByKey = new Map(
+    existing.map((item) => [normalizeThemeKey(item.tema), item] as const)
+  );
+
+  const seenKeys = new Set<string>();
+  const toInsert = themes
+    .map((theme) => ({
+      tema: theme.tema.trim(),
+      texto_apoio1: theme.textoApoio1.trim(),
+      texto_apoio2: theme.textoApoio2.trim(),
+      usado_count: 0,
+    }))
+    .filter((theme) => {
+      const key = normalizeThemeKey(theme.tema);
+      if (!key || seenKeys.has(key) || existingByKey.has(key)) return false;
+      seenKeys.add(key);
+      return Boolean(theme.tema && theme.texto_apoio1 && theme.texto_apoio2);
+    });
+
+  if (toInsert.length === 0) return [];
+
+  return withTimeout(async (signal) => {
+    const { data, error } = await client
+      .from('cached_themes')
+      .insert(toInsert)
+      .select('*')
+      .abortSignal(signal);
+
+    if (error) throw DatabaseError.fromPostgrestError(error);
+    return (data ?? []) as CachedThemeRow[];
   }, 'fast');
 }
