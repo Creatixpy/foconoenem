@@ -146,7 +146,7 @@ function PesquisaPageInner() {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder={isAI ? 'Pergunte à IA sobre o ENEM...' : 'Buscar por título ou conteúdo...'}
+              placeholder={isAI ? 'Peça um resumo das notícias recentes sobre um tema...' : 'Buscar por título ou conteúdo...'}
               className="w-full pl-10 pr-28 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--ring-color)] text-sm"
             />
             <button
@@ -169,7 +169,7 @@ function PesquisaPageInner() {
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
             </svg>
-            Busca com IA
+            Resumo com IA
           </button>
         </motion.form>
 
@@ -193,7 +193,7 @@ function PesquisaPageInner() {
               <svg className="w-4 h-4 text-[var(--primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
               </svg>
-              <span className="text-xs font-medium text-[var(--primary)]">Resposta da IA</span>
+              <span className="text-xs font-medium text-[var(--primary)]">Resumo da IA</span>
             </div>
             <div className="text-sm text-[var(--text-secondary)] leading-relaxed whitespace-pre-line">
               {aiContent}
@@ -235,7 +235,7 @@ function PesquisaPageInner() {
               Nenhum resultado encontrado
             </p>
             <p className="text-[var(--text-muted)] text-xs mb-4">
-              Tente termos diferentes ou use a busca com IA para uma resposta personalizada.
+              Tente termos diferentes ou peça um resumo com IA baseado nas notícias já publicadas.
             </p>
             {!isAI && (
               <button
@@ -251,7 +251,7 @@ function PesquisaPageInner() {
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
                 </svg>
-                Tentar com IA
+                Gerar resumo com IA
               </button>
             )}
           </div>

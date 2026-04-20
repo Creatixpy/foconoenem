@@ -9,15 +9,12 @@ import { SESSION_CONFIG } from './constants';
  * Generates a cryptographically secure random token
  */
 export function generateSecureToken(length: number = 32): string {
-  if (typeof window !== 'undefined' && window.crypto) {
+  if (globalThis.crypto) {
     const array = new Uint8Array(length);
-    window.crypto.getRandomValues(array);
+    globalThis.crypto.getRandomValues(array);
     return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
   }
-  // Server-side: use Node.js crypto for proper randomness
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const crypto = require('crypto');
-  return (crypto.randomBytes(length) as Buffer).toString('hex');
+  throw new Error('Crypto API indisponível para gerar token seguro');
 }
 
 /**

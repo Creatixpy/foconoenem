@@ -344,7 +344,8 @@ export default function CommunityPageClient() {
 
   // Topics
   const { topics, loading: topicsLoading } = useCommunityTopics();
-  const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
+  const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
+  const selectedTopic = topics.find((topic) => topic.id === selectedTopicId) ?? topics[0] ?? null;
 
   // Threads
   const {
@@ -366,10 +367,15 @@ export default function CommunityPageClient() {
   const [mobileTab, setMobileTab] = useState<'feed' | 'topics' | 'profile'>('feed');
 
   // Sidebar settings
-  const [tagline, setTagline] = useState('');
-  const [showStats, setShowStats] = useState(false);
+  const profileTagline = profile?.community_tagline || '';
+  const profileShowStats = profile?.community_show_statistics ?? false;
+  const [taglineDraft, setTaglineDraft] = useState('');
+  const [showStatsDraft, setShowStatsDraft] = useState(false);
+  const [settingsDirty, setSettingsDirty] = useState(false);
   const [settingsSaving, setSettingsSaving] = useState(false);
   const [settingsSaved, setSettingsSaved] = useState(false);
+  const tagline = settingsDirty ? taglineDraft : profileTagline;
+  const showStats = settingsDirty ? showStatsDraft : profileShowStats;
 
   // Rules expanded
   const [rulesExpanded, setRulesExpanded] = useState(false);
@@ -380,21 +386,6 @@ export default function CommunityPageClient() {
       router.replace('/login');
     }
   }, [initialized, authLoading, user, router]);
-
-  // Select first topic when loaded
-  useEffect(() => {
-    if (topics.length > 0 && !selectedTopic) {
-      setSelectedTopic(topics[0]);
-    }
-  }, [topics, selectedTopic]);
-
-  // Load profile settings
-  useEffect(() => {
-    if (profile) {
-      setTagline(profile.community_tagline || '');
-      setShowStats(profile.community_show_statistics ?? false);
-    }
-  }, [profile]);
 
   // Load achievements
   useEffect(() => {
@@ -452,11 +443,30 @@ export default function CommunityPageClient() {
         community_show_statistics: showStats,
       });
       await refreshProfile();
+      setSettingsDirty(false);
+      setTaglineDraft('');
+      setShowStatsDraft(false);
       setSettingsSaved(true);
       setTimeout(() => setSettingsSaved(false), 2000);
     } catch { /* ignore */ }
     setSettingsSaving(false);
   };
+
+  const handleTaglineChange = useCallback((value: string) => {
+    if (!settingsDirty) {
+      setSettingsDirty(true);
+      setShowStatsDraft(profileShowStats);
+    }
+    setTaglineDraft(value);
+  }, [settingsDirty, profileShowStats]);
+
+  const handleShowStatsChange = useCallback((checked: boolean) => {
+    if (!settingsDirty) {
+      setSettingsDirty(true);
+      setTaglineDraft(profileTagline);
+    }
+    setShowStatsDraft(checked);
+  }, [settingsDirty, profileTagline]);
 
   // -------------------------------------------------------------------------
   // Render guards
@@ -504,7 +514,7 @@ export default function CommunityPageClient() {
             topics.map((t) => (
               <button
                 key={t.id}
-                onClick={() => { setSelectedTopic(t); setMobileTab('feed'); }}
+                onClick={() => { setSelectedTopicId(t.id); setMobileTab('feed'); }}
                 className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer ${
                   selectedTopic?.id === t.id
                     ? 'bg-[var(--primary)]/10 text-[var(--primary)] font-semibold'
@@ -551,7 +561,7 @@ export default function CommunityPageClient() {
             <label className="text-xs text-[var(--text-muted)] mb-1 block">Bio / frase</label>
             <textarea
               value={tagline}
-              onChange={(e) => setTagline(e.target.value)}
+              onChange={(e) => handleTaglineChange(e.target.value)}
               rows={2}
               maxLength={120}
               placeholder="Sua frase curta..."
@@ -562,7 +572,7 @@ export default function CommunityPageClient() {
             <input
               type="checkbox"
               checked={showStats}
-              onChange={(e) => setShowStats(e.target.checked)}
+              onChange={(e) => handleShowStatsChange(e.target.checked)}
               className="w-4 h-4 rounded border-[var(--border-color)] accent-[var(--primary)]"
             />
             <span className="text-xs text-[var(--text-secondary)]">Exibir estatísticas publicamente</span>

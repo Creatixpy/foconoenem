@@ -1,6 +1,7 @@
 'use server';
 
-const BRAZIL_TZ = 'America/Sao_Paulo';
+import { extractHourMinute, formatBrazilTime, getBrazilNow } from '@/lib/server/brazil-time';
+
 const OPEN_HOUR = 7;
 const CLOSE_HOUR = 23;
 const CLOSE_MINUTE = 30;
@@ -15,52 +16,12 @@ export type OperatingHoursInfo = {
   usedFallback: boolean;
 };
 
-async function getBrazilNow(): Promise<{ now: Date; usedFallback: boolean }> {
-  try {
-    const response = await fetch('https://worldtimeapi.org/api/timezone/America/Sao_Paulo', {
-      headers: { 'cache-control': 'no-cache' },
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      const date = new Date(data.datetime);
-      if (!Number.isNaN(date.getTime())) {
-        return { now: date, usedFallback: false };
-      }
-    }
-  } catch (error) {
-    console.warn('Falha ao sincronizar horário com worldtimeapi:', error);
-  }
-
-  return { now: new Date(), usedFallback: true };
-}
-
-function extractHourMinute(date: Date): { hour: number; minute: number } {
-  const formatter = new Intl.DateTimeFormat('pt-BR', {
-    timeZone: BRAZIL_TZ,
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
-  const parts = formatter.formatToParts(date);
-  const hour = Number(parts.find((part) => part.type === 'hour')?.value ?? '0');
-  const minute = Number(parts.find((part) => part.type === 'minute')?.value ?? '0');
-  return { hour, minute };
-}
-
 function evaluateOperatingHours(date: Date): boolean {
   const { hour, minute } = extractHourMinute(date);
   if (hour < OPEN_HOUR) return false;
   if (hour > CLOSE_HOUR) return false;
   if (hour === CLOSE_HOUR && minute >= CLOSE_MINUTE) return false;
   return true;
-}
-
-function formatBrazilTime(date: Date, options: Intl.DateTimeFormatOptions): string {
-  return new Intl.DateTimeFormat('pt-BR', {
-    timeZone: BRAZIL_TZ,
-    ...options,
-  }).format(date);
 }
 
 export async function getOperatingHoursInfo(): Promise<OperatingHoursInfo> {

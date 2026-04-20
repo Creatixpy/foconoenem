@@ -128,7 +128,7 @@ export function useCommunityThreads(topicId: string | null, userId: string | nul
     es.addEventListener('post_insert', (e) => {
       try {
         const data = JSON.parse(e.data);
-        const newPost = data.new;
+        const newPost = data?.new ?? data;
         if (newPost && newPost.topic_id === topicId && newPost.status === 'published') {
           setThreads((prev) => {
             if (prev.some((t) => t.id === newPost.id)) return prev;
@@ -141,7 +141,7 @@ export function useCommunityThreads(topicId: string | null, userId: string | nul
     es.addEventListener('comment_insert', (e) => {
       try {
         const data = JSON.parse(e.data);
-        const newComment = data.new;
+        const newComment = data?.new ?? data;
         if (newComment && newComment.status === 'visible') {
           setThreads((prev) =>
             prev.map((t) =>
@@ -155,20 +155,19 @@ export function useCommunityThreads(topicId: string | null, userId: string | nul
     });
 
     es.onerror = () => {
-      es.close();
-      // Auto-reconnect after 3s
+      // Let EventSource retry automatically and refresh state opportunistically.
       setTimeout(() => {
         if (eventSourceRef.current === es) {
-          eventSourceRef.current = null;
+          void fetchThreads();
         }
-      }, 3000);
+      }, 1500);
     };
 
     return () => {
       es.close();
       eventSourceRef.current = null;
     };
-  }, [topicId]);
+  }, [fetchThreads, topicId]);
 
   // ── Create post ────────────────────────────────────
   const createPost = useCallback(

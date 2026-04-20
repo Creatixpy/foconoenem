@@ -5,9 +5,29 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'motion/react';
 
-function ConfettiParticle({ delay, x }: { delay: number; x: number }) {
-  const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
-  const color = colors[Math.floor(Math.random() * colors.length)];
+const CONFETTI_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+
+interface ConfettiConfig {
+  color: string;
+  delay: number;
+  drift: number;
+  rotate: number;
+  x: number;
+}
+
+function buildConfetti(count: number): ConfettiConfig[] {
+  return Array.from({ length: count }, (_, index) => ({
+    color: CONFETTI_COLORS[index % CONFETTI_COLORS.length],
+    delay: index * 0.06,
+    drift: ((index * 37) % 220) - 110,
+    rotate: index % 2 === 0 ? 360 : -360,
+    x: (index * 17) % 100,
+  }));
+}
+
+const CONFETTI_PARTICLES = buildConfetti(40);
+
+function ConfettiParticle({ color, delay, drift, rotate, x }: ConfettiConfig) {
 
   return (
     <motion.div
@@ -17,8 +37,8 @@ function ConfettiParticle({ delay, x }: { delay: number; x: number }) {
       animate={{
         opacity: [1, 1, 0],
         y: [0, 400, 600],
-        x: [0, (Math.random() - 0.5) * 200],
-        rotate: [0, 360 * (Math.random() > 0.5 ? 1 : -1)],
+        x: [0, drift],
+        rotate: [0, rotate],
       }}
       transition={{ duration: 3, delay, ease: 'easeOut' }}
     />
@@ -53,8 +73,8 @@ function SucessoContent() {
       {/* Confetti */}
       {showConfetti && (
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {Array.from({ length: 40 }).map((_, i) => (
-            <ConfettiParticle key={i} delay={i * 0.06} x={Math.random() * 100} />
+          {CONFETTI_PARTICLES.map((particle, index) => (
+            <ConfettiParticle key={index} {...particle} />
           ))}
         </div>
       )}

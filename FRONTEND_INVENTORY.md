@@ -1,412 +1,362 @@
-# FRONTEND INVENTORY — Foco no ENEM
+# PROJECT INVENTORY — Foco no ENEM
 
-> Blueprint for rebuilding the frontend from zero.
-> Generated on 2026-04-09. Covers every page, component, API route, backend service, DB table, env var, and integration.
-
----
-
-## 1. PAGES
-
-### Landing
-| File | Purpose | Backend Logic |
-|------|---------|---------------|
-| `app/page.tsx` | Server wrapper — renders HomePageClient with SEO metadata | None |
-| `app/HomePageClient.tsx` | Full landing page: hero, features (4 cards), how-it-works (3 steps), testimonials, CTA | None (pure visual) |
-
-### Auth (route group `(auth)`)
-| File | Purpose | Backend Logic |
-|------|---------|---------------|
-| `app/(auth)/layout.tsx` | Isolated auth layout: logo header, centered content, legal footer. robots: noindex | None |
-| `app/(auth)/login/page.tsx` | Suspense wrapper for LoginForm | None |
-| `app/(auth)/login/LoginForm.tsx` | Email/password login, Google OAuth, forgot-password link, auto-redirect if authed | `signIn()`, `signInWithGoogle()`, `validateEmail()` |
-| `app/(auth)/register/page.tsx` | Suspense wrapper for RegisterForm | None |
-| `app/(auth)/register/RegisterForm.tsx` | Registration: name, email, password (strength meter), goal, Google OAuth, T&C agreement | `signUp()`, `signInWithGoogle()`, `validateEmail()`, `validatePassword()` |
-| `app/(auth)/forgot-password/page.tsx` | Email input → sends reset via Supabase | `supabase.auth.resetPasswordForEmail()` |
-| `app/(auth)/reset-password/page.tsx` | New password form with strength indicator, session validation | `supabase.auth.updateUser()`, `validatePassword()` |
-
-### Auth (non-grouped)
-| File | Purpose | Backend Logic |
-|------|---------|---------------|
-| `app/auth/callback/route.ts` | **API Route** — OAuth code exchange, redirects to /conta or /auth/auth-code-error | `supabase.auth.exchangeCodeForSession()` |
-| `app/auth/auth-code-error/page.tsx` | Error page for failed OAuth — auto-redirect after 5s | None |
-| `app/auth/login/page.tsx` | Redirect: /auth/login → /(auth)/login | `redirect()` |
-| `app/auth/register/page.tsx` | Redirect: /auth/register → /(auth)/register | `redirect()` |
-
-### Questões (Quiz)
-| File | Purpose | Backend Logic |
-|------|---------|---------------|
-| `app/questoes/page.tsx` | Suspense wrapper for QuestoesPageClient | None |
-| `app/questoes/QuestoesPageClient.tsx` | Quiz simulator: discipline selection, AI question generation, answer interface, results, score storage | Calls `/api/questoes`, stores results via API, uses `getUser()` |
-
-### Redação (Essay)
-| File | Purpose | Backend Logic |
-|------|---------|---------------|
-| `app/redacao/page.tsx` | Suspense wrapper for RedacaoPageClient | None |
-| `app/redacao/RedacaoPageClient.tsx` | Essay editor: theme selection, text editor, AI correction, competency scores (1-5), feedback display | Calls `/api/corrigir`, `/api/gerar-tema`, operating hours check |
-
-### Notícias (News)
-| File | Purpose | Backend Logic |
-|------|---------|---------------|
-| `app/noticias/page.tsx` | Wrapper for NoticiasPageClient | None |
-| `app/noticias/NoticiasPageClient.tsx` | News feed with pagination (6/page), featured highlights, search, AI-powered GPT search | Calls `/api/noticias`, `/api/noticias/gpt-busca` |
-| `app/noticias/[slug]/page.tsx` | Single article view: content, tags, related news, social sharing | Calls `/api/noticias/[slug]` |
-| `app/noticias/pesquisa/page.tsx` | Search results page with query param `q` | Calls `/api/noticias/busca` |
-| `app/noticias/admin/page.tsx` | Admin news management panel | Calls admin API routes |
-| `app/noticias/hooks.ts` | `useNoticiasFeed(page, limit)` and `useNoticiasHighlights(shouldFetch)` hooks | Fetch from `/api/noticias` |
-
-### Comunidade (Community)
-| File | Purpose | Backend Logic |
-|------|---------|---------------|
-| `app/comunidade/page.tsx` | Wrapper for CommunityPageClient | None |
-| `app/comunidade/CommunityPageClient.tsx` | Forum: age verification, T&C, topic filter, thread creation, real-time SSE updates, comments, likes, user profiles, achievements | Calls `/api/comunidade/*` endpoints, SSE stream |
-| `app/comunidade/hooks/useCommunityThreads.ts` | Hook: threads, real-time SSE, CRUD for posts/comments/likes, auto-reconnect | REST + SSE to `/api/comunidade/*` |
-| `app/comunidade/hooks/useCommunityTopics.ts` | Hook: fetch community topics | Calls `/api/comunidade/topics` |
-
-### Conta (Account)
-| File | Purpose | Backend Logic |
-|------|---------|---------------|
-| `app/conta/page.tsx` | Wrapper for ContaPageClient | None |
-| `app/conta/ContaPageClient.tsx` | Dashboard: stats tabs (overall, essays, questions), charts (Recharts), recalculate button | Calls `/api/conta/dados`, `/api/conta/recalcular` |
-| `app/conta/editar/page.tsx` | Wrapper for ContaEditarPageClient | None |
-| `app/conta/editar/ContaEditarPageClient.tsx` | Edit profile: name, bio, goal, ENEM year | Calls `updateUserProfile()` |
-
-### Resultados (Results)
-| File | Purpose | Backend Logic |
-|------|---------|---------------|
-| `app/resultados/[id]/page.tsx` | Wrapper for ResultadosPageClient | None |
-| `app/resultados/[id]/ResultadosPageClient.tsx` | Essay results: competency scores, AI feedback per competency, original essay text | Calls `/api/resultados/[id]` |
-
-### Doação (Donation)
-| File | Purpose | Backend Logic |
-|------|---------|---------------|
-| `app/doacao/page.tsx` | Donation page: 5 preset amounts, custom input, Stripe checkout | Calls `/api/doacao/checkout` |
-| `app/doacao/sucesso/page.tsx` | Success confirmation: transaction ID, impact cards, social sharing | Reads `session_id` from query params |
-
-### Static Pages
-| File | Purpose | Backend Logic |
-|------|---------|---------------|
-| `app/sobre/page.tsx` | About: company story (2022-2024), values (4), features (4), CTA | None |
-| `app/privacidade/page.tsx` | Privacy policy: 8 sections in accordion | None |
-| `app/termos/page.tsx` | Terms of service: 9 sections in accordion | None |
+> Snapshot generated from the repository state on 2026-04-20.
+> This document is repo-first: if something is not present in the tree or current import graph, it is intentionally not claimed here.
+> Despite the historical file name, this inventory covers both frontend and active backend code in the Next.js app.
 
 ---
 
-## 2. COMPONENTS
+## 1. Current Scope
 
-### Layout
-| File | Purpose |
-|------|---------|
-| `app/components/layout/Header.tsx` | Navigation (6 links), auth menu, theme toggle, mobile hamburger, scroll detection |
-| `app/components/layout/Footer.tsx` | Branding, resource links (4), support links (4), social media, contact email |
+The current application is a full-stack Next.js 16 project with:
 
-### UI
-| File | Purpose |
-|------|---------|
-| `app/components/ui/ThemeToggle.tsx` | Dark/light toggle, fixed bottom-right, sun/moon icons |
-| `app/components/ui/AccountLinkButton.tsx` | Conditional link: /conta if logged in, /register if not. Accepts custom labels |
-| `app/components/ui/OperatingHoursIndicator.tsx` | Emoji status for operating hours (7h-23h30 Brasília), calls `/api/schedule/time` |
-| `app/components/ui/skeleton.tsx` | Loading skeleton placeholder |
+- public marketing and legal pages
+- auth flows with Supabase
+- ENEM essay flow with AI theme generation, correction and OCR support
+- quiz flow with generated questions and result persistence
+- approved-news feed, admin moderation/import and AI summaries based on stored articles
+- community feed with topics, posts, comments, likes, profiles and achievements
+- account dashboard and profile editing
+- Stripe donation checkout and webhook handling
 
-### Shared
-| File | Purpose |
-|------|---------|
-| `app/components/shared/CookieConsent.tsx` | Cookie notice banner, localStorage persistence (`foconoenem_cookie_consent_v1`) |
-| `app/components/shared/NewsImage.tsx` | Next.js Image wrapper with fallback to `/foconoenemicon.png` on error |
-| `app/components/shared/AdSenseLoader.tsx` | Google AdSense integration (`ca-pub-8449266040565561`) |
+The active runtime lives in:
 
-### Feature
-| File | Purpose |
-|------|---------|
-| `app/components/features/quiz/QuestionCard.tsx` | Single quiz question: text, alternatives (A-E), selection, explanation |
-| `app/components/features/quiz/QuizResults.tsx` | Quiz results summary: score, correct/incorrect, per-question feedback (lazy-loaded) |
+- `app/` for pages, layouts and route handlers
+- `lib/` for business logic and integrations
+- `supabase/migrations/` for local schema history
+
+The repository does **not** currently ship local Supabase Edge Function code. `supabase/functions/` contains only legacy documentation.
 
 ---
 
-## 3. CORE FILES (layout, providers, SEO)
+## 2. Route Surface
+
+### Root and feature routes
+
+| Route | Files | Purpose |
+| --- | --- | --- |
+| `/` | `app/page.tsx`, `app/HomePageClient.tsx` | Landing page |
+| `/redacao` | `app/redacao/page.tsx`, `app/redacao/RedacaoPageClient.tsx`, `app/redacao/PhotoUpload.tsx` | Essay workflow, OCR upload support, correction UI |
+| `/questoes` | `app/questoes/page.tsx`, `app/questoes/QuestoesPageClient.tsx` | Quiz generation, answering and result flow |
+| `/noticias` | `app/noticias/page.tsx`, `app/noticias/NoticiasPageClient.tsx` | Public news feed |
+| `/noticias/[slug]` | `app/noticias/[slug]/page.tsx` | Approved news detail |
+| `/noticias/pesquisa` | `app/noticias/pesquisa/page.tsx` | News search page |
+| `/noticias/admin` | `app/noticias/admin/page.tsx` | News admin panel |
+| `/comunidade` | `app/comunidade/page.tsx`, `app/comunidade/CommunityPageClient.tsx` | Community feed |
+| `/conta` | `app/conta/page.tsx`, `app/conta/ContaPageClient.tsx` | Account dashboard |
+| `/conta/editar` | `app/conta/editar/page.tsx`, `app/conta/editar/ContaEditarPageClient.tsx` | Profile editing |
+| `/resultados/[id]` | `app/resultados/[id]/page.tsx`, `app/resultados/[id]/ResultadosPageClient.tsx` | Essay result view |
+| `/doacao` | `app/doacao/page.tsx` | Donation page |
+| `/doacao/sucesso` | `app/doacao/sucesso/page.tsx` | Donation success page |
+| `/sobre` | `app/sobre/page.tsx` | About page |
+| `/privacidade` | `app/privacidade/page.tsx` | Privacy policy |
+| `/termos` | `app/termos/page.tsx` | Terms page |
+
+### Auth routes
+
+| Route | Files | Purpose |
+| --- | --- | --- |
+| `/login` | `app/(auth)/login/page.tsx`, `app/(auth)/login/LoginForm.tsx` | Main login UI |
+| `/register` | `app/(auth)/register/page.tsx`, `app/(auth)/register/RegisterForm.tsx` | Main registration UI |
+| `/forgot-password` | `app/(auth)/forgot-password/page.tsx` | Password reset request |
+| `/reset-password` | `app/(auth)/reset-password/page.tsx` | Password reset completion |
+| `/(auth)` layout | `app/(auth)/layout.tsx` | Shared auth layout |
+| `/auth/callback` | `app/auth/callback/route.ts` | OAuth callback and session exchange |
+| `/auth/auth-code-error` | `app/auth/auth-code-error/page.tsx` | OAuth error page |
+| `/auth/login` | `app/auth/login/page.tsx` | Redirect alias to `/login` |
+| `/auth/register` | `app/auth/register/page.tsx` | Redirect alias to `/register` |
+
+### Deprecated auth client files
+
+| File | Status |
+| --- | --- |
+| `app/auth/login/LoginPageClient.tsx` | Deprecated placeholder, intentionally unused |
+| `app/auth/register/RegisterPageClient.tsx` | Deprecated placeholder, intentionally unused |
+
+### Root app shell
 
 | File | Purpose |
-|------|---------|
-| `app/layout.tsx` | Root layout: fonts (Geist Sans/Mono, Press Start 2P), Header/Footer, CookieConsent, AdSense, Vercel analytics, theme init script, SEO metadata |
-| `app/providers.tsx` | Client component wrapping app with `AuthProvider` + `ThemeProvider` |
-| `app/structured-data.tsx` | JSON-LD Schema.org: EducationalOrganization, WebSite, WebApplication |
+| --- | --- |
+| `app/layout.tsx` | Root metadata, global shell, telemetry toggles, theme boot script |
+| `app/providers.tsx` | Wraps `AuthProvider` and `ThemeProvider` |
+| `app/styles/index.css` | CSS entrypoint |
 
 ---
 
-## 4. STYLES
+## 3. API Surface
 
-| File | Purpose |
-|------|---------|
-| `app/styles/index.css` | Entry point importing all CSS (tokens → base → forms → components → utilities) |
-| `app/styles/tokens.css` | CSS custom properties: colors, foregrounds, backgrounds, borders, typography, spacing, radius, z-index, light/dark themes |
-| `app/styles/base.css` | Resets, body defaults, typography, links, form element defaults, accessibility |
-| `app/styles/components.css` | `.card`, `.btn` (primary/secondary/outline), `.badge`, `.input/.textarea/.select`, `.grid`, animations |
-| `app/styles/forms.css` | Form elements: inputs, textareas, selects, checkboxes, radios, validation states, disabled states |
-| `app/styles/utilities.css` | Utility classes |
-
----
-
-## 5. API ROUTES
-
-### Essay & Quiz
-| Route | Method | Purpose |
-|-------|--------|---------|
-| `/api/corrigir` | POST | AI essay correction via Groq — returns competency scores + feedback |
-| `/api/gerar-tema` | POST | Generate or fetch cached essay theme via Groq |
-| `/api/questoes` | POST | Generate AI quiz questions by discipline via Groq |
-| `/api/resultados/[id]` | GET | Fetch stored essay result by ID |
-
-### News
-| Route | Method | Purpose |
-|-------|--------|---------|
-| `/api/noticias` | GET | List news with pagination, optional `destaque` filter |
-| `/api/noticias/[slug]` | GET | Single article by slug |
-| `/api/noticias/busca` | GET | Full-text search (Portuguese config) |
-| `/api/noticias/gpt-busca` | POST | AI-powered news search via Groq |
-| `/api/noticias/importar` | POST | Import articles from NewsAPI (admin) |
-| `/api/noticias/destaques/status` | GET | Featured news status |
-| `/api/noticias/admin` | GET | Admin news listing |
-| `/api/noticias/admin/moderar` | POST | Moderate news articles (admin) |
-| `/api/noticias/admin/status` | GET | Admin dashboard stats |
-
-### Community
-| Route | Method | Purpose |
-|-------|--------|---------|
-| `/api/comunidade/topics` | GET | List discussion topics |
-| `/api/comunidade/posts` | GET/POST | List or create posts |
-| `/api/comunidade/posts/[postId]` | GET/DELETE | Get or delete a post |
-| `/api/comunidade/posts/[postId]/likes` | POST/DELETE | Like/unlike a post |
-| `/api/comunidade/comments` | GET/POST | List or create comments |
-| `/api/comunidade/comments/count` | GET | Comment count for a post |
-| `/api/comunidade/comments/[commentId]` | DELETE | Delete a comment |
-| `/api/comunidade/threads` | GET | Thread listing with comments |
-| `/api/comunidade/likes` | GET | User's likes |
-| `/api/comunidade/profiles` | GET | Community user profiles |
-| `/api/comunidade/achievements` | GET | Community achievements |
-
-### Account
-| Route | Method | Purpose |
-|-------|--------|---------|
-| `/api/conta/dados` | GET | Fetch user statistics + recent essays |
-| `/api/conta/recalcular` | POST | Trigger statistics recalculation (RPC) |
-| `/api/conquistas` | GET | User achievements |
-
-### Donation (Stripe)
-| Route | Method | Purpose |
-|-------|--------|---------|
-| `/api/doacao/checkout` | POST | Create Stripe checkout session |
-| `/api/doacao/webhook` | POST | Stripe webhook handler |
-
-### System
-| Route | Method | Purpose |
-|-------|--------|---------|
-| `/api/atualizarDestaques` | GET | Cron job: refresh featured news (daily at 00:00 UTC) |
-| `/api/destaques/remover` | POST | Remove featured status from articles |
-| `/api/schedule/time` | GET | Current operating hours status |
-| `/api/realtime-proxy` | GET | SSE proxy for real-time community updates |
-| `/api/admin/manutencao` | POST | Admin maintenance operations |
-
-### Auth
-| Route | Method | Purpose |
-|-------|--------|---------|
-| `app/auth/callback/route.ts` | GET | OAuth code exchange → redirect |
+| Route | Methods | Purpose |
+| --- | --- | --- |
+| `/api/admin/manutencao` | `GET`, `POST` | Admin/cron cleanup of cached themes, rate limits and analytics rows |
+| `/api/atualizarDestaques` | `GET` | Admin/cron refresh of approved news highlights using Groq |
+| `/api/comunidade/achievements` | `POST` | Batch-load achievements for community users |
+| `/api/comunidade/comments` | `POST` | Create comment |
+| `/api/comunidade/comments/[commentId]` | `DELETE` | Delete comment |
+| `/api/comunidade/comments/count` | `GET` | Comment count for a post |
+| `/api/comunidade/likes` | `POST` | Batch-load likes for post IDs |
+| `/api/comunidade/posts` | `POST` | Create post |
+| `/api/comunidade/posts/[postId]` | `DELETE` | Delete post |
+| `/api/comunidade/posts/[postId]/likes` | `POST`, `DELETE` | Like / unlike a post |
+| `/api/comunidade/profiles` | `POST` | Batch-load profile cards for user IDs |
+| `/api/comunidade/threads` | `GET` | List threads and comments by topic |
+| `/api/comunidade/topics` | `GET` | List available community topics |
+| `/api/conquistas` | `POST` | Evaluate and sync unlocked user achievements |
+| `/api/conta/dados` | `GET` | Account dashboard payload |
+| `/api/conta/recalcular` | `POST` | Recalculate aggregated user statistics |
+| `/api/corrigir` | `GET`, `POST` | Fetch stored essay by query-string ID / submit essay for correction |
+| `/api/destaques/remover` | `POST` | Remove highlight status from selected news |
+| `/api/doacao/checkout` | `POST` | Create Stripe Checkout session |
+| `/api/doacao/webhook` | `POST` | Process Stripe webhook |
+| `/api/gerar-tema` | `GET` | Serve cached essay theme or generate a new one |
+| `/api/noticias` | `GET` | List approved news |
+| `/api/noticias/[slug]` | `GET` | Fetch a single approved article |
+| `/api/noticias/admin` | `GET`, `POST` | Redirect helper to admin page / reject direct POST usage |
+| `/api/noticias/admin/moderar` | `POST` | Moderate news records |
+| `/api/noticias/admin/status` | `GET` | Admin authorization status |
+| `/api/noticias/busca` | `GET` | Text search over approved news |
+| `/api/noticias/destaques/status` | `GET` | Status of the last highlights refresh |
+| `/api/noticias/gpt-busca` | `POST` | AI summary based only on approved news stored in DB |
+| `/api/noticias/importar` | `POST` | Admin import from NewsAPI |
+| `/api/ocr` | `POST` | OCR via Gemini Vision |
+| `/api/questoes` | `GET`, `POST` | Generate quiz questions / persist quiz result |
+| `/api/realtime-proxy` | `GET` | SSE proxy for community inserts |
+| `/api/resultados/[id]` | `GET` | Fetch essay result by route param |
+| `/api/schedule/time` | `GET` | Return current Brazil datetime and fallback source |
+| `/auth/callback` | `GET` | OAuth code exchange route |
 
 ---
 
-## 6. BACKEND SERVICES (lib/)
+## 4. Components and UI Files
 
-### Authentication (`lib/auth/`)
-| File | Purpose |
-|------|---------|
-| `service.ts` | Core auth: `signUp()`, `signIn()`, `signInWithGoogle()`, `requestPasswordReset()`, `updatePassword()`, `refreshSession()` |
-| `profile-service.ts` | Profile CRUD: `getUserProfile()`, `createUserProfile()`, `updateUserProfile()` |
-| `stats-service.ts` | Stats: `getUserStatistics()`, `recalculateUserStatistics()` (RPC) |
-| `goals-service.ts` | Goals CRUD: `getUserGoals()`, `createUserGoal()`, `updateUserGoal()`, `deleteUserGoal()` |
-| `achievements-service.ts` | `getUserAchievements()` with join to achievement details |
-| `community-service.ts` | `confirmCommunityAge()`, `acceptCommunityTerms()`, `updateCommunitySettings()` |
-| `validation.ts` | `validatePassword()` (strength), `validateEmail()` (RFC 5322), `sanitizeInput()` |
-| `security.ts` | CSRF tokens, rate limiting (client), session idle detection, redirect sanitization, user-agent parsing |
-| `constants.ts` | Session config (7d max, 30min idle), password rules, rate limits (5/15min), auth paths |
-| `types.ts` | `UserProfile`, `UserStatistics`, `UserGoal`, `Achievement`, `AuthState`, `SignUpData`, `SignInData` |
-| `context.tsx` | React `AuthProvider` + `AuthContext`: user, session, profile, `signOut()`, `refreshProfile()` |
-| `index.ts` | Barrel export |
+### Layout and shared shell
 
-### AI (`lib/ai/`)
 | File | Purpose |
-|------|---------|
-| `groq.ts` | Groq LLM provider factory: primary + fallback clients, rate limit detection |
-| `retry.ts` | `withGroqRetry()`: multi-provider retry with fallback on rate limits |
-| `parse-json.ts` | `extractJson()`: safe JSON extraction from LLM responses |
+| --- | --- |
+| `app/components/layout/Header.tsx` | Header, auth menu, theme toggle and mobile navigation |
+| `app/components/layout/Footer.tsx` | Footer links and branding |
+| `app/components/layout/index.ts` | Barrel for layout components |
 
-### Database (`lib/db/`)
-| File | Purpose |
-|------|---------|
-| `client.ts` | Browser Supabase client singleton + `withTimeout()` (fast 4s, default 8s, extended 15s) + `DatabaseError` |
-| `server.ts` | Server Supabase clients: `createServerClient()` (RLS), `createAdminClient()` (service role) |
-| `types.ts` | DB row types, insert/update variants, application models, enums |
-| `transformers.ts` | Row↔Model conversion: `toUserProfile()`, `toNoticia()`, `toCommunityPost()`, reverse transformers |
-| `repositories/users.ts` | Profile, statistics, goals, achievements CRUD |
-| `repositories/essays.ts` | Essay results + theme cache CRUD |
-| `repositories/quizzes.ts` | Quiz result CRUD |
-| `repositories/news.ts` | News CRUD + full-text search |
-| `repositories/community.ts` | Posts, comments, likes, topics CRUD |
-| `repositories/analytics.ts` | Event tracking + stats queries |
-| `index.ts` | Barrel export |
+### Quiz feature components
 
-### Server Utilities (`lib/server/`)
 | File | Purpose |
-|------|---------|
-| `auth-request.ts` | `resolveRequestUser()`: validate Bearer token, return user context |
-| `conta.ts` | `fetchContaData()`, `getAuthenticatedUserId()`, `recalculateContaStatistics()` |
-| `noticias.ts` | Server-side news: list, fetch by slug, full-text search, fetch by tag (admin client) |
-| `analytics.ts` | `trackEvent()`: log to analytics_events table |
-| `rate-limit.ts` | `checkRateLimit()`: DB-backed rate limiting |
-| `operating-hours.ts` | `getOperatingHoursInfo()`, `isWithinOperatingHours()` (7:00-23:30 São Paulo) |
+| --- | --- |
+| `app/components/features/quiz/QuestionCard.tsx` | Quiz question card |
+| `app/components/features/quiz/QuizResults.tsx` | Quiz result summary |
+| `app/components/features/quiz/index.ts` | Barrel for quiz components |
 
-### Supabase Clients (`lib/supabase/`)
-| File | Purpose |
-|------|---------|
-| `client.ts` | Browser-side Supabase client factory |
-| `server.ts` | Server-side Supabase client factory (cookie-based sessions) |
-| `middleware.ts` | `updateSession()`: session refresh + security headers |
+### Placeholder barrels
 
-### Contexts (`lib/contexts/`)
-| File | Purpose |
-|------|---------|
-| `ThemeContext.tsx` | `ThemeProvider`, `useTheme()`, `useResolvedTheme()` — dark/light/system with localStorage |
-| `index.ts` | Barrel export |
-
-### Hooks (`lib/hooks/`)
-| File | Purpose |
-|------|---------|
-| `useOutsideClick.ts` | Detect clicks outside element (mousedown + touchstart) |
-| `useScrollPosition.ts` | Track scroll position, `{ isScrolled, scrollY }` with threshold |
-| `index.ts` | Barrel export |
-
-### Constants (`lib/constants/`)
-| File | Purpose |
-|------|---------|
-| `routes.ts` | `ROUTES` object: HOME, ESSAY, QUESTIONS, NEWS, COMMUNITY, ACCOUNT, etc. |
-| `navigation.ts` | `NAV_LINKS` (header), `FOOTER_LINKS` (footer) with href + label |
-| `seo.ts` | `SEO` config: site name, title template, description, locale, images; `THEME_COLORS` |
-| `index.ts` | Barrel export |
-
-### Root Utilities
-| File | Purpose |
-|------|---------|
-| `lib/admin-auth.ts` | `authorizeAdmin()`: Bearer token or cron secret validation against email allowlist |
-| `lib/errors.ts` | `isAbortError()`: detect AbortError from browser/Node.js |
-| `lib/security.ts` | Zod schemas (email, password, uuid, pagination), `handleApiError()`, `sanitizeString()` |
-| `lib/news-import.ts` | NewsAPI import: fetch, normalize, dedupe, insert articles |
-| `lib/schedule.ts` | Operating hours via RapidAPI/WorldTimeAPI (7:00-23:30 São Paulo) |
-| `lib/with-timeout.ts` | `withTimeout()`: promise timeout wrapper (default 10s) |
+| File | Current state |
+| --- | --- |
+| `app/components/shared/index.ts` | Empty barrel |
+| `app/components/ui/index.ts` | Empty barrel |
 
 ---
 
-## 7. SUPABASE SCHEMA
-
-### Tables
-| Table | Purpose | Key Fields |
-|-------|---------|------------|
-| `user_profiles` | User profile data | user_id, nome_completo, avatar_url, bio, objetivo, ano_enem, community_* settings |
-| `user_statistics` | Aggregated performance stats | user_id, total_redacoes, media_nota_redacao, melhor/pior_nota, media_competencia1-5, quiz totals per discipline |
-| `user_goals` | Learning targets | user_id, tipo (redacao_nota_minima/questoes_acerto_minimo/estudar_disciplina/praticar_competencia), valor_alvo, prazo, progresso, concluida |
-| `user_achievements` | Earned badges | user_id, achievement_id, earned_at, metadata |
-| `achievements` | Achievement definitions | slug, name, description, icon, criteria (JSONB) |
-| `essay_results` | AI essay corrections | user_id, nota (0-1000), competencia1-5 (JSONB), feedback_geral, ponto_fortes[], pontos_a_melhorar[], redacao_original, tema, texto_apoio1/2, origem (IA/Simulação) |
-| `cached_themes` | Pre-generated essay themes | tema, texto_apoio1, texto_apoio2, usado_count |
-| `quiz_results` | Quiz performance records | user_id, total_questions, correct/wrong/unanswered, score, disciplines[], questions_data (JSONB), answers_data (JSONB) |
-| `noticias` | News articles | titulo, slug, resumo, conteudo, imagem_url, autor, data_publicacao, tags[], destaque, fonte_url, search_vector (tsvector) |
-| `community_topics` | Forum categories | slug, title, description |
-| `community_posts` | Forum threads | topic_id, user_id, title, content, status (published/archived), last_activity_at |
-| `community_comments` | Forum replies | post_id, user_id, content, status (visible/hidden) |
-| `community_post_likes` | Post engagement | post_id, user_id (unique constraint) |
-| `analytics_events` | Usage tracking | event_type (enum), metadata (JSONB), user_ip, user_agent, user_id |
-| `rate_limits` | Request throttling | identifier, endpoint, request_count, window_start |
-| `configuracoes` | System settings | chave (unique), valor |
-
-### Enums
-- `event_type_enum`: essay_submitted, essay_viewed, theme_generated, theme_cached, quiz_started, quiz_completed, page_view, error_occurred
-
-### Functions
-- `recalculate_user_statistics(target_user_id)`: Aggregates essay + quiz data into user_statistics (SECURITY DEFINER)
-- `cleanup_old_rate_limits()`: Deletes rate_limits older than 1 hour
-- `update_updated_at_column()`: Trigger function for auto-updating `updated_at`
-
-### RLS Policies
-- All tables have RLS enabled
-- Users can only read/write their own data (via `auth.uid()`)
-- `service_role` has full access on all tables
-- Community content is publicly readable (when status = 'visible'/'published')
-- Achievements are publicly readable
-
----
-
-## 8. ENVIRONMENT VARIABLES
-
-| Variable | Purpose | Context |
-|----------|---------|---------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL | Client + Server |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase public anon key | Client |
-| `SUPABASE_URL` | Alternative Supabase URL | Server |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase admin key (bypasses RLS) | Server only |
-| `NEXT_PUBLIC_SUPABASE_TIMEOUT_MS` | Query timeout in ms | Client |
-| `GROQ_API_KEY` | Primary Groq LLM API key | Server only |
-| `GROQ_FALLBACK_API_KEY` | Fallback Groq key (rate limit resilience) | Server only |
-| `GROQ_MODEL` | Primary LLM model (default: openai/gpt-oss-120b) | Server only |
-| `GROQ_FALLBACK_MODEL` | Fallback model (default: llama3-70b-8192) | Server only |
-| `NEWSAPI_API_KEY` | NewsAPI.org key for imports | Server only |
-| `RAPIDAPI_KEY` | RapidAPI key (World Time API) | Server only |
-| `STRIPE_SECRET_KEY` | Stripe secret key | Server only |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe public key | Client |
-| `SITE_URL` | Internal site URL | Server |
-| `NEXT_PUBLIC_SITE_URL` | Public site URL for redirects | Client + Server |
-| `ADMIN_ALLOWED_EMAILS` | Comma-separated admin email allowlist | Server only |
-
----
-
-## 9. EXTERNAL INTEGRATIONS
-
-| Service | Purpose | Files Using It |
-|---------|---------|---------------|
-| **Supabase** | Database, Auth, RLS, Realtime | `lib/supabase/*`, `lib/db/*`, `lib/auth/*`, all API routes |
-| **Groq** | LLM for essay correction, quiz generation, theme generation, AI news search | `lib/ai/*`, `/api/corrigir`, `/api/questoes`, `/api/gerar-tema`, `/api/noticias/gpt-busca` |
-| **Stripe** | Donation payments | `/api/doacao/checkout`, `/api/doacao/webhook`, `app/doacao/*` |
-| **NewsAPI** | News article import | `lib/news-import.ts`, `/api/noticias/importar` |
-| **RapidAPI** (World Time) | São Paulo timezone for operating hours | `lib/schedule.ts`, `lib/server/operating-hours.ts` |
-| **Vercel Analytics** | Page view and performance tracking | `app/layout.tsx` |
-| **Vercel Speed Insights** | Core Web Vitals monitoring | `app/layout.tsx` |
-| **Google AdSense** | Ad monetization | `app/components/shared/AdSenseLoader.tsx` |
-
----
-
-## 10. CONFIGURATION FILES
+## 5. Styling Files
 
 | File | Purpose |
-|------|---------|
-| `next.config.ts` | Next.js config: strict mode, no powered-by header, wildcard image remotes, security headers (CSP, HSTS, X-Frame-Options) |
-| `tailwind.config.js` | Tailwind config: darkMode via `[data-theme="dark"]` selector, custom colors mapped to CSS vars, extended theme |
-| `tsconfig.json` | TypeScript config |
-| `vercel.json` | Vercel cron: `/api/atualizarDestaques` daily at 00:00 UTC |
-| `middleware.ts` | Next.js middleware: session refresh via `updateSession()`, applies to all routes except static assets |
-| `next-sitemap.config.js` | Sitemap generation config |
-| `eslint.config.mjs` | ESLint config |
+| --- | --- |
+| `app/styles/index.css` | Imports design tokens and base styles |
+| `app/styles/tokens.css` | CSS variables and theme tokens |
+| `app/styles/base.css` | Base element styles and utilities used by the app shell |
+
+There are currently no separate `components.css`, `forms.css` or `utilities.css` files in the repository.
+
+---
+
+## 6. Library Map
+
+### `lib/ai/`
+
+| File | Purpose |
+| --- | --- |
+| `lib/ai/gemini.ts` | OCR extraction through Gemini |
+| `lib/ai/groq.ts` | Groq provider factory and rate-limit helpers |
+| `lib/ai/parse-json.ts` | Safe JSON extraction from model output |
+| `lib/ai/retry.ts` | Retry/fallback orchestration for Groq-backed tasks |
+
+### `lib/auth/`
+
+| File | Purpose |
+| --- | --- |
+| `lib/auth/achievements-service.ts` | Achievement reads for the authenticated user |
+| `lib/auth/community-service.ts` | Community consent and profile-social updates |
+| `lib/auth/constants.ts` | Auth constants and route references |
+| `lib/auth/context.tsx` | `AuthProvider` and auth state management |
+| `lib/auth/goals-service.ts` | Goal CRUD |
+| `lib/auth/index.ts` | Barrel |
+| `lib/auth/profile-service.ts` | Profile CRUD |
+| `lib/auth/security.ts` | Auth-side security helpers |
+| `lib/auth/service.ts` | Sign-in, sign-up, reset and session refresh flows |
+| `lib/auth/stats-service.ts` | Statistics reads and recalculation |
+| `lib/auth/types.ts` | Auth and profile-related types |
+| `lib/auth/validation.ts` | Email/password validation helpers |
+
+### `lib/constants/`
+
+| File | Purpose |
+| --- | --- |
+| `lib/constants/index.ts` | Barrel |
+| `lib/constants/navigation.ts` | Centralized nav/footer link definitions |
+| `lib/constants/routes.ts` | Route constants |
+| `lib/constants/seo.ts` | Reusable SEO constants |
+
+### `lib/contexts/`
+
+| File | Purpose |
+| --- | --- |
+| `lib/contexts/ThemeContext.tsx` | Theme state, persistence and `themeScript` |
+| `lib/contexts/index.ts` | Barrel |
+
+### `lib/db/`
+
+| File | Purpose |
+| --- | --- |
+| `lib/db/client.ts` | Browser DB helpers and timeout/error helpers |
+| `lib/db/index.ts` | Barrel |
+| `lib/db/server.ts` | Server and admin Supabase client wrappers |
+| `lib/db/transformers.ts` | Row/model transformation helpers |
+| `lib/db/types.ts` | DB-layer application types |
+| `lib/db/repositories/analytics.ts` | Analytics persistence/query helpers |
+| `lib/db/repositories/community.ts` | Community CRUD helpers |
+| `lib/db/repositories/essays.ts` | Essay result and cached theme helpers |
+| `lib/db/repositories/news.ts` | News persistence and search helpers |
+| `lib/db/repositories/quizzes.ts` | Quiz result helpers |
+| `lib/db/repositories/users.ts` | User/profile/statistics/goal helpers |
+
+### `lib/hooks/`
+
+| File | Purpose |
+| --- | --- |
+| `lib/hooks/index.ts` | Barrel |
+| `lib/hooks/useOutsideClick.ts` | Outside-click detection |
+| `lib/hooks/useScrollPosition.ts` | Scroll state hook |
+
+### `lib/server/`
+
+| File | Purpose |
+| --- | --- |
+| `lib/server/analytics.ts` | Server-side analytics event logging |
+| `lib/server/auth-request.ts` | Resolve authenticated user from cookies/token |
+| `lib/server/brazil-time.ts` | Brazil time sync with external fallback chain |
+| `lib/server/conta.ts` | Account dashboard data assembly and stat recalculation |
+| `lib/server/noticias.ts` | Read-only approved news access for public routes |
+| `lib/server/operating-hours.ts` | Business-hours evaluation |
+| `lib/server/rate-limit.ts` | Server-side rate limiting |
+
+### `lib/supabase/`
+
+| File | Purpose |
+| --- | --- |
+| `lib/supabase/client.ts` | Browser Supabase client |
+| `lib/supabase/middleware.ts` | Session refresh and security headers used by `proxy.ts` |
+| `lib/supabase/server.ts` | SSR Supabase client with cookie bridge |
+
+### Root-level utilities in `lib/`
+
+| File | Purpose |
+| --- | --- |
+| `lib/admin-auth.ts` | Admin authorization and audit-log helper |
+| `lib/errors.ts` | Generic error helpers |
+| `lib/news-import.ts` | NewsAPI fetch/normalize/dedupe/import pipeline |
+| `lib/schedule.ts` | Client-side operating-hours helper via `/api/schedule/time` |
+| `lib/security.ts` | Generic API input and error helpers |
+
+---
+
+## 7. Environment Variables Actually Read by Code
+
+| Variable | Used by | Notes |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | app, SSR, admin and public DB access | Required for normal runtime |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | browser auth/public reads/SSR | Required for normal runtime |
+| `NEXT_PUBLIC_SITE_URL` | root metadata, redirect safety | Recommended |
+| `SITE_URL` | sitemap generation | Build-time |
+| `SUPABASE_SERVICE_ROLE_KEY` | admin writes, analytics, imports, maintenance | Required for privileged server flows |
+| `GROQ_API_KEY` | essay, themes, quiz generation, AI news summary | Primary IA key |
+| `GROQ_MODEL` | Groq integration | Optional override |
+| `GROQ_FALLBACK_API_KEY` | Groq integration | Optional fallback provider |
+| `GROQ_FALLBACK_MODEL` | Groq integration | Optional fallback model |
+| `GROQ_MAX_ATTEMPTS` | Groq retry logic | Optional |
+| `GEMINI_API_KEY` | `/api/ocr` | Optional OCR feature |
+| `NEWSAPI_API_KEY` | news import | Preferred NewsAPI variable |
+| `NEWSAPI_KEY` | news import | Accepted alias |
+| `ADMIN_ALLOWED_EMAILS` | admin auth | Comma-separated allowlist |
+| `ADMIN_CRON_SECRET` | admin cron auth | Accepted secret alias |
+| `CRON_SECRET` | admin cron auth | Accepted secret alias |
+| `STRIPE_SECRET_KEY` | donation checkout and webhook | Required for donation backend |
+| `STRIPE_WEBHOOK_SECRET` | donation webhook | Required if webhook is enabled |
+| `RAPIDAPI_KEY` | Brazil time sync | Optional |
+| `RAPIDAPI_WORLD_TIME_URL` | Brazil time sync | Optional override |
+| `WORLD_TIME_API_URL` | Brazil time sync | Optional override |
+| `WORLD_TIME_API_KEY` | Brazil time sync | Accepted alias |
+| `WORLD_TIME_RAPIDAPI_KEY` | Brazil time sync | Accepted alias |
+| `NODE_ENV` | root layout telemetry toggle | Standard runtime variable |
+
+The codebase does **not** currently read `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`.
+
+---
+
+## 8. Types and Data Files
+
+| File | Purpose |
+| --- | --- |
+| `types/index.ts` | Shared app types |
+| `types/postgrest-augment.d.ts` | PostgREST type augmentations |
+| `types/supabase.ts` | Generated Supabase database types |
+
+---
+
+## 9. Supabase Assets
+
+| Path | Purpose |
+| --- | --- |
+| `supabase/migrations/` | Local migration history |
+| `supabase/remote-latest.sql` | Remote schema snapshot/reference |
+| `supabase/scripts/20250210_export_user_data.sql` | Data export helper script |
+| `supabase/functions/README.md` | Legacy Edge Function audit and operational note |
+
+As of the latest audit documented in `supabase/functions/README.md`, remote Edge Functions may still exist in the Supabase project, but the repository no longer depends on them at runtime.
+
+---
+
+## 10. Public and Verification Assets
+
+| File | Purpose |
+| --- | --- |
+| `public/robots.txt` | Search engine policy and sitemap reference |
+| `public/sitemap.xml` | Generated sitemap |
+| `public/ads.txt` | Google publisher declaration |
+| `public/BingSiteAuth.xml` | Bing verification |
+| `public/google085fc0ba40da0037.html` | Google verification |
+| `public/.well-known/discord` | External verification/integration artifact |
+| `public/foconoenemicon.png` | Primary app icon |
+| `public/file.svg`, `globe.svg`, `next.svg`, `vercel.svg`, `window.svg` | Static SVG assets currently present in the repo |
+
+---
+
+## 11. Config Files
+
+| File | Purpose |
+| --- | --- |
+| `next.config.ts` | Next.js config, remote image hosts and security headers |
+| `next-sitemap.config.js` | Sitemap and robots generation rules |
+| `proxy.ts` | Session-refresh proxy matcher |
+| `eslint.config.mjs` | Flat ESLint config based on Next core-web-vitals |
 | `postcss.config.mjs` | PostCSS config |
-| `package.json` | Dependencies: React 19, Next.js 16, Supabase SSR, Stripe, Groq SDK, Recharts, Luxon, Motion, Zod |
+| `tailwind.config.js` | Tailwind configuration |
+| `tsconfig.json` | TypeScript config |
+| `vercel.json` | Cron definitions for highlights refresh and maintenance |
+| `package.json` | Scripts and dependencies |
 
 ---
 
-## 11. TYPE DEFINITIONS (types/)
+## 12. Operational Notes
 
-| File | Key Types |
-|------|-----------|
-| `types/index.ts` | `EssaySubmission`, `EssayResult` (5 competencies), `Noticia`, `Alternative`, `Question`, `QuizResult` |
-| `types/supabase.ts` | Auto-generated Supabase types for all tables and enums |
-| `types/deno-runtime.d.ts` | Deno runtime types (edge functions) |
-| `types/edge-modules.d.ts` | Edge function module types |
-| `types/postgrest-augment.d.ts` | PostgREST API augmentation types |
-
----
-
-## 12. MIDDLEWARE
-
-`middleware.ts` — Calls `updateSession()` from `lib/supabase/middleware.ts` to refresh auth state. Matcher applies to all routes except `_next/static`, `_next/image`, `favicon.ico`, and image files.
+- `npm run build` performs both the production build and sitemap regeneration.
+- `npm run lint` is the active static validation command in the repo.
+- There is no automated test suite checked into the project today.
+- `app/components/shared/index.ts` and `app/components/ui/index.ts` are present but currently empty.
+- `app/auth/login/LoginPageClient.tsx` and `app/auth/register/RegisterPageClient.tsx` are deprecated placeholders.
+- The current runtime path is Next.js route handlers under `app/api`; Supabase Edge Functions are legacy only.
