@@ -153,13 +153,18 @@ export default function RegisterForm() {
 
   // Real-time email validation (debounced)
   useEffect(() => {
-    if (!email) { setEmailError(''); return; }
+    if (!email) return;
     const timeout = setTimeout(() => {
       const result = validateEmail(email);
       setEmailError(result.isValid ? '' : (result.error ?? 'Email inválido'));
     }, 500);
     return () => clearTimeout(timeout);
   }, [email]);
+
+  const handleEmailChange = useCallback((value: string) => {
+    setEmail(value);
+    setEmailError('');
+  }, []);
 
   // Real-time password validation
   const handlePasswordChange = useCallback((value: string) => {
@@ -331,7 +336,7 @@ export default function RegisterForm() {
               autoComplete="email"
               required
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => handleEmailChange(e.target.value)}
               placeholder="seu@email.com"
               className={`
                 w-full pl-10 pr-4 py-3 rounded-xl text-sm

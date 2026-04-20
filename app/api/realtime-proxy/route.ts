@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
         .on(
           'postgres_changes',
           { event: 'INSERT', schema: 'public', table: 'community_posts', filter: `topic_id=eq.${topicId}` },
-          (payload) => send('post_insert', payload.new)
+          (payload) => send('post_insert', { new: payload.new })
         )
         .on(
           'postgres_changes',
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
             table: 'community_comments',
             ...(commentFilter ? { filter: commentFilter } : {}),
           },
-          (payload) => send('comment_insert', payload.new)
+          (payload) => send('comment_insert', { new: payload.new })
         );
 
       channel.subscribe((status, error) => {

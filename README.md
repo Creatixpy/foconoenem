@@ -1,146 +1,168 @@
-# Foco no ENEM - Simulado de Redação
+# Foco no ENEM
 
-Este é um projeto [Next.js](https://nextjs.org) que oferece um simulado de redação do ENEM com correção automatizada usando inteligência artificial.
+Plataforma web para preparação para o ENEM construída com Next.js 16, React 19 e Supabase.
 
-## Configuração
+O projeto atual concentra toda a lógica ativa no próprio app Next.js:
 
-### Pré-requisitos
+- redação com geração de tema, correção por IA e consulta de resultados
+- simulados de questões com persistência de desempenho
+- notícias com moderação, destaques, busca textual e resumo com IA baseado no banco
+- comunidade com tópicos, posts, comentários, curtidas e conquistas
+- área de conta com estatísticas e edição de perfil
+- doações via Stripe
+- OCR de imagem com Gemini para apoiar o fluxo de redação
 
-- Node.js 18.17.0 ou superior
-- Uma conta na [Groq](https://groq.com) para obter a API key
-- Uma conta no [Supabase](https://supabase.com) para o banco de dados
+## Arquitetura atual
 
-### Variáveis de Ambiente
+- Frontend e backend vivem no mesmo repositório, via App Router e Route Handlers em `app/api`.
+- O banco e a autenticação usam Supabase com tipos gerados em `types/supabase.ts`.
+- Operações privilegiadas usam `SUPABASE_SERVICE_ROLE_KEY` no servidor.
+- O histórico de schema fica em `supabase/migrations/`.
+- O diretório `supabase/functions/` existe apenas para documentar Edge Functions remotas legadas; o runtime atual não depende delas.
 
-Crie um arquivo `.env.local` na raiz do projeto com:
+## Stack
+
+- Next.js 16
+- React 19
+- TypeScript 6
+- Tailwind CSS 4
+- Supabase SSR + PostgreSQL
+- Groq para geração/correção/resumos
+- Gemini para OCR
+- Stripe para checkout e webhook de doações
+- NewsAPI para importação de notícias
+- Vercel Analytics e Speed Insights em produção
+
+## Requisitos
+
+Use uma versão atual do Node.js compatível com Next.js 16 e npm.
+
+## Variáveis de ambiente
+
+Crie `.env.local` na raiz do projeto. Nem todas as variáveis são obrigatórias para todas as rotas; a tabela abaixo indica o uso real.
+
+| Variável | Status | Uso real |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | obrigatória | base de todos os clientes Supabase |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | obrigatória | auth, consultas com RLS e leitura pública |
+| `NEXT_PUBLIC_SITE_URL` | recomendada | metadata, redirects e URLs públicas |
+| `SITE_URL` | recomendada | geração do sitemap |
+| `SUPABASE_SERVICE_ROLE_KEY` | obrigatória para fluxos administrativos/privilegiados | rotas admin, analytics server-side, importação, manutenção e gravações privilegiadas |
+| `GROQ_API_KEY` | obrigatória para IA principal | `/api/corrigir`, `/api/gerar-tema`, `/api/questoes`, `/api/noticias/gpt-busca` |
+| `GROQ_MODEL` | opcional | modelo primário da Groq |
+| `GROQ_FALLBACK_API_KEY` | opcional | provedor secundário quando há rate limit |
+| `GROQ_FALLBACK_MODEL` | opcional | modelo secundário |
+| `GROQ_MAX_ATTEMPTS` | opcional | tentativas por provedor |
+| `GEMINI_API_KEY` | opcional | OCR em `/api/ocr` |
+| `STRIPE_SECRET_KEY` | opcional | checkout de doações |
+| `STRIPE_WEBHOOK_SECRET` | opcional | validação do webhook do Stripe |
+| `NEWSAPI_API_KEY` ou `NEWSAPI_KEY` | opcional | importação de notícias no painel admin |
+| `ADMIN_ALLOWED_EMAILS` | necessária para acesso admin por usuário | allowlist do painel/admin APIs |
+| `ADMIN_CRON_SECRET` ou `CRON_SECRET` | opcional | autenticação de cron e chamadas automatizadas |
+| `RAPIDAPI_KEY` | opcional | provedor de horário preferencial |
+| `RAPIDAPI_WORLD_TIME_URL` | opcional | override da URL RapidAPI de horário |
+| `WORLD_TIME_API_URL` | opcional | override do fallback de horário |
+| `WORLD_TIME_API_KEY` | opcional | alias aceito para integração de horário |
+| `WORLD_TIME_RAPIDAPI_KEY` | opcional | alias aceito para integração de horário |
+
+Exemplo mínimo para desenvolvimento de boa parte do app:
 
 ```bash
-# Groq API (correção/redação/questões/notícias)
-GROQ_API_KEY=sua-api-key-aqui
-GROQ_MODEL=openai/gpt-oss-120b
-# (Opcional) chave/modelo secundário para fallback automático quando houver rate limit
-GROQ_FALLBACK_API_KEY=sua-chave-secundaria
-GROQ_FALLBACK_MODEL=llama3-70b-8192
-# Número máximo de tentativas por provedor antes de acionar o próximo
-GROQ_MAX_ATTEMPTS=2
-
-# Supabase (banco de dados)
 NEXT_PUBLIC_SUPABASE_URL=https://seu-projeto.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sua-chave-anonima-aqui
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sua-chave-anon
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+SITE_URL=http://localhost:3000
 
-# NewsAPI (importação automática de notícias)
-NEWSAPI_API_KEY=sua-chave-newsapi
+SUPABASE_SERVICE_ROLE_KEY=sua-service-role
 
-# Administração de destaques
-ADMIN_ALLOWED_EMAILS=email1@example.com,email2@example.com
-# Opcional: segredo para execuções automáticas (cron jobs)
-ADMIN_CRON_SECRET=segredo-unico-para-requests-automaticas
+GROQ_API_KEY=sua-chave-groq
+GROQ_MODEL=openai/gpt-oss-120b
 
-# Supabase service role (usado pelas rotas internas do Next.js)
-SUPABASE_SERVICE_ROLE_KEY=chave-service-role
+ADMIN_ALLOWED_EMAILS=admin@exemplo.com
 ```
 
-## Primeiros Passos
-
-Primeiro, instale as dependências:
+## Comandos
 
 ```bash
 npm install
-# ou
-yarn install
-# ou
-pnpm install
-# ou
-bun install
-```
-
-Em seguida, execute o servidor de desenvolvimento:
-
-```bash
 npm run dev
-# ou
-yarn dev
-# ou
-pnpm dev
-# ou
-bun dev
+npm run lint
+npm run build
+npm run start
 ```
 
-Abra [http://localhost:3000](http://localhost:3000) em seu navegador para ver o resultado.
+Observações:
 
-## Funcionalidades
+- `npm run build` executa `next build` e depois `next-sitemap`, atualizando `public/sitemap.xml`.
+- Hoje não há suíte automatizada de testes no repositório; a validação prática do projeto passa por `npm run lint`, `npm run build` e QA manual.
 
-- Simulado de redação com tema atual
-- Correção automática baseada nos critérios do ENEM
-- Feedback detalhado por competência
-- Análise de pontos fortes e pontos a melhorar
-- Importação automática de notícias educacionais via NewsAPI (restrita ao painel administrativo)
+## Estrutura do repositório
 
-## Tecnologias Utilizadas
+```text
+app/                    rotas, páginas e APIs do Next.js
+app/api/                route handlers ativos do sistema
+lib/auth/               autenticação, perfis, metas, estatísticas e comunidade
+lib/ai/                 integração com Groq e Gemini
+lib/db/                 camada de acesso ao banco e repositórios
+lib/server/             helpers server-only (conta, notícias, horário, analytics, rate limit)
+lib/supabase/           clientes SSR/browser e atualização de sessão
+public/                 assets, arquivos de verificação, robots e sitemap
+supabase/migrations/    histórico local de schema
+supabase/functions/     documentação do legado de Edge Functions
+types/                  tipos compartilhados e tipos gerados do Supabase
+```
 
-- Next.js 15
-- React 19
-- TailwindCSS 4
-- Groq API (GPT-OSS 120B)
-- Supabase (PostgreSQL)
-- TypeScript 5.9
+## Áreas funcionais
 
-## Configuração do Banco de Dados
+### Redação
 
-### Estrutura de Tabelas
+- página em `app/redacao`
+- geração de tema via `/api/gerar-tema`
+- correção via `/api/corrigir`
+- consulta individual de resultado via `/api/resultados/[id]`
+- OCR opcional via `/api/ocr`
 
-O projeto utiliza as seguintes tabelas no Supabase:
+### Questões
 
-1. **essay_results** - Armazena correções de redações
-2. **cached_themes** - Cache de temas gerados
-3. **rate_limits** - Controle de rate limiting
-4. **analytics_events** - Eventos de analytics
-5. **configuracoes** - Preferências administrativas e marcação de atualizações
-6. **user_profiles** - Perfil público e dados básicos dos usuários
-7. **user_statistics** - Indicadores agregados de desempenho do usuário
-8. **user_goals** - Metas personalizadas definidas pelos usuários
-9. **quiz_results** - Resultados de simulados de questões
-10. **noticias** - Sistema de notícias educacionais
+- página em `app/questoes`
+- geração via `/api/questoes`
+- persistência do resultado do quiz para usuários autenticados
 
-Para mais detalhes sobre a estrutura e melhorias implementadas, consulte [MELHORIAS.md](./MELHORIAS.md).
+### Notícias
 
-## Funcionalidades Avançadas
+- feed público, detalhe por slug e busca textual
+- painel admin em `/noticias/admin`
+- importação via NewsAPI
+- destaques atualizados por rota administrativa e cron
+- resumo com IA restrito ao conteúdo já aprovado e armazenado no banco
 
-### Sistema de Cache
-- Reduz custos de API em 60-70%
-- Temas reutilizados de forma inteligente
-- Limpeza automática de cache antigo
+### Comunidade
 
-### Rate Limiting
-- Proteção contra abuso de API
-- Limites configuráveis por endpoint
-- Mensagens claras ao usuário
+- feed por tópicos em `/comunidade`
+- posts, comentários, curtidas e perfis sociais
+- atualização em tempo real via `/api/realtime-proxy`
+- conquistas e sincronização de badges
 
-### Horário de Funcionamento
-- Sistema disponível das 7h às 23h30
-- Controle de custos de API
-- Mensagens informativas fora do horário
+### Conta e autenticação
 
-### Analytics
-- Rastreamento de eventos importantes
-- Métricas de uso e performance
-- Suporte a decisões baseadas em dados
+- login, cadastro, reset de senha e callback OAuth com Supabase
+- dashboard em `/conta`
+- edição de perfil em `/conta/editar`
 
-### Serviços internos
-- `/api/gerar-tema`: gera e cacheia temas de redação usando a Groq API.
-- `/api/corrigir` e `/api/resultados/[id]`: corrigem redações, salvam resultados e expõem consultas por ID.
-- `/api/questoes`: cria simulados equilibrados por disciplina e registra o desempenho do usuário.
-- `/api/atualizarDestaques` e `/api/destaques/remover`: administração completa dos destaques de notícias (suporta cron jobs e painel web).
-- `/api/conquistas`: sincroniza conquistas da comunidade e atualiza a gamificação.
-- `/api/admin/manutencao`: rotina de limpeza de caches, rate limits e eventos antigos.
+### Doações
 
-Todas as rotas que dependem da Groq utilizam fallback automático: caso o provedor principal atinja limite de requisições, o sistema tenta novamente com a chave/modelo secundário antes de retornar erro para o usuário. Configure as variáveis `GROQ_FALLBACK_API_KEY` e `GROQ_FALLBACK_MODEL` para ativar esse comportamento.
+- checkout server-side em `/api/doacao/checkout`
+- webhook em `/api/doacao/webhook`
 
-## Aprender Mais
+## Supabase e operações
 
-Para saber mais sobre as tecnologias utilizadas, consulte:
+- As migrations locais estão em `supabase/migrations/`.
+- O snapshot `supabase/remote-latest.sql` existe como referência, não como fonte principal de edição manual.
+- O arquivo [supabase/functions/README.md](./supabase/functions/README.md) documenta o legado de Edge Functions remotas ainda implantadas.
 
-- [Documentação do Next.js](https://nextjs.org/docs)
-- [Documentação do Groq](https://docs.groq.com/)
-- [Documentação do Supabase](https://supabase.com/docs)
-- [Documentação do TailwindCSS](https://tailwindcss.com/docs)
+## Documentação interna
+
+- [README.md](./README.md): visão geral, setup e operação
+- [FRONTEND_INVENTORY.md](./FRONTEND_INVENTORY.md): inventário fiel da estrutura atual do repositório
+- [AGENTS.md](./AGENTS.md): diretrizes de colaboração no código
+- [supabase/functions/README.md](./supabase/functions/README.md): estado do legado de Edge Functions

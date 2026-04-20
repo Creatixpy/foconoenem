@@ -7,6 +7,7 @@ import {
     useEffect,
     useMemo,
     useState,
+    useSyncExternalStore,
     type ReactNode,
 } from 'react';
 
@@ -108,30 +109,23 @@ export function ThemeProvider({
     defaultTheme = 'system',
     forcedTheme,
 }: ThemeProviderProps) {
-    const [theme, setThemeState] = useState<Theme>(defaultTheme);
-    const [systemPrefersDark, setSystemPrefersDark] = useState<boolean>(false);
-    const [mounted, setMounted] = useState(false);
+    const [theme, setThemeState] = useState<Theme>(() => readStoredTheme() ?? defaultTheme);
+    const [systemPrefersDark, setSystemPrefersDark] = useState<boolean>(() => getSystemTheme() === 'dark');
+    const mounted = useSyncExternalStore(
+        () => () => {},
+        () => true,
+        () => false
+    );
 
     // Compute resolved theme
     const resolvedTheme = useMemo<ResolvedTheme>(() => {
-        const activeTheme = forcedTheme ?? theme;
+        const activeTheme = forcedTheme ?? (mounted ? theme : defaultTheme);
+        const prefersDark = mounted ? systemPrefersDark : false;
         if (activeTheme === 'system') {
-            return systemPrefersDark ? 'dark' : 'light';
+            return prefersDark ? 'dark' : 'light';
         }
         return activeTheme;
-    }, [theme, systemPrefersDark, forcedTheme]);
-
-    // Initialize theme from storage on mount
-    useEffect(() => {
-        const storedTheme = readStoredTheme();
-        if (storedTheme) {
-            setThemeState(storedTheme);
-        }
-
-        // Initialize system preference
-        setSystemPrefersDark(getSystemTheme() === 'dark');
-        setMounted(true);
-    }, []);
+    }, [defaultTheme, forcedTheme, mounted, systemPrefersDark, theme]);
 
     // Listen for system theme changes
     useEffect(() => {
@@ -144,9 +138,6 @@ export function ThemeProvider({
         const handleChange = (event: MediaQueryListEvent) => {
             setSystemPrefersDark(event.matches);
         };
-
-        // Set initial value
-        setSystemPrefersDark(mediaQuery.matches);
 
         // Modern browsers
         if (typeof mediaQuery.addEventListener === 'function') {
@@ -190,13 +181,13 @@ export function ThemeProvider({
 
     const value = useMemo<ThemeContextValue>(
         () => ({
-            theme: forcedTheme ?? theme,
+            theme: forcedTheme ?? (mounted ? theme : defaultTheme),
             resolvedTheme,
             setTheme,
             toggleTheme,
-            systemPrefersDark,
+            systemPrefersDark: mounted ? systemPrefersDark : false,
         }),
-        [theme, resolvedTheme, setTheme, toggleTheme, systemPrefersDark, forcedTheme]
+        [defaultTheme, forcedTheme, mounted, resolvedTheme, setTheme, systemPrefersDark, theme, toggleTheme]
     );
 
     return (

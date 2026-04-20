@@ -1,16 +1,25 @@
 'use server';
 
-import { createAdminClient } from '@/lib/db/server';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/supabase';
 
 const NOTICIA_FIELDS =
-  'id,titulo,slug,resumo,conteudo,imagem_url,autor,data_publicacao,tags,destaque,created_at,fonte_url';
+  'id,titulo,slug,resumo,conteudo,imagem_url,autor,data_publicacao,tags,destaque,created_at,fonte_url,status';
 
-function requireSupabaseAdmin() {
-  const client = createAdminClient();
-  if (!client) {
-    throw new Error('Supabase service role não configurado.');
+function requireReadonlyClient(): SupabaseClient<Database> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!url || !anonKey) {
+    throw new Error('Supabase público não configurado.');
   }
-  return client;
+
+  return createClient<Database>(url, anonKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
 }
 
 export async function listNoticias(options: {
@@ -20,9 +29,13 @@ export async function listNoticias(options: {
   destaque?: boolean;
 }) {
   const { limit, offset, tag, destaque } = options;
-  const supabase = requireSupabaseAdmin();
+  const supabase = requireReadonlyClient();
 
-  let query = supabase.from('noticias').select(NOTICIA_FIELDS).order('data_publicacao', { ascending: false });
+  let query = supabase
+    .from('noticias')
+    .select(NOTICIA_FIELDS)
+    .eq('status', 'aprovado')
+    .order('data_publicacao', { ascending: false });
 
   if (tag) {
     query = query.contains('tags', [tag]);
@@ -41,17 +54,25 @@ export async function listNoticias(options: {
 }
 
 export async function fetchNoticiaBySlug(slug: string) {
-  const supabase = requireSupabaseAdmin();
-  const { data, error } = await supabase.from('noticias').select(NOTICIA_FIELDS).eq('slug', slug).maybeSingle();
+  const supabase = requireReadonlyClient();
+  const { data, error } = await supabase
+    .from('noticias')
+    .select(NOTICIA_FIELDS)
+    .eq('slug', slug)
+    .eq('status', 'aprovado')
+    .maybeSingle();
+
   if (error) {
     throw error;
   }
+
   return data ?? null;
 }
 
 export async function searchNoticias(termo: string, limit: number) {
-  const supabase = requireSupabaseAdmin();
+  const supabase = requireReadonlyClient();
   const sanitizedTerm = termo.trim();
+
   if (!sanitizedTerm) {
     return [];
   }
@@ -59,6 +80,7 @@ export async function searchNoticias(termo: string, limit: number) {
   const { data, error } = await supabase
     .from('noticias')
     .select(NOTICIA_FIELDS)
+    .eq('status', 'aprovado')
     .textSearch('search_vector', sanitizedTerm, {
       type: 'websearch',
       config: 'portuguese',
@@ -74,10 +96,11 @@ export async function searchNoticias(termo: string, limit: number) {
 }
 
 export async function fetchNoticiasPorTag(tag: string, limit: number) {
-  const supabase = requireSupabaseAdmin();
+  const supabase = requireReadonlyClient();
   const { data, error } = await supabase
     .from('noticias')
     .select(NOTICIA_FIELDS)
+    .eq('status', 'aprovado')
     .contains('tags', [tag])
     .order('data_publicacao', { ascending: false })
     .limit(limit);

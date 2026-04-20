@@ -195,8 +195,10 @@ export function useBuscaIA() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ termo: q }),
       });
-      if (!res.ok) throw new Error('Erro na busca com IA');
       const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Erro ao gerar resumo com IA');
+      }
       setContent(data.noticias ?? null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
@@ -218,14 +220,15 @@ export function useBuscaIA() {
 // ---------------------------------------------------------------------------
 export function useRelatedNoticias(tags: string[], excludeSlug: string, limit = 3) {
   const [related, setRelated] = useState<NoticiaAPI[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => tags.length > 0);
 
   useEffect(() => {
     if (!tags.length) {
-      setLoading(false);
       return;
     }
+    let cancelled = false;
     (async () => {
+      setLoading(true);
       try {
         const res = await fetch(
           `/api/noticias?tag=${encodeURIComponent(tags[0])}&limit=${limit + 1}&offset=0`
@@ -235,11 +238,21 @@ export function useRelatedNoticias(tags: string[], excludeSlug: string, limit = 
         const items: NoticiaAPI[] = (data.noticias ?? []).filter(
           (n: NoticiaAPI) => n.slug !== excludeSlug
         );
-        setRelated(items.slice(0, limit));
+        if (!cancelled) {
+          setRelated(items.slice(0, limit));
+        }
       } catch { /* ignore */ }
-      setLoading(false);
+      if (!cancelled) {
+        setLoading(false);
+      }
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [tags, excludeSlug, limit]);
 
-  return { related, loading };
+  return {
+    related: tags.length ? related : [],
+    loading: tags.length ? loading : false,
+  };
 }

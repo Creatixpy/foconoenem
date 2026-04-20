@@ -239,15 +239,19 @@ export default function Header() {
   const { user, loading } = useAuth();
   const { isScrolled } = useScrollPosition(8);
   const pathname = usePathname();
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileMenuPath, setMobileMenuPath] = useState<string | null>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null!);
+  const mobileOpen = mobileMenuPath === pathname;
 
-  useOutsideClick(mobileMenuRef, () => setMobileOpen(false), mobileOpen);
+  const closeMobileMenu = useCallback(() => {
+    setMobileMenuPath(null);
+  }, []);
 
-  // Close mobile menu on navigation
-  useEffect(() => {
-    setMobileOpen(false);
+  const toggleMobileMenu = useCallback(() => {
+    setMobileMenuPath((current) => current === pathname ? null : pathname);
   }, [pathname]);
+
+  useOutsideClick(mobileMenuRef, closeMobileMenu, mobileOpen);
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
@@ -357,7 +361,7 @@ export default function Header() {
         {/* Mobile: hamburger */}
         <div className="flex md:hidden items-center gap-2">
           <button
-            onClick={() => setMobileOpen(!mobileOpen)}
+            onClick={toggleMobileMenu}
             className="
               inline-flex items-center justify-center w-10 h-10
               rounded-lg text-[var(--text-secondary)]
@@ -384,6 +388,7 @@ export default function Header() {
           transition-opacity duration-[var(--duration-normal)]
           ${mobileOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}
         `}
+        onClick={closeMobileMenu}
         aria-hidden="true"
       />
 
@@ -408,7 +413,7 @@ export default function Header() {
             Menu
           </span>
           <button
-            onClick={() => setMobileOpen(false)}
+            onClick={closeMobileMenu}
             className="
               inline-flex items-center justify-center w-9 h-9
               rounded-lg text-[var(--text-secondary)]
@@ -427,6 +432,7 @@ export default function Header() {
             <Link
               key={href}
               href={href}
+              onClick={closeMobileMenu}
               className={`
                 flex items-center px-3 py-3 rounded-lg text-base font-medium
                 transition-colors duration-[var(--duration-fast)]
@@ -456,11 +462,12 @@ export default function Header() {
           {!loading && (
             <>
               {user ? (
-                <MobileUserSection />
+                <MobileUserSection onNavigate={closeMobileMenu} />
               ) : (
                 <div className="flex flex-col gap-2">
                   <Link
                     href="/login"
+                    onClick={closeMobileMenu}
                     className="
                       flex items-center justify-center px-4 py-3
                       rounded-lg text-sm font-medium
@@ -473,6 +480,7 @@ export default function Header() {
                   </Link>
                   <Link
                     href="/register"
+                    onClick={closeMobileMenu}
                     className="
                       flex items-center justify-center px-4 py-3
                       rounded-lg text-sm font-medium
@@ -496,7 +504,7 @@ export default function Header() {
 /* ------------------------------------------------------------------ */
 /*  Mobile User Section                                                */
 /* ------------------------------------------------------------------ */
-function MobileUserSection() {
+function MobileUserSection({ onNavigate }: { onNavigate: () => void }) {
   const { user, profile, signOut } = useAuth();
 
   const displayName = profile?.nome_completo ?? user?.email?.split('@')[0] ?? 'Usuário';
@@ -521,6 +529,7 @@ function MobileUserSection() {
 
       <Link
         href="/conta"
+        onClick={onNavigate}
         className="
           flex items-center px-3 py-3 rounded-lg text-sm font-medium
           text-[var(--text-secondary)]
@@ -532,6 +541,7 @@ function MobileUserSection() {
       </Link>
       <Link
         href="/conta?tab=editar"
+        onClick={onNavigate}
         className="
           flex items-center px-3 py-3 rounded-lg text-sm font-medium
           text-[var(--text-secondary)]
@@ -542,7 +552,10 @@ function MobileUserSection() {
         Editar perfil
       </Link>
       <button
-        onClick={signOut}
+        onClick={async () => {
+          onNavigate();
+          await signOut();
+        }}
         className="
           flex items-center px-3 py-3 rounded-lg text-sm font-medium
           text-[var(--danger)]
