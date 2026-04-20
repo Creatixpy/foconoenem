@@ -6,49 +6,171 @@ import { createAdminClient } from '@/lib/db/server';
 import { getOperatingHoursInfo } from '@/lib/server/operating-hours';
 import { checkRateLimit } from '@/lib/server/rate-limit';
 import { trackEvent } from '@/lib/server/analytics';
-import { getLeastUsedCachedTheme, createCachedTheme } from '@/lib/db/repositories/essays';
+import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
+import {
+  createCachedThemes,
+  getCachedThemePool,
+  getRecentUserEssayThemes,
+  markCachedThemeAsUsed,
+} from '@/lib/db/repositories/essays';
 
-async function requestTheme(provider: GroqProvider) {
+type ThemeData = {
+  tema: string;
+  textoApoio1: string;
+  textoApoio2: string;
+};
+
+type CachedThemeCandidate = {
+  id: string;
+  tema: string;
+  texto_apoio1: string;
+  texto_apoio2: string;
+  usado_count: number;
+  created_at: string;
+};
+
+const THEME_BATCH_SIZE = 4;
+const MIN_THEME_POOL = 8;
+
+function normalizeThemeKey(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function sanitizeTheme(theme: Partial<ThemeData>): ThemeData | null {
+  const tema = theme.tema?.trim();
+  const textoApoio1 = theme.textoApoio1?.trim();
+  const textoApoio2 = theme.textoApoio2?.trim();
+
+  if (!tema || !textoApoio1 || !textoApoio2) return null;
+  if (tema.length < 10 || textoApoio1.length < 40 || textoApoio2.length < 40) return null;
+
+  return { tema, textoApoio1, textoApoio2 };
+}
+
+function dedupeThemes(themes: ThemeData[]): ThemeData[] {
+  const unique = new Map<string, ThemeData>();
+
+  for (const theme of themes) {
+    const key = normalizeThemeKey(theme.tema);
+    if (!key || unique.has(key)) continue;
+    unique.set(key, theme);
+  }
+
+  return [...unique.values()];
+}
+
+async function requestThemesBatch(
+  provider: GroqProvider,
+  excludedThemes: string[]
+): Promise<ThemeData[]> {
+  const exclusionBlock = excludedThemes.length > 0
+    ? `Evite gerar temas iguais ou muito próximos destes exemplos já usados:\n${excludedThemes.map((theme) => `- ${theme}`).join('\n')}`
+    : 'Gere temas realmente variados entre si.';
+
   const response = await provider.client.chat.completions.create({
     messages: [
       {
         role: 'user',
         content: `
-          Gere um tema inédito e atual para redação do ENEM, acompanhado de dois textos de apoio curtos.
-          Responda APENAS como JSON:
+          Gere ${THEME_BATCH_SIZE} temas INÉDITOS e bem diferentes entre si para redação estilo ENEM, cada um acompanhado de dois textos de apoio curtos, informativos e neutros.
+
+          Regras obrigatórias:
+          - Os temas devem cobrir recortes sociais diferentes. Não concentre tudo em inteligência artificial, educação ou tecnologia.
+          - Os textos de apoio devem trazer repertório, contexto social e conflito real, sem repetir a mesma ideia com outras palavras.
+          - Evite temas genéricos demais e evite títulos quase idênticos.
+          - O texto de apoio deve ser útil para argumentação de um estudante.
+          - Responda APENAS em JSON.
+
+          ${exclusionBlock}
+
+          Formato:
           {
-            "tema": "Título do tema",
-            "textoApoio1": "Texto de apoio principal",
-            "textoApoio2": "Segundo texto de apoio"
+            "themes": [
+              {
+                "tema": "Título do tema",
+                "textoApoio1": "Texto de apoio principal",
+                "textoApoio2": "Segundo texto de apoio"
+              }
+            ]
           }
         `,
       },
     ],
     model: provider.model,
-    temperature: 0.4,
-    max_completion_tokens: 1024,
+    temperature: 0.9,
+    max_completion_tokens: 3000,
     top_p: 1,
     stream: false,
     response_format: { type: 'json_object' },
   });
 
   const content = response.choices?.[0]?.message?.content ?? '';
-  const parsed = extractJson<{ tema?: string; textoApoio1?: string; textoApoio2?: string }>(content);
+  const parsed = extractJson<{ themes?: Partial<ThemeData>[]; data?: Partial<ThemeData>[] }>(content);
+  const rawThemes = Array.isArray(parsed.themes)
+    ? parsed.themes
+    : Array.isArray(parsed.data)
+      ? parsed.data
+      : [];
 
-  if (!parsed.tema || !parsed.textoApoio1 || !parsed.textoApoio2) {
-    throw new Error('Resposta da IA não contém todos os campos necessários.');
+  const normalized = dedupeThemes(
+    rawThemes
+      .map((theme) => sanitizeTheme(theme))
+      .filter((theme): theme is ThemeData => Boolean(theme))
+  );
+
+  if (normalized.length === 0) {
+    throw new Error('A IA não retornou temas válidos.');
   }
 
-  return {
-    tema: parsed.tema,
-    textoApoio1: parsed.textoApoio1,
-    textoApoio2: parsed.textoApoio2,
-  };
+  return normalized;
+}
+
+function pickThemeCandidate(
+  pool: CachedThemeCandidate[],
+  recentUserThemeKeys: Set<string>
+) {
+  const uniqueByTheme = new Map<string, CachedThemeCandidate>();
+
+  for (const item of pool) {
+    const key = normalizeThemeKey(item.tema);
+    if (!key || recentUserThemeKeys.has(key)) continue;
+
+    const current = uniqueByTheme.get(key);
+    if (
+      !current ||
+      item.usado_count < current.usado_count ||
+      (item.usado_count === current.usado_count &&
+        new Date(item.created_at).getTime() > new Date(current.created_at).getTime())
+    ) {
+      uniqueByTheme.set(key, item);
+    }
+  }
+
+  const candidates = [...uniqueByTheme.values()].sort((a, b) => {
+    const usageDelta = a.usado_count - b.usado_count;
+    if (usageDelta !== 0) return usageDelta;
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
+
+  if (candidates.length === 0) return null;
+
+  const shortlist = candidates.slice(0, Math.min(4, candidates.length));
+  return shortlist[Math.floor(Math.random() * shortlist.length)];
 }
 
 export async function GET(request: NextRequest) {
-  const supabase = createAdminClient();
-  if (!supabase) {
+  const auth = await resolveRequestUserFromCookies();
+  if ('error' in auth) {
+    return auth.error;
+  }
+
+  const adminClient = createAdminClient();
+  if (!adminClient) {
     return NextResponse.json(
       { error: 'Supabase service role não configurado.' },
       { status: 500 }
@@ -59,7 +181,8 @@ export async function GET(request: NextRequest) {
   const ip = forwardedFor?.split(',')[0].trim() ?? request.headers.get('x-real-ip') ?? 'unknown';
   const userAgent = request.headers.get('user-agent') ?? 'unknown';
 
-  const rateResult = await checkRateLimit(ip, '/api/gerar-tema', 3, 1);
+  const rateIdentifier = auth.userId || ip;
+  const rateResult = await checkRateLimit(rateIdentifier, '/api/gerar-tema', 3, 1);
   if (!rateResult.allowed) {
     return NextResponse.json(
       {
@@ -83,72 +206,87 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  try {
-    const cached = await getLeastUsedCachedTheme(supabase);
-    if (cached) {
-      await trackEvent({
-        eventType: 'theme_cached',
-        metadata: {
-          tema: cached.tema,
-          cache_age_hours: Math.floor((Date.now() - new Date(cached.created_at).getTime()) / (1000 * 60 * 60)),
-        },
-        userIp: ip,
-        userAgent,
-      });
+  const recentThemes = await getRecentUserEssayThemes(auth.supabase, auth.userId, 10).catch(() => []);
+  const recentThemeKeys = new Set(recentThemes.map((theme) => normalizeThemeKey(theme)));
 
-      return NextResponse.json({
-        tema: cached.tema,
-        textoApoio1: cached.texto_apoio1,
-        textoApoio2: cached.texto_apoio2,
-        cached: true,
-      });
+  let pool = await getCachedThemePool(auth.supabase, { daysBack: 90, limit: 60 }).catch(() => []);
+  let candidate = pickThemeCandidate(pool, recentThemeKeys);
+  let generatedThemes: ThemeData[] = [];
+  let providerUsed: string | null = null;
+
+  const availableUniqueThemes = new Set(
+    pool
+      .map((item) => normalizeThemeKey(item.tema))
+      .filter((item) => item && !recentThemeKeys.has(item))
+  ).size;
+
+  if (!candidate || availableUniqueThemes < MIN_THEME_POOL) {
+    const excludedThemes = dedupeThemes(
+      pool.map((item) => ({
+        tema: item.tema,
+        textoApoio1: item.texto_apoio1,
+        textoApoio2: item.texto_apoio2,
+      }))
+    )
+      .map((item) => item.tema)
+      .slice(0, 20);
+
+    try {
+      const { result, provider } = await withGroqRetry('generateThemeBatch', (currentProvider) =>
+        requestThemesBatch(currentProvider, [...recentThemes, ...excludedThemes].slice(0, 25))
+      );
+      generatedThemes = result;
+      providerUsed = provider;
+      await createCachedThemes(adminClient, generatedThemes);
+      pool = await getCachedThemePool(auth.supabase, { daysBack: 90, limit: 80 }).catch(() => pool);
+      candidate = pickThemeCandidate(pool, recentThemeKeys);
+    } catch (error) {
+      console.error('Erro ao gerar lote de temas com IA:', error);
+      if (!candidate) {
+        return NextResponse.json(
+          {
+            error: 'Erro ao gerar tema',
+            message: 'Nossa IA não respondeu a tempo. Tente novamente em instantes.',
+          },
+          { status: 503 }
+        );
+      }
     }
-  } catch (error) {
-    console.error('Erro ao buscar tema em cache:', error);
   }
 
-  let generated: { tema: string; textoApoio1: string; textoApoio2: string; provider: string } | null = null;
-
-  try {
-    const { result, provider } = await withGroqRetry('generateTheme', requestTheme);
-    generated = { ...result, provider };
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    const attempts =
-      error && typeof error === 'object' && 'attemptsLog' in error
-        ? ((error as { attemptsLog?: string[] }).attemptsLog ?? undefined)
-        : undefined;
-
-    console.error('Erro ao gerar tema com IA:', error);
+  if (!candidate) {
     return NextResponse.json(
       {
-        error: 'Erro ao gerar tema',
-        message: 'Nossa IA não respondeu a tempo. Tente novamente em instantes.',
-        diagnostics: undefined,
+        error: 'Nenhum tema disponível',
+        message: 'Não foi possível preparar um tema válido agora. Tente novamente em instantes.',
       },
       { status: 503 }
     );
   }
 
   try {
-    await createCachedTheme(supabase, {
-      tema: generated.tema,
-      textoApoio1: generated.textoApoio1,
-      textoApoio2: generated.textoApoio2,
-    });
+    await markCachedThemeAsUsed(adminClient, candidate.id, candidate.usado_count);
   } catch (error) {
-    console.error('Erro ao armazenar tema em cache:', error);
+    console.error('Erro ao atualizar uso do tema:', error);
   }
 
   await trackEvent({
-    eventType: 'theme_generated',
-    metadata: { tema: generated.tema, provider: generated.provider },
+    eventType: generatedThemes.length > 0 ? 'theme_generated' : 'theme_cached',
+    metadata: {
+      tema: candidate.tema,
+      generated_batch_size: generatedThemes.length,
+      pool_size: pool.length,
+      provider: providerUsed ?? undefined,
+    },
     userIp: ip,
     userAgent,
+    userId: auth.userId,
   });
 
   return NextResponse.json({
-    ...generated,
-    cached: false,
+    tema: candidate.tema,
+    textoApoio1: candidate.texto_apoio1,
+    textoApoio2: candidate.texto_apoio2,
+    cached: generatedThemes.length === 0,
   });
 }

@@ -16,6 +16,7 @@ interface ThemeData {
   textoApoio2: string;
 }
 
+type ThemeMode = 'generated' | 'manual';
 type MobileTab = 'theme' | 'write' | 'submit';
 
 /* ================================================================== */
@@ -247,14 +248,22 @@ function CorrectionOverlay() {
 /* ================================================================== */
 
 function ThemeSection({
+  mode,
   theme,
   themeLoading,
   themeError,
+  manualTheme,
+  onModeChange,
+  onManualThemeChange,
   onGenerate,
 }: {
+  mode: ThemeMode;
   theme: ThemeData | null;
   themeLoading: boolean;
   themeError: string;
+  manualTheme: string;
+  onModeChange: (mode: ThemeMode) => void;
+  onManualThemeChange: (value: string) => void;
   onGenerate: () => void;
 }) {
   return (
@@ -263,13 +272,54 @@ function ThemeSection({
         Tema da sua redação
       </h3>
 
+      <div className="mb-4 grid grid-cols-2 gap-2 rounded-xl bg-[var(--bg-surface)] p-1 border border-[var(--border-color)]">
+        <button
+          type="button"
+          onClick={() => onModeChange('generated')}
+          className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+            mode === 'generated'
+              ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-sm'
+              : 'text-[var(--text-muted)]'
+          }`}
+        >
+          Tema com IA
+        </button>
+        <button
+          type="button"
+          onClick={() => onModeChange('manual')}
+          className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+            mode === 'manual'
+              ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-sm'
+              : 'text-[var(--text-muted)]'
+          }`}
+        >
+          Tema manual
+        </button>
+      </div>
+
       {themeError && (
         <div className="mb-4 px-4 py-3 rounded-xl text-sm bg-[var(--danger-light)] text-[var(--danger)] border border-[var(--danger)]/20">
           {themeError}
         </div>
       )}
 
-      {!theme ? (
+      {mode === 'manual' ? (
+        <div className="space-y-4">
+          <p className="text-sm text-[var(--text-muted)]">
+            Digite seu próprio tema. Se você não enviar textos de apoio, a IA vai gerá-los automaticamente durante a correção.
+          </p>
+          <textarea
+            value={manualTheme}
+            onChange={(e) => onManualThemeChange(e.target.value)}
+            placeholder="Ex.: Caminhos para combater a evasão escolar no Brasil"
+            className="
+              w-full min-h-[120px] rounded-xl border border-[var(--border-color)]
+              bg-[var(--bg-base)] px-4 py-3 text-sm text-[var(--text-primary)]
+              placeholder:text-[var(--text-muted)] outline-none resize-none
+            "
+          />
+        </div>
+      ) : !theme ? (
         <div className="text-center py-6">
           <p className="text-sm text-[var(--text-muted)] mb-5">
             Gere um tema inédito com nossa IA para começar sua redação.
@@ -376,9 +426,11 @@ export default function RedacaoPageClient() {
   const { user, initialized } = useAuth();
 
   // Theme
+  const [themeMode, setThemeMode] = useState<ThemeMode>('generated');
   const [theme, setTheme] = useState<ThemeData | null>(null);
   const [themeLoading, setThemeLoading] = useState(false);
   const [themeError, setThemeError] = useState('');
+  const [manualTheme, setManualTheme] = useState('');
 
   // Essay
   const [essay, setEssay] = useState('');
@@ -397,7 +449,9 @@ export default function RedacaoPageClient() {
   // Derived
   const wordCount = countWords(essay);
   const charCount = essay.length;
-  const canSubmit = !!theme && wordCount >= MIN_WORDS && wordCount <= MAX_WORDS && !correcting;
+  const selectedThemeTitle = themeMode === 'manual' ? manualTheme.trim() : theme?.tema ?? '';
+  const hasSelectedTheme = selectedThemeTitle.length >= 5;
+  const canSubmit = hasSelectedTheme && wordCount >= MIN_WORDS && wordCount <= MAX_WORDS && !correcting;
 
   // Auth guard
   useEffect(() => {
@@ -427,6 +481,7 @@ export default function RedacaoPageClient() {
         textoApoio1: data.textoApoio1,
         textoApoio2: data.textoApoio2,
       });
+      setThemeMode('generated');
       // Auto-switch to write tab on mobile
       setMobileTab('write');
     } catch (err) {
@@ -438,22 +493,30 @@ export default function RedacaoPageClient() {
 
   // Submit essay
   const handleSubmit = useCallback(async () => {
-    if (!canSubmit || !theme) return;
+    if (!canSubmit) return;
 
     setCorrecting(true);
     setCorrectionError('');
 
     try {
+      const payload = themeMode === 'manual'
+        ? {
+            redacao: essay,
+            tema: manualTheme.trim(),
+            themeMode: 'manual' as const,
+          }
+        : {
+            redacao: essay,
+            tema: theme?.tema,
+            textoApoio1: theme?.textoApoio1,
+            textoApoio2: theme?.textoApoio2,
+            themeMode: 'generated' as const,
+          };
+
       const res = await fetch('/api/corrigir', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          redacao: essay,
-          tema: theme.tema,
-          textoApoio1: theme.textoApoio1,
-          textoApoio2: theme.textoApoio2,
-          usarTemaPadrao: false,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
@@ -467,7 +530,7 @@ export default function RedacaoPageClient() {
       setCorrectionError(err instanceof Error ? err.message : 'Erro ao corrigir. Tente novamente.');
       setCorrecting(false);
     }
-  }, [canSubmit, theme, essay, router]);
+  }, [canSubmit, themeMode, theme, manualTheme, essay, router]);
 
   // Loading
   if (!initialized) {
@@ -505,7 +568,7 @@ export default function RedacaoPageClient() {
             Escreva sua redação
           </h1>
           <p className="mt-2 text-sm text-[var(--text-muted)] max-w-xl">
-            Escolha um tema gerado pela IA, escreva sua redação dissertativa-argumentativa e receba feedback detalhado com nota por competência.
+            Gere um tema com IA ou escreva o seu próprio tema, produza sua redação dissertativa-argumentativa e receba feedback detalhado com nota por competência.
           </p>
         </div>
 
@@ -537,11 +600,11 @@ export default function RedacaoPageClient() {
           {/* ---- Left: Editor ---- */}
           <div className={`flex-1 space-y-4 ${mobileTab !== 'write' ? 'hidden lg:block' : ''}`}>
             {/* Theme pill (mobile compact — shown only in write tab) */}
-            {theme && (
+            {hasSelectedTheme && (
               <div className="lg:hidden">
                 <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)]">
                   <span className="text-xs font-medium text-[var(--text-muted)]">Tema:</span>
-                  <span className="text-xs text-[var(--text-secondary)] truncate flex-1">{theme.tema}</span>
+                  <span className="text-xs text-[var(--text-secondary)] truncate flex-1">{selectedThemeTitle}</span>
                   <button
                     type="button"
                     onClick={() => setMobileTab('theme')}
@@ -626,9 +689,19 @@ export default function RedacaoPageClient() {
             {/* Theme section (shown in theme tab on mobile, always on desktop) */}
             <div className={`${mobileTab !== 'theme' ? 'hidden lg:block' : ''}`}>
               <ThemeSection
+                mode={themeMode}
                 theme={theme}
                 themeLoading={themeLoading}
                 themeError={themeError}
+                manualTheme={manualTheme}
+                onModeChange={(mode) => {
+                  setThemeMode(mode);
+                  setThemeError('');
+                }}
+                onManualThemeChange={(value) => {
+                  setManualTheme(value);
+                  setThemeError('');
+                }}
                 onGenerate={handleGenerateTheme}
               />
             </div>
@@ -641,7 +714,7 @@ export default function RedacaoPageClient() {
                 </h3>
 
                 {/* Requirements */}
-                <RequirementsChecklist hasTheme={!!theme} wordCount={wordCount} />
+                <RequirementsChecklist hasTheme={hasSelectedTheme} wordCount={wordCount} />
 
                 {/* Error */}
                 {correctionError && (

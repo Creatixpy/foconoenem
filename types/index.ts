@@ -1,6 +1,7 @@
 export interface EssaySubmission {
   redacao: string;
   usarTemaPadrao?: boolean;
+  themeMode?: 'generated' | 'manual';
   tema?: string;
   textoApoio1?: string;
   textoApoio2?: string;

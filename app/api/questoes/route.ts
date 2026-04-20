@@ -1,26 +1,33 @@
-import { NextRequest, NextResponse } from "next/server";
-import { randomUUID } from "crypto";
-import type { Question, QuizResult } from "@/types";
-import type { GroqProvider } from "@/lib/ai/groq";
-import { isRateLimitError, buildGroqProviders } from "@/lib/ai/groq";
-import { extractJson } from "@/lib/ai/parse-json";
-import { getOperatingHoursInfo } from "@/lib/server/operating-hours";
-import { checkRateLimit } from "@/lib/server/rate-limit";
+import { NextRequest, NextResponse } from 'next/server';
+import { randomUUID } from 'crypto';
+import type { Question, QuizResult } from '@/types';
+import type { GroqProvider } from '@/lib/ai/groq';
+import { buildGroqProviders, isRateLimitError } from '@/lib/ai/groq';
+import { extractJson } from '@/lib/ai/parse-json';
+import { getOperatingHoursInfo } from '@/lib/server/operating-hours';
+import { checkRateLimit } from '@/lib/server/rate-limit';
 import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
-import { createAdminClient } from "@/lib/db/server";
-import { createQuizResult, saveGeneratedQuestions } from "@/lib/db/repositories/quizzes";
-import type { Database } from "@/types/supabase";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { createAdminClient } from '@/lib/db/server';
+import {
+  createQuizResult,
+  getQuestionSignature,
+  getRecentUserQuestionExposure,
+  getStoredQuestionsForDisciplines,
+  saveGeneratedQuestions,
+} from '@/lib/db/repositories/quizzes';
+import type { Database } from '@/types/supabase';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
-const DISCIPLINES: Question["discipline"][] = ["Matemática", "Português", "Química", "Física", "Geografia"];
+const DISCIPLINES: Question['discipline'][] = ['Matemática', 'Português', 'Química', 'Física', 'Geografia'];
 const QUESTIONS_PER_DISCIPLINE = 3;
+const REUSED_QUESTIONS_PER_DISCIPLINE = 2;
 const MAX_ATTEMPTS_PER_DISCIPLINE = 2;
 
 type QuizRequestPayload = {
   result: QuizResult;
   selectedAnswers: Record<string, string>;
   questions: Question[];
-  disciplines: Question["discipline"][];
+  disciplines: Question['discipline'][];
 };
 
 type RawAlternative = {
@@ -34,45 +41,71 @@ type RawQuestion = {
   text?: string;
   explanation?: string;
   alternatives?: RawAlternative[];
+  topic?: string;
+  difficulty?: string;
 };
 
+type GeneratedQuestionCandidate = Question & {
+  topic?: string | null;
+  difficulty?: string | null;
+};
+
+type GenerationDiagnostics = Partial<Record<Question['discipline'], string>>;
+
+function shuffleArray<T>(items: T[]): T[] {
+  const copy = [...items];
+  for (let index = copy.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [copy[index], copy[randomIndex]] = [copy[randomIndex], copy[index]];
+  }
+  return copy;
+}
+
+function normalizeText(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function assertQuizPayload(payload: unknown): QuizRequestPayload {
-  if (!payload || typeof payload !== "object") {
-    throw new Error("Payload ausente ou inválido");
+  if (!payload || typeof payload !== 'object') {
+    throw new Error('Payload ausente ou inválido');
   }
 
   const { result, selectedAnswers, questions, disciplines } = payload as Record<string, unknown>;
 
-  if (!result || typeof result !== "object") {
-    throw new Error("Dados do resultado inválidos");
+  if (!result || typeof result !== 'object') {
+    throw new Error('Dados do resultado inválidos');
   }
 
   const castResult = result as QuizResult;
   const requiredNumbers: Array<keyof QuizResult> = [
-    "totalQuestions",
-    "correctAnswers",
-    "wrongAnswers",
-    "unansweredQuestions",
-    "score",
+    'totalQuestions',
+    'correctAnswers',
+    'wrongAnswers',
+    'unansweredQuestions',
+    'score',
   ];
   for (const key of requiredNumbers) {
-    if (typeof castResult[key] !== "number") {
-      throw new Error("Dados do resultado inválidos");
+    if (typeof castResult[key] !== 'number') {
+      throw new Error('Dados do resultado inválidos');
     }
   }
 
   if (!Array.isArray(questions) || questions.length === 0) {
-    throw new Error("Lista de questões inválida");
+    throw new Error('Lista de questões inválida');
   }
 
-  if (!selectedAnswers || typeof selectedAnswers !== "object") {
-    throw new Error("Mapa de respostas inválido");
+  if (!selectedAnswers || typeof selectedAnswers !== 'object') {
+    throw new Error('Mapa de respostas inválido');
   }
 
   const normalizedDisciplines = Array.isArray(disciplines)
-    ? (disciplines.filter((item): item is Question["discipline"] =>
-        typeof item === "string" ? DISCIPLINES.includes(item as Question["discipline"]) : false)
-      )
+    ? disciplines.filter((item): item is Question['discipline'] =>
+        typeof item === 'string' ? DISCIPLINES.includes(item as Question['discipline']) : false)
     : [];
 
   return {
@@ -83,161 +116,213 @@ function assertQuizPayload(payload: unknown): QuizRequestPayload {
   };
 }
 
-async function requestQuestionsForDiscipline(provider: GroqProvider, discipline: Question["discipline"]): Promise<Question[]> {
+function normalizeGeneratedQuestion(
+  discipline: Question['discipline'],
+  rawQuestion: RawQuestion
+): GeneratedQuestionCandidate | null {
+  const text = rawQuestion.text?.trim();
+  if (!text || !Array.isArray(rawQuestion.alternatives) || rawQuestion.alternatives.length < 4) {
+    return null;
+  }
+
+  const alternatives = rawQuestion.alternatives
+    .map((alternative, index) => {
+      const letter = String.fromCharCode(65 + index);
+      const alternativeText = alternative?.text?.trim();
+      if (!alternativeText) return null;
+
+      return {
+        id: alternative?.id?.trim() || letter,
+        text: alternativeText,
+        isCorrect: Boolean(alternative?.isCorrect),
+      };
+    })
+    .filter((alternative): alternative is Question['alternatives'][number] => Boolean(alternative));
+
+  if (alternatives.length !== 4) return null;
+
+  const uniqueAlternatives = new Set(alternatives.map((alternative) => normalizeText(alternative.text)));
+  const correctCount = alternatives.filter((alternative) => alternative.isCorrect).length;
+  if (uniqueAlternatives.size !== 4 || correctCount !== 1) return null;
+
+  return {
+    id: randomUUID(),
+    discipline,
+    text,
+    explanation: rawQuestion.explanation?.trim() || 'Sem explicação disponível.',
+    alternatives,
+    topic: rawQuestion.topic?.trim() || null,
+    difficulty: rawQuestion.difficulty?.trim() || 'desafiador',
+  };
+}
+
+async function requestQuestionsForDiscipline(
+  provider: GroqProvider,
+  input: {
+    discipline: Question['discipline'];
+    count: number;
+    excludedTexts: string[];
+  }
+): Promise<GeneratedQuestionCandidate[]> {
+  const excludedBlock = input.excludedTexts.length > 0
+    ? `Evite perguntas iguais ou muito parecidas com estes enunciados já usados:\n${input.excludedTexts
+        .slice(0, 12)
+        .map((text, index) => `${index + 1}. ${text}`)
+        .join('\n')}`
+    : 'Todas as questões precisam ser inéditas entre si.';
+
   const prompt = `
-      Atue como um professor especialista no ENEM (Exame Nacional do Ensino Médio).
-      Crie ${QUESTIONS_PER_DISCIPLINE} questões de múltipla escolha INÉDITAS e DE ALTA QUALIDADE sobre ${discipline}.
-      
-      Requisitos obrigatórios:
-      1. Nível de dificuldade: Desafiador (estilo ENEM).
-      2. Contextualização: As questões devem ter um texto base ou situação-problema, não apenas perguntas diretas.
-      3. Estrutura: Enunciado claro, 4 alternativas (A, B, C, D) onde APENAS UMA é correta.
-      4. Explicação: Forneça uma explicação detalhada (mini-aula) de por que a resposta correta é a certa e por que as outras estão erradas.
-      
-      Responda no seguinte formato JSON (sem markdown):
-      {
-        "questions": [
-          {
-            "discipline": "${discipline}",
-            "text": "Texto base + Enunciado da questão",
-            "alternatives": [
-              {"id": "A", "text": "Texto da alternativa A", "isCorrect": false},
-              {"id": "B", "text": "Texto da alternativa B", "isCorrect": false},
-              {"id": "C", "text": "Texto da alternativa C", "isCorrect": true},
-              {"id": "D", "text": "Texto da alternativa D", "isCorrect": false}
-            ],
-            "explanation": "Explicação detalhada."
-          }
-        ]
-      }
-      
-      Certifique-se de gerar exatamente ${QUESTIONS_PER_DISCIPLINE} questões distintas no array "questions".
-    `;
+    Atue como um professor especialista no ENEM.
+    Crie exatamente ${input.count} questões inéditas e de alta qualidade sobre ${input.discipline}.
+
+    Requisitos obrigatórios:
+    1. Nível de dificuldade: desafiador, estilo ENEM.
+    2. Contextualização: cada questão deve trazer texto-base ou situação-problema.
+    3. Estrutura: 4 alternativas (A, B, C, D) e APENAS UMA correta.
+    4. Qualidade: não repita alternativas, não crie pegadinhas vagas e não use explicações superficiais.
+    5. Explicação: explique por que a correta está certa e por que as outras não resolvem o problema.
+
+    ${excludedBlock}
+
+    Responda no formato JSON:
+    {
+      "questions": [
+        {
+          "discipline": "${input.discipline}",
+          "topic": "assunto central",
+          "difficulty": "desafiador",
+          "text": "Texto base + enunciado da questão",
+          "alternatives": [
+            {"id": "A", "text": "Alternativa A", "isCorrect": false},
+            {"id": "B", "text": "Alternativa B", "isCorrect": false},
+            {"id": "C", "text": "Alternativa C", "isCorrect": true},
+            {"id": "D", "text": "Alternativa D", "isCorrect": false}
+          ],
+          "explanation": "Explicação detalhada."
+        }
+      ]
+    }
+  `;
 
   const response = await provider.client.chat.completions.create({
-    messages: [{ role: "user", content: prompt }],
+    messages: [{ role: 'user', content: prompt }],
     model: provider.model,
-    temperature: 0.7,
+    temperature: 0.75,
     max_completion_tokens: 4096,
     top_p: 1,
     stream: false,
-    response_format: { type: "json_object" },
+    response_format: { type: 'json_object' },
   });
 
-  const aiContent = response.choices?.[0]?.message?.content ?? "";
-  let rawQuestions: RawQuestion[] = [];
-
+  const aiContent = response.choices?.[0]?.message?.content ?? '';
   const parsed = extractJson<Record<string, unknown>>(aiContent);
-  if (Array.isArray(parsed)) {
-    rawQuestions = parsed;
-  } else if (Array.isArray(parsed.questions)) {
-    rawQuestions = parsed.questions;
-  } else if (Array.isArray(parsed.data)) {
-    rawQuestions = parsed.data;
-  } else {
-    throw new Error("Estrutura inesperada na resposta da IA");
-  }
+  const rawQuestions = Array.isArray(parsed.questions)
+    ? parsed.questions
+    : Array.isArray(parsed.data)
+      ? parsed.data
+      : Array.isArray(parsed)
+        ? parsed
+        : [];
 
-  const normalized: Question[] = [];
-  for (const question of rawQuestions) {
-    if (!question.text || !Array.isArray(question.alternatives) || question.alternatives.length < 4) {
-      continue;
-    }
+  const normalized = rawQuestions
+    .map((question) => normalizeGeneratedQuestion(input.discipline, question as RawQuestion))
+    .filter((question): question is GeneratedQuestionCandidate => Boolean(question));
 
-    const alternatives = question.alternatives.map((alternative, index) => {
-      const letter = String.fromCharCode(65 + index);
-      return {
-        id: alternative?.id ?? letter,
-        text: alternative?.text ?? `Alternativa ${letter}`,
-        isCorrect: Boolean(alternative?.isCorrect),
-      };
-    });
-
-    if (!alternatives.some((alternative) => alternative.isCorrect)) {
-      alternatives[0].isCorrect = true;
-    }
-
-    normalized.push({
-      id: randomUUID(),
-      discipline,
-      text: question.text,
-      explanation: question.explanation ?? "Sem explicação disponível.",
-      alternatives,
-    });
+  if (normalized.length === 0) {
+    throw new Error('A IA não retornou questões válidas.');
   }
 
   return normalized;
 }
 
-type GenerationDiagnostics = Record<Question["discipline"], string>;
-
-async function generateQuestionsWithDiagnostics(
-  disciplines: Question["discipline"][]
+async function generateFreshQuestionsForDiscipline(
+  discipline: Question['discipline'],
+  count: number,
+  excludedSignatures: Set<string>,
+  excludedTexts: string[]
 ): Promise<{
-  questions: Question[];
-  diagnostics: GenerationDiagnostics;
-  missing: Question["discipline"][];
-  providersUsed: Record<string, string>;
+  questions: GeneratedQuestionCandidate[];
+  provider?: string;
+  error?: string;
 }> {
+  if (count <= 0) {
+    return { questions: [] };
+  }
+
   const providers = buildGroqProviders();
-  const diagnostics: GenerationDiagnostics = {} as GenerationDiagnostics;
-  const missing: Question["discipline"][] = [];
-  const providersUsed: Record<string, string> = {};
-  const questions: Question[] = [];
+  let lastError = 'Falha ao gerar questões';
 
-  for (const discipline of disciplines) {
-    let disciplineQuestions: Question[] | null = null;
-    let lastError: string | null = null;
+  for (let providerIndex = 0; providerIndex < providers.length; providerIndex += 1) {
+    const provider = providers[providerIndex];
+    let attempts = 0;
 
-    for (let providerIndex = 0; providerIndex < providers.length && !disciplineQuestions; providerIndex++) {
-      const provider = providers[providerIndex];
-      let attempts = 0;
+    while (attempts < MAX_ATTEMPTS_PER_DISCIPLINE) {
+      attempts += 1;
+      try {
+        const generated = await requestQuestionsForDiscipline(provider, {
+          discipline,
+          count,
+          excludedTexts,
+        });
 
-      while (attempts < MAX_ATTEMPTS_PER_DISCIPLINE && !disciplineQuestions) {
-        attempts++;
-        try {
-          const generated = await requestQuestionsForDiscipline(provider, discipline);
-          if (generated.length >= QUESTIONS_PER_DISCIPLINE) {
-            disciplineQuestions = generated.slice(0, QUESTIONS_PER_DISCIPLINE);
-            providersUsed[discipline] = provider.name;
-          } else {
-            lastError = `(${provider.name}) Recebemos ${generated.length} questão(ões)`;
-          }
-        } catch (error) {
-          const message =
-            error instanceof Error
-              ? error.message
-              : typeof error === "string"
-                ? error
-                : "Falha desconhecida ao consultar o modelo";
-          lastError = `(${provider.name}) ${message}`;
-          console.error(`Erro ao gerar questões de ${discipline} com ${provider.name} (tentativa ${attempts}):`, error);
+        const uniqueQuestions: GeneratedQuestionCandidate[] = [];
+        const seenSignatures = new Set(excludedSignatures);
 
-          if (isRateLimitError(error) && providerIndex < providers.length - 1) {
-            break;
-          }
+        for (const question of generated) {
+          const signature = getQuestionSignature(question);
+          if (seenSignatures.has(signature)) continue;
+          seenSignatures.add(signature);
+          uniqueQuestions.push(question);
+        }
+
+        if (uniqueQuestions.length >= count) {
+          return {
+            questions: uniqueQuestions.slice(0, count),
+            provider: provider.name,
+          };
+        }
+
+        lastError = `(${provider.name}) Recebemos ${uniqueQuestions.length} questão(ões) válidas`;
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : typeof error === 'string'
+              ? error
+              : 'Falha desconhecida ao consultar o modelo';
+        lastError = `(${provider.name}) ${message}`;
+        console.error(`Erro ao gerar questões de ${discipline} com ${provider.name} (tentativa ${attempts}):`, error);
+
+        if (isRateLimitError(error) && providerIndex < providers.length - 1) {
+          break;
         }
       }
     }
-
-    if (disciplineQuestions) {
-      questions.push(...disciplineQuestions);
-    } else {
-      diagnostics[discipline] = lastError ?? "Falha ao gerar questões";
-      missing.push(discipline);
-    }
   }
 
-  return { questions, diagnostics, missing, providersUsed };
+  return { questions: [], error: lastError };
 }
 
 export async function GET(request: NextRequest) {
   try {
+    const auth = await resolveRequestUserFromCookies();
+    if ('error' in auth) {
+      return auth.error;
+    }
+
+    const adminClient = createAdminClient();
+    if (!adminClient) {
+      return NextResponse.json(
+        { error: 'Supabase service role não configurado.' },
+        { status: 500 }
+      );
+    }
+
     const operatingInfo = await getOperatingHoursInfo();
     if (!operatingInfo.isOpen) {
       return NextResponse.json(
         {
-          error: "Sistema fora do horário de funcionamento",
+          error: 'Sistema fora do horário de funcionamento',
           message: operatingInfo.message,
           horarioFuncionamento: `${operatingInfo.opensAt} - ${operatingInfo.closesAt}`,
         },
@@ -245,14 +330,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // C02: Add rate limiting to prevent AI cost abuse
-    const forwardedFor = request.headers.get("x-forwarded-for");
-    const ip = forwardedFor?.split(",")[0].trim() ?? request.headers.get("x-real-ip") ?? "unknown";
-    const rateResult = await checkRateLimit(ip, "/api/questoes", 5, 1);
+    const forwardedFor = request.headers.get('x-forwarded-for');
+    const ip = forwardedFor?.split(',')[0].trim() ?? request.headers.get('x-real-ip') ?? 'unknown';
+    const rateIdentifier = auth.userId || ip;
+    const rateResult = await checkRateLimit(rateIdentifier, '/api/questoes', 5, 1);
     if (!rateResult.allowed) {
       return NextResponse.json(
         {
-          error: "Muitas requisições",
+          error: 'Muitas requisições',
           message: `Você atingiu o limite de requisições. Tente novamente após ${rateResult.resetAt.toISOString()}.`,
           resetAt: rateResult.resetAt.toISOString(),
         },
@@ -260,25 +345,110 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const disciplinesParam = request.nextUrl.searchParams.get("disciplines");
+    const disciplinesParam = request.nextUrl.searchParams.get('disciplines');
     const disciplines = disciplinesParam
       ? disciplinesParam
-          .split(",")
+          .split(',')
           .map((item) => item.trim())
-          .filter((item): item is Question["discipline"] => DISCIPLINES.includes(item as Question["discipline"]))
+          .filter((item): item is Question['discipline'] => DISCIPLINES.includes(item as Question['discipline']))
       : DISCIPLINES;
 
     if (disciplines.length === 0) {
-      return NextResponse.json({ error: "Pelo menos uma disciplina deve ser selecionada" }, { status: 400 });
+      return NextResponse.json({ error: 'Pelo menos uma disciplina deve ser selecionada' }, { status: 400 });
     }
 
-    const { questions: aiQuestions, diagnostics, missing, providersUsed } = await generateQuestionsWithDiagnostics(disciplines);
+    const [storedByDiscipline, recentExposure] = await Promise.all([
+      getStoredQuestionsForDisciplines(auth.supabase, disciplines, { limit: 400 }),
+      getRecentUserQuestionExposure(auth.supabase, auth.userId, 10),
+    ]);
 
-    if (missing.length > 0 || aiQuestions.length === 0) {
+    const selectedQuestions: Question[] = [];
+    const diagnostics: GenerationDiagnostics = {};
+    const missing: Question['discipline'][] = [];
+    const providersUsed: Record<string, string> = {};
+    const reuseSummary: Record<string, { reused: number; generated: number }> = {};
+
+    const usedIds = new Set(recentExposure.questionIds);
+    const usedSignatures = new Set(recentExposure.questionSignatures);
+
+    for (const discipline of disciplines) {
+      const disciplinePool = shuffleArray(storedByDiscipline[discipline] ?? []);
+      const disciplineQuestions: Question[] = [];
+
+      for (const question of disciplinePool) {
+        if (disciplineQuestions.length >= REUSED_QUESTIONS_PER_DISCIPLINE) break;
+
+        const signature = getQuestionSignature(question);
+        if (usedIds.has(question.id) || usedSignatures.has(signature)) continue;
+
+        disciplineQuestions.push(question);
+        usedIds.add(question.id);
+        usedSignatures.add(signature);
+      }
+
+      const requiredFreshQuestions = QUESTIONS_PER_DISCIPLINE - disciplineQuestions.length;
+      let generatedCount = 0;
+
+      if (requiredFreshQuestions > 0) {
+        const excludedTexts = Array.from(
+          new Set([
+            ...disciplinePool.map((question) => question.text),
+            ...(recentExposure.recentQuestionsByDiscipline[discipline] ?? []),
+          ])
+        ).slice(0, 16);
+
+        const generated = await generateFreshQuestionsForDiscipline(
+          discipline,
+          requiredFreshQuestions,
+          usedSignatures,
+          excludedTexts
+        );
+
+        if (generated.provider) {
+          providersUsed[discipline] = generated.provider;
+        }
+
+        if (generated.questions.length > 0) {
+          const canonicalGenerated = await saveGeneratedQuestions(adminClient, generated.questions);
+
+          for (const question of canonicalGenerated) {
+            const signature = getQuestionSignature(question);
+            if (disciplineQuestions.length >= QUESTIONS_PER_DISCIPLINE) break;
+            if (usedIds.has(question.id) || usedSignatures.has(signature)) continue;
+
+            disciplineQuestions.push(question);
+            generatedCount += 1;
+            usedIds.add(question.id);
+            usedSignatures.add(signature);
+          }
+        }
+
+        if (generated.questions.length === 0 && generated.error) {
+          diagnostics[discipline] = generated.error;
+        }
+      }
+
+      reuseSummary[discipline] = {
+        reused: disciplineQuestions.length - generatedCount,
+        generated: generatedCount,
+      };
+
+      if (disciplineQuestions.length < QUESTIONS_PER_DISCIPLINE) {
+        diagnostics[discipline] =
+          diagnostics[discipline] ??
+          'Não foi possível completar a disciplina sem repetir questões recentes.';
+        missing.push(discipline);
+        continue;
+      }
+
+      selectedQuestions.push(...disciplineQuestions.slice(0, QUESTIONS_PER_DISCIPLINE));
+    }
+
+    if (missing.length > 0 || selectedQuestions.length === 0) {
       return NextResponse.json(
         {
-          error: "Não foi possível gerar questões para todas as disciplinas",
-          message: "Nossa IA não respondeu a tempo para todas as áreas selecionadas. Tente novamente em instantes.",
+          error: 'Não foi possível montar o simulado completo',
+          message: 'Não foi possível preparar questões suficientes sem repetir seu histórico recente. Tente novamente em instantes.',
           diagnostics,
           missing_disciplines: missing,
           providers_used: providersUsed,
@@ -287,23 +457,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const balanced = disciplines.flatMap((discipline) =>
-      aiQuestions.filter((question) => question.discipline === discipline).slice(0, QUESTIONS_PER_DISCIPLINE)
-    );
-
-    const selected = balanced.length > 0
-      ? balanced
-      : aiQuestions.slice(0, QUESTIONS_PER_DISCIPLINE * disciplines.length);
-
-    const shuffled = [...selected].sort(() => Math.random() - 0.5);
-
-    // Save questions to DB (fire and forget)
-    const adminClient = createAdminClient();
-    if (adminClient) {
-      saveGeneratedQuestions(adminClient, shuffled).catch((err) => {
-        console.error("Error saving generated questions:", err);
-      });
-    }
+    const shuffled = shuffleArray(selectedQuestions);
 
     return NextResponse.json({
       questions: shuffled,
@@ -312,15 +466,15 @@ export async function GET(request: NextRequest) {
         discipline,
         count: shuffled.filter((question) => question.discipline === discipline).length,
       })),
-      diagnostics,
       providersUsed,
+      reuseSummary,
     });
   } catch (error) {
-    console.error("Erro ao gerar questões:", error);
+    console.error('Erro ao gerar questões:', error);
     return NextResponse.json(
       {
-        error: "Erro ao gerar questões",
-        message: "Ocorreu um erro interno. Tente novamente em instantes.",
+        error: 'Erro ao gerar questões',
+        message: 'Ocorreu um erro interno. Tente novamente em instantes.',
       },
       { status: 500 }
     );
@@ -333,14 +487,14 @@ export async function POST(request: NextRequest) {
     const raw = await request.json();
     parsedPayload = assertQuizPayload(raw);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "JSON inválido";
+    const message = error instanceof Error ? error.message : 'JSON inválido';
     return NextResponse.json({ error: message }, { status: 400 });
   }
 
   const auth = await resolveRequestUserFromCookies();
   if ('error' in auth) {
     if (auth.error.status === 401) {
-      return NextResponse.json({ success: true, saved: false, reason: "not_authenticated" });
+      return NextResponse.json({ success: true, saved: false, reason: 'not_authenticated' });
     }
     return auth.error;
   }
@@ -349,11 +503,11 @@ export async function POST(request: NextRequest) {
   const { userId } = auth;
 
   try {
-    const answersData = parsedPayload.questions.map(q => {
-      const selectedId = parsedPayload.selectedAnswers[q.id];
-      const isCorrect = q.alternatives.find(a => a.id === selectedId)?.isCorrect || false;
+    const answersData = parsedPayload.questions.map((question) => {
+      const selectedId = parsedPayload.selectedAnswers[question.id];
+      const isCorrect = question.alternatives.find((alternative) => alternative.id === selectedId)?.isCorrect || false;
       return {
-        question_id: q.id,
+        question_id: question.id,
         selected_alternative_id: selectedId,
         is_correct: isCorrect,
       };
@@ -367,24 +521,22 @@ export async function POST(request: NextRequest) {
       score: parsedPayload.result.score,
       disciplines: parsedPayload.disciplines,
       questionsData: parsedPayload.questions,
-      answersData: answersData,
+      answersData,
     });
 
-    // Recalculate statistics
-    const { error: statsError } = await supabase.rpc("recalculate_user_statistics", {
+    const { error: statsError } = await supabase.rpc('recalculate_user_statistics', {
       target_user_id: userId,
     });
 
     if (statsError) {
-      console.error("Erro ao recalcular estatísticas:", statsError);
+      console.error('Erro ao recalcular estatísticas:', statsError);
     }
 
     return NextResponse.json({ success: true, saved: true });
-
   } catch (error) {
-    console.error("Erro ao salvar resultado do simulado:", error);
+    console.error('Erro ao salvar resultado do simulado:', error);
     return NextResponse.json(
-      { error: "Erro ao salvar resultado do simulado" },
+      { error: 'Erro ao salvar resultado do simulado' },
       { status: 500 }
     );
   }

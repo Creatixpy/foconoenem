@@ -258,8 +258,8 @@ export default function QuestoesPageClient() {
               Simulado inteligente de questões
             </h1>
             <p className="text-[var(--text-muted)] max-w-lg">
-              Escolha as disciplinas e receba questões personalizadas no estilo ENEM,
-              com explicações comentadas para cada resposta.
+              Escolha as disciplinas e receba um simulado inteligente com banco próprio de questões
+              e novas gerações no estilo ENEM, sempre com explicações comentadas.
             </p>
           </motion.div>
 
@@ -285,7 +285,7 @@ export default function QuestoesPageClient() {
             {[
               { label: '3 questões', sub: 'por disciplina', icon: '📝' },
               { label: '20 min', sub: 'tempo sugerido', icon: '⏱️' },
-              { label: 'Explicações', sub: 'comentadas', icon: '💡' },
+              { label: 'Banco inteligente', sub: 'menos repetição', icon: '🧠' },
             ].map((info) => (
               <div
                 key={info.label}
@@ -348,7 +348,7 @@ export default function QuestoesPageClient() {
                 <span className="font-semibold text-[var(--text-primary)]">{selectedDisciplines.size}</span>
                 {' '}disciplina{selectedDisciplines.size > 1 ? 's' : ''} •{' '}
                 <span className="font-semibold text-[var(--text-primary)]">{totalQuestions}</span>
-                {' '}questões serão geradas
+                {' '}questões serão preparadas
               </p>
             )}
 
