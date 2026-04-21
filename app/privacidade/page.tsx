@@ -35,13 +35,13 @@ const sections = [
     id: 'retencao',
     title: '6. Retenção e exclusão',
     content:
-      'Dados de conta e histórico acadêmico permanecem armazenados enquanto a conta estiver ativa ou enquanto forem necessários para prestação do serviço, auditoria, segurança e defesa de direitos. O usuário pode solicitar exclusão da conta e, quando juridicamente possível, eliminação dos dados associados. Alguns registros podem ser mantidos por prazo adicional quando houver obrigação legal, necessidade de prevenção a fraude, investigação de abuso ou preservação mínima de logs operacionais.',
+      'Dados de conta e histórico acadêmico permanecem armazenados enquanto a conta estiver ativa ou enquanto forem necessários para prestação do serviço, auditoria, segurança e defesa de direitos. O usuário pode solicitar exclusão da conta e, quando juridicamente possível, eliminação dos dados associados. Quando a funcionalidade estiver disponível na área autenticada, a exclusão pode exigir confirmação adicional de identidade, incluindo senha para contas com autenticação local. Alguns registros podem ser mantidos por prazo adicional quando houver obrigação legal, necessidade de prevenção a fraude, investigação de abuso ou preservação mínima de logs operacionais.',
   },
   {
     id: 'direitos',
     title: '7. Direitos do titular',
     content:
-      'Nos termos da LGPD, o titular pode solicitar confirmação de tratamento, acesso, correção, anonimização, bloqueio ou eliminação quando cabível, portabilidade, informação sobre compartilhamento, revogação de consentimento e revisão de decisões automatizadas quando aplicável. O pedido deve ser enviado primeiro ao controlador pelos canais da plataforma. Se a resposta for insatisfatória, o titular pode recorrer à ANPD, conforme as orientações oficiais da Autoridade.',
+      'Nos termos da LGPD, o titular pode solicitar confirmação de tratamento, acesso, correção, anonimização, bloqueio ou eliminação quando cabível, portabilidade, informação sobre compartilhamento, revogação de consentimento e revisão de decisões automatizadas quando aplicável. Parte desses direitos pode ser exercida diretamente pela conta autenticada, incluindo a exclusão da conta quando o fluxo estiver disponível. O pedido também pode ser enviado ao controlador pelos canais da plataforma. Se a resposta for insatisfatória, o titular pode recorrer à ANPD, conforme as orientações oficiais da Autoridade.',
   },
   {
     id: 'menores',

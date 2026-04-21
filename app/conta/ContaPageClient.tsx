@@ -603,13 +603,17 @@ function QuestionsTab({ stats }: { stats: UserStatistics | null }) {
 
 export default function ContaPageClient() {
   const router = useRouter();
-  const { user, profile, initialized, loading: authLoading } = useAuth();
+  const { user, profile, initialized, loading: authLoading, signOut } = useAuth();
 
   const [data, setData] = useState<ContaData | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
   const [dataError, setDataError] = useState('');
   const [recalculating, setRecalculating] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
+  const [showDeleteForm, setShowDeleteForm] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   // Auth guard
   useEffect(() => {
@@ -669,6 +673,42 @@ export default function ContaPageClient() {
   const essays = data?.essays ?? [];
   const { level, xp, nextXp } = calcLevel(stats);
   const displayName = profile?.nome_completo || user.email?.split('@')[0] || 'Usuário';
+  const authProviders = Array.isArray(user.app_metadata?.providers)
+    ? user.app_metadata.providers.filter((provider): provider is string => typeof provider === 'string')
+    : typeof user.app_metadata?.provider === 'string'
+      ? [user.app_metadata.provider]
+      : [];
+  const canConfirmDeletionWithPassword = authProviders.length === 0 || authProviders.includes('email');
+
+  async function handleDeleteAccount(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setDeleteSubmitting(true);
+    setDeleteError('');
+
+    try {
+      const response = await fetch('/api/conta/excluir', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password: deletePassword }),
+      });
+
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(payload?.message || 'Nao foi possivel excluir sua conta.');
+      }
+
+      await signOut();
+      router.replace('/');
+      router.refresh();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Nao foi possivel excluir sua conta.';
+      setDeleteError(message);
+    } finally {
+      setDeleteSubmitting(false);
+    }
+  }
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 space-y-8">
@@ -811,6 +851,88 @@ export default function ContaPageClient() {
             </>
           )}
         </div>
+      </div>
+
+      <div className="rounded-2xl border border-[var(--danger)]/30 bg-[var(--card-bg)] p-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div className="max-w-2xl">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--danger-light)] text-[var(--danger)]">
+                <AlertTriangleIcon />
+              </span>
+              <div>
+                <h2 className="text-lg font-semibold text-[var(--text-primary)]">Excluir conta</h2>
+                <p className="text-sm text-[var(--text-muted)]">
+                  Essa acao remove seu acesso e apaga a conta de autenticacao. Alguns registros podem permanecer pelo prazo legal ou para seguranca.
+                </p>
+              </div>
+            </div>
+            {!canConfirmDeletionWithPassword && (
+              <p className="mt-4 text-sm text-[var(--text-muted)]">
+                Esta conta usa login externo sem senha local. Para excluir, sera preciso primeiro ter autenticacao por senha ou tratar o pedido pelo canal de privacidade.
+              </p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setShowDeleteForm((current) => !current);
+              setDeleteError('');
+              setDeletePassword('');
+            }}
+            disabled={!canConfirmDeletionWithPassword}
+            className="inline-flex items-center justify-center rounded-xl border border-[var(--danger)]/40 px-4 py-2.5 text-sm font-semibold text-[var(--danger)] transition-colors hover:bg-[var(--danger-light)] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Excluir conta
+          </button>
+        </div>
+
+        {showDeleteForm && canConfirmDeletionWithPassword && (
+          <form onSubmit={handleDeleteAccount} className="mt-6 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] p-5">
+            <label htmlFor="delete-password" className="block text-sm font-medium text-[var(--text-secondary)]">
+              Confirme sua senha para excluir a conta
+            </label>
+            <input
+              id="delete-password"
+              name="delete-password"
+              type="password"
+              autoComplete="current-password"
+              required
+              minLength={8}
+              value={deletePassword}
+              onChange={(event) => setDeletePassword(event.target.value)}
+              className="mt-2 w-full rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none transition-colors focus:border-[var(--danger)]"
+              placeholder="Digite sua senha atual"
+            />
+            <p className="mt-3 text-xs leading-relaxed text-[var(--text-muted)]">
+              A exclusao e irreversivel. Seu login sera removido e a conta nao podera ser restaurada depois da confirmacao.
+            </p>
+            {deleteError && (
+              <p className="mt-3 text-sm text-[var(--danger)]">{deleteError}</p>
+            )}
+            <div className="mt-5 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteForm(false);
+                  setDeletePassword('');
+                  setDeleteError('');
+                }}
+                className="rounded-xl border border-[var(--border-color)] px-4 py-2.5 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-elevated)]"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={deleteSubmitting || deletePassword.length < 8}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--danger)] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {deleteSubmitting ? <SpinnerIcon size={14} /> : null}
+                Excluir conta definitivamente
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );
