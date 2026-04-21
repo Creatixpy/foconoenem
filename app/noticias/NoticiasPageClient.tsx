@@ -3,7 +3,6 @@
 import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion } from 'motion/react';
 import { useNoticias, useDestaques, useBuscaNoticias, useBuscaIA, type NoticiaAPI } from './hooks';
 
 // ---------------------------------------------------------------------------
@@ -86,11 +85,8 @@ function NewsImage({
 function ArticleCardSmall({ noticia }: { noticia: NoticiaAPI }) {
   return (
     <Link href={`/noticias/${noticia.slug}`} className="group block">
-      <motion.article
+      <article
         className="rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] overflow-hidden hover:border-[var(--border-hover)] transition-colors"
-        initial={{ opacity: 0, y: 16 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-40px' }}
       >
         <div className="relative aspect-[16/9] overflow-hidden">
           <NewsImage src={noticia.imagem_url} alt={noticia.titulo} fill />
@@ -112,7 +108,7 @@ function ArticleCardSmall({ noticia }: { noticia: NoticiaAPI }) {
             <span>{readTime(noticia.conteudo)}</span>
           </div>
         </div>
-      </motion.article>
+      </article>
     </Link>
   );
 }
@@ -120,11 +116,8 @@ function ArticleCardSmall({ noticia }: { noticia: NoticiaAPI }) {
 function ArticleCardMedium({ noticia }: { noticia: NoticiaAPI }) {
   return (
     <Link href={`/noticias/${noticia.slug}`} className="group block">
-      <motion.article
+      <article
         className="rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] overflow-hidden hover:border-[var(--border-hover)] transition-colors h-full"
-        initial={{ opacity: 0, y: 16 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-40px' }}
       >
         <div className="relative aspect-[16/10] overflow-hidden">
           <NewsImage src={noticia.imagem_url} alt={noticia.titulo} fill />
@@ -145,7 +138,7 @@ function ArticleCardMedium({ noticia }: { noticia: NoticiaAPI }) {
             <span>{readTime(noticia.conteudo)}</span>
           </div>
         </div>
-      </motion.article>
+      </article>
     </Link>
   );
 }
@@ -221,9 +214,15 @@ function SearchBar({
 // ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
-export default function NoticiasPageClient() {
-  const { noticias, loading, loadingMore, error, hasMore, loadMore } = useNoticias(9);
-  const { destaques, loading: destaquesLoading } = useDestaques(3);
+export default function NoticiasPageClient({
+  initialNoticias,
+  initialDestaques,
+}: {
+  initialNoticias: NoticiaAPI[];
+  initialDestaques: NoticiaAPI[];
+}) {
+  const { noticias, loading, loadingMore, error, hasMore, loadMore } = useNoticias(9, initialNoticias);
+  const { destaques, loading: destaquesLoading } = useDestaques(3, initialDestaques);
   const { results: searchResults, loading: searchLoading, searched, search, clear: clearSearch } = useBuscaNoticias();
   const { content: aiContent, loading: aiLoading, error: aiError, search: aiSearch, clear: clearAI } = useBuscaIA();
 
@@ -264,11 +263,7 @@ export default function NoticiasPageClient() {
     <div className="min-h-[80vh] pb-20">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
         {/* page header */}
-        <motion.div
-          className="mb-8 space-y-2"
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
+        <div className="mb-8 space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--border-color)] bg-[var(--bg-surface)] text-xs text-[var(--text-muted)]">
             <span className="text-[var(--primary)]">✦</span>
             Notícias
@@ -279,25 +274,16 @@ export default function NoticiasPageClient() {
           <p className="text-[var(--text-muted)] text-sm max-w-xl">
             Fique por dentro das últimas notícias sobre o ENEM, vestibulares e educação no Brasil.
           </p>
-        </motion.div>
+        </div>
 
         {/* search */}
-        <motion.div
-          className="mb-10"
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
+        <div className="mb-10">
           <SearchBar onSearch={handleSearch} onAISearch={handleAISearch} />
-        </motion.div>
+        </div>
 
         {/* search results */}
         {(showingSearch || showingAI) && (
-          <motion.div
-            className="mb-10"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
+          <div className="mb-10">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
                 {showingAI && (
@@ -369,7 +355,7 @@ export default function NoticiasPageClient() {
                 ))}
               </div>
             )}
-          </motion.div>
+          </div>
         )}
 
         {/* featured hero */}
@@ -387,11 +373,7 @@ export default function NoticiasPageClient() {
               <div className="mb-10 space-y-4">
                 {/* hero card */}
                 <Link href={`/noticias/${heroArticle.slug}`} className="group block">
-                  <motion.article
-                    className="relative rounded-2xl overflow-hidden h-[360px] sm:h-[420px]"
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                  >
+                  <article className="relative rounded-2xl overflow-hidden h-[360px] sm:h-[420px]">
                     <NewsImage src={heroArticle.imagem_url} alt={heroArticle.titulo} fill className="transition-transform duration-500 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
                     <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 space-y-3">
@@ -415,7 +397,7 @@ export default function NoticiasPageClient() {
                         </span>
                       </div>
                     </div>
-                  </motion.article>
+                  </article>
                 </Link>
 
                 {/* secondary highlights */}

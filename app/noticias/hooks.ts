@@ -23,13 +23,13 @@ export interface NoticiaAPI {
 // ---------------------------------------------------------------------------
 // useNoticias — paginated news list with optional destaque filter
 // ---------------------------------------------------------------------------
-export function useNoticias(pageSize = 9) {
-  const [noticias, setNoticias] = useState<NoticiaAPI[]>([]);
-  const [loading, setLoading] = useState(true);
+export function useNoticias(pageSize = 9, initialNoticias: NoticiaAPI[] = []) {
+  const [noticias, setNoticias] = useState<NoticiaAPI[]>(initialNoticias);
+  const [loading, setLoading] = useState(initialNoticias.length === 0);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [offset, setOffset] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
+  const [offset, setOffset] = useState(initialNoticias.length);
+  const [hasMore, setHasMore] = useState(initialNoticias.length >= pageSize);
 
   const fetchPage = useCallback(
     async (currentOffset: number, append: boolean) => {
@@ -65,8 +65,11 @@ export function useNoticias(pageSize = 9) {
   );
 
   useEffect(() => {
+    if (initialNoticias.length > 0) {
+      return;
+    }
     fetchPage(0, false);
-  }, [fetchPage]);
+  }, [fetchPage, initialNoticias.length]);
 
   const loadMore = useCallback(() => {
     if (!loadingMore && hasMore) {
@@ -86,11 +89,15 @@ export function useNoticias(pageSize = 9) {
 // ---------------------------------------------------------------------------
 // useDestaques — featured articles
 // ---------------------------------------------------------------------------
-export function useDestaques(limit = 3) {
-  const [destaques, setDestaques] = useState<NoticiaAPI[]>([]);
-  const [loading, setLoading] = useState(true);
+export function useDestaques(limit = 3, initialDestaques: NoticiaAPI[] = []) {
+  const [destaques, setDestaques] = useState<NoticiaAPI[]>(initialDestaques);
+  const [loading, setLoading] = useState(initialDestaques.length === 0);
 
   useEffect(() => {
+    if (initialDestaques.length > 0) {
+      return;
+    }
+
     (async () => {
       try {
         const res = await fetch(`/api/noticias?destaque=true&limit=${limit}&offset=0`);
@@ -100,7 +107,7 @@ export function useDestaques(limit = 3) {
       } catch { /* ignore */ }
       setLoading(false);
     })();
-  }, [limit]);
+  }, [initialDestaques.length, limit]);
 
   return { destaques, loading };
 }

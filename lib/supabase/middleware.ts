@@ -12,6 +12,7 @@ export async function updateSession(request: NextRequest) {
   response.headers.set('X-Frame-Options', 'SAMEORIGIN')
   response.headers.set('X-Content-Type-Options', 'nosniff')
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), browsing-topics=()')
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -33,6 +34,7 @@ export async function updateSession(request: NextRequest) {
           response.headers.set('X-Frame-Options', 'SAMEORIGIN')
           response.headers.set('X-Content-Type-Options', 'nosniff')
           response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+          response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), browsing-topics=()')
 
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options)

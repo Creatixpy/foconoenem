@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { listNoticias } from '@/lib/server/noticias';
 
+const CACHE_HEADERS = {
+  'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=3600',
+};
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -17,7 +21,7 @@ export async function GET(request: NextRequest) {
       destaque,
     });
 
-    return NextResponse.json({ noticias });
+    return NextResponse.json({ noticias }, { headers: CACHE_HEADERS });
   } catch (error) {
     console.error('Erro na API de notícias:', error);
     return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
