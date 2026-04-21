@@ -11,7 +11,7 @@ const sections = [
     id: 'conta',
     title: '2. Conta do usuário',
     content:
-      'Algumas funcionalidades exigem cadastro. O usuário deve manter seus dados atualizados, proteger suas credenciais e não compartilhar acesso com terceiros. O uso da conta é pessoal. A plataforma pode restringir ou suspender contas em caso de fraude, abuso técnico, violação destes termos ou risco à segurança do serviço.',
+      'Algumas funcionalidades exigem cadastro. O usuário deve manter seus dados atualizados, proteger suas credenciais e não compartilhar acesso com terceiros. O uso da conta é pessoal. A plataforma pode restringir ou suspender contas em caso de fraude, abuso técnico, violação destes termos ou risco à segurança do serviço. Quando a funcionalidade estiver disponível na área autenticada, o usuário também pode solicitar a exclusão da própria conta, mediante confirmação adicional de identidade, incluindo senha quando aplicável.',
   },
   {
     id: 'uso',
