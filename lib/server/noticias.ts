@@ -1,18 +1,22 @@
-'use server';
-
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { unstable_cache } from 'next/cache';
 import type { Database } from '@/types/supabase';
 
 const NOTICIA_FIELDS =
   'id,titulo,slug,resumo,conteudo,imagem_url,autor,data_publicacao,tags,destaque,created_at,fonte_url,status';
+const NEWS_CACHE_SECONDS = 300;
+
+export function isReadonlyClientConfigured(): boolean {
+  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+}
 
 function requireReadonlyClient(): SupabaseClient<Database> {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!url || !anonKey) {
+  if (!isReadonlyClientConfigured()) {
     throw new Error('Supabase público não configurado.');
   }
+
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
   return createClient<Database>(url, anonKey, {
     auth: {
@@ -22,7 +26,7 @@ function requireReadonlyClient(): SupabaseClient<Database> {
   });
 }
 
-export async function listNoticias(options: {
+async function listNoticiasQuery(options: {
   limit: number;
   offset: number;
   tag?: string | null;
@@ -53,7 +57,33 @@ export async function listNoticias(options: {
   return data ?? [];
 }
 
-export async function fetchNoticiaBySlug(slug: string) {
+const listNoticiasCached = unstable_cache(
+  async (limit: number, offset: number, tag: string | null, destaque: boolean | null) =>
+    listNoticiasQuery({
+      limit,
+      offset,
+      tag,
+      destaque: destaque ?? undefined,
+    }),
+  ['public-noticias-list'],
+  { revalidate: NEWS_CACHE_SECONDS }
+);
+
+export async function listNoticias(options: {
+  limit: number;
+  offset: number;
+  tag?: string | null;
+  destaque?: boolean;
+}) {
+  return listNoticiasCached(
+    options.limit,
+    options.offset,
+    options.tag ?? null,
+    typeof options.destaque === 'boolean' ? options.destaque : null
+  );
+}
+
+async function fetchNoticiaBySlugQuery(slug: string) {
   const supabase = requireReadonlyClient();
   const { data, error } = await supabase
     .from('noticias')
@@ -69,7 +99,17 @@ export async function fetchNoticiaBySlug(slug: string) {
   return data ?? null;
 }
 
-export async function searchNoticias(termo: string, limit: number) {
+const fetchNoticiaBySlugCached = unstable_cache(
+  async (slug: string) => fetchNoticiaBySlugQuery(slug),
+  ['public-noticia-by-slug'],
+  { revalidate: NEWS_CACHE_SECONDS }
+);
+
+export async function fetchNoticiaBySlug(slug: string) {
+  return fetchNoticiaBySlugCached(slug);
+}
+
+async function searchNoticiasQuery(termo: string, limit: number) {
   const supabase = requireReadonlyClient();
   const sanitizedTerm = termo.trim();
 
@@ -95,7 +135,17 @@ export async function searchNoticias(termo: string, limit: number) {
   return data ?? [];
 }
 
-export async function fetchNoticiasPorTag(tag: string, limit: number) {
+const searchNoticiasCached = unstable_cache(
+  async (termo: string, limit: number) => searchNoticiasQuery(termo, limit),
+  ['public-noticias-search'],
+  { revalidate: NEWS_CACHE_SECONDS }
+);
+
+export async function searchNoticias(termo: string, limit: number) {
+  return searchNoticiasCached(termo, limit);
+}
+
+async function fetchNoticiasPorTagQuery(tag: string, limit: number) {
   const supabase = requireReadonlyClient();
   const { data, error } = await supabase
     .from('noticias')
@@ -110,4 +160,14 @@ export async function fetchNoticiasPorTag(tag: string, limit: number) {
   }
 
   return data ?? [];
+}
+
+const fetchNoticiasPorTagCached = unstable_cache(
+  async (tag: string, limit: number) => fetchNoticiasPorTagQuery(tag, limit),
+  ['public-noticias-by-tag'],
+  { revalidate: NEWS_CACHE_SECONDS }
+);
+
+export async function fetchNoticiasPorTag(tag: string, limit: number) {
+  return fetchNoticiasPorTagCached(tag, limit);
 }

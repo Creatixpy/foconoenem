@@ -54,7 +54,7 @@ const SUPORTE = [
 ];
 
 const SOCIAL = [
-  { href: 'https://github.com/LCodeBase/foconoenem', label: 'GitHub', Icon: GitHubIcon },
+  { href: 'https://github.com/Creatixpy/foconoenem', label: 'GitHub', Icon: GitHubIcon },
   { href: 'https://x.com/foconoenem', label: 'X (Twitter)', Icon: XTwitterIcon },
   { href: 'https://instagram.com/foconoenem', label: 'Instagram', Icon: InstagramIcon },
   { href: 'mailto:contato@foconoenem.com', label: 'E-mail', Icon: MailIcon },

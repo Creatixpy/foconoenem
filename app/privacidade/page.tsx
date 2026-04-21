@@ -1,145 +1,126 @@
-'use client';
-
-import { useState } from 'react';
 import Link from 'next/link';
-import { motion } from 'motion/react';
 
 const sections = [
   {
-    id: 'coleta',
-    title: '1. Coleta de Dados',
-    content: `Coletamos informações que você fornece diretamente ao criar uma conta, como nome, endereço de email e objetivo de estudo. Também coletamos dados de uso automaticamente, incluindo informações sobre como você interage com a plataforma, notas de redações, resultados de simulados e atividade na comunidade. Utilizamos cookies essenciais para manter sua sessão ativa e preferências de tema. Não coletamos dados sensíveis além do estritamente necessário para o funcionamento do serviço.`,
+    id: 'controlador',
+    title: '1. Quem controla os dados',
+    content:
+      'O Foco no ENEM controla os dados pessoais tratados diretamente na plataforma para viabilizar conta, correção de redação, simulados, comunidade, histórico de resultados, notícias e suporte operacional. Para assuntos de privacidade, os canais públicos atuais são privacidade@foconoenem.com e contato@foconoenem.com.',
   },
   {
-    id: 'uso',
-    title: '2. Uso dos Dados',
-    content: `Seus dados são usados para: fornecer e melhorar nossos serviços de preparação para o ENEM; personalizar sua experiência na plataforma; processar correções de redações via inteligência artificial; gerar estatísticas de desempenho no seu dashboard; permitir interações na comunidade; enviar comunicações sobre o serviço quando necessário. Não vendemos seus dados pessoais a terceiros em nenhuma circunstância.`,
+    id: 'coleta',
+    title: '2. Quais dados tratamos',
+    content:
+      'Tratamos dados fornecidos no cadastro, como nome, email e objetivo de estudo; dados de uso, como temas gerados, redações enviadas, resultados de questões, interações na comunidade e eventos de conta; e dados técnicos indispensáveis para autenticação, segurança, prevenção de abuso, logs e funcionamento da interface. Dados de cartão não são armazenados pelo Foco no ENEM: pagamentos e doações são processados pela Stripe.',
+  },
+  {
+    id: 'finalidades',
+    title: '3. Finalidades e bases legais',
+    content:
+      'Os dados são tratados para executar o serviço solicitado pelo usuário, manter autenticação e segurança, personalizar estudo, armazenar histórico acadêmico dentro da plataforma, prevenir fraude e abuso, atender obrigações legais e responder solicitações do titular. Dependendo do caso, o tratamento pode se apoiar em execução de contrato, legítimo interesse, cumprimento de obrigação legal e consentimento quando exigido.',
   },
   {
     id: 'ia',
-    title: '3. Inteligência Artificial',
-    content: `Utilizamos modelos de inteligência artificial para correção de redações e geração de questões. Suas redações são enviadas a provedores de IA (como Groq/OpenAI) exclusivamente para fins de correção. Não armazenamos suas redações nos servidores dos provedores de IA além do tempo necessário para processamento. Os feedbacks gerados são armazenados em nosso banco de dados vinculados à sua conta.`,
-  },
-  {
-    id: 'armazenamento',
-    title: '4. Armazenamento e Segurança',
-    content: `Seus dados são armazenados de forma segura no Supabase, que utiliza criptografia em repouso e em trânsito. Implementamos Row Level Security (RLS) para garantir que cada usuário acesse apenas seus próprios dados. Senhas são criptografadas com bcrypt e nunca armazenadas em texto plano. Realizamos backups regulares e monitoramos acessos não autorizados.`,
+    title: '4. Uso de inteligência artificial',
+    content:
+      'A plataforma utiliza provedores de IA para correção de redações, geração de temas, textos de apoio, questões e resumos do acervo de notícias. Hoje o provedor integrado no código é a Groq. Redações, prompts e respostas podem ser processados por esse fornecedor para executar a solicitação. Conforme a documentação pública da Groq, requisições de inferência não são retidas por padrão, mas podem ser temporariamente registradas por até 30 dias para confiabilidade e investigação de abuso, salvo configurações mais restritivas do cliente. Os resultados retornados pela IA são armazenados no banco do Foco no ENEM quando necessários ao funcionamento do produto.',
   },
   {
     id: 'compartilhamento',
-    title: '5. Compartilhamento',
-    content: `Compartilhamos dados apenas com: Supabase (hospedagem e banco de dados); provedores de IA (correção de redações, de forma anonimizada quando possível); Stripe (processamento de doações — apenas dados de pagamento); Vercel (hospedagem da aplicação). Nenhum desses parceiros tem permissão para usar seus dados para fins próprios além do serviço prestado.`,
+    title: '5. Compartilhamento e transferências internacionais',
+    content:
+      'O Foco no ENEM compartilha dados com prestadores essenciais de infraestrutura e operação, incluindo Supabase, Vercel, Stripe e Groq. Esses serviços podem processar dados fora do Brasil, conforme sua arquitetura e região de infraestrutura. Quando isso ocorre, o tratamento continua vinculado às finalidades desta política e às salvaguardas contratuais e técnicas aplicáveis.',
+  },
+  {
+    id: 'retencao',
+    title: '6. Retenção e exclusão',
+    content:
+      'Dados de conta e histórico acadêmico permanecem armazenados enquanto a conta estiver ativa ou enquanto forem necessários para prestação do serviço, auditoria, segurança e defesa de direitos. O usuário pode solicitar exclusão da conta e, quando juridicamente possível, eliminação dos dados associados. Alguns registros podem ser mantidos por prazo adicional quando houver obrigação legal, necessidade de prevenção a fraude, investigação de abuso ou preservação mínima de logs operacionais.',
   },
   {
     id: 'direitos',
-    title: '6. Seus Direitos',
-    content: `De acordo com a LGPD (Lei Geral de Proteção de Dados), você tem direito a: acessar todos os dados que temos sobre você; solicitar correção de dados incorretos; solicitar a exclusão de seus dados e conta; revogar consentimento a qualquer momento; solicitar portabilidade dos seus dados. Para exercer qualquer desses direitos, entre em contato pelo email indicado abaixo.`,
+    title: '7. Direitos do titular',
+    content:
+      'Nos termos da LGPD, o titular pode solicitar confirmação de tratamento, acesso, correção, anonimização, bloqueio ou eliminação quando cabível, portabilidade, informação sobre compartilhamento, revogação de consentimento e revisão de decisões automatizadas quando aplicável. O pedido deve ser enviado primeiro ao controlador pelos canais da plataforma. Se a resposta for insatisfatória, o titular pode recorrer à ANPD, conforme as orientações oficiais da Autoridade.',
   },
   {
     id: 'menores',
-    title: '7. Menores de Idade',
-    content: `Nossa plataforma é destinada a estudantes, que frequentemente são menores de idade. Exigimos confirmação de idade (mínimo 16 anos) para participação na comunidade. Não coletamos deliberadamente dados de crianças menores de 13 anos. Se tomarmos conhecimento de que coletamos dados de uma criança menor de 13 anos, tomaremos medidas para excluir essas informações.`,
+    title: '8. Crianças e adolescentes',
+    content:
+      'A plataforma é voltada a estudantes e pode ser usada por adolescentes. Para participação na comunidade, o produto exige idade mínima de 16 anos. O tratamento de dados de crianças e adolescentes deve observar seu melhor interesse. Se responsável legal ou usuário identificar uso inadequado de dados pessoais envolvendo menor de idade, deve entrar em contato imediatamente pelos canais de privacidade da plataforma.',
+  },
+  {
+    id: 'seguranca',
+    title: '9. Segurança',
+    content:
+      'O Foco no ENEM adota medidas de segurança compatíveis com sua operação, incluindo controle de acesso, criptografia em trânsito, políticas de autorização no banco, rate limiting e restrição de uso de chaves privilegiadas no backend. As credenciais de autenticação são gerenciadas pelo provedor de autenticação; a plataforma não armazena senhas em texto puro.',
   },
   {
     id: 'alteracoes',
-    title: '8. Alterações nesta Política',
-    content: `Podemos atualizar esta política periodicamente. Notificaremos sobre alterações significativas por meio de aviso na plataforma ou por email. O uso contínuo da plataforma após alterações constitui aceitação da política atualizada. Recomendamos revisar esta página periodicamente.`,
+    title: '10. Alterações nesta política',
+    content:
+      'Esta política pode ser atualizada para refletir mudanças técnicas, regulatórias ou operacionais. A versão vigente será publicada nesta página com data de atualização revisada.',
   },
-];
+] as const;
 
 export default function PrivacidadePage() {
-  const [activeSection, setActiveSection] = useState<string | null>(null);
-
-  const scrollToSection = (id: string) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
-
   return (
     <div className="min-h-screen bg-bg-base">
-      {/* Hero */}
-      <section className="py-16 md:py-24 px-4 border-b border-border-color">
-        <div className="max-w-4xl mx-auto">
-          <motion.h1
-            className="text-3xl md:text-4xl font-bold text-text-primary mb-4"
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          >
-            Política de Privacidade
-          </motion.h1>
-          <motion.p
-            className="text-text-secondary text-lg"
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-          >
-            Sua privacidade é importante para nós. Entenda como coletamos, usamos e protegemos seus dados.
-          </motion.p>
-          <motion.p
-            className="text-text-muted text-sm mt-4"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
-          >
-            Última atualização: Abril de 2025
-          </motion.p>
+      <section className="border-b border-border-color px-4 py-16 md:py-20">
+        <div className="mx-auto max-w-4xl">
+          <h1 className="text-3xl font-bold text-text-primary md:text-4xl">Política de Privacidade</h1>
+          <p className="mt-4 max-w-2xl text-lg text-text-secondary">
+            Esta política descreve como o Foco no ENEM trata dados pessoais no estado atual da plataforma.
+          </p>
+          <p className="mt-4 text-sm text-text-muted">Última atualização: 21 de abril de 2026</p>
         </div>
       </section>
 
-      <div className="max-w-4xl mx-auto px-4 py-12 flex gap-12">
-        {/* TOC sidebar — desktop only */}
-        <aside className="hidden lg:block w-56 flex-shrink-0">
+      <div className="mx-auto flex max-w-4xl gap-12 px-4 py-12">
+        <aside className="hidden w-56 flex-shrink-0 lg:block">
           <nav className="sticky top-24 space-y-1">
-            <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">Índice</p>
-            {sections.map((s) => (
-              <button
-                key={s.id}
-                onClick={() => { setActiveSection(s.id); scrollToSection(s.id); }}
-                className={`block w-full text-left text-sm py-1.5 px-3 rounded-lg transition-colors ${
-                  activeSection === s.id
-                    ? 'text-primary bg-primary-light'
-                    : 'text-text-secondary hover:text-text-primary hover:bg-muted-bg'
-                }`}
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-text-muted">Índice</p>
+            {sections.map((section) => (
+              <a
+                key={section.id}
+                href={`#${section.id}`}
+                className="block rounded-lg px-3 py-1.5 text-sm text-text-secondary transition-colors hover:bg-muted-bg hover:text-text-primary"
               >
-                {s.title}
-              </button>
+                {section.title}
+              </a>
             ))}
           </nav>
         </aside>
 
-        {/* Content */}
-        <main className="flex-1 min-w-0">
+        <main className="min-w-0 flex-1">
           <div className="space-y-10">
-            {sections.map((s, i) => (
-              <motion.section
-                key={s.id}
-                id={s.id}
-                className="scroll-mt-24"
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-                onViewportEnter={() => setActiveSection(s.id)}
-              >
-                <h2 className="text-xl font-semibold text-text-primary mb-3">{s.title}</h2>
-                <p className="text-text-secondary leading-relaxed text-[15px] whitespace-pre-line">{s.content}</p>
-              </motion.section>
+            {sections.map((section) => (
+              <section key={section.id} id={section.id} className="scroll-mt-24">
+                <h2 className="mb-3 text-xl font-semibold text-text-primary">{section.title}</h2>
+                <p className="whitespace-pre-line text-[15px] leading-relaxed text-text-secondary">
+                  {section.content}
+                </p>
+              </section>
             ))}
           </div>
 
-          {/* Contact */}
-          <div className="mt-16 p-6 rounded-xl bg-card-bg border border-border-color">
-            <h3 className="text-base font-semibold text-text-primary mb-2">Dúvidas sobre privacidade?</h3>
-            <p className="text-sm text-text-secondary mb-3">
-              Entre em contato conosco para qualquer questão relacionada à sua privacidade e proteção de dados.
+          <div className="mt-16 rounded-xl border border-border-color bg-card-bg p-6">
+            <h3 className="mb-2 text-base font-semibold text-text-primary">Exercício de direitos e contato</h3>
+            <p className="mb-3 text-sm text-text-secondary">
+              Para solicitações de privacidade, envie um email com identificação mínima do pedido e contexto da conta.
             </p>
-            <a
-              href="mailto:privacidade@foconoenem.com"
-              className="text-sm text-primary hover:text-primary-hover transition-colors"
-            >
-              privacidade@foconoenem.com
-            </a>
+            <div className="flex flex-wrap items-center gap-4 text-sm">
+              <a href="mailto:privacidade@foconoenem.com" className="text-primary hover:text-primary-hover">
+                privacidade@foconoenem.com
+              </a>
+              <a href="mailto:contato@foconoenem.com" className="text-primary hover:text-primary-hover">
+                contato@foconoenem.com
+              </a>
+            </div>
           </div>
 
           <div className="mt-8">
-            <Link href="/" className="text-sm text-text-muted hover:text-text-secondary transition-colors">
+            <Link href="/" className="text-sm text-text-muted transition-colors hover:text-text-secondary">
               ← Voltar ao início
             </Link>
           </div>

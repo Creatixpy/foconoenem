@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
+import AuthProviders from '@/app/auth-providers';
 import { useAuth } from '@/lib/auth/context';
 
 // ---------------------------------------------------------------------------
@@ -38,7 +39,7 @@ interface NoticiaRow {
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
-export default function AdminNoticiasPage() {
+function AdminNoticiasPageContent() {
   const router = useRouter();
   const { user, loading: authLoading, initialized } = useAuth();
   const [authorized, setAuthorized] = useState(false);
@@ -362,5 +363,13 @@ export default function AdminNoticiasPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AdminNoticiasPage() {
+  return (
+    <AuthProviders>
+      <AdminNoticiasPageContent />
+    </AuthProviders>
   );
 }

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import AuthProviders from '@/app/auth-providers';
 import { useAuth } from '@/lib/auth/context';
 import { updatePassword } from '@/lib/auth/service';
 import { validatePassword, getPasswordStrengthLabel } from '@/lib/auth/validation';
@@ -84,7 +85,7 @@ const STRENGTH_SEGMENTS: Record<PasswordStrength, number> = {
 /*  ResetPasswordPage                                                  */
 /* ------------------------------------------------------------------ */
 
-export default function ResetPasswordPage() {
+function ResetPasswordPageContent() {
   const router = useRouter();
   const { user, initialized } = useAuth();
 
@@ -336,5 +337,13 @@ export default function ResetPasswordPage() {
         </Link>
       </p>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <AuthProviders>
+      <ResetPasswordPageContent />
+    </AuthProviders>
   );
 }

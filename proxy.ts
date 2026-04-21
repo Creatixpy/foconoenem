@@ -7,13 +7,31 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
-     */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/login',
+    '/register',
+    '/forgot-password',
+    '/reset-password',
+    '/auth/:path*',
+    '/conta/:path*',
+    '/comunidade/:path*',
+    '/redacao/:path*',
+    '/questoes/:path*',
+    '/resultados/:path*',
+    '/noticias/admin',
+    '/api/admin/:path*',
+    '/api/atualizarDestaques',
+    '/api/comunidade/:path*',
+    '/api/conquistas',
+    '/api/conta/:path*',
+    '/api/corrigir',
+    '/api/destaques/:path*',
+    '/api/gerar-tema',
+    '/api/noticias/admin/:path*',
+    '/api/noticias/destaques/status',
+    '/api/noticias/importar',
+    '/api/ocr',
+    '/api/questoes',
+    '/api/realtime-proxy',
+    '/api/resultados/:path*',
   ],
 }
