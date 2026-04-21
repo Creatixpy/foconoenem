@@ -14,31 +14,3 @@ create policy noticias_select_readonly
   for select
   to anon, authenticated
   using (true);
-
-drop policy if exists community_topics_select_public on public.community_topics;
-create policy community_topics_select_readonly
-  on public.community_topics
-  for select
-  to anon, authenticated
-  using (true);
-
-drop policy if exists community_posts_select_public on public.community_posts;
-create policy community_posts_select_readonly
-  on public.community_posts
-  for select
-  to anon, authenticated
-  using (status = 'published');
-
-drop policy if exists community_comments_select_public on public.community_comments;
-create policy community_comments_select_readonly
-  on public.community_comments
-  for select
-  to anon, authenticated
-  using (status = 'visible');
-
-drop policy if exists community_likes_select_public on public.community_post_likes;
-create policy community_likes_select_readonly
-  on public.community_post_likes
-  for select
-  to anon, authenticated
-  using (true);

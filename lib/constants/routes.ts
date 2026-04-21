@@ -12,7 +12,6 @@ export const ROUTES = {
     ESSAY: '/redacao',
     QUESTIONS: '/questoes',
     NEWS: '/noticias',
-    COMMUNITY: '/comunidade',
     RESULTS: '/resultados',
 
     // User

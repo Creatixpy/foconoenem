@@ -15,7 +15,6 @@ export const NAV_LINKS: NavLink[] = [
     { href: ROUTES.ESSAY, label: 'Redação' },
     { href: ROUTES.QUESTIONS, label: 'Questões' },
     { href: ROUTES.NEWS, label: 'Notícias' },
-    { href: ROUTES.COMMUNITY, label: 'Comunidade' },
     { href: ROUTES.ABOUT, label: 'Sobre' },
 ];
 

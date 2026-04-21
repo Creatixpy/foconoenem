@@ -7,7 +7,6 @@ O projeto atual concentra toda a lógica ativa no próprio app Next.js:
 - redação com geração de tema, correção por IA e consulta de resultados
 - simulados de questões com persistência de desempenho
 - notícias com moderação, destaques, busca textual e resumo com IA baseado no banco
-- comunidade com tópicos, posts, comentários, curtidas e conquistas
 - área de conta com estatísticas e edição de perfil
 - doações via Stripe
 - OCR de imagem com Gemini para apoiar o fluxo de redação
@@ -101,7 +100,7 @@ Observações:
 ```text
 app/                    rotas, páginas e APIs do Next.js
 app/api/                route handlers ativos do sistema
-lib/auth/               autenticação, perfis, metas, estatísticas e comunidade
+lib/auth/               autenticação, perfis, metas e estatísticas
 lib/ai/                 integração com Groq e Gemini
 lib/db/                 camada de acesso ao banco e repositórios
 lib/server/             helpers server-only (conta, notícias, horário, analytics, rate limit)
@@ -135,13 +134,6 @@ types/                  tipos compartilhados e tipos gerados do Supabase
 - importação via NewsAPI
 - destaques atualizados por rota administrativa e cron
 - resumo com IA restrito ao conteúdo já aprovado e armazenado no banco
-
-### Comunidade
-
-- feed por tópicos em `/comunidade`
-- posts, comentários, curtidas e perfis sociais
-- atualização em tempo real via `/api/realtime-proxy`
-- conquistas e sincronização de badges
 
 ### Conta e autenticação
 

@@ -2,7 +2,6 @@
 -- Consolidates all fixes from the comprehensive database audit (2026-04-11)
 --
 -- Critical fixes:
---   C1: community_comments SELECT policy used 'published' instead of 'visible'
 --   C2: user_achievements INSERT allowed self-award
 --   C3: anon could execute cleanup_old_rate_limits()
 --   C4: anon could execute recalculate_user_statistics(uuid)
@@ -10,13 +9,6 @@
 --   I5: Drop dead increment_xp function
 --   I6: Remove user_statistics mutate policy (users could fake stats)
 --   I7: Replace {public} role with {anon, authenticated}
---   I8: Missing community_posts indexes
-
--- C1: Fix community_comments SELECT (published → visible)
-DROP POLICY IF EXISTS community_comments_select ON public.community_comments;
-CREATE POLICY community_comments_select
-  ON public.community_comments FOR SELECT TO authenticated
-  USING ((status = 'visible'::text) OR (auth.uid() = user_id));
 
 -- C2: Remove user_achievements self-award INSERT
 DROP POLICY IF EXISTS user_achievements_insert ON public.user_achievements;
@@ -50,33 +42,3 @@ DROP POLICY IF EXISTS noticias_select_public ON public.noticias;
 CREATE POLICY noticias_select
   ON public.noticias FOR SELECT TO anon, authenticated
   USING (true);
-
-DROP POLICY IF EXISTS community_topics_select ON public.community_topics;
-CREATE POLICY community_topics_select
-  ON public.community_topics FOR SELECT TO anon, authenticated
-  USING (true);
-
--- I8: Missing indexes for community queries
-CREATE INDEX IF NOT EXISTS idx_community_posts_last_activity
-  ON public.community_posts (last_activity_at DESC);
-
-CREATE INDEX IF NOT EXISTS idx_community_posts_status_published
-  ON public.community_posts (status)
-  WHERE status = 'published';
-
--- M14: Add UPDATE policy for community_comments (allow editing own comments)
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies
-    WHERE policyname = 'Users can update own comments'
-    AND tablename = 'community_comments'
-  ) THEN
-    CREATE POLICY "Users can update own comments"
-      ON public.community_comments
-      FOR UPDATE
-      TO authenticated
-      USING (auth.uid() = user_id)
-      WITH CHECK (auth.uid() = user_id);
-  END IF;
-END $$;

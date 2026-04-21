@@ -15,7 +15,6 @@ The current application is a full-stack Next.js 16 project with:
 - ENEM essay flow with AI theme generation, correction and OCR support
 - quiz flow with generated questions and result persistence
 - approved-news feed, admin moderation/import and AI summaries based on stored articles
-- community feed with topics, posts, comments, likes, profiles and achievements
 - account dashboard and profile editing
 - Stripe donation checkout and webhook handling
 
@@ -42,7 +41,6 @@ The repository does **not** currently ship local Supabase Edge Function code. `s
 | `/noticias/[slug]` | `app/noticias/[slug]/page.tsx` | Approved news detail |
 | `/noticias/pesquisa` | `app/noticias/pesquisa/page.tsx` | News search page |
 | `/noticias/admin` | `app/noticias/admin/page.tsx` | News admin panel |
-| `/comunidade` | `app/comunidade/page.tsx`, `app/comunidade/CommunityPageClient.tsx` | Community feed |
 | `/conta` | `app/conta/page.tsx`, `app/conta/ContaPageClient.tsx` | Account dashboard |
 | `/conta/editar` | `app/conta/editar/page.tsx`, `app/conta/editar/ContaEditarPageClient.tsx` | Profile editing |
 | `/resultados/[id]` | `app/resultados/[id]/page.tsx`, `app/resultados/[id]/ResultadosPageClient.tsx` | Essay result view |
@@ -89,17 +87,6 @@ The repository does **not** currently ship local Supabase Edge Function code. `s
 | --- | --- | --- |
 | `/api/admin/manutencao` | `GET`, `POST` | Admin/cron cleanup of cached themes, rate limits and analytics rows |
 | `/api/atualizarDestaques` | `GET` | Admin/cron refresh of approved news highlights using Groq |
-| `/api/comunidade/achievements` | `POST` | Batch-load achievements for community users |
-| `/api/comunidade/comments` | `POST` | Create comment |
-| `/api/comunidade/comments/[commentId]` | `DELETE` | Delete comment |
-| `/api/comunidade/comments/count` | `GET` | Comment count for a post |
-| `/api/comunidade/likes` | `POST` | Batch-load likes for post IDs |
-| `/api/comunidade/posts` | `POST` | Create post |
-| `/api/comunidade/posts/[postId]` | `DELETE` | Delete post |
-| `/api/comunidade/posts/[postId]/likes` | `POST`, `DELETE` | Like / unlike a post |
-| `/api/comunidade/profiles` | `POST` | Batch-load profile cards for user IDs |
-| `/api/comunidade/threads` | `GET` | List threads and comments by topic |
-| `/api/comunidade/topics` | `GET` | List available community topics |
 | `/api/conquistas` | `POST` | Evaluate and sync unlocked user achievements |
 | `/api/conta/dados` | `GET` | Account dashboard payload |
 | `/api/conta/recalcular` | `POST` | Recalculate aggregated user statistics |
@@ -119,7 +106,6 @@ The repository does **not** currently ship local Supabase Edge Function code. `s
 | `/api/noticias/importar` | `POST` | Admin import from NewsAPI |
 | `/api/ocr` | `POST` | OCR via Gemini Vision |
 | `/api/questoes` | `GET`, `POST` | Generate quiz questions / persist quiz result |
-| `/api/realtime-proxy` | `GET` | SSE proxy for community inserts |
 | `/api/resultados/[id]` | `GET` | Fetch essay result by route param |
 | `/api/schedule/time` | `GET` | Return current Brazil datetime and fallback source |
 | `/auth/callback` | `GET` | OAuth code exchange route |
@@ -181,7 +167,6 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | File | Purpose |
 | --- | --- |
 | `lib/auth/achievements-service.ts` | Achievement reads for the authenticated user |
-| `lib/auth/community-service.ts` | Community consent and profile-social updates |
 | `lib/auth/constants.ts` | Auth constants and route references |
 | `lib/auth/context.tsx` | `AuthProvider` and auth state management |
 | `lib/auth/goals-service.ts` | Goal CRUD |
@@ -219,7 +204,6 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | `lib/db/transformers.ts` | Row/model transformation helpers |
 | `lib/db/types.ts` | DB-layer application types |
 | `lib/db/repositories/analytics.ts` | Analytics persistence/query helpers |
-| `lib/db/repositories/community.ts` | Community CRUD helpers |
 | `lib/db/repositories/essays.ts` | Essay result and cached theme helpers |
 | `lib/db/repositories/news.ts` | News persistence and search helpers |
 | `lib/db/repositories/quizzes.ts` | Quiz result helpers |

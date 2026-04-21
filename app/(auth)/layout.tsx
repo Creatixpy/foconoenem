@@ -36,7 +36,7 @@ const FEATURES = [
         <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
       </svg>
     ),
-    text: 'Comunidade ativa',
+    text: 'Histórico e estatísticas',
   },
 ];
 
@@ -77,7 +77,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
             Sua preparação para o ENEM começa aqui.
           </h1>
           <p className="mt-4 leading-relaxed" style={{ color: 'var(--auth-panel-text-secondary)' }}>
-            Ferramentas inteligentes, feedback personalizado e uma comunidade de estudantes dedicados.
+            Ferramentas inteligentes, feedback personalizado e acompanhamento contínuo da sua evolução.
           </p>
 
           <ul className="mt-10 space-y-5">

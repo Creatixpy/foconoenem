@@ -1,29 +1,5 @@
 begin;
 
--- Configurações extras no perfil para comunidade (executa apenas se a tabela existir)
-do $$
-begin
-  if exists (
-    select 1
-    from pg_tables
-    where schemaname = 'public'
-      and tablename = 'user_profiles'
-  ) then
-    alter table public.user_profiles
-      add column if not exists is_over_16 boolean,
-      add column if not exists community_age_confirmed_at timestamptz,
-      add column if not exists community_terms_version text,
-      add column if not exists community_terms_accepted_at timestamptz,
-      add column if not exists community_tagline text,
-      add column if not exists community_profile_theme text,
-      add column if not exists community_show_statistics boolean not null default true;
-
-    update public.user_profiles
-    set community_show_statistics = coalesce(community_show_statistics, true)
-    where community_show_statistics is distinct from true;
-  end if;
-end $$;
-
 -- Tabelas de conquistas
 create table if not exists public.achievements (
   id uuid primary key default extensions.uuid_generate_v4(),
@@ -96,17 +72,10 @@ values
   ),
   (
     'nota_mil',
-    'Rumo à nota mil',
-    'Alcance média de 900+ na redação.',
+    'Nota Mil',
+    'Obtenha nota 1000 em uma redação.',
     '🌟',
-    jsonb_build_object('type', 'essay_average', 'threshold', 900)
-  ),
-  (
-    'mentor_comunitario',
-    'Mentor Comunitário',
-    'Faça 5 comentários aprovados na comunidade.',
-    '🤝',
-    jsonb_build_object('type', 'community_comments', 'threshold', 5)
+    jsonb_build_object('type', 'essay_score', 'threshold', 1000)
   )
 on conflict (slug) do update
 set

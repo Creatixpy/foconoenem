@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 - `app/`: Next.js App Router pages, layouts and active route handlers under `app/api`.
-- `lib/auth/`: auth state, profile/statistics services, community helpers and validation.
+- `lib/auth/`: auth state, profile/statistics services and validation.
 - `lib/ai/`: Groq and Gemini integrations.
 - `lib/db/`: repository layer and server/browser database helpers.
 - `lib/server/`: server-only helpers for account data, news, analytics, operating hours and rate limiting.
@@ -35,7 +35,6 @@
   - auth flows (`/login`, `/register`, `/forgot-password`)
   - essay flow (`/redacao` and `/resultados/[id]`)
   - quiz flow (`/questoes`)
-  - community feed (`/comunidade`)
   - news admin flows (`/noticias/admin`) when relevant
   - donation flow if Stripe credentials are configured
 

@@ -134,144 +134,6 @@ export type Database = {
         }
         Relationships: []
       }
-      community_comments: {
-        Row: {
-          content: string
-          created_at: string
-          id: string
-          post_id: string
-          status: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          content: string
-          created_at?: string
-          id?: string
-          post_id: string
-          status?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          content?: string
-          created_at?: string
-          id?: string
-          post_id?: string
-          status?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "community_comments_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "community_posts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      community_post_likes: {
-        Row: {
-          created_at: string
-          id: string
-          post_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          post_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          post_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "community_post_likes_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "community_posts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      community_posts: {
-        Row: {
-          content: string
-          created_at: string
-          id: string
-          last_activity_at: string
-          status: string
-          title: string
-          topic_id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          content: string
-          created_at?: string
-          id?: string
-          last_activity_at?: string
-          status?: string
-          title: string
-          topic_id: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          content?: string
-          created_at?: string
-          id?: string
-          last_activity_at?: string
-          status?: string
-          title?: string
-          topic_id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "community_posts_topic_id_fkey"
-            columns: ["topic_id"]
-            isOneToOne: false
-            referencedRelation: "community_topics"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      community_topics: {
-        Row: {
-          created_at: string
-          description: string | null
-          id: string
-          slug: string
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          slug: string
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          slug?: string
-          title?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       configuracoes: {
         Row: {
           chave: string
@@ -597,15 +459,8 @@ export type Database = {
           ano_enem: number | null
           avatar_url: string | null
           bio: string | null
-          community_age_confirmed_at: string | null
-          community_profile_theme: string | null
-          community_show_statistics: boolean
-          community_tagline: string | null
-          community_terms_accepted_at: string | null
-          community_terms_version: string | null
           created_at: string
           id: string
-          is_over_16: boolean | null
           nome_completo: string | null
           objetivo: string | null
           updated_at: string
@@ -615,15 +470,8 @@ export type Database = {
           ano_enem?: number | null
           avatar_url?: string | null
           bio?: string | null
-          community_age_confirmed_at?: string | null
-          community_profile_theme?: string | null
-          community_show_statistics?: boolean
-          community_tagline?: string | null
-          community_terms_accepted_at?: string | null
-          community_terms_version?: string | null
           created_at?: string
           id?: string
-          is_over_16?: boolean | null
           nome_completo?: string | null
           objetivo?: string | null
           updated_at?: string
@@ -633,15 +481,8 @@ export type Database = {
           ano_enem?: number | null
           avatar_url?: string | null
           bio?: string | null
-          community_age_confirmed_at?: string | null
-          community_profile_theme?: string | null
-          community_show_statistics?: boolean
-          community_tagline?: string | null
-          community_terms_accepted_at?: string | null
-          community_terms_version?: string | null
           created_at?: string
           id?: string
-          is_over_16?: boolean | null
           nome_completo?: string | null
           objetivo?: string | null
           updated_at?: string

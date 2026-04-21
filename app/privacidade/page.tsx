@@ -5,13 +5,13 @@ const sections = [
     id: 'controlador',
     title: '1. Quem controla os dados',
     content:
-      'O Foco no ENEM controla os dados pessoais tratados diretamente na plataforma para viabilizar conta, correção de redação, simulados, comunidade, histórico de resultados, notícias e suporte operacional. Para assuntos de privacidade, os canais públicos atuais são privacidade@foconoenem.com e contato@foconoenem.com.',
+      'O Foco no ENEM controla os dados pessoais tratados diretamente na plataforma para viabilizar conta, correção de redação, simulados, histórico de resultados, notícias e suporte operacional. Para assuntos de privacidade, os canais públicos atuais são privacidade@foconoenem.com e contato@foconoenem.com.',
   },
   {
     id: 'coleta',
     title: '2. Quais dados tratamos',
     content:
-      'Tratamos dados fornecidos no cadastro, como nome, email e objetivo de estudo; dados de uso, como temas gerados, redações enviadas, resultados de questões, interações na comunidade e eventos de conta; e dados técnicos indispensáveis para autenticação, segurança, prevenção de abuso, logs e funcionamento da interface. Dados de cartão não são armazenados pelo Foco no ENEM: pagamentos e doações são processados pela Stripe.',
+      'Tratamos dados fornecidos no cadastro, como nome, email e objetivo de estudo; dados de uso, como temas gerados, redações enviadas, resultados de questões, eventos de conta e navegação funcional; e dados técnicos indispensáveis para autenticação, segurança, prevenção de abuso, logs e funcionamento da interface. Dados de cartão não são armazenados pelo Foco no ENEM: pagamentos e doações são processados pela Stripe.',
   },
   {
     id: 'finalidades',
@@ -47,7 +47,7 @@ const sections = [
     id: 'menores',
     title: '8. Crianças e adolescentes',
     content:
-      'A plataforma é voltada a estudantes e pode ser usada por adolescentes. Para participação na comunidade, o produto exige idade mínima de 16 anos. O tratamento de dados de crianças e adolescentes deve observar seu melhor interesse. Se responsável legal ou usuário identificar uso inadequado de dados pessoais envolvendo menor de idade, deve entrar em contato imediatamente pelos canais de privacidade da plataforma.',
+      'A plataforma é voltada a estudantes e pode ser usada por adolescentes. O tratamento de dados de crianças e adolescentes deve observar seu melhor interesse. Se responsável legal ou usuário identificar uso inadequado de dados pessoais envolvendo menor de idade, deve entrar em contato imediatamente pelos canais de privacidade da plataforma.',
   },
   {
     id: 'seguranca',

@@ -51,12 +51,6 @@ export type {
   NoticiaInsert,
   NoticiaUpdate,
   CachedThemeRow,
-  CommunityTopicRow,
-  CommunityPostRow,
-  CommunityPostInsert,
-  CommunityCommentRow,
-  CommunityCommentInsert,
-  CommunityPostLikeRow,
   AnalyticsEventRow,
   AnalyticsEventInsert,
   RateLimitRow,
@@ -66,8 +60,6 @@ export type {
   EventType,
   GoalType,
   EssayOrigin,
-  PostStatus,
-  CommentStatus,
   
   // Application models
   UserProfile,
@@ -76,7 +68,6 @@ export type {
   EssayResult,
   QuizResult,
   Noticia,
-  CommunityPost,
   
   // Query options
   PaginationOptions,
@@ -96,7 +87,6 @@ export {
   toUserProfile,
   toUserStatistics,
   toNoticia,
-  toCommunityPost,
   fromUserProfileUpdate,
   fromNoticiaInsert,
 } from './transformers';
@@ -109,14 +99,12 @@ import * as usersRepo from './repositories/users';
 import * as essaysRepo from './repositories/essays';
 import * as quizzesRepo from './repositories/quizzes';
 import * as newsRepo from './repositories/news';
-import * as communityRepo from './repositories/community';
 import * as analyticsRepo from './repositories/analytics';
 
 export const users = usersRepo;
 export const essays = essaysRepo;
 export const quizzes = quizzesRepo;
 export const news = newsRepo;
-export const community = communityRepo;
 export const analytics = analyticsRepo;
 
 // ============================================================================
@@ -134,7 +122,6 @@ export const db = {
   essays: essaysRepo,
   quizzes: quizzesRepo,
   news: newsRepo,
-  community: communityRepo,
   analytics: analyticsRepo,
 };
 

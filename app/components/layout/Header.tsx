@@ -12,7 +12,6 @@ const NAV_LINKS = [
   { href: '/redacao', label: 'Redação' },
   { href: '/questoes', label: 'Questões' },
   { href: '/noticias', label: 'Notícias' },
-  { href: '/comunidade', label: 'Comunidade' },
   { href: '/sobre', label: 'Sobre' },
 ] as const;
 

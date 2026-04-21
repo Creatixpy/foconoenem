@@ -10,7 +10,7 @@ const STEPS = [
   {
     number: '01',
     title: 'Escolha sua atividade',
-    description: 'Redação, simulado ou comunidade: comece pelo que faz mais sentido para a sua rotina.',
+    description: 'Redação, simulado ou leitura de notícias: comece pelo que faz mais sentido para a sua rotina.',
   },
   {
     number: '02',
@@ -41,7 +41,7 @@ const TESTIMONIALS = [
     name: 'Larissa M.',
     role: 'Vestibulanda',
     quote:
-      'A comunidade e os exercícios me ajudaram a manter ritmo de estudo sem depender de várias ferramentas separadas.',
+      'Os exercícios e o histórico me ajudaram a manter ritmo de estudo sem depender de várias ferramentas separadas.',
   },
 ] as const;
 
@@ -118,7 +118,7 @@ export default function HomePageClient() {
           </h1>
 
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-[var(--text-muted)] md:text-xl">
-            Redações corrigidas por IA, simulados personalizados, notícias filtradas e uma comunidade para manter constância nos estudos.
+            Redações corrigidas por IA, simulados personalizados, notícias filtradas e histórico para manter constância nos estudos.
           </p>
 
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
@@ -218,9 +218,9 @@ export default function HomePageClient() {
               <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--success-light)] text-[var(--success)]">
                 <UsersIcon />
               </div>
-              <h3 className="mb-2 text-xl font-bold text-[var(--text-primary)]">Comunidade</h3>
+              <h3 className="mb-2 text-xl font-bold text-[var(--text-primary)]">Conta e histórico</h3>
               <p className="leading-relaxed text-[var(--text-muted)]">
-                Um espaço para trocar dúvidas, compartilhar estratégias e manter motivação ao longo da preparação.
+                Dashboard com resultados, estatísticas e acompanhamento contínuo da sua preparação ao longo do tempo.
               </p>
             </article>
 

@@ -41,14 +41,6 @@ export type NoticiaUpdate = Tables['noticias']['Update'];
 
 export type CachedThemeRow = Tables['cached_themes']['Row'];
 
-// Community
-export type CommunityTopicRow = Tables['community_topics']['Row'];
-export type CommunityPostRow = Tables['community_posts']['Row'];
-export type CommunityPostInsert = Tables['community_posts']['Insert'];
-export type CommunityCommentRow = Tables['community_comments']['Row'];
-export type CommunityCommentInsert = Tables['community_comments']['Insert'];
-export type CommunityPostLikeRow = Tables['community_post_likes']['Row'];
-
 // System
 export type AnalyticsEventRow = Tables['analytics_events']['Row'];
 export type AnalyticsEventInsert = Tables['analytics_events']['Insert'];
@@ -63,8 +55,6 @@ export type EventType = Database['public']['Enums']['event_type_enum'];
 
 export type GoalType = 'redacao_nota_minima' | 'questoes_acerto_minimo' | 'estudar_disciplina' | 'praticar_competencia';
 export type EssayOrigin = 'IA' | 'Simulação';
-export type PostStatus = 'published' | 'archived';
-export type CommentStatus = 'visible' | 'hidden';
 
 // ============================================================================
 // Application Models (transformed from DB rows)
@@ -79,13 +69,6 @@ export interface UserProfile {
   bio: string | null;
   objetivo: string | null;
   anoEnem: number | null;
-  communityTagline: string | null;
-  communityProfileTheme: string | null;
-  communityShowStatistics: boolean;
-  communityTermsVersion: string | null;
-  communityTermsAcceptedAt: string | null;
-  communityAgeConfirmedAt: string | null;
-  isOver16: boolean | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -173,26 +156,6 @@ export interface Noticia {
   fonteUrl: string | null;
   createdAt: string;
   updatedAt: string;
-}
-
-/** Community post with author info */
-export interface CommunityPost {
-  id: string;
-  topicId: string;
-  userId: string;
-  title: string;
-  content: string;
-  status: PostStatus;
-  createdAt: string;
-  updatedAt: string;
-  lastActivityAt: string;
-  author?: {
-    nomeCompleto: string | null;
-    avatarUrl: string | null;
-  };
-  likesCount?: number;
-  commentsCount?: number;
-  userHasLiked?: boolean;
 }
 
 // ============================================================================
