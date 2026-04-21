@@ -7,10 +7,6 @@ drop function if exists public.recalculate_user_statistics(uuid) cascade;
 drop function if exists public.cleanup_old_rate_limits() cascade;
 drop function if exists public.update_updated_at_column() cascade;
 
-drop table if exists public.community_post_likes cascade;
-drop table if exists public.community_comments cascade;
-drop table if exists public.community_posts cascade;
-drop table if exists public.community_topics cascade;
 drop table if exists public.analytics_events cascade;
 drop table if exists public.quiz_results cascade;
 drop table if exists public.essay_results cascade;
@@ -48,13 +44,6 @@ create table public.user_profiles (
   bio text,
   objetivo text,
   ano_enem smallint,
-  community_tagline text,
-  community_profile_theme text,
-  community_show_statistics boolean not null default true,
-  community_terms_version text,
-  community_terms_accepted_at timestamptz,
-  community_age_confirmed_at timestamptz,
-  is_over_16 boolean,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint user_profiles_user_id_key unique (user_id)
@@ -204,45 +193,6 @@ create table public.analytics_events (
   user_id uuid references auth.users(id) on delete set null
 );
 
-create table public.community_topics (
-  id uuid primary key default uuid_generate_v4(),
-  slug text not null unique,
-  title text not null,
-  description text,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
-create table public.community_posts (
-  id uuid primary key default uuid_generate_v4(),
-  topic_id uuid not null references public.community_topics(id) on delete cascade,
-  user_id uuid not null references auth.users(id) on delete cascade,
-  title text not null,
-  content text not null,
-  status text not null default 'published' check (status = any (array['published', 'archived'])),
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  last_activity_at timestamptz not null default now()
-);
-
-create table public.community_comments (
-  id uuid primary key default uuid_generate_v4(),
-  post_id uuid not null references public.community_posts(id) on delete cascade,
-  user_id uuid not null references auth.users(id) on delete cascade,
-  content text not null,
-  status text not null default 'visible' check (status = any (array['visible', 'hidden'])),
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
-create table public.community_post_likes (
-  id uuid primary key default uuid_generate_v4(),
-  post_id uuid not null references public.community_posts(id) on delete cascade,
-  user_id uuid not null references auth.users(id) on delete cascade,
-  created_at timestamptz not null default now(),
-  constraint community_post_likes_unique_like unique (post_id, user_id)
-);
-
 create table public.cached_themes (
   id uuid primary key default uuid_generate_v4(),
   tema text not null,
@@ -276,12 +226,6 @@ create index idx_essay_results_created on public.essay_results(created_at desc);
 create index idx_quiz_results_user on public.quiz_results(user_id, created_at desc);
 create index idx_analytics_events_user on public.analytics_events(user_id);
 create index idx_analytics_events_type on public.analytics_events(event_type, created_at desc);
-create index idx_community_posts_topic on public.community_posts(topic_id, created_at desc);
-create index idx_community_posts_user on public.community_posts(user_id, created_at desc);
-create index idx_community_comments_post on public.community_comments(post_id, created_at asc);
-create index idx_community_comments_user on public.community_comments(user_id, created_at desc);
-create index idx_community_post_likes_post on public.community_post_likes(post_id);
-create index idx_community_post_likes_user on public.community_post_likes(user_id);
 create index idx_cached_themes_usado on public.cached_themes(usado_count, created_at desc);
 create index idx_rate_limits_identifier_endpoint on public.rate_limits(identifier, endpoint, window_start);
 
@@ -483,18 +427,6 @@ create trigger trg_essay_results_updated_at
   before update on public.essay_results
   for each row execute function public.update_updated_at_column();
 
-create trigger trg_community_topics_updated_at
-  before update on public.community_topics
-  for each row execute function public.update_updated_at_column();
-
-create trigger trg_community_posts_updated_at
-  before update on public.community_posts
-  for each row execute function public.update_updated_at_column();
-
-create trigger trg_community_comments_updated_at
-  before update on public.community_comments
-  for each row execute function public.update_updated_at_column();
-
 alter table public.user_profiles enable row level security;
 alter table public.user_statistics enable row level security;
 alter table public.user_goals enable row level security;
@@ -505,10 +437,6 @@ alter table public.configuracoes enable row level security;
 alter table public.essay_results enable row level security;
 alter table public.quiz_results enable row level security;
 alter table public.analytics_events enable row level security;
-alter table public.community_topics enable row level security;
-alter table public.community_posts enable row level security;
-alter table public.community_comments enable row level security;
-alter table public.community_post_likes enable row level security;
 alter table public.cached_themes enable row level security;
 alter table public.rate_limits enable row level security;
 
@@ -706,105 +634,6 @@ create policy "analytics_select_service"
   for select
   to service_role
   using (true);
-
--- community topics policies
-create policy "community_topics_select_public"
-  on public.community_topics
-  for select
-  to public
-  using (true);
-
-create policy "community_topics_manage_service"
-  on public.community_topics
-  for all
-  to service_role
-  using (true)
-  with check (true);
-
--- community posts policies
-create policy "community_posts_select_public"
-  on public.community_posts
-  for select
-  to public
-  using (status = 'published');
-
-create policy "community_posts_insert"
-  on public.community_posts
-  for insert
-  to authenticated
-  with check (auth.uid() = user_id);
-
-create policy "community_posts_update"
-  on public.community_posts
-  for update
-  to authenticated
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
-
-create policy "community_posts_delete"
-  on public.community_posts
-  for delete
-  to authenticated
-  using (auth.uid() = user_id);
-
-create policy "community_posts_service"
-  on public.community_posts
-  for all
-  to service_role
-  using (true)
-  with check (true);
-
--- community comments policies
-create policy "community_comments_select_public"
-  on public.community_comments
-  for select
-  to public
-  using (status = 'visible');
-
-create policy "community_comments_insert"
-  on public.community_comments
-  for insert
-  to authenticated
-  with check (auth.uid() = user_id);
-
-create policy "community_comments_delete"
-  on public.community_comments
-  for delete
-  to authenticated
-  using (auth.uid() = user_id);
-
-create policy "community_comments_service"
-  on public.community_comments
-  for all
-  to service_role
-  using (true)
-  with check (true);
-
--- community likes policies
-create policy "community_likes_select_public"
-  on public.community_post_likes
-  for select
-  to public
-  using (true);
-
-create policy "community_likes_insert"
-  on public.community_post_likes
-  for insert
-  to authenticated
-  with check (auth.uid() = user_id);
-
-create policy "community_likes_delete"
-  on public.community_post_likes
-  for delete
-  to authenticated
-  using (auth.uid() = user_id);
-
-create policy "community_likes_service"
-  on public.community_post_likes
-  for all
-  to service_role
-  using (true)
-  with check (true);
 
 -- cached themes policies
 create policy "cached_themes_service"

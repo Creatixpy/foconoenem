@@ -107,38 +107,6 @@ end $$;
 
 do $$
 begin
-  if exists (select 1 from information_schema.tables where table_schema = 'public' and table_name = 'community_topics') then
-    drop table if exists backup_user_data.community_topics cascade;
-    create table backup_user_data.community_topics as select * from public.community_topics;
-  end if;
-end $$;
-
-do $$
-begin
-  if exists (select 1 from information_schema.tables where table_schema = 'public' and table_name = 'community_posts') then
-    drop table if exists backup_user_data.community_posts cascade;
-    create table backup_user_data.community_posts as select * from public.community_posts;
-  end if;
-end $$;
-
-do $$
-begin
-  if exists (select 1 from information_schema.tables where table_schema = 'public' and table_name = 'community_comments') then
-    drop table if exists backup_user_data.community_comments cascade;
-    create table backup_user_data.community_comments as select * from public.community_comments;
-  end if;
-end $$;
-
-do $$
-begin
-  if exists (select 1 from information_schema.tables where table_schema = 'public' and table_name = 'community_post_likes') then
-    drop table if exists backup_user_data.community_post_likes cascade;
-    create table backup_user_data.community_post_likes as select * from public.community_post_likes;
-  end if;
-end $$;
-
-do $$
-begin
   if exists (select 1 from information_schema.tables where table_schema = 'public' and table_name = 'analytics_events') then
     drop table if exists backup_user_data.analytics_events cascade;
     create table backup_user_data.analytics_events as select * from public.analytics_events;

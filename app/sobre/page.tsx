@@ -17,11 +17,6 @@ const pilares = [
       'Publicação de notícias aprovadas na própria plataforma, com página pública indexável e resumo por IA sobre o acervo publicado.',
   },
   {
-    title: 'Comunidade',
-    description:
-      'Área de interação entre estudantes com posts, comentários, curtidas, conquistas e atualização em tempo real.',
-  },
-  {
     title: 'Conta e histórico',
     description:
       'Painel com resultados, estatísticas e histórico de uso para acompanhar evolução ao longo da preparação.',
@@ -53,7 +48,7 @@ export default function SobrePage() {
             Uma plataforma de estudo focada em prática, correção e acompanhamento
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-text-secondary">
-            O Foco no ENEM reúne redação, questões, notícias e comunidade em um fluxo único. A proposta é reduzir atrito operacional e dar ao estudante uma rotina mais consistente.
+            O Foco no ENEM reúne redação, questões, notícias e histórico em um fluxo único. A proposta é reduzir atrito operacional e dar ao estudante uma rotina mais consistente.
           </p>
         </div>
       </section>

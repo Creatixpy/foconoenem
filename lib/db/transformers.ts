@@ -10,8 +10,6 @@ import type {
   UserStatistics,
   NoticiaRow,
   Noticia,
-  CommunityPostRow,
-  CommunityPost,
 } from './types';
 import type { Database } from '@/types/supabase';
 
@@ -45,13 +43,6 @@ export function toUserProfile(row: UserProfileRow): UserProfile {
     bio: row.bio,
     objetivo: row.objetivo,
     anoEnem: row.ano_enem,
-    communityTagline: row.community_tagline,
-    communityProfileTheme: row.community_profile_theme,
-    communityShowStatistics: row.community_show_statistics,
-    communityTermsVersion: row.community_terms_version,
-    communityTermsAcceptedAt: row.community_terms_accepted_at,
-    communityAgeConfirmedAt: row.community_age_confirmed_at,
-    isOver16: row.is_over_16,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -65,13 +56,6 @@ export function fromUserProfileUpdate(profile: Partial<UserProfile>): Database['
   if (profile.bio !== undefined) updates.bio = profile.bio;
   if (profile.objetivo !== undefined) updates.objetivo = profile.objetivo;
   if (profile.anoEnem !== undefined) updates.ano_enem = profile.anoEnem;
-  if (profile.communityTagline !== undefined) updates.community_tagline = profile.communityTagline;
-  if (profile.communityProfileTheme !== undefined) updates.community_profile_theme = profile.communityProfileTheme;
-  if (profile.communityShowStatistics !== undefined) updates.community_show_statistics = profile.communityShowStatistics;
-  if (profile.communityTermsVersion !== undefined) updates.community_terms_version = profile.communityTermsVersion;
-  if (profile.communityTermsAcceptedAt !== undefined) updates.community_terms_accepted_at = profile.communityTermsAcceptedAt;
-  if (profile.communityAgeConfirmedAt !== undefined) updates.community_age_confirmed_at = profile.communityAgeConfirmedAt;
-  if (profile.isOver16 !== undefined) updates.is_over_16 = profile.isOver16;
   
   return updates;
 }
@@ -143,40 +127,5 @@ export function fromNoticiaInsert(noticia: Omit<Noticia, 'id' | 'createdAt' | 'u
     tags: noticia.tags,
     destaque: noticia.destaque,
     fonte_url: noticia.fonteUrl,
-  };
-}
-
-// ============================================================================
-// Community Transformers
-// ============================================================================
-
-export function toCommunityPost(
-  row: CommunityPostRow,
-  extras?: {
-    author?: { nome_completo: string | null; avatar_url: string | null };
-    likesCount?: number;
-    commentsCount?: number;
-    userHasLiked?: boolean;
-  }
-): CommunityPost {
-  return {
-    id: row.id,
-    topicId: row.topic_id,
-    userId: row.user_id,
-    title: row.title,
-    content: row.content,
-    status: row.status as CommunityPost['status'],
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-    lastActivityAt: row.last_activity_at,
-    ...(extras?.author && {
-      author: {
-        nomeCompleto: extras.author.nome_completo,
-        avatarUrl: extras.author.avatar_url,
-      },
-    }),
-    ...(extras?.likesCount !== undefined && { likesCount: extras.likesCount }),
-    ...(extras?.commentsCount !== undefined && { commentsCount: extras.commentsCount }),
-    ...(extras?.userHasLiked !== undefined && { userHasLiked: extras.userHasLiked }),
   };
 }

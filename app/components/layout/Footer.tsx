@@ -43,7 +43,6 @@ const RECURSOS = [
   { href: '/redacao', label: 'Redação' },
   { href: '/questoes', label: 'Questões' },
   { href: '/noticias', label: 'Notícias' },
-  { href: '/comunidade', label: 'Comunidade' },
 ];
 
 const SUPORTE = [

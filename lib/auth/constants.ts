@@ -73,6 +73,3 @@ export const AUTH_ERROR_CODES = {
   NETWORK_ERROR: 'AUTH_NETWORK_ERROR',
   UNKNOWN_ERROR: 'AUTH_UNKNOWN_ERROR',
 } as const;
-
-// Community terms version
-export const COMMUNITY_TERMS_VERSION = '2024-07-community';

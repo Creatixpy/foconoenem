@@ -1,21 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
 
-const ACHIEVEMENT_SLUGS = ['primeira_redacao', 'maratona_questoes', 'nota_mil', 'mentor_comunitario'] as const;
+const ACHIEVEMENT_SLUGS = ['primeira_redacao', 'maratona_questoes', 'nota_mil'] as const;
 type AchievementSlug = (typeof ACHIEVEMENT_SLUGS)[number];
 
 type AwardContext = {
   total_redacoes: number | null;
   total_questoes_respondidas: number | null;
   media_nota_redacao: number | null;
-  comment_count: number;
 };
 
 const checkConditions = (context: AwardContext): Record<AchievementSlug, boolean> => ({
   primeira_redacao: (context.total_redacoes ?? 0) >= 1,
   maratona_questoes: (context.total_questoes_respondidas ?? 0) >= 50,
-  nota_mil: (context.media_nota_redacao ?? 0) >= 900,
-  mentor_comunitario: context.comment_count >= 5,
+  nota_mil: (context.media_nota_redacao ?? 0) >= 1000,
 });
 
 export async function POST(request: NextRequest) {
@@ -26,20 +24,17 @@ export async function POST(request: NextRequest) {
 
   const { supabase, userId } = auth;
 
-  const [{ data: stats, error: statsError }, { count: commentCount = 0, error: commentsError }] = await Promise.all([
-    supabase
-      .from('user_statistics')
-      .select('total_redacoes,total_questoes_respondidas,media_nota_redacao')
-      .eq('user_id', userId)
-      .maybeSingle(),
-    supabase.from('community_comments').select('*', { head: true, count: 'exact' }).eq('user_id', userId),
-  ]);
+  const { data: stats, error: statsError } = await supabase
+    .from('user_statistics')
+    .select('total_redacoes,total_questoes_respondidas,media_nota_redacao')
+    .eq('user_id', userId)
+    .maybeSingle();
 
-  if (statsError || commentsError) {
+  if (statsError) {
     return NextResponse.json(
       {
         error: 'statistics_error',
-        details: statsError?.message ?? commentsError?.message,
+        details: statsError.message,
       },
       { status: 500 }
     );
@@ -49,7 +44,6 @@ export async function POST(request: NextRequest) {
     total_redacoes: stats?.total_redacoes ?? 0,
     total_questoes_respondidas: stats?.total_questoes_respondidas ?? 0,
     media_nota_redacao: stats?.media_nota_redacao ?? 0,
-    comment_count: commentCount ?? 0,
   };
 
   const { data: existingAchievements, error: existingError } = await supabase

@@ -11,7 +11,6 @@ export {
   OAUTH_CONFIG,
   AUTH_PATHS,
   AUTH_ERROR_CODES,
-  COMMUNITY_TERMS_VERSION,
 } from './constants';
 
 // Types
@@ -93,10 +92,3 @@ export {
 export {
   getUserAchievements,
 } from './achievements-service';
-
-// Community Service
-export {
-  confirmCommunityAge,
-  acceptCommunityTerms,
-  updateCommunitySettings,
-} from './community-service';

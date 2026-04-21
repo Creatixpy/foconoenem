@@ -14,13 +14,6 @@ export interface UserProfile {
   bio: string | null;
   objetivo: string | null;
   ano_enem: number | null;
-  community_tagline: string | null;
-  community_profile_theme: string | null;
-  community_show_statistics: boolean;
-  community_terms_version: string | null;
-  community_terms_accepted_at: string | null;
-  community_age_confirmed_at: string | null;
-  is_over_16: boolean | null;
   created_at: string;
   updated_at: string;
 }
