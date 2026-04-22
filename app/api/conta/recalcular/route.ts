@@ -1,10 +1,16 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUserId, recalculateContaStatistics } from '@/lib/server/conta';
+import { ensureTrustedOrigin } from '@/lib/server/request-origin';
 
 export const dynamic = 'force-dynamic';
 
-export async function POST() {
+export async function POST(request: NextRequest) {
     try {
+        const originError = ensureTrustedOrigin(request);
+        if (originError) {
+            return originError;
+        }
+
         const userId = await getAuthenticatedUserId();
 
         if (!userId) {

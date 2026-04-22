@@ -1,10 +1,10 @@
 import { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import Script from "next/script";
 import "./styles/index.css";
 import Providers from "./providers";
 import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
-import { themeScript } from "@/lib/contexts/ThemeContext";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 
@@ -83,7 +83,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className={inter.variable} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <Script src="/theme-init.js" strategy="beforeInteractive" />
       </head>
       <body className="flex flex-col min-h-dvh">
         <Providers>

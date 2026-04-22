@@ -1,5 +1,8 @@
 import Link from 'next/link';
 
+const PLATFORM_VIDEO_URL = 'https://www.youtube-nocookie.com/embed/Tc_VjgQltfc?rel=0';
+const PLATFORM_VIDEO_WATCH_URL = 'https://youtu.be/Tc_VjgQltfc?si=-zgvoZP0ntUq-yRc';
+
 const STATS = [
   { value: '10.000+', label: 'Questões geradas' },
   { value: '500+', label: 'Redações corrigidas' },
@@ -255,6 +258,45 @@ export default function HomePageClient() {
             <p className="mx-auto mt-4 max-w-md text-lg text-[var(--text-muted)]">
               Fluxo simples para transformar prática em revisão útil.
             </p>
+          </div>
+
+          <div className="mx-auto mb-14 max-w-5xl overflow-hidden rounded-3xl border border-[var(--border-color)] bg-[var(--card-bg)] shadow-sm">
+            <div className="grid gap-0 lg:grid-cols-[1.2fr_0.8fr]">
+              <div className="border-b border-[var(--border-color)] bg-[var(--bg-base)] lg:border-b-0 lg:border-r">
+                <div className="aspect-video">
+                  <iframe
+                    className="h-full w-full"
+                    src={PLATFORM_VIDEO_URL}
+                    title="Vídeo explicando como funciona a plataforma Foco no ENEM"
+                    loading="lazy"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    allowFullScreen
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col justify-center p-6 sm:p-8">
+                <span className="mb-3 inline-flex w-fit items-center rounded-full bg-[var(--primary-light)] px-3 py-1 text-xs font-semibold text-[var(--primary)]">
+                  Vídeo explicativo
+                </span>
+                <h3 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">
+                  Veja a plataforma em ação
+                </h3>
+                <p className="mt-4 leading-relaxed text-[var(--text-muted)]">
+                  Assista ao passo a passo da redação, dos simulados, das notícias e do acompanhamento de desempenho em um único ambiente.
+                </p>
+                <a
+                  href={PLATFORM_VIDEO_WATCH_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[var(--primary)] transition-colors hover:text-[var(--primary-hover)]"
+                >
+                  Abrir no YouTube
+                  <ArrowRightIcon />
+                </a>
+              </div>
+            </div>
           </div>
 
           <div className="relative mx-auto grid max-w-4xl grid-cols-1 gap-8 md:grid-cols-3 md:gap-6">

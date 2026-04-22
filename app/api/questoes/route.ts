@@ -8,6 +8,7 @@ import { getOperatingHoursInfo } from '@/lib/server/operating-hours';
 import { checkRateLimit } from '@/lib/server/rate-limit';
 import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
 import { createAdminClient } from '@/lib/db/server';
+import { ensureTrustedOrigin } from '@/lib/server/request-origin';
 import {
   createQuizResult,
   getQuestionSignature,
@@ -482,6 +483,11 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const originError = ensureTrustedOrigin(request);
+  if (originError) {
+    return originError;
+  }
+
   let parsedPayload: QuizRequestPayload;
   try {
     const raw = await request.json();

@@ -12,6 +12,7 @@ import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
 import { createAdminClient } from '@/lib/db/server';
 import { z } from 'zod';
 import { handleApiError, sanitizeString } from '@/lib/security';
+import { ensureTrustedOrigin } from '@/lib/server/request-origin';
 import {
   createCachedThemes,
   createEssayResult,
@@ -451,6 +452,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const originError = ensureTrustedOrigin(request);
+    if (originError) {
+      return originError;
+    }
+
     const auth = await resolveRequestUserFromCookies();
     if ('error' in auth) {
       return auth.error;

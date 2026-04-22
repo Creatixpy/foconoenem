@@ -3,6 +3,7 @@ import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
 import { checkRateLimit } from '@/lib/server/rate-limit';
 import { handleApiError } from '@/lib/security';
 import { extractTextFromImage } from '@/lib/ai/gemini';
+import { ensureTrustedOrigin } from '@/lib/server/request-origin';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
@@ -35,6 +36,11 @@ function validateMagicBytes(buffer: ArrayBuffer, declaredType: string): boolean 
 
 export async function POST(request: NextRequest) {
   try {
+    const originError = ensureTrustedOrigin(request);
+    if (originError) {
+      return originError;
+    }
+
     // 1. Auth
     const auth = await resolveRequestUserFromCookies();
     if ('error' in auth) {

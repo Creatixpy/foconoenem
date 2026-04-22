@@ -3,6 +3,7 @@ import { authorizeAdmin, logAdminAction } from '@/lib/admin-auth';
 import { type SupabaseClient, type Database } from '@/lib/db';
 import { createAdminClient } from '@/lib/db/server';
 import { buildGroqProviders, GROQ_MAX_ATTEMPTS, isRateLimitError } from '@/lib/ai/groq';
+import { ensureTrustedOrigin } from '@/lib/server/request-origin';
 
 const GROQ_TIMEOUT_MS = 30_000;
 const MAX_NEWS_FOR_HIGHLIGHTS = 100;
@@ -160,7 +161,10 @@ async function selectHighlightsWithGroq(noticias: NoticiaResumo[]) {
   throw finalError;
 }
 
-async function processAutomaticUpdate(client: SupabaseClient<Database> | null) {
+async function processAutomaticUpdate(
+  client: SupabaseClient<Database> | null,
+  adminEmail: string | null = 'cron'
+) {
   if (!client) {
     throw new Error('Supabase service role não configurado.');
   }
@@ -210,7 +214,7 @@ async function processAutomaticUpdate(client: SupabaseClient<Database> | null) {
   await atualizarTimestamp(client);
 
   await logAdminAction(client, {
-    adminEmail: 'cron',
+    adminEmail,
     action: 'highlights_update',
     details: { destaques, provider },
   });
@@ -224,6 +228,14 @@ async function processAutomaticUpdate(client: SupabaseClient<Database> | null) {
 }
 
 export async function GET(request: NextRequest) {
+  const isAutomatic = request.nextUrl.searchParams.get('automatic') === 'true';
+  if (!isAutomatic) {
+    return NextResponse.json(
+      { error: 'Method not allowed. Use POST para execução manual.' },
+      { status: 405 }
+    );
+  }
+
   const supabase = createAdminClient();
   if (!supabase) {
     return NextResponse.json(
@@ -232,8 +244,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const isAutomatic = request.nextUrl.searchParams.get('automatic') === 'true';
-  const auth = await authorizeAdmin(request, { allowCron: isAutomatic });
+  const auth = await authorizeAdmin(request, { allowCron: true });
 
   if (!auth.authorized) {
     return NextResponse.json(
@@ -242,18 +253,60 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  if (isAutomatic) {
-    const precisaAtualizar = await isUpdateNeeded(supabase);
-    if (!precisaAtualizar) {
-      return NextResponse.json({
-        status: 'skipped',
-        message: 'Atualização de destaques não necessária. Menos de 24 horas desde a última atualização.',
-      });
-    }
+  if (auth.mode !== 'cron') {
+    return NextResponse.json(
+      { error: 'Método reservado para execução automática.' },
+      { status: 405 }
+    );
+  }
+
+  const precisaAtualizar = await isUpdateNeeded(supabase);
+  if (!precisaAtualizar) {
+    return NextResponse.json({
+      status: 'skipped',
+      message: 'Atualização de destaques não necessária. Menos de 24 horas desde a última atualização.',
+    });
   }
 
   try {
-    const resultado = await processAutomaticUpdate(supabase);
+    const resultado = await processAutomaticUpdate(supabase, 'cron');
+    return NextResponse.json(resultado);
+  } catch (error) {
+    console.error('Erro ao atualizar destaques:', error);
+    return NextResponse.json(
+      {
+        error: 'Erro ao atualizar destaques.',
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  const originError = ensureTrustedOrigin(request, { allowMissingOriginForAuthHeader: true });
+  if (originError) {
+    return originError;
+  }
+
+  const supabase = createAdminClient();
+  if (!supabase) {
+    return NextResponse.json(
+      { error: 'Supabase service role não configurado.' },
+      { status: 500 }
+    );
+  }
+
+  const auth = await authorizeAdmin(request, { allowCron: true });
+  if (!auth.authorized) {
+    return NextResponse.json(
+      { error: auth.message ?? 'Acesso negado' },
+      { status: auth.status ?? 401 }
+    );
+  }
+
+  try {
+    const adminEmail = auth.mode === 'user' ? auth.user?.email ?? null : 'cron';
+    const resultado = await processAutomaticUpdate(supabase, adminEmail);
     return NextResponse.json(resultado);
   } catch (error) {
     console.error('Erro ao atualizar destaques:', error);
