@@ -78,7 +78,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const isTelemetryEnabled = process.env.NODE_ENV === "production";
+  const isTelemetryEnabled =
+    process.env.NODE_ENV === "production" &&
+    process.env.VERCEL === "1";
 
   return (
     <html lang="pt-BR" className={inter.variable} suppressHydrationWarning>

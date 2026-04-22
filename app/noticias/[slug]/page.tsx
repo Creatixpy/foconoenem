@@ -97,6 +97,7 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
               alt={noticia.titulo}
               fill
               priority
+              unoptimized
               className="object-cover"
               sizes="100vw"
             />
@@ -188,6 +189,7 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
                       src={item.safeImageUrl}
                       alt={item.titulo}
                       fill
+                      unoptimized
                       className="object-cover"
                       sizes="(max-width: 768px) 100vw, 33vw"
                     />

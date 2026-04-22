@@ -157,12 +157,11 @@ function AuthActions({
 export default function Header() {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
-  const [mobileMenuPath, setMobileMenuPath] = useState<string | null>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const mobileOpen = mobileMenuPath === pathname;
 
   const closeMobileMenu = () => {
-    setMobileMenuPath(null);
+    setMobileOpen(false);
   };
 
   useEffect(() => {
@@ -251,7 +250,7 @@ export default function Header() {
           <button
             type="button"
             onClick={() => {
-              setMobileMenuPath((current) => (current === pathname ? null : pathname));
+              setMobileOpen((current) => !current);
             }}
             className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]"
             aria-label={mobileOpen ? 'Fechar menu' : 'Abrir menu'}

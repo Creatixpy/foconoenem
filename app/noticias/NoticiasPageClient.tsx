@@ -63,6 +63,7 @@ function NewsImage({
       src={src}
       alt={alt}
       fill
+      unoptimized
       className={`object-cover ${className}`}
       onError={() => setError(true)}
       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -73,6 +74,7 @@ function NewsImage({
       alt={alt}
       width={800}
       height={450}
+      unoptimized
       className={`object-cover ${className}`}
       onError={() => setError(true)}
     />

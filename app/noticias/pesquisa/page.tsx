@@ -42,6 +42,7 @@ function ResultCard({ noticia }: { noticia: NoticiaAPI }) {
               src={noticia.imagem_url}
               alt={noticia.titulo}
               fill
+              unoptimized
               className="object-cover"
               onError={() => setImgError(true)}
               sizes="128px"
