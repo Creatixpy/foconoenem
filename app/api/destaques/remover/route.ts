@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authorizeAdmin, logAdminAction } from '@/lib/admin-auth';
 import { createAdminClient } from '@/lib/db/server';
+import { ensureTrustedOrigin } from '@/lib/server/request-origin';
 
 export async function POST(request: NextRequest) {
+  const originError = ensureTrustedOrigin(request, { allowMissingOriginForAuthHeader: true });
+  if (originError) {
+    return originError;
+  }
+
   const supabase = createAdminClient();
   if (!supabase) {
     return NextResponse.json(

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authorizeAdmin, logAdminAction } from '@/lib/admin-auth';
 import { createAdminClient } from '@/lib/db/server';
+import { ensureTrustedOrigin } from '@/lib/server/request-origin';
 
 async function cleanupCachedThemes() {
   const supabase = createAdminClient();
@@ -54,19 +55,35 @@ async function cleanupAnalytics() {
 }
 
 export async function GET(request: NextRequest) {
-  return handler(request);
+  return handler(request, { requireCronMode: true });
 }
 
 export async function POST(request: NextRequest) {
+  const originError = ensureTrustedOrigin(request, { allowMissingOriginForAuthHeader: true });
+  if (originError) {
+    return originError;
+  }
+
   return handler(request);
 }
 
-async function handler(request: NextRequest) {
+async function handler(
+  request: NextRequest,
+  options: { requireCronMode?: boolean } = {}
+) {
+  const { requireCronMode = false } = options;
   const auth = await authorizeAdmin(request, { allowCron: true });
   if (!auth.authorized) {
     return NextResponse.json(
       { error: 'Acesso não autorizado.' },
       { status: auth.status ?? 401 }
+    );
+  }
+
+  if (requireCronMode && auth.mode !== 'cron') {
+    return NextResponse.json(
+      { error: 'Método reservado para execução automática.' },
+      { status: 405 }
     );
   }
 

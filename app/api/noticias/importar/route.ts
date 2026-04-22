@@ -9,6 +9,7 @@ import {
   insertNewsRecords,
   type NewsApiArticle,
 } from '@/lib/news-import';
+import { ensureTrustedOrigin } from '@/lib/server/request-origin';
 
 const NEWS_API_ENDPOINT = 'https://newsapi.org/v2/everything';
 const NEWSAPI_TIMEOUT_MS = 30_000;
@@ -16,6 +17,11 @@ const NEWSAPI_TIMEOUT_MS = 30_000;
 const KEYWORDS = ['enem', 'educação', 'educacao', 'vestibular', 'inep', 'mec'];
 
 export async function POST(request: NextRequest) {
+  const originError = ensureTrustedOrigin(request, { allowMissingOriginForAuthHeader: true });
+  if (originError) {
+    return originError;
+  }
+
   const authResult = await authorizeAdmin(request, { allowCron: true });
 
   if (!authResult.authorized) {

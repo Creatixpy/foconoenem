@@ -1,6 +1,6 @@
 # PROJECT INVENTORY — Foco no ENEM
 
-> Snapshot generated from the repository state on 2026-04-20.
+> Snapshot generated from the repository state on 2026-04-21.
 > This document is repo-first: if something is not present in the tree or current import graph, it is intentionally not claimed here.
 > Despite the historical file name, this inventory covers both frontend and active backend code in the Next.js app.
 
@@ -15,7 +15,7 @@ The current application is a full-stack Next.js 16 project with:
 - ENEM essay flow with AI theme generation, correction and OCR support
 - quiz flow with generated questions and result persistence
 - approved-news feed, admin moderation/import and AI summaries based on stored articles
-- account dashboard and profile editing
+- account dashboard, profile editing and account deletion with password confirmation
 - Stripe donation checkout and webhook handling
 
 The active runtime lives in:
@@ -89,6 +89,7 @@ The repository does **not** currently ship local Supabase Edge Function code. `s
 | `/api/atualizarDestaques` | `GET` | Admin/cron refresh of approved news highlights using Groq |
 | `/api/conquistas` | `POST` | Evaluate and sync unlocked user achievements |
 | `/api/conta/dados` | `GET` | Account dashboard payload |
+| `/api/conta/excluir` | `POST` | Delete the authenticated account after password confirmation |
 | `/api/conta/recalcular` | `POST` | Recalculate aggregated user statistics |
 | `/api/corrigir` | `GET`, `POST` | Fetch stored essay by query-string ID / submit essay for correction |
 | `/api/destaques/remover` | `POST` | Remove highlight status from selected news |
@@ -223,10 +224,11 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | --- | --- |
 | `lib/server/analytics.ts` | Server-side analytics event logging |
 | `lib/server/auth-request.ts` | Resolve authenticated user from cookies/token |
-| `lib/server/brazil-time.ts` | Brazil time sync with external fallback chain |
+| `lib/server/brazil-time.ts` | Brazil timezone helpers based on local server time |
 | `lib/server/conta.ts` | Account dashboard data assembly and stat recalculation |
 | `lib/server/noticias.ts` | Read-only approved news access for public routes |
 | `lib/server/operating-hours.ts` | Business-hours evaluation |
+| `lib/server/page-auth.ts` | Server-side page guards for authenticated routes |
 | `lib/server/rate-limit.ts` | Server-side rate limiting |
 
 ### `lib/supabase/`
@@ -268,14 +270,9 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | `NEWSAPI_KEY` | news import | Accepted alias |
 | `ADMIN_ALLOWED_EMAILS` | admin auth | Comma-separated allowlist |
 | `ADMIN_CRON_SECRET` | admin cron auth | Accepted secret alias |
-| `CRON_SECRET` | admin cron auth | Accepted secret alias |
+| `CRON_SECRET` | admin cron auth | Preferred secret name in Vercel cron context |
 | `STRIPE_SECRET_KEY` | donation checkout and webhook | Required for donation backend |
 | `STRIPE_WEBHOOK_SECRET` | donation webhook | Required if webhook is enabled |
-| `RAPIDAPI_KEY` | Brazil time sync | Optional |
-| `RAPIDAPI_WORLD_TIME_URL` | Brazil time sync | Optional override |
-| `WORLD_TIME_API_URL` | Brazil time sync | Optional override |
-| `WORLD_TIME_API_KEY` | Brazil time sync | Accepted alias |
-| `WORLD_TIME_RAPIDAPI_KEY` | Brazil time sync | Accepted alias |
 | `NODE_ENV` | root layout telemetry toggle | Standard runtime variable |
 
 The codebase does **not** currently read `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`.
@@ -344,3 +341,4 @@ As of the latest audit documented in `supabase/functions/README.md`, remote Edge
 - `app/components/shared/index.ts` and `app/components/ui/index.ts` are present but currently empty.
 - `app/auth/login/LoginPageClient.tsx` and `app/auth/register/RegisterPageClient.tsx` are deprecated placeholders.
 - The current runtime path is Next.js route handlers under `app/api`; Supabase Edge Functions are legacy only.
+- The repository does not contain an active community/forum subsystem anymore.

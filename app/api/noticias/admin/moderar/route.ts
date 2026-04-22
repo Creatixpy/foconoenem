@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { authorizeAdmin, logAdminAction } from "@/lib/admin-auth";
 import { createAdminClient } from '@/lib/db/server';
 import { buildGroqProviders, GROQ_MAX_ATTEMPTS, GroqProvider, isRateLimitError } from "@/lib/ai/groq";
+import { ensureTrustedOrigin } from '@/lib/server/request-origin';
 
 const MAX_NEWS_TO_REVIEW = 25;
 const GROQ_TIMEOUT_MS = 30_000;
@@ -29,6 +30,11 @@ function buildPrompt({
 }
 
 export async function POST(request: NextRequest) {
+  const originError = ensureTrustedOrigin(request, { allowMissingOriginForAuthHeader: true });
+  if (originError) {
+    return originError;
+  }
+
   const authResult = await authorizeAdmin(request);
 
   if (!authResult.authorized) {

@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
+import { sanitizeExternalUrl } from '@/lib/server/news-content';
 
 export type NewsApiArticle = {
   title: string | null;
@@ -92,8 +93,9 @@ function buildContent(article: NewsApiArticle): string {
     .filter(Boolean)
     .map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`);
 
-  if (article.url) {
-    const fonte = escapeHtml(article.url);
+  const sourceUrl = sanitizeExternalUrl(article.url);
+  if (sourceUrl) {
+    const fonte = escapeHtml(sourceUrl);
     const fonteNome = escapeHtml(article.source?.name ?? 'Notícia original');
     html.push(
       `<p><strong>Fonte:</strong> <a href="${fonte}" target="_blank" rel="noopener noreferrer">${fonteNome}</a></p>`
@@ -129,17 +131,20 @@ export function mapArticleToRecord(article: NewsApiArticle): NormalizedNewsRecor
   const resumo = buildResumo(article);
   const conteudo = buildContent(article);
 
+  const sourceUrl = sanitizeExternalUrl(article.url);
+  const imageUrl = sanitizeExternalUrl(article.urlToImage);
+
   return {
     titulo: article.title,
     slug,
     resumo,
     conteudo,
-    imagem_url: article.urlToImage,
+    imagem_url: imageUrl,
     autor: (article.author || article.source?.name || 'Agência de notícias').slice(0, 255),
     data_publicacao: new Date(article.publishedAt).toISOString(),
     tags: buildTags(article),
     destaque: false,
-    fonte_url: article.url ?? null,
+    fonte_url: sourceUrl,
   };
 }
 

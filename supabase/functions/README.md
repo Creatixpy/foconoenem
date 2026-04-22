@@ -9,7 +9,7 @@ Integracoes que antes passaram por Edge Functions agora rodam diretamente nas ro
 - Checkout e webhook do Stripe: `app/api/doacao/checkout`, `app/api/doacao/webhook`
 - Horario de funcionamento: `app/api/schedule/time`
 
-Auditoria mais recente: 2026-04-20.
+Auditoria mais recente: 2026-04-21.
 
 Funcoes remotas encontradas no projeto Supabase:
 

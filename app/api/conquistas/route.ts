@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
+import { ensureTrustedOrigin } from '@/lib/server/request-origin';
 
 const ACHIEVEMENT_SLUGS = ['primeira_redacao', 'maratona_questoes', 'nota_mil'] as const;
 type AchievementSlug = (typeof ACHIEVEMENT_SLUGS)[number];
@@ -17,6 +18,11 @@ const checkConditions = (context: AwardContext): Record<AchievementSlug, boolean
 });
 
 export async function POST(request: NextRequest) {
+  const originError = ensureTrustedOrigin(request);
+  if (originError) {
+    return originError;
+  }
+
   const auth = await resolveRequestUserFromCookies();
   if ('error' in auth) {
     return auth.error;
@@ -31,11 +37,9 @@ export async function POST(request: NextRequest) {
     .maybeSingle();
 
   if (statsError) {
+    console.error('Erro ao carregar estatísticas para conquistas:', statsError);
     return NextResponse.json(
-      {
-        error: 'statistics_error',
-        details: statsError.message,
-      },
+      { error: 'statistics_error' },
       { status: 500 }
     );
   }
@@ -52,8 +56,9 @@ export async function POST(request: NextRequest) {
     .eq('user_id', userId);
 
   if (existingError) {
+    console.error('Erro ao carregar conquistas existentes:', existingError);
     return NextResponse.json(
-      { error: 'load_achievements_failed', details: existingError.message },
+      { error: 'load_achievements_failed' },
       { status: 500 }
     );
   }
@@ -78,8 +83,9 @@ export async function POST(request: NextRequest) {
       .in('slug', targetSlugs);
 
     if (catalogError) {
+      console.error('Erro ao carregar catálogo de conquistas:', catalogError);
       return NextResponse.json(
-        { error: 'catalog_error', details: catalogError.message },
+        { error: 'catalog_error' },
         { status: 500 }
       );
     }
@@ -103,8 +109,9 @@ export async function POST(request: NextRequest) {
         .upsert(inserts, { onConflict: 'user_id,achievement_id' });
 
       if (insertError) {
+        console.error('Erro ao conceder conquistas:', insertError);
         return NextResponse.json(
-          { error: 'award_error', details: insertError.message },
+          { error: 'award_error' },
           { status: 500 }
         );
       }
@@ -118,8 +125,9 @@ export async function POST(request: NextRequest) {
     .order('earned_at', { ascending: false });
 
   if (refreshError) {
+    console.error('Erro ao recarregar conquistas:', refreshError);
     return NextResponse.json(
-      { error: 'refresh_error', details: refreshError.message },
+      { error: 'refresh_error' },
       { status: 500 }
     );
   }

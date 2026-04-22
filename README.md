@@ -7,7 +7,7 @@ O projeto atual concentra toda a lógica ativa no próprio app Next.js:
 - redação com geração de tema, correção por IA e consulta de resultados
 - simulados de questões com persistência de desempenho
 - notícias com moderação, destaques, busca textual e resumo com IA baseado no banco
-- área de conta com estatísticas e edição de perfil
+- área de conta com estatísticas, edição de perfil e exclusão de conta com confirmação por senha
 - doações via Stripe
 - OCR de imagem com Gemini para apoiar o fluxo de redação
 
@@ -16,8 +16,10 @@ O projeto atual concentra toda a lógica ativa no próprio app Next.js:
 - Frontend e backend vivem no mesmo repositório, via App Router e Route Handlers em `app/api`.
 - O banco e a autenticação usam Supabase com tipos gerados em `types/supabase.ts`.
 - Operações privilegiadas usam `SUPABASE_SERVICE_ROLE_KEY` no servidor.
+- A atualização de sessão autenticada passa por `proxy.ts`.
 - O histórico de schema fica em `supabase/migrations/`.
 - O diretório `supabase/functions/` existe apenas para documentar Edge Functions remotas legadas; o runtime atual não depende delas.
+- O sistema de comunidade foi removido do produto, do código ativo e do schema atual.
 
 ## Stack
 
@@ -57,12 +59,7 @@ Crie `.env.local` na raiz do projeto. Nem todas as variáveis são obrigatórias
 | `STRIPE_WEBHOOK_SECRET` | opcional | validação do webhook do Stripe |
 | `NEWSAPI_API_KEY` ou `NEWSAPI_KEY` | opcional | importação de notícias no painel admin |
 | `ADMIN_ALLOWED_EMAILS` | necessária para acesso admin por usuário | allowlist do painel/admin APIs |
-| `ADMIN_CRON_SECRET` ou `CRON_SECRET` | opcional | autenticação de cron e chamadas automatizadas |
-| `RAPIDAPI_KEY` | opcional | provedor de horário preferencial |
-| `RAPIDAPI_WORLD_TIME_URL` | opcional | override da URL RapidAPI de horário |
-| `WORLD_TIME_API_URL` | opcional | override do fallback de horário |
-| `WORLD_TIME_API_KEY` | opcional | alias aceito para integração de horário |
-| `WORLD_TIME_RAPIDAPI_KEY` | opcional | alias aceito para integração de horário |
+| `ADMIN_CRON_SECRET` ou `CRON_SECRET` | opcional | autenticação das rotas chamadas por cron |
 
 Exemplo mínimo para desenvolvimento de boa parte do app:
 
@@ -140,6 +137,7 @@ types/                  tipos compartilhados e tipos gerados do Supabase
 - login, cadastro, reset de senha e callback OAuth com Supabase
 - dashboard em `/conta`
 - edição de perfil em `/conta/editar`
+- exclusão de conta em `/api/conta/excluir` com reconfirmação por senha
 
 ### Doações
 
@@ -151,6 +149,7 @@ types/                  tipos compartilhados e tipos gerados do Supabase
 - As migrations locais estão em `supabase/migrations/`.
 - O snapshot `supabase/remote-latest.sql` existe como referência, não como fonte principal de edição manual.
 - O arquivo [supabase/functions/README.md](./supabase/functions/README.md) documenta o legado de Edge Functions remotas ainda implantadas.
+- Os crons do deploy estão em `vercel.json` e hoje cobrem atualização de destaques e manutenção.
 
 ## Documentação interna
 

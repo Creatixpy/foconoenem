@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import ShareButton from './ShareButton';
 import { fetchNoticiaBySlug, fetchNoticiasPorTag, isReadonlyClientConfigured } from '@/lib/server/noticias';
+import { sanitizeExternalUrl, sanitizeNewsHtml } from '@/lib/server/news-content';
 
 type NoticiaPageProps = {
   params: Promise<{ slug: string }>;
@@ -43,6 +44,7 @@ export async function generateMetadata({ params }: NoticiaPageProps): Promise<Me
   }
 
   const description = stripHtml(noticia.resumo || noticia.conteudo).slice(0, 160);
+  const imageUrl = sanitizeExternalUrl(noticia.imagem_url);
 
   return {
     title: noticia.titulo,
@@ -51,7 +53,7 @@ export async function generateMetadata({ params }: NoticiaPageProps): Promise<Me
       title: noticia.titulo,
       description,
       type: 'article',
-      images: noticia.imagem_url ? [{ url: noticia.imagem_url, alt: noticia.titulo }] : undefined,
+      images: imageUrl ? [{ url: imageUrl, alt: noticia.titulo }] : undefined,
     },
   };
 }
@@ -68,6 +70,10 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
     notFound();
   }
 
+  const safeImageUrl = sanitizeExternalUrl(noticia.imagem_url);
+  const safeSourceUrl = sanitizeExternalUrl(noticia.fonte_url);
+  const safeContent = sanitizeNewsHtml(noticia.conteudo);
+
   let related: Awaited<ReturnType<typeof fetchNoticiasPorTag>> = [];
 
   if (noticia.tags.length > 0) {
@@ -76,13 +82,18 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
       .slice(0, 3);
   }
 
+  const relatedItems = related.map((item) => ({
+    ...item,
+    safeImageUrl: sanitizeExternalUrl(item.imagem_url),
+  }));
+
   return (
     <div className="min-h-[80vh] pb-20">
       <div className="relative overflow-hidden bg-[var(--bg-surface)]">
-        {noticia.imagem_url ? (
+        {safeImageUrl ? (
           <div className="relative aspect-[21/9] w-full">
             <Image
-              src={noticia.imagem_url}
+              src={safeImageUrl}
               alt={noticia.titulo}
               fill
               priority
@@ -136,9 +147,9 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
 
           <div className="flex flex-wrap items-center gap-2">
             <ShareButton />
-            {noticia.fonte_url ? (
+            {safeSourceUrl ? (
               <a
-                href={noticia.fonte_url}
+                href={safeSourceUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-color)] px-3 py-1.5 text-xs text-[var(--text-muted)] transition-colors hover:border-[var(--border-hover)] hover:text-[var(--text-secondary)]"
@@ -151,7 +162,7 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
 
         <div
           className="prose prose-neutral max-w-none prose-headings:text-[var(--text-primary)] prose-p:text-[var(--text-secondary)] prose-a:text-[var(--primary)] prose-strong:text-[var(--text-primary)]"
-          dangerouslySetInnerHTML={{ __html: noticia.conteudo }}
+          dangerouslySetInnerHTML={{ __html: safeContent }}
         />
       </article>
 
@@ -165,16 +176,16 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {related.map((item) => (
+            {relatedItems.map((item) => (
               <Link
                 key={item.id}
                 href={`/noticias/${item.slug}`}
                 className="group overflow-hidden rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] transition-colors hover:border-[var(--border-hover)]"
               >
                 <div className="relative aspect-[16/9] bg-[var(--bg-surface)]">
-                  {item.imagem_url ? (
+                  {item.safeImageUrl ? (
                     <Image
-                      src={item.imagem_url}
+                      src={item.safeImageUrl}
                       alt={item.titulo}
                       fill
                       className="object-cover"

@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import { z } from 'zod';
 import { checkRateLimit } from '@/lib/server/rate-limit';
 import { handleApiError } from '@/lib/security';
+import { ensureTrustedOrigin } from '@/lib/server/request-origin';
 
 // Sentinel Security: Validates the request body strictly
 const checkoutSchema = z.object({
@@ -31,6 +32,11 @@ function getStripe() {
 
 export async function POST(request: NextRequest) {
   try {
+    const originError = ensureTrustedOrigin(request);
+    if (originError) {
+      return originError;
+    }
+
     // I18: Add rate limiting to checkout
     const forwardedFor = request.headers.get("x-forwarded-for");
     const ip = forwardedFor?.split(",")[0].trim() ?? request.headers.get("x-real-ip") ?? "unknown";
@@ -50,15 +56,7 @@ export async function POST(request: NextRequest) {
     // Criar sessão de checkout do Stripe
     const stripe = getStripe();
 
-    // Sentinel Security: Strict Origin Validation
-    // Prevent open redirect vulnerabilities by whitelisting the origin.
-    const allowedOrigin = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-    let origin = request.headers.get('origin') || allowedOrigin;
-
-    if (origin !== allowedOrigin) {
-      // If origin doesn't match our site, fallback to safe internal URL (or reject, but fallback preserves flow for some setups)
-      origin = allowedOrigin;
-    }
+    const origin = request.nextUrl.origin;
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
