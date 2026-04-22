@@ -1,6 +1,7 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
-const PLATFORM_VIDEO_URL = 'https://www.youtube-nocookie.com/embed/Tc_VjgQltfc?rel=0';
+const PLATFORM_VIDEO_THUMBNAIL_URL = 'https://i.ytimg.com/vi/Tc_VjgQltfc/maxresdefault.jpg';
 const PLATFORM_VIDEO_WATCH_URL = 'https://youtu.be/Tc_VjgQltfc?si=-zgvoZP0ntUq-yRc';
 
 const STATS = [
@@ -262,19 +263,41 @@ export default function HomePageClient() {
 
           <div className="mx-auto mb-14 max-w-5xl overflow-hidden rounded-3xl border border-[var(--border-color)] bg-[var(--card-bg)] shadow-sm">
             <div className="grid gap-0 lg:grid-cols-[1.2fr_0.8fr]">
-              <div className="border-b border-[var(--border-color)] bg-[var(--bg-base)] lg:border-b-0 lg:border-r">
-                <div className="aspect-video">
-                  <iframe
-                    className="h-full w-full"
-                    src={PLATFORM_VIDEO_URL}
-                    title="Vídeo explicando como funciona a plataforma Foco no ENEM"
-                    loading="lazy"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    referrerPolicy="strict-origin-when-cross-origin"
-                    allowFullScreen
+              <a
+                href={PLATFORM_VIDEO_WATCH_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative block border-b border-[var(--border-color)] bg-[var(--bg-base)] lg:border-b-0 lg:border-r"
+                aria-label="Assistir vídeo explicativo da plataforma no YouTube"
+              >
+                <div className="aspect-video overflow-hidden">
+                  <Image
+                    src={PLATFORM_VIDEO_THUMBNAIL_URL}
+                    alt="Prévia do vídeo explicando como funciona a plataforma Foco no ENEM"
+                    fill
+                    sizes="(max-width: 1024px) 100vw, 60vw"
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
                   />
                 </div>
-              </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-base)]/60 via-transparent to-transparent" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/92 text-[var(--primary)] shadow-xl transition-transform duration-300 group-hover:scale-105">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M8 5.14v14l11-7-11-7Z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-3 rounded-2xl border border-white/15 bg-[var(--bg-base)]/70 px-4 py-3 backdrop-blur-sm">
+                  <div>
+                    <p className="text-sm font-semibold text-white">Assista à demonstração completa</p>
+                    <p className="text-xs text-white/70">Abre direto no YouTube para evitar bloqueios do player</p>
+                  </div>
+                  <span className="inline-flex items-center gap-2 rounded-full bg-[var(--primary)] px-3 py-1.5 text-xs font-semibold text-white">
+                    Assistir
+                    <ArrowRightIcon />
+                  </span>
+                </div>
+              </a>
 
               <div className="flex flex-col justify-center p-6 sm:p-8">
                 <span className="mb-3 inline-flex w-fit items-center rounded-full bg-[var(--primary-light)] px-3 py-1 text-xs font-semibold text-[var(--primary)]">
