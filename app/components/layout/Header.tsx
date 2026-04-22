@@ -1,6 +1,7 @@
 'use client';
 
 import { startTransition, useEffect, useMemo, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
@@ -27,22 +28,15 @@ function isActivePath(pathname: string, href: string): boolean {
 
 function Logo() {
   return (
-    <Link href="/" className="flex items-center gap-2 shrink-0 group" aria-label="Foco no ENEM — Página inicial">
-      <svg
-        className="transition-transform duration-[var(--duration-normal)] group-hover:scale-105"
-        width="28"
-        height="28"
-        viewBox="0 0 28 28"
-        fill="none"
-        aria-hidden="true"
-      >
-        <rect x="4" y="4" width="20" height="20" rx="4" fill="var(--primary)" opacity="0.15" />
-        <rect x="8" y="8" width="12" height="12" rx="2" fill="var(--primary)" />
-        <path d="M14 11L17 14L14 17L11 14Z" fill="white" />
-      </svg>
-      <span className="text-lg font-bold tracking-tight text-[var(--text-primary)]">
-        Foco no <span className="text-[var(--primary)]">ENEM</span>
-      </span>
+    <Link href="/" className="shrink-0 transition-transform duration-[var(--duration-normal)] group-hover:scale-[1.02]" aria-label="Foco no ENEM — Página inicial">
+      <Image
+        src="/foconoenem-logo.png"
+        alt="Foco no ENEM"
+        width={164}
+        height={48}
+        priority
+        className="h-10 w-auto sm:h-11"
+      />
     </Link>
   );
 }

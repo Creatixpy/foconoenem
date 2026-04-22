@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
@@ -59,15 +60,15 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
 
         {/* Top: Logo */}
         <div className="relative z-10">
-          <Link href="/" className="inline-flex items-center gap-2.5 group" aria-label="Foco no ENEM — Página inicial">
-            <svg width="32" height="32" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-              <rect x="4" y="4" width="20" height="20" rx="4" fill="#3B82F6" opacity="0.15" />
-              <rect x="8" y="8" width="12" height="12" rx="2" fill="#3B82F6" />
-              <path d="M14 11L17 14L14 17L11 14Z" fill="white" />
-            </svg>
-            <span className="text-xl font-bold tracking-tight" style={{ color: 'var(--auth-panel-text)' }}>
-              Foco no <span className="text-[var(--primary)]">ENEM</span>
-            </span>
+          <Link href="/" className="inline-flex transition-transform duration-200 group-hover:scale-[1.02]" aria-label="Foco no ENEM — Página inicial">
+            <Image
+              src="/foconoenem-logo.png"
+              alt="Foco no ENEM"
+              width={188}
+              height={56}
+              priority
+              className="h-12 w-auto"
+            />
           </Link>
         </div>
 
@@ -102,15 +103,15 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       <div className="flex-1 flex flex-col min-h-dvh bg-[var(--bg-base)]">
         {/* Mobile logo (lg:hidden) */}
         <div className="lg:hidden flex items-center justify-center pt-8 pb-2">
-          <Link href="/" className="inline-flex items-center gap-2" aria-label="Foco no ENEM">
-            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-              <rect x="4" y="4" width="20" height="20" rx="4" fill="var(--primary)" opacity="0.15" />
-              <rect x="8" y="8" width="12" height="12" rx="2" fill="var(--primary)" />
-              <path d="M14 11L17 14L14 17L11 14Z" fill="white" />
-            </svg>
-            <span className="text-lg font-bold tracking-tight text-[var(--text-primary)]">
-              Foco no <span className="text-[var(--primary)]">ENEM</span>
-            </span>
+          <Link href="/" className="inline-flex transition-transform duration-200 hover:scale-[1.02]" aria-label="Foco no ENEM">
+            <Image
+              src="/foconoenem-logo.png"
+              alt="Foco no ENEM"
+              width={164}
+              height={48}
+              priority
+              className="h-10 w-auto"
+            />
           </Link>
         </div>
 
