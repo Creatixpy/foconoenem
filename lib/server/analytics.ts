@@ -2,6 +2,7 @@
 
 import { type EventType } from '@/lib/db';
 import { createAdminClient } from '@/lib/db/server';
+import { cleanupAnalyticsIfDue } from '@/lib/server/local-maintenance';
 import type { Json } from '@/types/supabase';
 
 type TrackEventParams = {
@@ -13,6 +14,8 @@ type TrackEventParams = {
 };
 
 export async function trackEvent({ eventType, metadata, userIp, userAgent, userId }: TrackEventParams) {
+  await cleanupAnalyticsIfDue();
+
   const supabase = createAdminClient();
   if (!supabase) {
     return;

@@ -1,6 +1,7 @@
 'use server';
 
 import { createAdminClient } from '@/lib/db/server';
+import { cleanupRateLimitsIfDue } from '@/lib/server/local-maintenance';
 
 export type RateLimitResult = {
   allowed: boolean;
@@ -19,6 +20,8 @@ export async function checkRateLimit(
   maxRequests: number,
   windowMinutes: number
 ): Promise<RateLimitResult> {
+  await cleanupRateLimitsIfDue();
+
   const supabase = createAdminClient();
   const resetAt = new Date(Date.now() + windowMinutes * 60 * 1000);
 

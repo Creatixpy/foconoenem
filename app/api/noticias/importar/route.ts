@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { authorizeAdmin, logAdminAction } from '@/lib/admin-auth';
 import { createAdminClient } from '@/lib/db/server';
 import {
@@ -22,7 +23,7 @@ export async function POST(request: NextRequest) {
     return originError;
   }
 
-  const authResult = await authorizeAdmin(request, { allowCron: true });
+  const authResult = await authorizeAdmin(request);
 
   if (!authResult.authorized) {
     return NextResponse.json(
@@ -105,7 +106,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const adminEmail = authResult.mode === 'user' ? authResult.user?.email ?? null : 'cron';
+  const adminEmail = authResult.user.email ?? null;
   await logAdminAction(supabaseAdmin, {
     adminEmail,
     action: 'news_import',
@@ -115,6 +116,7 @@ export async function POST(request: NextRequest) {
       totalConsulta: articles.length,
     },
   });
+  revalidateTag('public-noticias', 'max');
 
   return NextResponse.json({
     imported: insertedCount,

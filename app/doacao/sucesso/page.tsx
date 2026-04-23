@@ -56,7 +56,8 @@ function SucessoContent() {
   }, []);
 
   const handleShare = async () => {
-    const text = 'Acabei de apoiar o FocoNoEnem! 💙 Uma plataforma gratuita que ajuda estudantes a se prepararem para o ENEM com IA. Conheça: https://foconoenem.com';
+    const shareUrl = window.location.origin;
+    const text = `Acabei de apoiar o FocoNoEnem! 💙 Uma plataforma gratuita que ajuda estudantes a se prepararem para o ENEM com IA. Conheça: ${shareUrl}`;
     if (navigator.share) {
       try {
         await navigator.share({ text });

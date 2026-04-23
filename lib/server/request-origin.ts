@@ -37,10 +37,7 @@ export function getRequestOrigin(request: NextRequest): string | null {
 }
 
 function hasPrivilegedAuthHeader(request: NextRequest): boolean {
-  return Boolean(
-    request.headers.get('authorization') ||
-      request.headers.get('x-cron-secret')
-  );
+  return Boolean(request.headers.get('authorization'));
 }
 
 type EnsureTrustedOriginOptions = {

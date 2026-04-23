@@ -58,16 +58,12 @@ export async function getOperatingHoursInfo(): Promise<OperatingHoursInfo> {
     ? `Sistema disponível agora. Atendemos até às 23h30 · Hora atual: ${currentTime}`
     : `Sistema indisponível no momento · Funcionamos das 7h às 23h30 · Próxima abertura: ${nextOpenTime} · Hora atual: ${currentTime}`;
 
-  const message = usedFallback
-    ? `${baseMessage} · Atualizado com horário local (falha na sincronização com o serviço externo).`
-    : baseMessage;
-
   return {
     isOpen,
     opensAt: '07:00',
     closesAt: '23:30',
     nextOpenTime,
-    message,
+    message: baseMessage,
     currentTime,
     usedFallback,
   };

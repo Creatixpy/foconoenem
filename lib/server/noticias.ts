@@ -35,26 +35,35 @@ async function listNoticiasQuery(options: {
   const { limit, offset, tag, destaque } = options;
   const supabase = requireReadonlyClient();
 
-  let query = supabase
-    .from('noticias')
-    .select(NOTICIA_FIELDS)
-    .eq('status', 'aprovado')
-    .order('data_publicacao', { ascending: false });
+  const runQuery = async (highlightFilter?: boolean) => {
+    let query = supabase
+      .from('noticias')
+      .select(NOTICIA_FIELDS)
+      .eq('status', 'aprovado')
+      .order('data_publicacao', { ascending: false });
 
-  if (tag) {
-    query = query.contains('tags', [tag]);
+    if (tag) {
+      query = query.contains('tags', [tag]);
+    }
+
+    if (typeof highlightFilter === 'boolean') {
+      query = query.eq('destaque', highlightFilter);
+    }
+
+    const { data, error } = await query.range(offset, offset + limit - 1);
+    if (error) {
+      throw error;
+    }
+
+    return data ?? [];
+  };
+
+  const noticias = await runQuery(destaque);
+  if (destaque === true && noticias.length === 0) {
+    return runQuery(undefined);
   }
 
-  if (typeof destaque === 'boolean') {
-    query = query.eq('destaque', destaque);
-  }
-
-  const { data, error } = await query.range(offset, offset + limit - 1);
-  if (error) {
-    throw error;
-  }
-
-  return data ?? [];
+  return noticias;
 }
 
 const listNoticiasCached = unstable_cache(
@@ -66,7 +75,7 @@ const listNoticiasCached = unstable_cache(
       destaque: destaque ?? undefined,
     }),
   ['public-noticias-list'],
-  { revalidate: NEWS_CACHE_SECONDS }
+  { revalidate: NEWS_CACHE_SECONDS, tags: ['public-noticias'] }
 );
 
 export async function listNoticias(options: {
@@ -102,7 +111,7 @@ async function fetchNoticiaBySlugQuery(slug: string) {
 const fetchNoticiaBySlugCached = unstable_cache(
   async (slug: string) => fetchNoticiaBySlugQuery(slug),
   ['public-noticia-by-slug'],
-  { revalidate: NEWS_CACHE_SECONDS }
+  { revalidate: NEWS_CACHE_SECONDS, tags: ['public-noticias'] }
 );
 
 export async function fetchNoticiaBySlug(slug: string) {
@@ -138,7 +147,7 @@ async function searchNoticiasQuery(termo: string, limit: number) {
 const searchNoticiasCached = unstable_cache(
   async (termo: string, limit: number) => searchNoticiasQuery(termo, limit),
   ['public-noticias-search'],
-  { revalidate: NEWS_CACHE_SECONDS }
+  { revalidate: NEWS_CACHE_SECONDS, tags: ['public-noticias'] }
 );
 
 export async function searchNoticias(termo: string, limit: number) {
@@ -165,7 +174,7 @@ async function fetchNoticiasPorTagQuery(tag: string, limit: number) {
 const fetchNoticiasPorTagCached = unstable_cache(
   async (tag: string, limit: number) => fetchNoticiasPorTagQuery(tag, limit),
   ['public-noticias-by-tag'],
-  { revalidate: NEWS_CACHE_SECONDS }
+  { revalidate: NEWS_CACHE_SECONDS, tags: ['public-noticias'] }
 );
 
 export async function fetchNoticiasPorTag(tag: string, limit: number) {

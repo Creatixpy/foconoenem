@@ -18,6 +18,7 @@ O projeto atual concentra toda a lógica ativa no próprio app Next.js:
 - Operações privilegiadas usam `SUPABASE_SERVICE_ROLE_KEY` no servidor.
 - A atualização de sessão autenticada passa por `proxy.ts`.
 - O histórico de schema fica em `supabase/migrations/`.
+- Manutenção operacional é local ao app: limpeza de tabelas e atualização de destaques acontecem sob demanda, sem cron externo.
 - O diretório `supabase/functions/` existe apenas para documentar Edge Functions remotas legadas; o runtime atual não depende delas.
 - O sistema de comunidade foi removido do produto, do código ativo e do schema atual.
 
@@ -48,7 +49,7 @@ Crie `.env.local` na raiz do projeto. Nem todas as variáveis são obrigatórias
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | obrigatória | auth, consultas com RLS e leitura pública |
 | `NEXT_PUBLIC_SITE_URL` | recomendada | metadata, redirects e URLs públicas |
 | `SITE_URL` | recomendada | geração do sitemap |
-| `SUPABASE_SERVICE_ROLE_KEY` | obrigatória para fluxos administrativos/privilegiados | rotas admin, analytics server-side, importação, manutenção e gravações privilegiadas |
+| `SUPABASE_SERVICE_ROLE_KEY` | obrigatória para fluxos administrativos/privilegiados | rotas admin, analytics server-side, importação, manutenção local, destaques e gravações privilegiadas |
 | `GROQ_API_KEY` | obrigatória para IA principal | `/api/corrigir`, `/api/gerar-tema`, `/api/questoes`, `/api/noticias/gpt-busca` |
 | `GROQ_MODEL` | opcional | modelo primário da Groq |
 | `GROQ_FALLBACK_API_KEY` | opcional | provedor secundário quando há rate limit |
@@ -59,7 +60,6 @@ Crie `.env.local` na raiz do projeto. Nem todas as variáveis são obrigatórias
 | `STRIPE_WEBHOOK_SECRET` | opcional | validação do webhook do Stripe |
 | `NEWSAPI_API_KEY` ou `NEWSAPI_KEY` | opcional | importação de notícias no painel admin |
 | `ADMIN_ALLOWED_EMAILS` | necessária para acesso admin por usuário | allowlist do painel/admin APIs |
-| `ADMIN_CRON_SECRET` ou `CRON_SECRET` | opcional | autenticação das rotas chamadas por cron |
 
 Exemplo mínimo para desenvolvimento de boa parte do app:
 
@@ -129,7 +129,7 @@ types/                  tipos compartilhados e tipos gerados do Supabase
 - feed público, detalhe por slug e busca textual
 - painel admin em `/noticias/admin`
 - importação via NewsAPI
-- destaques atualizados por rota administrativa e cron
+- destaques recalculados localmente após moderação e também sob demanda quando ficam vencidos ou vazios
 - resumo com IA restrito ao conteúdo já aprovado e armazenado no banco
 
 ### Conta e autenticação
@@ -141,15 +141,16 @@ types/                  tipos compartilhados e tipos gerados do Supabase
 
 ### Doações
 
-- checkout server-side em `/api/doacao/checkout`
-- webhook em `/api/doacao/webhook`
+- checkout server-side em `/api/doacao/checkout` com persistência em `donation_checkouts`
+- webhook em `/api/doacao/webhook` com validação de assinatura, idempotência por `stripe_event_id` e trilha em `stripe_webhook_events`
 
 ## Supabase e operações
 
 - As migrations locais estão em `supabase/migrations/`.
+- A auditoria de produção de 2026-04-23 foi reconciliada localmente nas migrations `20260423010000_reconcile_production_schema_and_donations.sql` e `20260423011000_index_stripe_webhook_client_reference.sql`.
 - O snapshot `supabase/remote-latest.sql` existe como referência, não como fonte principal de edição manual.
 - O arquivo [supabase/functions/README.md](./supabase/functions/README.md) documenta o legado de Edge Functions remotas ainda implantadas.
-- Os crons do deploy estão em `vercel.json` e hoje cobrem atualização de destaques e manutenção.
+- Não há mais `vercel.json` com cron. Limpeza de `rate_limits`, `analytics_events` e `cached_themes` roda localmente no app em janelas controladas via `configuracoes`, e os destaques de notícias são atualizados sob demanda.
 
 ## Documentação interna
 

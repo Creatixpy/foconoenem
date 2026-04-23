@@ -158,6 +158,90 @@ export type Database = {
         }
         Relationships: []
       }
+      donation_checkouts: {
+        Row: {
+          amount_cents: number
+          checkout_url: string | null
+          client_reference_id: string
+          completed_at: string | null
+          created_at: string
+          currency: string
+          donor_email: string | null
+          donor_name: string | null
+          expires_at: string | null
+          failure_reason: string | null
+          id: string
+          latest_event_created_at: string | null
+          latest_event_id: string | null
+          latest_event_type: string | null
+          metadata: Json
+          paid_at: string | null
+          request_ip: string | null
+          request_user_agent: string | null
+          session_payload: Json
+          status: string
+          stripe_checkout_session_id: string | null
+          stripe_customer_details: Json | null
+          stripe_customer_id: string | null
+          stripe_payment_intent_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          checkout_url?: string | null
+          client_reference_id: string
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          donor_email?: string | null
+          donor_name?: string | null
+          expires_at?: string | null
+          failure_reason?: string | null
+          id?: string
+          latest_event_created_at?: string | null
+          latest_event_id?: string | null
+          latest_event_type?: string | null
+          metadata?: Json
+          paid_at?: string | null
+          request_ip?: string | null
+          request_user_agent?: string | null
+          session_payload?: Json
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_customer_details?: Json | null
+          stripe_customer_id?: string | null
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          checkout_url?: string | null
+          client_reference_id?: string
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          donor_email?: string | null
+          donor_name?: string | null
+          expires_at?: string | null
+          failure_reason?: string | null
+          id?: string
+          latest_event_created_at?: string | null
+          latest_event_id?: string | null
+          latest_event_type?: string | null
+          metadata?: Json
+          paid_at?: string | null
+          request_ip?: string | null
+          request_user_agent?: string | null
+          session_payload?: Json
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_customer_details?: Json | null
+          stripe_customer_id?: string | null
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       essay_results: {
         Row: {
           competencia1: Json
@@ -377,6 +461,65 @@ export type Database = {
         }
         Relationships: []
       }
+      stripe_webhook_events: {
+        Row: {
+          api_version: string | null
+          checkout_session_id: string | null
+          client_reference_id: string | null
+          error_message: string | null
+          event_created_at: string
+          event_type: string
+          id: string
+          livemode: boolean
+          payload: Json
+          processed_at: string | null
+          received_at: string
+          status: string
+          stripe_event_id: string
+          updated_at: string
+        }
+        Insert: {
+          api_version?: string | null
+          checkout_session_id?: string | null
+          client_reference_id?: string | null
+          error_message?: string | null
+          event_created_at: string
+          event_type: string
+          id?: string
+          livemode?: boolean
+          payload: Json
+          processed_at?: string | null
+          received_at?: string
+          status?: string
+          stripe_event_id: string
+          updated_at?: string
+        }
+        Update: {
+          api_version?: string | null
+          checkout_session_id?: string | null
+          client_reference_id?: string | null
+          error_message?: string | null
+          event_created_at?: string
+          event_type?: string
+          id?: string
+          livemode?: boolean
+          payload?: Json
+          processed_at?: string | null
+          received_at?: string
+          status?: string
+          stripe_event_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stripe_webhook_events_client_reference_id_fkey"
+            columns: ["client_reference_id"]
+            isOneToOne: false
+            referencedRelation: "donation_checkouts"
+            referencedColumns: ["client_reference_id"]
+          },
+        ]
+      }
       user_achievements: {
         Row: {
           achievement_id: string
@@ -585,7 +728,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      cleanup_old_rate_limits: { Args: never; Returns: undefined }
       recalculate_user_statistics: {
         Args: { target_user_id: string }
         Returns: {

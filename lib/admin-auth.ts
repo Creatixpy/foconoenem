@@ -1,6 +1,5 @@
 'use server';
 
-import { timingSafeEqual } from 'node:crypto';
 import type { User } from '@supabase/supabase-js';
 import { NextRequest } from 'next/server';
 import { createServerClient, createAdminClient } from '@/lib/db/server';
@@ -12,48 +11,26 @@ const allowedEmails = (process.env.ADMIN_ALLOWED_EMAILS ?? '')
   .map((email) => email.trim().toLowerCase())
   .filter(Boolean);
 
-type AdminAuthSuccess = { authorized: true; mode: 'user' | 'cron'; user?: User };
+type AdminAuthMode = 'session' | 'token';
+type AdminAuthSuccess = { authorized: true; mode: AdminAuthMode; user: User };
 type AdminAuthFailure = { authorized: false; status: number; message: string };
 
-function safeCompare(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  try {
-    return timingSafeEqual(Buffer.from(a, 'utf8'), Buffer.from(b, 'utf8'));
-  } catch {
-    return false;
-  }
-}
-
 export async function authorizeAdmin(
-  request: NextRequest,
-  options: { allowCron?: boolean } = {}
+  request: NextRequest
 ): Promise<AdminAuthSuccess | AdminAuthFailure> {
-  const { allowCron = false } = options;
-
-  // 1) Cron secret check (Vercel sends CRON_SECRET automatically)
-  if (allowCron) {
-    const secret = process.env.CRON_SECRET ?? process.env.ADMIN_CRON_SECRET;
-    const cronHeader = request.headers.get('authorization')?.replace('Bearer ', '')
-      ?? request.headers.get('x-cron-secret');
-
-    if (secret && cronHeader && safeCompare(cronHeader, secret)) {
-      return { authorized: true, mode: 'cron' };
-    }
-  }
-
-  // 2) Cookie-based auth (primary — used by frontend)
+  // 1) Cookie-based auth (primary — used by frontend)
   try {
     const supabase = await createServerClient();
     const { data: { user }, error } = await supabase.auth.getUser();
 
     if (!error && user) {
-      return verifyAdminEmail(user);
+      return verifyAdminEmail(user, 'session');
     }
   } catch {
     // Cookie auth not available, try Bearer fallback
   }
 
-  // 3) Bearer token fallback (programmatic access)
+  // 2) Bearer token fallback (programmatic access)
   const authHeader = request.headers.get('authorization');
   if (authHeader?.toLowerCase().startsWith('bearer ')) {
     const token = authHeader.slice('bearer '.length).trim();
@@ -65,7 +42,7 @@ export async function authorizeAdmin(
   return { authorized: false, status: 401, message: 'Autenticação necessária.' };
 }
 
-function verifyAdminEmail(user: User): AdminAuthSuccess | AdminAuthFailure {
+function verifyAdminEmail(user: User, mode: AdminAuthMode): AdminAuthSuccess | AdminAuthFailure {
   if (allowedEmails.length === 0) {
     return {
       authorized: false,
@@ -79,7 +56,7 @@ function verifyAdminEmail(user: User): AdminAuthSuccess | AdminAuthFailure {
     return { authorized: false, status: 403, message: 'Acesso restrito.' };
   }
 
-  return { authorized: true, mode: 'user', user };
+  return { authorized: true, mode, user };
 }
 
 async function verifyBearerToken(token: string): Promise<AdminAuthSuccess | AdminAuthFailure> {
@@ -93,7 +70,7 @@ async function verifyBearerToken(token: string): Promise<AdminAuthSuccess | Admi
     if (error || !data?.user) {
       return { authorized: false, status: 401, message: 'Autenticação necessária.' };
     }
-    return verifyAdminEmail(data.user);
+    return verifyAdminEmail(data.user, 'token');
   } catch {
     return { authorized: false, status: 500, message: 'Erro de autenticação.' };
   }
@@ -124,7 +101,7 @@ export async function logAdminAction(
 ) {
   try {
     await adminClient.from('admin_audit_log').insert({
-      admin_email: opts.adminEmail ?? 'cron',
+      admin_email: opts.adminEmail ?? 'system',
       action: opts.action,
       target_type: opts.targetType ?? null,
       target_id: opts.targetId ?? null,
