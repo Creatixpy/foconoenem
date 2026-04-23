@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import { MAX_PLAN_CODE } from '@/lib/constants/subscriptions';
+import { MAX_PLAN_CODE, MAX_PLAN_TRIAL_DAYS } from '@/lib/constants/subscriptions';
 import { createAdminClient } from '@/lib/db/server';
 import { handleApiError } from '@/lib/security';
 import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
@@ -8,6 +8,7 @@ import { checkRateLimit } from '@/lib/server/rate-limit';
 import { ensureTrustedOrigin } from '@/lib/server/request-origin';
 import { getStripe } from '@/lib/server/stripe';
 import {
+  canStartMaxTrial,
   ensureStripeCustomerForUser,
   getMaxSubscriptionPriceId,
   getUserSubscription,
@@ -54,6 +55,7 @@ export async function POST(request: NextRequest) {
 
     const stripe = getStripe();
     const existingSubscription = await getUserSubscription(adminClient, auth.userId);
+    const trialEligible = canStartMaxTrial(existingSubscription);
     if (existingSubscription && hasMaxPlanAccess(existingSubscription)) {
       return NextResponse.json(
         { error: 'Você já possui uma assinatura Max ativa.' },
@@ -111,7 +113,9 @@ export async function POST(request: NextRequest) {
             metadata: {
               plan_code: MAX_PLAN_CODE,
               supabase_user_id: auth.userId,
+              trial_eligible: trialEligible ? 'true' : 'false',
             },
+            ...(trialEligible ? { trial_period_days: MAX_PLAN_TRIAL_DAYS } : {}),
           },
         },
         {
@@ -150,12 +154,16 @@ export async function POST(request: NextRequest) {
         latest_checkout_mode: 'subscription',
         latest_checkout_url: session.url,
         latest_checkout_created_at: new Date().toISOString(),
+        trial_eligible: trialEligible,
+        trial_days: trialEligible ? MAX_PLAN_TRIAL_DAYS : 0,
       },
     });
 
     return NextResponse.json({
       url: session.url,
       sessionId: session.id,
+      trialEligible,
+      trialDays: trialEligible ? MAX_PLAN_TRIAL_DAYS : 0,
     });
   } catch (error) {
     return handleApiError(error);

@@ -8,7 +8,7 @@ O projeto atual concentra toda a lógica ativa no próprio app Next.js:
 - simulados de questões com persistência de desempenho
 - notícias com moderação, destaques, busca textual e resumo com IA baseado no banco
 - área de conta com estatísticas, edição de perfil e exclusão de conta com confirmação por senha
-- assinatura mensal Max com Stripe Subscription e portal do cliente
+- assinatura mensal Max com 7 dias grátis, Stripe Subscription e portal do cliente
 - doações via Stripe
 - OCR de imagem com Gemini para apoiar o fluxo de redação
 
@@ -148,6 +148,7 @@ types/                  tipos compartilhados e tipos gerados do Supabase
 ### Assinatura Max
 
 - checkout mensal do plano Max em `/api/assinatura/checkout`
+- 7 dias grátis no primeiro ciclo para usuários elegíveis
 - portal do cliente em `/api/assinatura/portal`
 - sincronização por webhook em `/api/doacao/webhook`
 - persistência em `subscriptions` e trilha em `subscription_events`
