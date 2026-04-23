@@ -23,6 +23,24 @@ function isStripeCheckoutPaymentMethodError(error: unknown) {
   );
 }
 
+function canReuseOpenCheckoutSession(
+  session: Awaited<ReturnType<ReturnType<typeof getStripe>['checkout']['sessions']['retrieve']>>,
+  trialEligible: boolean
+) {
+  if (!session.url || session.status !== 'open') {
+    return false;
+  }
+
+  // Stripe returns `amount_total = 0` for a new subscription checkout with a free trial.
+  // If the user is still eligible but the open session already totals the first invoice,
+  // the session was created without trial and must be replaced.
+  if (trialEligible && session.amount_total !== 0) {
+    return false;
+  }
+
+  return true;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const originError = ensureTrustedOrigin(request);
@@ -71,7 +89,7 @@ export async function POST(request: NextRequest) {
       const openSession = await stripe.checkout.sessions.retrieve(
         existingSubscription.latest_checkout_session_id
       );
-      if (openSession.url && openSession.status === 'open') {
+      if (canReuseOpenCheckoutSession(openSession, trialEligible)) {
         return NextResponse.json({
           url: openSession.url,
           sessionId: openSession.id,
@@ -108,12 +126,15 @@ export async function POST(request: NextRequest) {
             plan_code: MAX_PLAN_CODE,
             supabase_user_id: auth.userId,
             source: 'app/conta',
+            trial_eligible: trialEligible ? 'true' : 'false',
+            trial_days: trialEligible ? String(MAX_PLAN_TRIAL_DAYS) : '0',
           },
           subscription_data: {
             metadata: {
               plan_code: MAX_PLAN_CODE,
               supabase_user_id: auth.userId,
               trial_eligible: trialEligible ? 'true' : 'false',
+              trial_days: trialEligible ? String(MAX_PLAN_TRIAL_DAYS) : '0',
             },
             ...(trialEligible ? { trial_period_days: MAX_PLAN_TRIAL_DAYS } : {}),
           },
