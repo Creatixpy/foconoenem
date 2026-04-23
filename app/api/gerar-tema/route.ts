@@ -4,6 +4,7 @@ import { withGroqRetry } from '@/lib/ai/retry';
 import { extractJson } from '@/lib/ai/parse-json';
 import { createAdminClient } from '@/lib/db/server';
 import { getOperatingHoursInfo } from '@/lib/server/operating-hours';
+import { cleanupCachedThemesIfDue } from '@/lib/server/local-maintenance';
 import { checkRateLimit } from '@/lib/server/rate-limit';
 import { trackEvent } from '@/lib/server/analytics';
 import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
@@ -176,6 +177,8 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+
+  await cleanupCachedThemesIfDue();
 
   const forwardedFor = request.headers.get('x-forwarded-for');
   const ip = forwardedFor?.split(',')[0].trim() ?? request.headers.get('x-real-ip') ?? 'unknown';

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { authorizeAdmin, logAdminAction } from '@/lib/admin-auth';
 import { createAdminClient } from '@/lib/db/server';
 import { ensureTrustedOrigin } from '@/lib/server/request-origin';
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const auth = await authorizeAdmin(request, { allowCron: true });
+  const auth = await authorizeAdmin(request);
   if (!auth.authorized) {
     return NextResponse.json(
       { error: 'Acesso não autorizado.' },
@@ -44,13 +45,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Erro ao remover destaque.' }, { status: 500 });
   }
 
-  const adminEmail = auth.mode === 'user' ? auth.user?.email ?? null : 'cron';
+  const adminEmail = auth.user.email ?? null;
   await logAdminAction(supabase, {
     adminEmail,
     action: 'highlights_remove',
     targetType: 'noticia',
     targetId: id,
   });
+  revalidateTag('public-noticias', 'max');
 
   return NextResponse.json({ success: true, message: 'Destaque removido com sucesso.' });
 }

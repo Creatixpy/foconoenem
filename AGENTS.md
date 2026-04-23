@@ -57,7 +57,7 @@
 - Never commit `.env.local` or secrets.
 - `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are essential for runtime.
 - `SUPABASE_SERVICE_ROLE_KEY` is required for privileged server operations.
-- Admin and cron flows use `ADMIN_ALLOWED_EMAILS` and `CRON_SECRET`/`ADMIN_CRON_SECRET`.
+- Admin flows use `ADMIN_ALLOWED_EMAILS`. Maintenance and news highlights now run locally in the app and no longer depend on cron secrets.
 - Stripe depends on `STRIPE_SECRET_KEY`; the webhook also requires `STRIPE_WEBHOOK_SECRET`.
 - OCR depends on `GEMINI_API_KEY`.
 - News import uses `NEWSAPI_API_KEY` or `NEWSAPI_KEY`.

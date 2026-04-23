@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { listNoticias } from '@/lib/server/noticias';
+import { refreshHighlightsIfDue } from '@/lib/server/news-highlights';
 
 const CACHE_HEADERS = {
   'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=3600',
@@ -13,6 +14,10 @@ export async function GET(request: NextRequest) {
     const tag = searchParams.get('tag');
     const destaqueParam = searchParams.get('destaque');
     const destaque = destaqueParam === null ? undefined : destaqueParam === 'true';
+
+    if (destaque === true) {
+      await refreshHighlightsIfDue();
+    }
 
     const noticias = await listNoticias({
       limit,

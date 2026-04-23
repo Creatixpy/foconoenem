@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from 'next/cache';
 import { authorizeAdmin, logAdminAction } from "@/lib/admin-auth";
 import { createAdminClient } from '@/lib/db/server';
 import { buildGroqProviders, GROQ_MAX_ATTEMPTS, GroqProvider, isRateLimitError } from "@/lib/ai/groq";
+import { refreshHighlights } from '@/lib/server/news-highlights';
 import { ensureTrustedOrigin } from '@/lib/server/request-origin';
 
 const MAX_NEWS_TO_REVIEW = 25;
@@ -132,7 +134,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const adminEmail = authResult.mode === 'user' ? authResult.user?.email ?? null : 'cron';
+  const adminEmail = authResult.user.email ?? null;
   await logAdminAction(supabaseAdmin, {
     adminEmail,
     action: 'news_moderate',
@@ -142,13 +144,34 @@ export async function POST(request: NextRequest) {
       rejected: idsRejeitados.length,
     },
   });
+  revalidateTag('public-noticias', 'max');
+
+  let highlightsRefreshed = false;
+  let highlightDiagnostics: string | null = null;
+  if (idsAprovados.length > 0 || idsRejeitados.length > 0) {
+    try {
+      const highlightResult = await refreshHighlights({
+        force: true,
+        adminEmail,
+        client: supabaseAdmin,
+      });
+      highlightsRefreshed = Boolean(highlightResult.refreshed);
+    } catch (error) {
+      highlightDiagnostics = error instanceof Error ? error.message : String(error);
+      console.error('Erro ao recalcular destaques após moderação:', error);
+    }
+  }
 
   return NextResponse.json({
     reviewed: decisions.length,
     approved: idsAprovados.length,
     rejected: idsRejeitados.length,
+    highlightsRefreshed,
     providersUsed: providerUsage,
-    diagnostics: diagnostics.length > 0 ? diagnostics : undefined,
+    diagnostics:
+      diagnostics.length > 0 || highlightDiagnostics
+        ? [...diagnostics, ...(highlightDiagnostics ? [highlightDiagnostics] : [])]
+        : undefined,
   });
 }
 

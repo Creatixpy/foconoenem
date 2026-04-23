@@ -1,6 +1,6 @@
 # PROJECT INVENTORY — Foco no ENEM
 
-> Snapshot generated from the repository state on 2026-04-21.
+> Snapshot generated from the repository state on 2026-04-23.
 > This document is repo-first: if something is not present in the tree or current import graph, it is intentionally not claimed here.
 > Despite the historical file name, this inventory covers both frontend and active backend code in the Next.js app.
 
@@ -85,18 +85,16 @@ The repository does **not** currently ship local Supabase Edge Function code. `s
 
 | Route | Methods | Purpose |
 | --- | --- | --- |
-| `/api/admin/manutencao` | `GET`, `POST` | Admin/cron cleanup of cached themes, rate limits and analytics rows |
-| `/api/atualizarDestaques` | `GET` | Admin/cron refresh of approved news highlights using Groq |
 | `/api/conquistas` | `POST` | Evaluate and sync unlocked user achievements |
 | `/api/conta/dados` | `GET` | Account dashboard payload |
 | `/api/conta/excluir` | `POST` | Delete the authenticated account after password confirmation |
 | `/api/conta/recalcular` | `POST` | Recalculate aggregated user statistics |
 | `/api/corrigir` | `GET`, `POST` | Fetch stored essay by query-string ID / submit essay for correction |
 | `/api/destaques/remover` | `POST` | Remove highlight status from selected news |
-| `/api/doacao/checkout` | `POST` | Create Stripe Checkout session |
-| `/api/doacao/webhook` | `POST` | Process Stripe webhook |
+| `/api/doacao/checkout` | `POST` | Create Stripe Checkout session and persist `donation_checkouts` |
+| `/api/doacao/webhook` | `POST` | Process Stripe webhook with idempotent persistence in `stripe_webhook_events` |
 | `/api/gerar-tema` | `GET` | Serve cached essay theme or generate a new one |
-| `/api/noticias` | `GET` | List approved news |
+| `/api/noticias` | `GET` | List approved news and refresh stale highlights on demand when requested |
 | `/api/noticias/[slug]` | `GET` | Fetch a single approved article |
 | `/api/noticias/admin` | `GET`, `POST` | Redirect helper to admin page / reject direct POST usage |
 | `/api/noticias/admin/moderar` | `POST` | Moderate news records |
@@ -108,7 +106,6 @@ The repository does **not** currently ship local Supabase Edge Function code. `s
 | `/api/ocr` | `POST` | OCR via Gemini Vision |
 | `/api/questoes` | `GET`, `POST` | Generate quiz questions / persist quiz result |
 | `/api/resultados/[id]` | `GET` | Fetch essay result by route param |
-| `/api/schedule/time` | `GET` | Return current Brazil datetime and fallback source |
 | `/auth/callback` | `GET` | OAuth code exchange route |
 
 ---
@@ -204,11 +201,8 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | `lib/db/server.ts` | Server and admin Supabase client wrappers |
 | `lib/db/transformers.ts` | Row/model transformation helpers |
 | `lib/db/types.ts` | DB-layer application types |
-| `lib/db/repositories/analytics.ts` | Analytics persistence/query helpers |
 | `lib/db/repositories/essays.ts` | Essay result and cached theme helpers |
-| `lib/db/repositories/news.ts` | News persistence and search helpers |
 | `lib/db/repositories/quizzes.ts` | Quiz result helpers |
-| `lib/db/repositories/users.ts` | User/profile/statistics/goal helpers |
 
 ### `lib/hooks/`
 
@@ -226,10 +220,13 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | `lib/server/auth-request.ts` | Resolve authenticated user from cookies/token |
 | `lib/server/brazil-time.ts` | Brazil timezone helpers based on local server time |
 | `lib/server/conta.ts` | Account dashboard data assembly and stat recalculation |
+| `lib/server/local-maintenance.ts` | Throttled local cleanup of `rate_limits`, `analytics_events` and `cached_themes` |
+| `lib/server/news-highlights.ts` | On-demand highlight refresh/status logic backed by `configuracoes` |
 | `lib/server/noticias.ts` | Read-only approved news access for public routes |
 | `lib/server/operating-hours.ts` | Business-hours evaluation |
 | `lib/server/page-auth.ts` | Server-side page guards for authenticated routes |
 | `lib/server/rate-limit.ts` | Server-side rate limiting |
+| `lib/server/stripe.ts` | Shared Stripe server client helpers |
 
 ### `lib/supabase/`
 
@@ -246,7 +243,7 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | `lib/admin-auth.ts` | Admin authorization and audit-log helper |
 | `lib/errors.ts` | Generic error helpers |
 | `lib/news-import.ts` | NewsAPI fetch/normalize/dedupe/import pipeline |
-| `lib/schedule.ts` | Client-side operating-hours helper via `/api/schedule/time` |
+| `lib/schedule.ts` | Client-side operating-hours helper using local São Paulo time |
 | `lib/security.ts` | Generic API input and error helpers |
 
 ---
@@ -259,7 +256,7 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | browser auth/public reads/SSR | Required for normal runtime |
 | `NEXT_PUBLIC_SITE_URL` | root metadata, redirect safety | Recommended |
 | `SITE_URL` | sitemap generation | Build-time |
-| `SUPABASE_SERVICE_ROLE_KEY` | admin writes, analytics, imports, maintenance | Required for privileged server flows |
+| `SUPABASE_SERVICE_ROLE_KEY` | admin writes, analytics, imports, maintenance, highlights and donation persistence | Required for privileged server flows |
 | `GROQ_API_KEY` | essay, themes, quiz generation, AI news summary | Primary IA key |
 | `GROQ_MODEL` | Groq integration | Optional override |
 | `GROQ_FALLBACK_API_KEY` | Groq integration | Optional fallback provider |
@@ -269,8 +266,6 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | `NEWSAPI_API_KEY` | news import | Preferred NewsAPI variable |
 | `NEWSAPI_KEY` | news import | Accepted alias |
 | `ADMIN_ALLOWED_EMAILS` | admin auth | Comma-separated allowlist |
-| `ADMIN_CRON_SECRET` | admin cron auth | Accepted secret alias |
-| `CRON_SECRET` | admin cron auth | Preferred secret name in Vercel cron context |
 | `STRIPE_SECRET_KEY` | donation checkout and webhook | Required for donation backend |
 | `STRIPE_WEBHOOK_SECRET` | donation webhook | Required if webhook is enabled |
 | `NODE_ENV` | root layout telemetry toggle | Standard runtime variable |
@@ -328,7 +323,6 @@ As of the latest audit documented in `supabase/functions/README.md`, remote Edge
 | `postcss.config.mjs` | PostCSS config |
 | `tailwind.config.js` | Tailwind configuration |
 | `tsconfig.json` | TypeScript config |
-| `vercel.json` | Cron definitions for highlights refresh and maintenance |
 | `package.json` | Scripts and dependencies |
 
 ---
@@ -341,4 +335,5 @@ As of the latest audit documented in `supabase/functions/README.md`, remote Edge
 - `app/components/shared/index.ts` and `app/components/ui/index.ts` are present but currently empty.
 - `app/auth/login/LoginPageClient.tsx` and `app/auth/register/RegisterPageClient.tsx` are deprecated placeholders.
 - The current runtime path is Next.js route handlers under `app/api`; Supabase Edge Functions are legacy only.
+- There is no external cron scheduler in the repo anymore. Maintenance and highlights now run locally, on demand, with timestamps persisted in `configuracoes`.
 - The repository does not contain an active community/forum subsystem anymore.

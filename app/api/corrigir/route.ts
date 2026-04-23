@@ -6,6 +6,7 @@ import type { GroqProvider } from '@/lib/ai/groq';
 import { withGroqRetry } from '@/lib/ai/retry';
 import { extractJson } from '@/lib/ai/parse-json';
 import { getOperatingHoursInfo } from '@/lib/server/operating-hours';
+import { cleanupCachedThemesIfDue } from '@/lib/server/local-maintenance';
 import { checkRateLimit } from '@/lib/server/rate-limit';
 import { trackEvent } from '@/lib/server/analytics';
 import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
@@ -469,6 +470,8 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    await cleanupCachedThemesIfDue();
 
     const supabase = auth.supabase as SupabaseClient<Database>;
     const userId = auth.userId;

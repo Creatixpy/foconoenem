@@ -17,8 +17,9 @@ interface ImportResult {
 
 interface ModerateResult {
   reviewed: number;
-  removed: number;
-  kept: number;
+  approved: number;
+  rejected: number;
+  highlightsRefreshed?: boolean;
 }
 
 interface StatusResult {
@@ -282,7 +283,8 @@ function AdminNoticiasPageContent() {
         )}
         {moderateResult && (
           <div className="mb-6 rounded-xl border border-[var(--success)]/20 bg-[var(--success)]/5 p-4 text-sm text-[var(--success)]">
-            Moderação concluída: {moderateResult.reviewed} revisadas, {moderateResult.kept} mantidas, {moderateResult.removed} removidas.
+            Moderação concluída: {moderateResult.reviewed} revisadas, {moderateResult.approved} aprovadas, {moderateResult.rejected} rejeitadas.
+            {moderateResult.highlightsRefreshed ? ' Destaques recalculados automaticamente.' : ''}
           </div>
         )}
 
