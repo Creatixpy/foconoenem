@@ -15,7 +15,7 @@ The current application is a full-stack Next.js 16 project with:
 - ENEM essay flow with AI theme generation, correction and OCR support
 - quiz flow with generated questions and result persistence
 - approved-news feed, admin moderation/import and AI summaries based on stored articles
-- account dashboard, profile editing, Max subscription management and account deletion with password confirmation
+- account dashboard, profile editing, Max subscription management with 7-day trial and account deletion with password confirmation
 - Stripe donation checkout, Max subscription billing and shared webhook handling
 
 The active runtime lives in:
@@ -90,7 +90,7 @@ The repository does **not** currently ship local Supabase Edge Function code. `s
 | `/api/conta/excluir` | `POST` | Delete the authenticated account after password confirmation |
 | `/api/conta/recalcular` | `POST` | Recalculate aggregated user statistics |
 | `/api/corrigir` | `GET`, `POST` | Fetch stored essay by query-string ID / submit essay for correction |
-| `/api/assinatura/checkout` | `POST` | Start Stripe Subscription Checkout for the Max plan |
+| `/api/assinatura/checkout` | `POST` | Start Stripe Subscription Checkout for the Max plan, with a 7-day trial when eligible |
 | `/api/assinatura/portal` | `POST` | Open Stripe Billing Portal for the authenticated user |
 | `/api/destaques/remover` | `POST` | Remove highlight status from selected news |
 | `/api/doacao/checkout` | `POST` | Create Stripe Checkout session and persist `donation_checkouts` |
@@ -349,5 +349,5 @@ As of the latest audit documented in `supabase/functions/README.md`, remote Edge
 - `app/auth/login/LoginPageClient.tsx` and `app/auth/register/RegisterPageClient.tsx` are deprecated placeholders.
 - The current runtime path is Next.js route handlers under `app/api`; Supabase Edge Functions are legacy only.
 - There is no external cron scheduler in the repo anymore. Maintenance and highlights now run locally, on demand, with timestamps persisted in `configuracoes`.
-- The Max plan is monthly-only at R$ 10,00 and is enforced server-side through `subscriptions` plus webhook-driven Stripe synchronization.
+- The Max plan is monthly-only at R$ 10,00, includes a one-time 7-day trial for eligible users, and is enforced server-side through `subscriptions` plus webhook-driven Stripe synchronization.
 - The repository does not contain an active community/forum subsystem anymore.

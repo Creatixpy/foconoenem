@@ -2,6 +2,7 @@ export const MAX_PLAN_CODE = 'max' as const;
 export const MAX_PLAN_NAME = 'Max' as const;
 export const MAX_PLAN_PRICE_CENTS = 1000;
 export const MAX_PLAN_PRICE_DISPLAY = 'R$ 10,00/mês';
+export const MAX_PLAN_TRIAL_DAYS = 7;
 
 export const SUBSCRIPTION_STATUSES = [
   'checkout_pending',
@@ -28,6 +29,8 @@ export type UserSubscriptionSummary = {
   provider: 'stripe' | null;
   status: SubscriptionStatus | 'free';
   hasMaxAccess: boolean;
+  trialEligible: boolean;
+  trialDays: number | null;
   cancelAtPeriodEnd: boolean;
   currentPeriodEnd: string | null;
   renewsAt: string | null;

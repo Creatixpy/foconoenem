@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth/context';
 import {
   MAX_PLAN_NAME,
   MAX_PLAN_PRICE_DISPLAY,
+  MAX_PLAN_TRIAL_DAYS,
   type UserSubscriptionSummary,
 } from '@/lib/constants/subscriptions';
 import type { UserStatistics } from '@/lib/auth/types';
@@ -398,6 +399,7 @@ function SubscriptionCard({
   const statusTone = getSubscriptionStatusTone(subscription);
   const nextRenewal = formatDateTime(subscription.renewsAt);
   const periodEnd = formatDateTime(subscription.currentPeriodEnd);
+  const showTrialOffer = subscription.trialEligible && subscription.status !== 'trialing';
 
   return (
     <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--card-bg)] p-6 sm:p-7">
@@ -423,6 +425,16 @@ function SubscriptionCard({
               Correção de redação, geração de temas e simulados com provider NVIDIA no backend.
             </p>
           </div>
+          {showTrialOffer && (
+            <p className="rounded-xl border border-[var(--success)]/20 bg-[var(--success)]/10 px-4 py-3 text-sm text-[var(--success)]">
+              {subscription.trialDays ?? MAX_PLAN_TRIAL_DAYS} dias grátis no primeiro ciclo. A cobrança de {MAX_PLAN_PRICE_DISPLAY} começa só depois do teste.
+            </p>
+          )}
+          {subscription.status === 'trialing' && periodEnd && (
+            <p className="rounded-xl border border-[var(--primary)]/20 bg-[var(--primary)]/10 px-4 py-3 text-sm text-[var(--primary)]">
+              Seu teste grátis do {MAX_PLAN_NAME} está ativo até {periodEnd}.
+            </p>
+          )}
           <div className="flex items-end gap-2">
             <span className="text-3xl font-bold tracking-tight text-[var(--text-primary)]">{MAX_PLAN_PRICE_DISPLAY}</span>
           </div>
@@ -431,6 +443,7 @@ function SubscriptionCard({
             <p>Acesso Max: <strong className="text-[var(--text-primary)]">{subscription.hasMaxAccess ? 'Liberado' : 'Não liberado'}</strong></p>
             <p>Próxima renovação: <strong className="text-[var(--text-primary)]">{nextRenewal ?? 'Não agendada'}</strong></p>
             <p>Fim do período atual: <strong className="text-[var(--text-primary)]">{periodEnd ?? 'Não disponível'}</strong></p>
+            <p>Teste grátis: <strong className="text-[var(--text-primary)]">{subscription.trialEligible ? `${subscription.trialDays ?? MAX_PLAN_TRIAL_DAYS} dias disponíveis` : 'Já utilizado'}</strong></p>
           </div>
           {subscription.cancelAtPeriodEnd && periodEnd && (
             <p className="rounded-xl border border-[var(--warning)]/30 bg-[var(--warning)]/10 px-4 py-3 text-sm text-[var(--warning)]">
@@ -462,7 +475,9 @@ function SubscriptionCard({
                 ? 'Assinatura ativa'
                 : subscription.status === 'checkout_pending'
                   ? 'Continuar checkout'
-                  : 'Assinar Max'}
+                  : subscription.trialEligible
+                    ? `Começar ${subscription.trialDays ?? MAX_PLAN_TRIAL_DAYS} dias grátis`
+                    : 'Assinar Max'}
           </button>
           <button
             type="button"
@@ -913,6 +928,8 @@ export default function ContaPageClient() {
     provider: null,
     status: 'free',
     hasMaxAccess: false,
+    trialEligible: true,
+    trialDays: MAX_PLAN_TRIAL_DAYS,
     cancelAtPeriodEnd: false,
     currentPeriodEnd: null,
     renewsAt: null,

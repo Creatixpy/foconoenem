@@ -7,6 +7,7 @@ import {
   MAX_ACCESS_STATUSES,
   MAX_PLAN_CODE,
   MAX_PLAN_NAME,
+  MAX_PLAN_TRIAL_DAYS,
   type SubscriptionStatus,
   type UserSubscriptionSummary,
 } from '@/lib/constants/subscriptions';
@@ -77,6 +78,14 @@ function getStripeSubscriptionPeriodValue(
   return typeof source[key] === 'number' ? source[key] : null;
 }
 
+function getStripeSubscriptionTrialValue(
+  subscription: Stripe.Subscription,
+  key: 'trial_start' | 'trial_end'
+) {
+  const source = subscription as Stripe.Subscription & Partial<Record<'trial_start' | 'trial_end', number>>;
+  return typeof source[key] === 'number' ? source[key] : null;
+}
+
 function getInvoiceSubscriptionId(invoice: Stripe.Invoice) {
   const source = invoice as Stripe.Invoice & {
     subscription?: string | Stripe.Subscription | null;
@@ -114,6 +123,35 @@ export function hasMaxPlanAccess(subscription: Pick<SubscriptionRow, 'plan_code'
   return new Date(subscription.current_period_end).getTime() > Date.now();
 }
 
+function hasUsedMaxTrial(
+  subscription: Pick<SubscriptionRow, 'metadata' | 'status' | 'stripe_subscription_id'> | null
+) {
+  if (!subscription) {
+    return false;
+  }
+
+  if (subscription.status === 'trialing') {
+    return true;
+  }
+
+  if (subscription.stripe_subscription_id) {
+    return true;
+  }
+
+  const metadata = subscription.metadata;
+  if (!isJsonRecord(metadata)) {
+    return false;
+  }
+
+  return typeof metadata.trial_used_at === 'string' && metadata.trial_used_at.trim().length > 0;
+}
+
+export function canStartMaxTrial(
+  subscription: Pick<SubscriptionRow, 'metadata' | 'status' | 'stripe_subscription_id'> | null
+) {
+  return !hasUsedMaxTrial(subscription);
+}
+
 export function buildFreeSubscriptionSummary(): UserSubscriptionSummary {
   return {
     planCode: 'free',
@@ -121,6 +159,8 @@ export function buildFreeSubscriptionSummary(): UserSubscriptionSummary {
     provider: null,
     status: 'free',
     hasMaxAccess: false,
+    trialEligible: true,
+    trialDays: MAX_PLAN_TRIAL_DAYS,
     cancelAtPeriodEnd: false,
     currentPeriodEnd: null,
     renewsAt: null,
@@ -143,6 +183,8 @@ export function toSubscriptionSummary(subscription: SubscriptionRow | null): Use
     provider: subscription.provider === 'stripe' ? 'stripe' : null,
     status: subscription.status as SubscriptionStatus,
     hasMaxAccess: hasMaxPlanAccess(subscription),
+    trialEligible: canStartMaxTrial(subscription),
+    trialDays: MAX_PLAN_TRIAL_DAYS,
     cancelAtPeriodEnd: subscription.cancel_at_period_end,
     currentPeriodEnd: subscription.current_period_end,
     renewsAt: subscription.renews_at,
@@ -448,6 +490,8 @@ export async function upsertSubscriptionFromStripeObject(
   const normalizedStatus = normalizeSubscriptionStatus(subscription.status);
   const currentPeriodStart = toIsoString(getStripeSubscriptionPeriodValue(subscription, 'current_period_start'));
   const currentPeriodEnd = toIsoString(getStripeSubscriptionPeriodValue(subscription, 'current_period_end'));
+  const trialStart = toIsoString(getStripeSubscriptionTrialValue(subscription, 'trial_start'));
+  const trialEnd = toIsoString(getStripeSubscriptionTrialValue(subscription, 'trial_end'));
   const payload: SubscriptionInsert = {
     user_id: userId,
     plan_code: MAX_PLAN_CODE,
@@ -468,6 +512,9 @@ export async function upsertSubscriptionFromStripeObject(
     metadata: mergeMetadata(existing?.metadata, hints.metadata, {
       last_synced_from: 'stripe_webhook',
       latest_invoice_id: getStripeStringId(subscription.latest_invoice),
+      ...(trialStart ? { trial_used_at: trialStart } : {}),
+      ...(trialEnd ? { trial_ends_at: trialEnd } : {}),
+      ...(trialStart || trialEnd ? { trial_days: MAX_PLAN_TRIAL_DAYS } : {}),
     }),
   };
 

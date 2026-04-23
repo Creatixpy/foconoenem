@@ -39,7 +39,7 @@
   - quiz flow: `/questoes`
   - news admin: `/noticias/admin` when relevant
   - donations: `/doacao` and the webhook if Stripe is configured
-  - subscriptions: `/conta`, `/api/assinatura/checkout`, `/api/assinatura/portal`, `/api/doacao/webhook`
+  - subscriptions: `/conta`, `/api/assinatura/checkout`, `/api/assinatura/portal`, `/api/doacao/webhook`, including first-time 7-day trial eligibility
 
 ## Documentation Maintenance
 - Always update `README.md`, `FRONTEND_INVENTORY.md`, and this `AGENTS.md` when changing:
