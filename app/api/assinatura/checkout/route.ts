@@ -15,6 +15,13 @@ import {
   savePendingSubscriptionCheckout,
 } from '@/lib/server/subscriptions';
 
+function isStripeCheckoutPaymentMethodError(error: unknown) {
+  return (
+    error instanceof Error &&
+    error.message.includes('No valid payment method types for this Checkout Session')
+  );
+}
+
 export async function POST(request: NextRequest) {
   try {
     const originError = ensureTrustedOrigin(request);
@@ -78,36 +85,53 @@ export async function POST(request: NextRequest) {
     );
 
     const origin = request.nextUrl.origin;
-    const session = await stripe.checkout.sessions.create(
-      {
-        mode: 'subscription',
-        customer: stripeCustomerId,
-        client_reference_id: auth.userId,
-        success_url: `${origin}/conta?subscription=success`,
-        cancel_url: `${origin}/conta?subscription=canceled`,
-        allow_promotion_codes: true,
-        line_items: [
-          {
-            price: getMaxSubscriptionPriceId(),
-            quantity: 1,
-          },
-        ],
-        metadata: {
-          plan_code: MAX_PLAN_CODE,
-          supabase_user_id: auth.userId,
-          source: 'app/conta',
-        },
-        subscription_data: {
+    let session;
+    try {
+      session = await stripe.checkout.sessions.create(
+        {
+          mode: 'subscription',
+          customer: stripeCustomerId,
+          client_reference_id: auth.userId,
+          success_url: `${origin}/conta?subscription=success`,
+          cancel_url: `${origin}/conta?subscription=canceled`,
+          allow_promotion_codes: true,
+          payment_method_types: ['card'],
+          line_items: [
+            {
+              price: getMaxSubscriptionPriceId(),
+              quantity: 1,
+            },
+          ],
           metadata: {
             plan_code: MAX_PLAN_CODE,
             supabase_user_id: auth.userId,
+            source: 'app/conta',
+          },
+          subscription_data: {
+            metadata: {
+              plan_code: MAX_PLAN_CODE,
+              supabase_user_id: auth.userId,
+            },
           },
         },
-      },
-      {
-        idempotencyKey: randomUUID(),
+        {
+          idempotencyKey: randomUUID(),
+        }
+      );
+    } catch (error) {
+      if (isStripeCheckoutPaymentMethodError(error)) {
+        return NextResponse.json(
+          {
+            error: 'Checkout indisponível',
+            message:
+              'Os métodos de pagamento do Stripe ainda não estão prontos para esta assinatura. Tente novamente em instantes.',
+          },
+          { status: 503 }
+        );
       }
-    );
+
+      throw error;
+    }
 
     if (!session.url) {
       throw new Error('Stripe não retornou URL de checkout para a assinatura.');
