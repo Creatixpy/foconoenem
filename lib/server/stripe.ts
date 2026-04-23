@@ -22,7 +22,17 @@ export function getStripe() {
 }
 
 export function getStripeStringId(
-  value: string | Stripe.PaymentIntent | Stripe.Customer | Stripe.DeletedCustomer | null | undefined
+  value:
+    | string
+    | { id: string }
+    | Stripe.PaymentIntent
+    | Stripe.Customer
+    | Stripe.DeletedCustomer
+    | Stripe.Subscription
+    | Stripe.Invoice
+    | Stripe.Checkout.Session
+    | null
+    | undefined
 ) {
   if (!value) {
     return null;

@@ -2,13 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
 import { randomUUID } from 'crypto';
-import type { GroqProvider } from '@/lib/ai/groq';
-import { withGroqRetry } from '@/lib/ai/retry';
 import { extractJson } from '@/lib/ai/parse-json';
 import { getOperatingHoursInfo } from '@/lib/server/operating-hours';
 import { cleanupCachedThemesIfDue } from '@/lib/server/local-maintenance';
 import { checkRateLimit } from '@/lib/server/rate-limit';
 import { trackEvent } from '@/lib/server/analytics';
+import { getUserAiRuntime, type UserAiRuntime } from '@/lib/server/ai/provider';
 import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
 import { createAdminClient } from '@/lib/db/server';
 import { z } from 'zod';
@@ -126,10 +125,11 @@ function normalizeList(value: unknown, fallback: string[]): string[] {
 }
 
 async function requestSupportTexts(
-  provider: GroqProvider,
+  runtime: UserAiRuntime,
   tema: string
-): Promise<SupportTexts> {
-  const response = await provider.client.chat.completions.create({
+): Promise<{ data: SupportTexts; provider: string }> {
+  const response = await runtime.complete({
+    label: 'generateSupportTexts',
     messages: [
       {
         role: 'user',
@@ -150,16 +150,13 @@ async function requestSupportTexts(
         `,
       },
     ],
-    model: provider.model,
     temperature: 0.4,
-    max_completion_tokens: 1200,
-    top_p: 1,
-    stream: false,
-    response_format: { type: 'json_object' },
+    maxTokens: 1200,
+    topP: 1,
+    expectJson: true,
   });
 
-  const content = response.choices?.[0]?.message?.content ?? '';
-  const parsed = extractJson<Partial<SupportTexts>>(content);
+  const parsed = extractJson<Partial<SupportTexts>>(response.content);
   const textoApoio1 = parsed.textoApoio1?.trim();
   const textoApoio2 = parsed.textoApoio2?.trim();
 
@@ -167,11 +164,14 @@ async function requestSupportTexts(
     throw new Error('A IA não retornou textos de apoio válidos.');
   }
 
-  return { textoApoio1, textoApoio2 };
+  return {
+    data: { textoApoio1, textoApoio2 },
+    provider: response.provider,
+  };
 }
 
 async function requestEssayAnalysis(
-  provider: GroqProvider,
+  runtime: UserAiRuntime,
   input: {
     submission: EssaySubmission;
     temaFinal: string;
@@ -179,7 +179,7 @@ async function requestEssayAnalysis(
     textoApoio2Final: string;
     essayId: string;
   }
-): Promise<Omit<NormalizedEssayResult, 'createdAt' | 'origem'>> {
+): Promise<{ data: Omit<NormalizedEssayResult, 'createdAt' | 'origem'>; provider: string }> {
   const { submission, temaFinal, textoApoio1Final, textoApoio2Final, essayId } = input;
 
   let prompt = `
@@ -231,18 +231,16 @@ async function requestEssayAnalysis(
     }
   `;
 
-  const response = await provider.client.chat.completions.create({
+  const response = await runtime.complete({
+    label: 'analyseEssay',
     messages: [{ role: 'user', content: prompt }],
-    model: provider.model,
     temperature: 0.1,
-    max_completion_tokens: 5000,
-    top_p: 1,
-    stream: false,
-    response_format: { type: 'json_object' },
+    maxTokens: 5000,
+    topP: 1,
+    expectJson: true,
   });
 
-  const aiContent = response.choices?.[0]?.message?.content ?? '';
-  const parsed = extractJson<RawEssayAnalysis>(aiContent);
+  const parsed = extractJson<RawEssayAnalysis>(response.content);
 
   const competencia1 = normalizeEssayCompetence(parsed.competencia1, 'Não foi possível avaliar a competência 1 com precisão.');
   const competencia2 = normalizeEssayCompetence(parsed.competencia2, 'Não foi possível avaliar a competência 2 com precisão.');
@@ -258,40 +256,44 @@ async function requestEssayAnalysis(
     competencia5.nota;
 
   return {
-    id: essayId,
-    nota: notaTotal,
-    competencia1,
-    competencia2,
-    competencia3,
-    competencia4,
-    competencia5,
-    feedbackGeral:
-      typeof parsed.feedbackGeral === 'string' && parsed.feedbackGeral.trim()
-        ? parsed.feedbackGeral.trim()
-        : 'A redação apresenta potencial, mas precisa de ajustes para ganhar precisão argumentativa e consistência nas competências do ENEM.',
-    pontoFortes: normalizeList(parsed.pontoFortes, [
-      'Há um posicionamento identificável ao longo do texto.',
-      'O texto demonstra tentativa de organização argumentativa.',
-      'Existe repertório inicial para sustentar a discussão.',
-    ]),
-    pontosAMelhorar: normalizeList(parsed.pontosAMelhorar, [
-      'Aprofundar os argumentos com causas, consequências e exemplos mais específicos.',
-      'Melhorar a progressão lógica entre os parágrafos.',
-      'Tornar a proposta de intervenção mais detalhada e executável.',
-    ]),
-    redacaoOriginal: submission.redacao,
-    tema: temaFinal,
-    textoApoio1: textoApoio1Final,
-    textoApoio2: textoApoio2Final,
+    data: {
+      id: essayId,
+      nota: notaTotal,
+      competencia1,
+      competencia2,
+      competencia3,
+      competencia4,
+      competencia5,
+      feedbackGeral:
+        typeof parsed.feedbackGeral === 'string' && parsed.feedbackGeral.trim()
+          ? parsed.feedbackGeral.trim()
+          : 'A redação apresenta potencial, mas precisa de ajustes para ganhar precisão argumentativa e consistência nas competências do ENEM.',
+      pontoFortes: normalizeList(parsed.pontoFortes, [
+        'Há um posicionamento identificável ao longo do texto.',
+        'O texto demonstra tentativa de organização argumentativa.',
+        'Existe repertório inicial para sustentar a discussão.',
+      ]),
+      pontosAMelhorar: normalizeList(parsed.pontosAMelhorar, [
+        'Aprofundar os argumentos com causas, consequências e exemplos mais específicos.',
+        'Melhorar a progressão lógica entre os parágrafos.',
+        'Tornar a proposta de intervenção mais detalhada e executável.',
+      ]),
+      redacaoOriginal: submission.redacao,
+      tema: temaFinal,
+      textoApoio1: textoApoio1Final,
+      textoApoio2: textoApoio2Final,
+    },
+    provider: response.provider,
   };
 }
 
 async function requestThemeAlignment(
-  provider: GroqProvider,
+  runtime: UserAiRuntime,
   submission: EssaySubmission,
   temaFinal: string
 ): Promise<ThemeAlignmentResult> {
-  const response = await provider.client.chat.completions.create({
+  const response = await runtime.complete({
+    label: 'verifyThemeAlignment',
     messages: [
       {
         role: 'user',
@@ -315,16 +317,13 @@ Regras:
 `,
       },
     ],
-    model: provider.model,
     temperature: 0,
-    max_completion_tokens: 256,
-    top_p: 1,
-    stream: false,
-    response_format: { type: 'json_object' },
+    maxTokens: 256,
+    topP: 1,
+    expectJson: true,
   });
 
-  const raw = response.choices?.[0]?.message?.content ?? '';
-  const parsed = extractJson<{ alinhado?: boolean; justificativa?: string }>(raw);
+  const parsed = extractJson<{ alinhado?: boolean; justificativa?: string }>(response.content);
 
   if (typeof parsed.alinhado !== 'boolean') {
     throw new Error('A verificação de tema não retornou o campo "alinhado".');
@@ -338,6 +337,7 @@ Regras:
 
 async function resolveThemeContext(
   submission: EssaySubmission,
+  aiRuntime: UserAiRuntime,
   supabase: SupabaseClient<Database>,
   adminClient: SupabaseClient<Database>
 ): Promise<ThemeContext> {
@@ -380,7 +380,10 @@ async function resolveThemeContext(
     };
   }
 
-  const cachedTheme = await findCachedThemeByTema(supabase, providedTheme).catch(() => null);
+  const canUseSharedCache = !aiRuntime.subscription.hasMaxAccess;
+  const cachedTheme = canUseSharedCache
+    ? await findCachedThemeByTema(supabase, providedTheme).catch(() => null)
+    : null;
   if (cachedTheme?.texto_apoio1?.trim() && cachedTheme.texto_apoio2?.trim()) {
     return {
       tema: cachedTheme.tema,
@@ -391,25 +394,25 @@ async function resolveThemeContext(
     };
   }
 
-  const { result, provider } = await withGroqRetry('generateSupportTexts', (currentProvider) =>
-    requestSupportTexts(currentProvider, providedTheme)
-  );
+  const generatedSupport = await requestSupportTexts(aiRuntime, providedTheme);
 
-  await createCachedThemes(adminClient, [{
-    tema: providedTheme,
-    textoApoio1: result.textoApoio1,
-    textoApoio2: result.textoApoio2,
-  }]).catch((error) => {
-    console.error('Erro ao salvar novos textos de apoio:', error);
-  });
+  if (canUseSharedCache) {
+    await createCachedThemes(adminClient, [{
+      tema: providedTheme,
+      textoApoio1: generatedSupport.data.textoApoio1,
+      textoApoio2: generatedSupport.data.textoApoio2,
+    }]).catch((error) => {
+      console.error('Erro ao salvar novos textos de apoio:', error);
+    });
+  }
 
   return {
     tema: providedTheme,
-    textoApoio1: result.textoApoio1,
-    textoApoio2: result.textoApoio2,
+    textoApoio1: generatedSupport.data.textoApoio1,
+    textoApoio2: generatedSupport.data.textoApoio2,
     themeType: submission.themeMode === 'manual' ? 'manual' : 'gerado',
     supportSource: 'generated',
-    supportProvider: provider,
+    supportProvider: generatedSupport.provider,
   };
 }
 
@@ -521,10 +524,11 @@ export async function POST(request: NextRequest) {
     const trimmedEssay = submission.redacao;
     const essayLength = trimmedEssay.length;
     const essayId = randomUUID();
+    const aiRuntime = await getUserAiRuntime(userId);
 
     let themeContext: ThemeContext;
     try {
-      themeContext = await resolveThemeContext(submission, supabase, adminClient);
+      themeContext = await resolveThemeContext(submission, aiRuntime, supabase, adminClient);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Não foi possível preparar o tema da redação.';
       if (message.includes('tema válido')) {
@@ -543,10 +547,11 @@ export async function POST(request: NextRequest) {
 
     let alignmentResult: ThemeAlignmentResult;
     try {
-      const { result } = await withGroqRetry('verifyThemeAlignment', (provider) =>
-        requestThemeAlignment(provider, { ...submission, redacao: trimmedEssay }, themeContext.tema)
+      alignmentResult = await requestThemeAlignment(
+        aiRuntime,
+        { ...submission, redacao: trimmedEssay },
+        themeContext.tema
       );
-      alignmentResult = result;
     } catch (error) {
       console.error('Erro ao validar alinhamento de tema:', error);
       return NextResponse.json(
@@ -566,6 +571,7 @@ export async function POST(request: NextRequest) {
           theme_type: themeContext.themeType,
           justification: alignmentResult.justification,
           tema: themeContext.tema,
+          subscription_plan: aiRuntime.subscription.planCode,
         },
         userIp: ip,
         userAgent,
@@ -582,17 +588,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let aiAnalysis: { result: Omit<NormalizedEssayResult, 'createdAt' | 'origem'>; provider: string };
+    let aiAnalysis: { data: Omit<NormalizedEssayResult, 'createdAt' | 'origem'>; provider: string };
     try {
-      aiAnalysis = await withGroqRetry('analyseEssay', (provider) =>
-        requestEssayAnalysis(provider, {
-          submission: { ...submission, redacao: trimmedEssay },
-          temaFinal: themeContext.tema,
-          textoApoio1Final: themeContext.textoApoio1,
-          textoApoio2Final: themeContext.textoApoio2,
-          essayId,
-        })
-      );
+      aiAnalysis = await requestEssayAnalysis(aiRuntime, {
+        submission: { ...submission, redacao: trimmedEssay },
+        temaFinal: themeContext.tema,
+        textoApoio1Final: themeContext.textoApoio1,
+        textoApoio2Final: themeContext.textoApoio2,
+        essayId,
+      });
     } catch (error) {
       console.error('Erro ao analisar redação com IA:', error);
       return NextResponse.json(
@@ -605,7 +609,7 @@ export async function POST(request: NextRequest) {
     }
 
     const result: NormalizedEssayResult = {
-      ...aiAnalysis.result,
+      ...aiAnalysis.data,
       id: essayId,
       redacaoOriginal: trimmedEssay,
       createdAt: new Date().toISOString(),
@@ -635,6 +639,7 @@ export async function POST(request: NextRequest) {
         theme_type: themeContext.themeType,
         support_source: themeContext.supportSource,
         support_provider: themeContext.supportProvider ?? undefined,
+        subscription_plan: aiRuntime.subscription.planCode,
         essay_length: essayLength,
         score: result.nota,
         tema: themeContext.tema,

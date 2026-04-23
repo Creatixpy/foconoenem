@@ -520,6 +520,143 @@ export type Database = {
           },
         ]
       }
+      subscription_events: {
+        Row: {
+          api_version: string | null
+          error_message: string | null
+          event_created_at: string
+          event_type: string
+          id: string
+          livemode: boolean
+          payload: Json
+          processed_at: string | null
+          received_at: string
+          status: string
+          stripe_checkout_session_id: string | null
+          stripe_customer_id: string | null
+          stripe_event_id: string
+          stripe_subscription_id: string | null
+          subscription_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          api_version?: string | null
+          error_message?: string | null
+          event_created_at: string
+          event_type: string
+          id?: string
+          livemode?: boolean
+          payload: Json
+          processed_at?: string | null
+          received_at?: string
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_customer_id?: string | null
+          stripe_event_id: string
+          stripe_subscription_id?: string | null
+          subscription_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          api_version?: string | null
+          error_message?: string | null
+          event_created_at?: string
+          event_type?: string
+          id?: string
+          livemode?: boolean
+          payload?: Json
+          processed_at?: string | null
+          received_at?: string
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_customer_id?: string | null
+          stripe_event_id?: string
+          stripe_subscription_id?: string | null
+          subscription_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_events_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          cancel_at: string | null
+          cancel_at_period_end: boolean
+          canceled_at: string | null
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          latest_checkout_expires_at: string | null
+          latest_checkout_session_id: string | null
+          metadata: Json
+          plan_code: string
+          plan_name: string
+          provider: string
+          renews_at: string | null
+          status: string
+          stripe_customer_id: string | null
+          stripe_price_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cancel_at?: string | null
+          cancel_at_period_end?: boolean
+          canceled_at?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          latest_checkout_expires_at?: string | null
+          latest_checkout_session_id?: string | null
+          metadata?: Json
+          plan_code?: string
+          plan_name?: string
+          provider?: string
+          renews_at?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_price_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cancel_at?: string | null
+          cancel_at_period_end?: boolean
+          canceled_at?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          latest_checkout_expires_at?: string | null
+          latest_checkout_session_id?: string | null
+          metadata?: Json
+          plan_code?: string
+          plan_name?: string
+          provider?: string
+          renews_at?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_price_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_achievements: {
         Row: {
           achievement_id: string

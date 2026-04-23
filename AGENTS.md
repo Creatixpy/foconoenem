@@ -3,7 +3,8 @@
 ## Project Structure & Module Organization
 - `app/`: App Router routes, layouts, public pages, authenticated areas, and Route Handlers under `app/api`.
 - `lib/auth/`: authentication flows, profile, goals, statistics, and validation helpers.
-- `lib/ai/`: Groq and Gemini integrations.
+- `lib/ai/`: Groq and Gemini integrations for the standard runtime.
+- `lib/server/ai/`: server-side provider selection and NVIDIA integration for the Max plan.
 - `lib/db/`: Supabase clients, repositories, and data transformers.
 - `lib/server/`: server-only helpers for account data, cookie/token auth, analytics, news, operating hours, and rate limiting.
 - `lib/supabase/`: SSR/browser Supabase clients plus session refresh logic used by `proxy.ts`.
@@ -38,6 +39,7 @@
   - quiz flow: `/questoes`
   - news admin: `/noticias/admin` when relevant
   - donations: `/doacao` and the webhook if Stripe is configured
+  - subscriptions: `/conta`, `/api/assinatura/checkout`, `/api/assinatura/portal`, `/api/doacao/webhook`
 
 ## Documentation Maintenance
 - Always update `README.md`, `FRONTEND_INVENTORY.md`, and this `AGENTS.md` when changing:
@@ -59,6 +61,8 @@
 - `SUPABASE_SERVICE_ROLE_KEY` is required for privileged server operations.
 - Admin flows use `ADMIN_ALLOWED_EMAILS`. Maintenance and news highlights now run locally in the app and no longer depend on cron secrets.
 - Stripe depends on `STRIPE_SECRET_KEY`; the webhook also requires `STRIPE_WEBHOOK_SECRET`.
+- The Max subscription checkout requires `STRIPE_MAX_PRICE_ID`.
+- The Max AI provider requires `NVIDIA_API_KEY`.
 - OCR depends on `GEMINI_API_KEY`.
 - News import uses `NEWSAPI_API_KEY` or `NEWSAPI_KEY`.
 - The project uses RLS in Supabase; prefer server-side routes for privileged writes.

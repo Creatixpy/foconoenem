@@ -8,6 +8,7 @@ O projeto atual concentra toda a lógica ativa no próprio app Next.js:
 - simulados de questões com persistência de desempenho
 - notícias com moderação, destaques, busca textual e resumo com IA baseado no banco
 - área de conta com estatísticas, edição de perfil e exclusão de conta com confirmação por senha
+- assinatura mensal Max com Stripe Subscription e portal do cliente
 - doações via Stripe
 - OCR de imagem com Gemini para apoiar o fluxo de redação
 
@@ -19,6 +20,7 @@ O projeto atual concentra toda a lógica ativa no próprio app Next.js:
 - A atualização de sessão autenticada passa por `proxy.ts`.
 - O histórico de schema fica em `supabase/migrations/`.
 - Manutenção operacional é local ao app: limpeza de tabelas e atualização de destaques acontecem sob demanda, sem cron externo.
+- O plano Max usa Stripe para billing e NVIDIA para os fluxos premium de redação, temas e simulados.
 - O diretório `supabase/functions/` existe apenas para documentar Edge Functions remotas legadas; o runtime atual não depende delas.
 - O sistema de comunidade foi removido do produto, do código ativo e do schema atual.
 
@@ -29,9 +31,10 @@ O projeto atual concentra toda a lógica ativa no próprio app Next.js:
 - TypeScript 6
 - Tailwind CSS 4
 - Supabase SSR + PostgreSQL
-- Groq para geração/correção/resumos
+- Groq para o fluxo padrão de IA
+- NVIDIA via SDK `openai` compatível para o plano Max
 - Gemini para OCR
-- Stripe para checkout e webhook de doações
+- Stripe para doações, assinaturas Max e webhook
 - NewsAPI para importação de notícias
 - Vercel Analytics e Speed Insights em produção
 
@@ -50,14 +53,16 @@ Crie `.env.local` na raiz do projeto. Nem todas as variáveis são obrigatórias
 | `NEXT_PUBLIC_SITE_URL` | recomendada | metadata, redirects e URLs públicas |
 | `SITE_URL` | recomendada | geração do sitemap |
 | `SUPABASE_SERVICE_ROLE_KEY` | obrigatória para fluxos administrativos/privilegiados | rotas admin, analytics server-side, importação, manutenção local, destaques e gravações privilegiadas |
-| `GROQ_API_KEY` | obrigatória para IA principal | `/api/corrigir`, `/api/gerar-tema`, `/api/questoes`, `/api/noticias/gpt-busca` |
+| `GROQ_API_KEY` | obrigatória para IA padrão | `/api/corrigir`, `/api/gerar-tema`, `/api/questoes`, `/api/noticias/gpt-busca` |
 | `GROQ_MODEL` | opcional | modelo primário da Groq |
 | `GROQ_FALLBACK_API_KEY` | opcional | provedor secundário quando há rate limit |
 | `GROQ_FALLBACK_MODEL` | opcional | modelo secundário |
 | `GROQ_MAX_ATTEMPTS` | opcional | tentativas por provedor |
+| `NVIDIA_API_KEY` | obrigatória para o plano Max | `/api/corrigir`, `/api/gerar-tema`, `/api/questoes` quando o usuário tem assinatura Max ativa |
 | `GEMINI_API_KEY` | opcional | OCR em `/api/ocr` |
-| `STRIPE_SECRET_KEY` | opcional | checkout de doações |
+| `STRIPE_SECRET_KEY` | opcional | checkout de doações, assinatura Max e portal do cliente |
 | `STRIPE_WEBHOOK_SECRET` | opcional | validação do webhook do Stripe |
+| `STRIPE_MAX_PRICE_ID` | obrigatória para assinatura Max | price mensal recorrente de R$ 10,00 do plano Max |
 | `NEWSAPI_API_KEY` ou `NEWSAPI_KEY` | opcional | importação de notícias no painel admin |
 | `ADMIN_ALLOWED_EMAILS` | necessária para acesso admin por usuário | allowlist do painel/admin APIs |
 
@@ -73,6 +78,7 @@ SUPABASE_SERVICE_ROLE_KEY=sua-service-role
 
 GROQ_API_KEY=sua-chave-groq
 GROQ_MODEL=openai/gpt-oss-120b
+NVIDIA_API_KEY=sua-chave-nvidia
 
 ADMIN_ALLOWED_EMAILS=admin@exemplo.com
 ```
@@ -98,9 +104,9 @@ Observações:
 app/                    rotas, páginas e APIs do Next.js
 app/api/                route handlers ativos do sistema
 lib/auth/               autenticação, perfis, metas e estatísticas
-lib/ai/                 integração com Groq e Gemini
+lib/ai/                 integração com Groq e Gemini para o fluxo padrão
 lib/db/                 camada de acesso ao banco e repositórios
-lib/server/             helpers server-only (conta, notícias, horário, analytics, rate limit)
+lib/server/             helpers server-only (conta, assinatura, IA por plano, notícias, horário, analytics, rate limit)
 lib/supabase/           clientes SSR/browser e atualização de sessão
 public/                 assets, arquivos de verificação, robots e sitemap
 supabase/migrations/    histórico local de schema
@@ -139,6 +145,14 @@ types/                  tipos compartilhados e tipos gerados do Supabase
 - edição de perfil em `/conta/editar`
 - exclusão de conta em `/api/conta/excluir` com reconfirmação por senha
 
+### Assinatura Max
+
+- checkout mensal do plano Max em `/api/assinatura/checkout`
+- portal do cliente em `/api/assinatura/portal`
+- sincronização por webhook em `/api/doacao/webhook`
+- persistência em `subscriptions` e trilha em `subscription_events`
+- acesso Max validado no backend antes de selecionar NVIDIA para `/api/corrigir`, `/api/gerar-tema` e `/api/questoes`
+
 ### Doações
 
 - checkout server-side em `/api/doacao/checkout` com persistência em `donation_checkouts`
@@ -148,6 +162,7 @@ types/                  tipos compartilhados e tipos gerados do Supabase
 
 - As migrations locais estão em `supabase/migrations/`.
 - A auditoria de produção de 2026-04-23 foi reconciliada localmente nas migrations `20260423010000_reconcile_production_schema_and_donations.sql` e `20260423011000_index_stripe_webhook_client_reference.sql`.
+- O plano Max foi introduzido localmente na migration `20260423100000_add_max_subscription_support.sql`.
 - O snapshot `supabase/remote-latest.sql` existe como referência, não como fonte principal de edição manual.
 - O arquivo [supabase/functions/README.md](./supabase/functions/README.md) documenta o legado de Edge Functions remotas ainda implantadas.
 - Não há mais `vercel.json` com cron. Limpeza de `rate_limits`, `analytics_events` e `cached_themes` roda localmente no app em janelas controladas via `configuracoes`, e os destaques de notícias são atualizados sob demanda.

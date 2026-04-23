@@ -1,5 +1,6 @@
 'use server';
 
+import { toSubscriptionSummary } from '@/lib/server/subscriptions';
 import { createAdminClient, createServerClient } from '@/lib/db/server';
 
 /**
@@ -25,7 +26,7 @@ export async function fetchContaData(userId: string) {
         throw new Error('Supabase admin não configurado');
     }
 
-    const [statsResponse, essaysResponse] = await Promise.all([
+    const [statsResponse, essaysResponse, subscriptionResponse] = await Promise.all([
         supabase
             .from('user_statistics')
             .select('*')
@@ -37,6 +38,11 @@ export async function fetchContaData(userId: string) {
             .eq('user_id', userId)
             .order('created_at', { ascending: false })
             .limit(10),
+        supabase
+            .from('subscriptions')
+            .select('*')
+            .eq('user_id', userId)
+            .maybeSingle(),
     ]);
 
     // Parse numeric fields
@@ -60,9 +66,14 @@ export async function fetchContaData(userId: string) {
         }
     }
 
+    if (subscriptionResponse.error) {
+        throw subscriptionResponse.error;
+    }
+
     return {
         statistics: statistics || null,
         essays: essaysResponse.data || [],
+        subscription: toSubscriptionSummary(subscriptionResponse.data ?? null),
     };
 }
 

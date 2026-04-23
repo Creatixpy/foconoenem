@@ -23,13 +23,13 @@ const sections = [
     id: 'ia',
     title: '4. Uso de inteligência artificial',
     content:
-      'A plataforma utiliza provedores de IA para correção de redações, geração de temas, textos de apoio, questões e resumos do acervo de notícias. Hoje o provedor integrado no código é a Groq. Redações, prompts e respostas podem ser processados por esse fornecedor para executar a solicitação. Conforme a documentação pública da Groq, requisições de inferência não são retidas por padrão, mas podem ser temporariamente registradas por até 30 dias para confiabilidade e investigação de abuso, salvo configurações mais restritivas do cliente. Os resultados retornados pela IA são armazenados no banco do Foco no ENEM quando necessários ao funcionamento do produto.',
+      'A plataforma utiliza provedores de IA para correção de redações, geração de temas, textos de apoio, questões e resumos do acervo de notícias. No fluxo padrão, a integração principal segue usando Groq. Para usuários com assinatura Max ativa, os fluxos premium de redação, temas e questões podem ser processados pela API compatível com OpenAI da NVIDIA usando o modelo z-ai/glm-5.1. Redações, prompts e respostas podem ser enviados ao provedor aplicável para executar a solicitação. Os resultados retornados pela IA são armazenados no banco do Foco no ENEM quando necessários ao funcionamento do produto.',
   },
   {
     id: 'compartilhamento',
     title: '5. Compartilhamento e transferências internacionais',
     content:
-      'O Foco no ENEM compartilha dados com prestadores essenciais de infraestrutura e operação, incluindo Supabase, Vercel, Stripe e Groq. Esses serviços podem processar dados fora do Brasil, conforme sua arquitetura e região de infraestrutura. Quando isso ocorre, o tratamento continua vinculado às finalidades desta política e às salvaguardas contratuais e técnicas aplicáveis.',
+      'O Foco no ENEM compartilha dados com prestadores essenciais de infraestrutura e operação, incluindo Supabase, Vercel, Stripe, Groq e NVIDIA. Esses serviços podem processar dados fora do Brasil, conforme sua arquitetura e região de infraestrutura. Quando isso ocorre, o tratamento continua vinculado às finalidades desta política e às salvaguardas contratuais e técnicas aplicáveis.',
   },
   {
     id: 'retencao',
@@ -72,7 +72,7 @@ export default function PrivacidadePage() {
           <p className="mt-4 max-w-2xl text-lg text-text-secondary">
             Esta política descreve como o Foco no ENEM trata dados pessoais no estado atual da plataforma.
           </p>
-          <p className="mt-4 text-sm text-text-muted">Última atualização: 21 de abril de 2026</p>
+          <p className="mt-4 text-sm text-text-muted">Última atualização: 23 de abril de 2026</p>
         </div>
       </section>
 
