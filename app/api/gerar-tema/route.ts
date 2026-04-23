@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import type { GroqProvider } from '@/lib/ai/groq';
-import { withGroqRetry } from '@/lib/ai/retry';
 import { extractJson } from '@/lib/ai/parse-json';
 import { createAdminClient } from '@/lib/db/server';
+import { getUserAiRuntime, type UserAiRuntime } from '@/lib/server/ai/provider';
 import { getOperatingHoursInfo } from '@/lib/server/operating-hours';
 import { cleanupCachedThemesIfDue } from '@/lib/server/local-maintenance';
 import { checkRateLimit } from '@/lib/server/rate-limit';
@@ -66,14 +65,15 @@ function dedupeThemes(themes: ThemeData[]): ThemeData[] {
 }
 
 async function requestThemesBatch(
-  provider: GroqProvider,
+  runtime: UserAiRuntime,
   excludedThemes: string[]
-): Promise<ThemeData[]> {
+): Promise<{ themes: ThemeData[]; provider: string; tier: 'standard' | 'max' }> {
   const exclusionBlock = excludedThemes.length > 0
     ? `Evite gerar temas iguais ou muito próximos destes exemplos já usados:\n${excludedThemes.map((theme) => `- ${theme}`).join('\n')}`
     : 'Gere temas realmente variados entre si.';
 
-  const response = await provider.client.chat.completions.create({
+  const response = await runtime.complete({
+    label: 'generateThemeBatch',
     messages: [
       {
         role: 'user',
@@ -102,16 +102,13 @@ async function requestThemesBatch(
         `,
       },
     ],
-    model: provider.model,
     temperature: 0.9,
-    max_completion_tokens: 3000,
-    top_p: 1,
-    stream: false,
-    response_format: { type: 'json_object' },
+    maxTokens: 3000,
+    topP: 1,
+    expectJson: true,
   });
 
-  const content = response.choices?.[0]?.message?.content ?? '';
-  const parsed = extractJson<{ themes?: Partial<ThemeData>[]; data?: Partial<ThemeData>[] }>(content);
+  const parsed = extractJson<{ themes?: Partial<ThemeData>[]; data?: Partial<ThemeData>[] }>(response.content);
   const rawThemes = Array.isArray(parsed.themes)
     ? parsed.themes
     : Array.isArray(parsed.data)
@@ -128,7 +125,11 @@ async function requestThemesBatch(
     throw new Error('A IA não retornou temas válidos.');
   }
 
-  return normalized;
+  return {
+    themes: normalized,
+    provider: response.provider,
+    tier: response.tier,
+  };
 }
 
 function pickThemeCandidate(
@@ -211,6 +212,46 @@ export async function GET(request: NextRequest) {
 
   const recentThemes = await getRecentUserEssayThemes(auth.supabase, auth.userId, 10).catch(() => []);
   const recentThemeKeys = new Set(recentThemes.map((theme) => normalizeThemeKey(theme)));
+  const aiRuntime = await getUserAiRuntime(auth.userId);
+
+  if (aiRuntime.subscription.hasMaxAccess) {
+    try {
+      const generated = await requestThemesBatch(aiRuntime, recentThemes.slice(0, 25));
+      const selectedTheme =
+        generated.themes[Math.floor(Math.random() * generated.themes.length)] ?? generated.themes[0];
+
+      await trackEvent({
+        eventType: 'theme_generated',
+        metadata: {
+          tema: selectedTheme.tema,
+          generated_batch_size: generated.themes.length,
+          provider: generated.provider,
+          subscription_plan: aiRuntime.subscription.planCode,
+          ai_tier: generated.tier,
+        },
+        userIp: ip,
+        userAgent,
+        userId: auth.userId,
+      });
+
+      return NextResponse.json({
+        tema: selectedTheme.tema,
+        textoApoio1: selectedTheme.textoApoio1,
+        textoApoio2: selectedTheme.textoApoio2,
+        cached: false,
+        plan: aiRuntime.subscription.planCode,
+      });
+    } catch (error) {
+      console.error('Erro ao gerar tema Max com NVIDIA:', error);
+      return NextResponse.json(
+        {
+          error: 'Erro ao gerar tema',
+          message: 'Não foi possível gerar um tema Max agora. Tente novamente em instantes.',
+        },
+        { status: 503 }
+      );
+    }
+  }
 
   let pool = await getCachedThemePool(auth.supabase, { daysBack: 90, limit: 60 }).catch(() => []);
   let candidate = pickThemeCandidate(pool, recentThemeKeys);
@@ -235,11 +276,9 @@ export async function GET(request: NextRequest) {
       .slice(0, 20);
 
     try {
-      const { result, provider } = await withGroqRetry('generateThemeBatch', (currentProvider) =>
-        requestThemesBatch(currentProvider, [...recentThemes, ...excludedThemes].slice(0, 25))
-      );
-      generatedThemes = result;
-      providerUsed = provider;
+      const generated = await requestThemesBatch(aiRuntime, [...recentThemes, ...excludedThemes].slice(0, 25));
+      generatedThemes = generated.themes;
+      providerUsed = generated.provider;
       await createCachedThemes(adminClient, generatedThemes);
       pool = await getCachedThemePool(auth.supabase, { daysBack: 90, limit: 80 }).catch(() => pool);
       candidate = pickThemeCandidate(pool, recentThemeKeys);
@@ -280,6 +319,7 @@ export async function GET(request: NextRequest) {
       generated_batch_size: generatedThemes.length,
       pool_size: pool.length,
       provider: providerUsed ?? undefined,
+      subscription_plan: aiRuntime.subscription.planCode,
     },
     userIp: ip,
     userAgent,
@@ -291,5 +331,6 @@ export async function GET(request: NextRequest) {
     textoApoio1: candidate.texto_apoio1,
     textoApoio2: candidate.texto_apoio2,
     cached: generatedThemes.length === 0,
+    plan: aiRuntime.subscription.planCode,
   });
 }

@@ -2,8 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth/context';
+import {
+  MAX_PLAN_NAME,
+  MAX_PLAN_PRICE_DISPLAY,
+  type UserSubscriptionSummary,
+} from '@/lib/constants/subscriptions';
 import type { UserStatistics } from '@/lib/auth/types';
 import {
   RadarChart,
@@ -33,6 +38,7 @@ interface EssaySummary {
 interface ContaData {
   statistics: UserStatistics | null;
   essays: EssaySummary[];
+  subscription: UserSubscriptionSummary;
 }
 
 type TabKey = 'overview' | 'essays' | 'questions';
@@ -158,6 +164,61 @@ function formatDate(dateStr: string): string {
     month: 'short',
     year: 'numeric',
   });
+}
+
+function formatDateTime(dateStr: string | null): string | null {
+  if (!dateStr) return null;
+
+  return new Date(dateStr).toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+function getSubscriptionStatusLabel(subscription: UserSubscriptionSummary) {
+  switch (subscription.status) {
+    case 'active':
+      return 'Ativa';
+    case 'trialing':
+      return 'Em teste';
+    case 'checkout_pending':
+      return 'Checkout pendente';
+    case 'past_due':
+      return 'Pagamento pendente';
+    case 'canceled':
+      return 'Cancelada';
+    case 'incomplete':
+      return 'Incompleta';
+    case 'incomplete_expired':
+      return 'Expirada';
+    case 'paused':
+      return 'Pausada';
+    case 'unpaid':
+      return 'Inadimplente';
+    default:
+      return 'Gratuito';
+  }
+}
+
+function getSubscriptionStatusTone(subscription: UserSubscriptionSummary) {
+  if (subscription.hasMaxAccess) {
+    return 'var(--success)';
+  }
+
+  if (subscription.status === 'checkout_pending') {
+    return 'var(--warning)';
+  }
+
+  if (subscription.status === 'past_due' || subscription.status === 'unpaid') {
+    return 'var(--warning)';
+  }
+
+  if (subscription.status === 'canceled' || subscription.status === 'incomplete_expired') {
+    return 'var(--danger)';
+  }
+
+  return 'var(--text-muted)';
 }
 
 function calcLevel(stats: UserStatistics | null): { level: number; xp: number; nextXp: number } {
@@ -315,6 +376,104 @@ function EmptyState({ title, description, href, cta }: { title: string; descript
       >
         {cta}
       </Link>
+    </div>
+  );
+}
+
+function SubscriptionCard({
+  subscription,
+  loading,
+  message,
+  error,
+  onSubscribe,
+  onManage,
+}: {
+  subscription: UserSubscriptionSummary;
+  loading: 'checkout' | 'portal' | null;
+  message: string;
+  error: string;
+  onSubscribe: () => Promise<void>;
+  onManage: () => Promise<void>;
+}) {
+  const statusTone = getSubscriptionStatusTone(subscription);
+  const nextRenewal = formatDateTime(subscription.renewsAt);
+  const periodEnd = formatDateTime(subscription.currentPeriodEnd);
+
+  return (
+    <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--card-bg)] p-6 sm:p-7">
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="inline-flex items-center rounded-full border border-[var(--primary)]/20 bg-[var(--primary)]/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[var(--primary)]">
+              Plano {subscription.planCode === 'max' ? MAX_PLAN_NAME : 'Gratuito'}
+            </span>
+            <span
+              className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium"
+              style={{
+                color: statusTone,
+                backgroundColor: `color-mix(in srgb, ${statusTone} 12%, transparent)`,
+              }}
+            >
+              {getSubscriptionStatusLabel(subscription)}
+            </span>
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-[var(--text-primary)]">{MAX_PLAN_NAME}</h2>
+            <p className="mt-1 text-sm text-[var(--text-muted)]">
+              Correção de redação, geração de temas e simulados com provider NVIDIA no backend.
+            </p>
+          </div>
+          <div className="flex items-end gap-2">
+            <span className="text-3xl font-bold tracking-tight text-[var(--text-primary)]">{MAX_PLAN_PRICE_DISPLAY}</span>
+          </div>
+          <div className="grid gap-3 text-sm text-[var(--text-secondary)] sm:grid-cols-2">
+            <p>Plano atual: <strong className="text-[var(--text-primary)]">{subscription.planCode === 'max' ? MAX_PLAN_NAME : 'Gratuito'}</strong></p>
+            <p>Acesso Max: <strong className="text-[var(--text-primary)]">{subscription.hasMaxAccess ? 'Liberado' : 'Não liberado'}</strong></p>
+            <p>Próxima renovação: <strong className="text-[var(--text-primary)]">{nextRenewal ?? 'Não agendada'}</strong></p>
+            <p>Fim do período atual: <strong className="text-[var(--text-primary)]">{periodEnd ?? 'Não disponível'}</strong></p>
+          </div>
+          {subscription.cancelAtPeriodEnd && periodEnd && (
+            <p className="rounded-xl border border-[var(--warning)]/30 bg-[var(--warning)]/10 px-4 py-3 text-sm text-[var(--warning)]">
+              O cancelamento está agendado para o fim do período atual em {periodEnd}.
+            </p>
+          )}
+          {message && (
+            <p className="rounded-xl border border-[var(--success)]/20 bg-[var(--success)]/10 px-4 py-3 text-sm text-[var(--success)]">
+              {message}
+            </p>
+          )}
+          {error && (
+            <p className="rounded-xl border border-[var(--danger)]/20 bg-[var(--danger-light)] px-4 py-3 text-sm text-[var(--danger)]">
+              {error}
+            </p>
+          )}
+        </div>
+
+        <div className="flex w-full flex-col gap-3 lg:w-64">
+          <button
+            type="button"
+            onClick={() => void onSubscribe()}
+            disabled={loading !== null || subscription.hasMaxAccess}
+            className="inline-flex items-center justify-center rounded-xl bg-[var(--primary)] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[var(--primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loading === 'checkout'
+              ? 'Abrindo checkout...'
+              : subscription.hasMaxAccess
+                ? 'Assinatura ativa'
+                : subscription.status === 'checkout_pending'
+                  ? 'Continuar checkout'
+                  : 'Assinar Max'}
+          </button>
+          <button
+            type="button"
+            onClick={() => void onManage()}
+            disabled={loading !== null || !subscription.stripeCustomerId}
+            className="inline-flex items-center justify-center rounded-xl border border-[var(--border-color)] px-4 py-3 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loading === 'portal' ? 'Abrindo portal...' : 'Gerenciar assinatura'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -603,6 +762,7 @@ function QuestionsTab({ stats }: { stats: UserStatistics | null }) {
 
 export default function ContaPageClient() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, profile, initialized, loading: authLoading, signOut } = useAuth();
 
   const [data, setData] = useState<ContaData | null>(null);
@@ -614,6 +774,9 @@ export default function ContaPageClient() {
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+  const [subscriptionAction, setSubscriptionAction] = useState<'checkout' | 'portal' | null>(null);
+  const [subscriptionError, setSubscriptionError] = useState('');
+  const [subscriptionMessage, setSubscriptionMessage] = useState('');
 
   // Auth guard
   useEffect(() => {
@@ -642,6 +805,25 @@ export default function ContaPageClient() {
     if (initialized && user) fetchData();
   }, [initialized, user, fetchData]);
 
+  useEffect(() => {
+    const subscriptionState = searchParams.get('subscription');
+    if (subscriptionState === 'success') {
+      setSubscriptionMessage('Checkout concluído. Estamos sincronizando sua assinatura Max.');
+      setSubscriptionError('');
+      void fetchData();
+      return;
+    }
+
+    if (subscriptionState === 'canceled') {
+      setSubscriptionMessage('');
+      setSubscriptionError('Assinatura cancelada antes da conclusão. Você pode tentar novamente quando quiser.');
+      return;
+    }
+
+    setSubscriptionMessage('');
+    setSubscriptionError('');
+  }, [fetchData, searchParams]);
+
   // Recalculate stats
   async function handleRecalculate() {
     setRecalculating(true);
@@ -653,6 +835,60 @@ export default function ContaPageClient() {
       // silent — data will just not refresh
     } finally {
       setRecalculating(false);
+    }
+  }
+
+  async function handleSubscribe() {
+    setSubscriptionAction('checkout');
+    setSubscriptionError('');
+    setSubscriptionMessage('');
+
+    try {
+      const response = await fetch('/api/assinatura/checkout', { method: 'POST' });
+      const payload = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(payload?.error || 'Não foi possível iniciar a assinatura.');
+      }
+
+      if (!payload?.url) {
+        throw new Error('Stripe não retornou uma URL de checkout.');
+      }
+
+      window.location.href = payload.url;
+    } catch (error) {
+      setSubscriptionError(
+        error instanceof Error ? error.message : 'Não foi possível iniciar a assinatura.'
+      );
+    } finally {
+      setSubscriptionAction(null);
+    }
+  }
+
+  async function handleManageSubscription() {
+    setSubscriptionAction('portal');
+    setSubscriptionError('');
+    setSubscriptionMessage('');
+
+    try {
+      const response = await fetch('/api/assinatura/portal', { method: 'POST' });
+      const payload = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(payload?.error || 'Não foi possível abrir o portal da assinatura.');
+      }
+
+      if (!payload?.url) {
+        throw new Error('Stripe não retornou uma URL de portal.');
+      }
+
+      window.location.href = payload.url;
+    } catch (error) {
+      setSubscriptionError(
+        error instanceof Error ? error.message : 'Não foi possível abrir o portal da assinatura.'
+      );
+    } finally {
+      setSubscriptionAction(null);
     }
   }
 
@@ -671,6 +907,21 @@ export default function ContaPageClient() {
 
   const stats = data?.statistics ?? null;
   const essays = data?.essays ?? [];
+  const subscription = data?.subscription ?? {
+    planCode: 'free',
+    planName: 'Gratuito',
+    provider: null,
+    status: 'free',
+    hasMaxAccess: false,
+    cancelAtPeriodEnd: false,
+    currentPeriodEnd: null,
+    renewsAt: null,
+    canceledAt: null,
+    latestCheckoutSessionId: null,
+    stripeCustomerId: null,
+    stripeSubscriptionId: null,
+    stripePriceId: null,
+  };
   const { level, xp, nextXp } = calcLevel(stats);
   const displayName = profile?.nome_completo || user.email?.split('@')[0] || 'Usuário';
   const authProviders = Array.isArray(user.app_metadata?.providers)
@@ -777,6 +1028,15 @@ export default function ContaPageClient() {
           </div>
         </div>
       </div>
+
+      <SubscriptionCard
+        subscription={subscription}
+        loading={subscriptionAction}
+        message={subscriptionMessage}
+        error={subscriptionError}
+        onSubscribe={handleSubscribe}
+        onManage={handleManageSubscription}
+      />
 
       {/* ---- Stats Overview ---- */}
       {dataLoading ? (

@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import type { Question, QuizResult } from '@/types';
-import type { GroqProvider } from '@/lib/ai/groq';
-import { buildGroqProviders, isRateLimitError } from '@/lib/ai/groq';
 import { extractJson } from '@/lib/ai/parse-json';
+import { getUserAiRuntime, type UserAiRuntime } from '@/lib/server/ai/provider';
 import { getOperatingHoursInfo } from '@/lib/server/operating-hours';
 import { checkRateLimit } from '@/lib/server/rate-limit';
 import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
@@ -158,13 +157,13 @@ function normalizeGeneratedQuestion(
 }
 
 async function requestQuestionsForDiscipline(
-  provider: GroqProvider,
+  runtime: UserAiRuntime,
   input: {
     discipline: Question['discipline'];
     count: number;
     excludedTexts: string[];
   }
-): Promise<GeneratedQuestionCandidate[]> {
+): Promise<{ questions: GeneratedQuestionCandidate[]; provider: string }> {
   const excludedBlock = input.excludedTexts.length > 0
     ? `Evite perguntas iguais ou muito parecidas com estes enunciados já usados:\n${input.excludedTexts
         .slice(0, 12)
@@ -205,18 +204,16 @@ async function requestQuestionsForDiscipline(
     }
   `;
 
-  const response = await provider.client.chat.completions.create({
+  const response = await runtime.complete({
+    label: `generateQuestions:${input.discipline}`,
     messages: [{ role: 'user', content: prompt }],
-    model: provider.model,
     temperature: 0.75,
-    max_completion_tokens: 4096,
-    top_p: 1,
-    stream: false,
-    response_format: { type: 'json_object' },
+    maxTokens: 4096,
+    topP: 1,
+    expectJson: true,
   });
 
-  const aiContent = response.choices?.[0]?.message?.content ?? '';
-  const parsed = extractJson<Record<string, unknown>>(aiContent);
+  const parsed = extractJson<Record<string, unknown>>(response.content);
   const rawQuestions = Array.isArray(parsed.questions)
     ? parsed.questions
     : Array.isArray(parsed.data)
@@ -233,10 +230,14 @@ async function requestQuestionsForDiscipline(
     throw new Error('A IA não retornou questões válidas.');
   }
 
-  return normalized;
+  return {
+    questions: normalized,
+    provider: response.provider,
+  };
 }
 
 async function generateFreshQuestionsForDiscipline(
+  runtime: UserAiRuntime,
   discipline: Question['discipline'],
   count: number,
   excludedSignatures: Set<string>,
@@ -250,54 +251,43 @@ async function generateFreshQuestionsForDiscipline(
     return { questions: [] };
   }
 
-  const providers = buildGroqProviders();
   let lastError = 'Falha ao gerar questões';
 
-  for (let providerIndex = 0; providerIndex < providers.length; providerIndex += 1) {
-    const provider = providers[providerIndex];
-    let attempts = 0;
+  for (let attempts = 1; attempts <= MAX_ATTEMPTS_PER_DISCIPLINE; attempts += 1) {
+    try {
+      const generated = await requestQuestionsForDiscipline(runtime, {
+        discipline,
+        count,
+        excludedTexts,
+      });
 
-    while (attempts < MAX_ATTEMPTS_PER_DISCIPLINE) {
-      attempts += 1;
-      try {
-        const generated = await requestQuestionsForDiscipline(provider, {
-          discipline,
-          count,
-          excludedTexts,
-        });
+      const uniqueQuestions: GeneratedQuestionCandidate[] = [];
+      const seenSignatures = new Set(excludedSignatures);
 
-        const uniqueQuestions: GeneratedQuestionCandidate[] = [];
-        const seenSignatures = new Set(excludedSignatures);
-
-        for (const question of generated) {
-          const signature = getQuestionSignature(question);
-          if (seenSignatures.has(signature)) continue;
-          seenSignatures.add(signature);
-          uniqueQuestions.push(question);
-        }
-
-        if (uniqueQuestions.length >= count) {
-          return {
-            questions: uniqueQuestions.slice(0, count),
-            provider: provider.name,
-          };
-        }
-
-        lastError = `(${provider.name}) Recebemos ${uniqueQuestions.length} questão(ões) válidas`;
-      } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : typeof error === 'string'
-              ? error
-              : 'Falha desconhecida ao consultar o modelo';
-        lastError = `(${provider.name}) ${message}`;
-        console.error(`Erro ao gerar questões de ${discipline} com ${provider.name} (tentativa ${attempts}):`, error);
-
-        if (isRateLimitError(error) && providerIndex < providers.length - 1) {
-          break;
-        }
+      for (const question of generated.questions) {
+        const signature = getQuestionSignature(question);
+        if (seenSignatures.has(signature)) continue;
+        seenSignatures.add(signature);
+        uniqueQuestions.push(question);
       }
+
+      if (uniqueQuestions.length >= count) {
+        return {
+          questions: uniqueQuestions.slice(0, count),
+          provider: generated.provider,
+        };
+      }
+
+      lastError = `(${generated.provider}) Recebemos ${uniqueQuestions.length} questão(ões) válidas`;
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : typeof error === 'string'
+            ? error
+            : 'Falha desconhecida ao consultar o modelo';
+      lastError = message;
+      console.error(`Erro ao gerar questões de ${discipline} (tentativa ${attempts}):`, error);
     }
   }
 
@@ -358,8 +348,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Pelo menos uma disciplina deve ser selecionada' }, { status: 400 });
     }
 
+    const aiRuntime = await getUserAiRuntime(auth.userId);
+    const emptyStoredQuestions = disciplines.reduce<Record<Question['discipline'], Question[]>>(
+      (accumulator, discipline) => {
+        accumulator[discipline] = [];
+        return accumulator;
+      },
+      {} as Record<Question['discipline'], Question[]>
+    );
     const [storedByDiscipline, recentExposure] = await Promise.all([
-      getStoredQuestionsForDisciplines(auth.supabase, disciplines, { limit: 400 }),
+      aiRuntime.subscription.hasMaxAccess
+        ? Promise.resolve(emptyStoredQuestions)
+        : getStoredQuestionsForDisciplines(auth.supabase, disciplines, { limit: 400 }),
       getRecentUserQuestionExposure(auth.supabase, auth.userId, 10),
     ]);
 
@@ -376,15 +376,17 @@ export async function GET(request: NextRequest) {
       const disciplinePool = shuffleArray(storedByDiscipline[discipline] ?? []);
       const disciplineQuestions: Question[] = [];
 
-      for (const question of disciplinePool) {
-        if (disciplineQuestions.length >= REUSED_QUESTIONS_PER_DISCIPLINE) break;
+      if (!aiRuntime.subscription.hasMaxAccess) {
+        for (const question of disciplinePool) {
+          if (disciplineQuestions.length >= REUSED_QUESTIONS_PER_DISCIPLINE) break;
 
-        const signature = getQuestionSignature(question);
-        if (usedIds.has(question.id) || usedSignatures.has(signature)) continue;
+          const signature = getQuestionSignature(question);
+          if (usedIds.has(question.id) || usedSignatures.has(signature)) continue;
 
-        disciplineQuestions.push(question);
-        usedIds.add(question.id);
-        usedSignatures.add(signature);
+          disciplineQuestions.push(question);
+          usedIds.add(question.id);
+          usedSignatures.add(signature);
+        }
       }
 
       const requiredFreshQuestions = QUESTIONS_PER_DISCIPLINE - disciplineQuestions.length;
@@ -399,6 +401,7 @@ export async function GET(request: NextRequest) {
         ).slice(0, 16);
 
         const generated = await generateFreshQuestionsForDiscipline(
+          aiRuntime,
           discipline,
           requiredFreshQuestions,
           usedSignatures,
@@ -410,7 +413,9 @@ export async function GET(request: NextRequest) {
         }
 
         if (generated.questions.length > 0) {
-          const canonicalGenerated = await saveGeneratedQuestions(adminClient, generated.questions);
+          const canonicalGenerated = aiRuntime.subscription.hasMaxAccess
+            ? generated.questions
+            : await saveGeneratedQuestions(adminClient, generated.questions);
 
           for (const question of canonicalGenerated) {
             const signature = getQuestionSignature(question);
@@ -469,6 +474,7 @@ export async function GET(request: NextRequest) {
       })),
       providersUsed,
       reuseSummary,
+      plan: aiRuntime.subscription.planCode,
     });
   } catch (error) {
     console.error('Erro ao gerar questões:', error);

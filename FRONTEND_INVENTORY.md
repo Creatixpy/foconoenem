@@ -15,8 +15,8 @@ The current application is a full-stack Next.js 16 project with:
 - ENEM essay flow with AI theme generation, correction and OCR support
 - quiz flow with generated questions and result persistence
 - approved-news feed, admin moderation/import and AI summaries based on stored articles
-- account dashboard, profile editing and account deletion with password confirmation
-- Stripe donation checkout and webhook handling
+- account dashboard, profile editing, Max subscription management and account deletion with password confirmation
+- Stripe donation checkout, Max subscription billing and shared webhook handling
 
 The active runtime lives in:
 
@@ -41,7 +41,7 @@ The repository does **not** currently ship local Supabase Edge Function code. `s
 | `/noticias/[slug]` | `app/noticias/[slug]/page.tsx` | Approved news detail |
 | `/noticias/pesquisa` | `app/noticias/pesquisa/page.tsx` | News search page |
 | `/noticias/admin` | `app/noticias/admin/page.tsx` | News admin panel |
-| `/conta` | `app/conta/page.tsx`, `app/conta/ContaPageClient.tsx` | Account dashboard |
+| `/conta` | `app/conta/page.tsx`, `app/conta/ContaPageClient.tsx` | Account dashboard and Max subscription management |
 | `/conta/editar` | `app/conta/editar/page.tsx`, `app/conta/editar/ContaEditarPageClient.tsx` | Profile editing |
 | `/resultados/[id]` | `app/resultados/[id]/page.tsx`, `app/resultados/[id]/ResultadosPageClient.tsx` | Essay result view |
 | `/doacao` | `app/doacao/page.tsx` | Donation page |
@@ -90,9 +90,11 @@ The repository does **not** currently ship local Supabase Edge Function code. `s
 | `/api/conta/excluir` | `POST` | Delete the authenticated account after password confirmation |
 | `/api/conta/recalcular` | `POST` | Recalculate aggregated user statistics |
 | `/api/corrigir` | `GET`, `POST` | Fetch stored essay by query-string ID / submit essay for correction |
+| `/api/assinatura/checkout` | `POST` | Start Stripe Subscription Checkout for the Max plan |
+| `/api/assinatura/portal` | `POST` | Open Stripe Billing Portal for the authenticated user |
 | `/api/destaques/remover` | `POST` | Remove highlight status from selected news |
 | `/api/doacao/checkout` | `POST` | Create Stripe Checkout session and persist `donation_checkouts` |
-| `/api/doacao/webhook` | `POST` | Process Stripe webhook with idempotent persistence in `stripe_webhook_events` |
+| `/api/doacao/webhook` | `POST` | Process donation and subscription Stripe webhooks with idempotent persistence |
 | `/api/gerar-tema` | `GET` | Serve cached essay theme or generate a new one |
 | `/api/noticias` | `GET` | List approved news and refresh stale highlights on demand when requested |
 | `/api/noticias/[slug]` | `GET` | Fetch a single approved article |
@@ -220,13 +222,22 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | `lib/server/auth-request.ts` | Resolve authenticated user from cookies/token |
 | `lib/server/brazil-time.ts` | Brazil timezone helpers based on local server time |
 | `lib/server/conta.ts` | Account dashboard data assembly and stat recalculation |
+| `lib/server/donations.ts` | Donation webhook persistence and checkout-status synchronization |
 | `lib/server/local-maintenance.ts` | Throttled local cleanup of `rate_limits`, `analytics_events` and `cached_themes` |
 | `lib/server/news-highlights.ts` | On-demand highlight refresh/status logic backed by `configuracoes` |
 | `lib/server/noticias.ts` | Read-only approved news access for public routes |
 | `lib/server/operating-hours.ts` | Business-hours evaluation |
 | `lib/server/page-auth.ts` | Server-side page guards for authenticated routes |
 | `lib/server/rate-limit.ts` | Server-side rate limiting |
+| `lib/server/subscriptions.ts` | Max subscription summary, Stripe sync, customer provisioning and webhook helpers |
 | `lib/server/stripe.ts` | Shared Stripe server client helpers |
+
+### `lib/server/ai/`
+
+| File | Purpose |
+| --- | --- |
+| `lib/server/ai/nvidia.ts` | NVIDIA OpenAI-compatible client for the Max plan |
+| `lib/server/ai/provider.ts` | Server-side AI provider resolver by authenticated user's subscription state |
 
 ### `lib/supabase/`
 
@@ -257,17 +268,19 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | `NEXT_PUBLIC_SITE_URL` | root metadata, redirect safety | Recommended |
 | `SITE_URL` | sitemap generation | Build-time |
 | `SUPABASE_SERVICE_ROLE_KEY` | admin writes, analytics, imports, maintenance, highlights and donation persistence | Required for privileged server flows |
-| `GROQ_API_KEY` | essay, themes, quiz generation, AI news summary | Primary IA key |
+| `GROQ_API_KEY` | essay, themes, quiz generation, AI news summary | Standard IA key |
 | `GROQ_MODEL` | Groq integration | Optional override |
 | `GROQ_FALLBACK_API_KEY` | Groq integration | Optional fallback provider |
 | `GROQ_FALLBACK_MODEL` | Groq integration | Optional fallback model |
 | `GROQ_MAX_ATTEMPTS` | Groq retry logic | Optional |
+| `NVIDIA_API_KEY` | Max essay/theme/quiz generation | Required when active users should use the Max plan provider |
 | `GEMINI_API_KEY` | `/api/ocr` | Optional OCR feature |
 | `NEWSAPI_API_KEY` | news import | Preferred NewsAPI variable |
 | `NEWSAPI_KEY` | news import | Accepted alias |
 | `ADMIN_ALLOWED_EMAILS` | admin auth | Comma-separated allowlist |
-| `STRIPE_SECRET_KEY` | donation checkout and webhook | Required for donation backend |
-| `STRIPE_WEBHOOK_SECRET` | donation webhook | Required if webhook is enabled |
+| `STRIPE_SECRET_KEY` | donation checkout, subscription checkout, portal and webhook sync | Required for Stripe-backed billing |
+| `STRIPE_WEBHOOK_SECRET` | donation and subscription webhook validation | Required if webhook is enabled |
+| `STRIPE_MAX_PRICE_ID` | Max subscription checkout | Required recurring monthly price ID for the Max plan |
 | `NODE_ENV` | root layout telemetry toggle | Standard runtime variable |
 
 The codebase does **not** currently read `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`.
@@ -336,4 +349,5 @@ As of the latest audit documented in `supabase/functions/README.md`, remote Edge
 - `app/auth/login/LoginPageClient.tsx` and `app/auth/register/RegisterPageClient.tsx` are deprecated placeholders.
 - The current runtime path is Next.js route handlers under `app/api`; Supabase Edge Functions are legacy only.
 - There is no external cron scheduler in the repo anymore. Maintenance and highlights now run locally, on demand, with timestamps persisted in `configuracoes`.
+- The Max plan is monthly-only at R$ 10,00 and is enforced server-side through `subscriptions` plus webhook-driven Stripe synchronization.
 - The repository does not contain an active community/forum subsystem anymore.
