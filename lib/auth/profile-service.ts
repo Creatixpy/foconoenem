@@ -5,31 +5,26 @@
  * User profile CRUD operations
  */
 
-import { createClient } from '@/lib/supabase/client';
-import { withTimeout } from '@/lib/db/client';
 import { sanitizeInput } from './validation';
 import type { UserProfile } from './types';
 
-const supabase = createClient();
+async function parseProfileResponse(response: Response): Promise<UserProfile | null> {
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(payload?.error ?? 'Erro ao sincronizar perfil.');
+  }
+
+  return (payload?.profile ?? null) as UserProfile | null;
+}
 
 /**
  * Get user profile
  */
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
   try {
-    const data = await withTimeout(async (signal) => {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .abortSignal(signal)
-        .single();
-
-      if (error && error.code !== 'PGRST116') throw error;
-      return data as UserProfile | null;
-    });
-
-    return data;
+    void userId;
+    const response = await fetch('/api/perfil', { headers: { Accept: 'application/json' } });
+    return parseProfileResponse(response);
   } catch (error) {
     console.error('Erro ao buscar perfil:', error);
     return null;
@@ -45,37 +40,17 @@ export async function createUserProfile(
   objetivo?: string | null
 ): Promise<UserProfile | null> {
   try {
-    // Create profile
-    const profile = await withTimeout(async (signal) => {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .upsert(
-          {
-            user_id: userId,
-            nome_completo: nomeCompleto ? sanitizeInput(nomeCompleto) : null,
-            objetivo: objetivo ? sanitizeInput(objetivo) : null,
-          },
-          { onConflict: 'user_id' }
-        )
-        .select()
-        .abortSignal(signal)
-        .single();
-
-      if (error) throw error;
-      return data as UserProfile;
+    void userId;
+    const response = await fetch('/api/perfil', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({
+        nome_completo: nomeCompleto ? sanitizeInput(nomeCompleto) : null,
+        objetivo: objetivo ? sanitizeInput(objetivo) : null,
+      }),
     });
 
-    // Create statistics record
-    await withTimeout(async (signal) => {
-      const { error } = await supabase
-        .from('user_statistics')
-        .upsert({ user_id: userId }, { onConflict: 'user_id' })
-        .abortSignal(signal);
-
-      if (error) throw error;
-    });
-
-    return profile;
+    return parseProfileResponse(response);
   } catch (error) {
     console.error('Erro ao criar perfil:', error);
     throw error;
@@ -102,20 +77,14 @@ export async function updateUserProfile(
       sanitizedUpdates.bio = sanitizeInput(updates.bio);
     }
 
-    const data = await withTimeout(async (signal) => {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .update(sanitizedUpdates)
-        .eq('user_id', userId)
-        .select()
-        .abortSignal(signal)
-        .single();
-
-      if (error) throw error;
-      return data as UserProfile;
+    void userId;
+    const response = await fetch('/api/perfil', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(sanitizedUpdates),
     });
 
-    return data;
+    return parseProfileResponse(response);
   } catch (error) {
     console.error('Erro ao atualizar perfil:', error);
     throw error;

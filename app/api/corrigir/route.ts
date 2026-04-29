@@ -17,7 +17,6 @@ import {
   createCachedThemes,
   createEssayResult,
   findCachedThemeByTema,
-  getEssayById,
   type NormalizedEssayResult,
 } from '@/lib/db/repositories/essays';
 
@@ -416,44 +415,6 @@ async function resolveThemeContext(
   };
 }
 
-export async function GET(request: NextRequest) {
-  try {
-    const auth = await resolveRequestUserFromCookies();
-    if ('error' in auth) {
-      return auth.error;
-    }
-
-    const supabase = auth.supabase as SupabaseClient<Database>;
-    const userId = auth.userId;
-    const id = request.nextUrl.searchParams.get('id');
-
-    if (!id) {
-      return NextResponse.json({ error: 'ID não fornecido' }, { status: 400 });
-    }
-
-    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
-       return NextResponse.json({ error: 'Formato de ID inválido' }, { status: 400 });
-    }
-
-    const result = await getEssayById(supabase, id, userId);
-    if (!result) {
-      return NextResponse.json({ error: 'Resultado não encontrado' }, { status: 404 });
-    }
-
-    await trackEvent({
-      eventType: 'essay_viewed',
-      metadata: { essay_id: id },
-      userIp: request.headers.get('x-forwarded-for') ?? undefined,
-      userAgent: request.headers.get('user-agent') ?? undefined,
-      userId,
-    });
-
-    return NextResponse.json({ result });
-  } catch (error) {
-    return handleApiError(error);
-  }
-}
-
 export async function POST(request: NextRequest) {
   try {
     const originError = ensureTrustedOrigin(request);
@@ -476,7 +437,6 @@ export async function POST(request: NextRequest) {
 
     await cleanupCachedThemesIfDue();
 
-    const supabase = auth.supabase as SupabaseClient<Database>;
     const userId = auth.userId;
     const forwardedFor = request.headers.get('x-forwarded-for');
     const ip = forwardedFor?.split(',')[0].trim() ?? request.headers.get('x-real-ip') ?? 'unknown';
@@ -528,7 +488,7 @@ export async function POST(request: NextRequest) {
 
     let themeContext: ThemeContext;
     try {
-      themeContext = await resolveThemeContext(submission, aiRuntime, supabase, adminClient);
+      themeContext = await resolveThemeContext(submission, aiRuntime, adminClient, adminClient);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Não foi possível preparar o tema da redação.';
       if (message.includes('tema válido')) {
@@ -617,7 +577,7 @@ export async function POST(request: NextRequest) {
     };
 
     try {
-      await createEssayResult(supabase, result, userId);
+      await createEssayResult(adminClient, result, userId);
     } catch (error) {
       console.error('Erro ao salvar correção de redação:', error);
       return NextResponse.json(
@@ -626,7 +586,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { error: statsError } = await supabase.rpc('recalculate_user_statistics', {
+    const { error: statsError } = await adminClient.rpc('recalculate_user_statistics', {
       target_user_id: userId,
     });
     if (statsError) {

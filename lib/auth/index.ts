@@ -17,9 +17,6 @@ export {
 export type {
   UserProfile,
   UserStatistics,
-  UserGoal,
-  Achievement,
-  UserAchievement,
   AuthState,
   SignUpData,
   SignInData,
@@ -73,22 +70,3 @@ export {
   createUserProfile,
   updateUserProfile,
 } from './profile-service';
-
-// Statistics Service
-export {
-  getUserStatistics,
-  recalculateUserStatistics,
-} from './stats-service';
-
-// Goals Service
-export {
-  getUserGoals,
-  createUserGoal,
-  updateUserGoal,
-  deleteUserGoal,
-} from './goals-service';
-
-// Achievements Service
-export {
-  getUserAchievements,
-} from './achievements-service';

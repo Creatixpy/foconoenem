@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 - `app/`: App Router routes, layouts, public pages, authenticated areas, and Route Handlers under `app/api`.
-- `lib/auth/`: authentication flows, profile, goals, statistics, and validation helpers.
+- `lib/auth/`: authentication flows, profile client wrapper, session security, and validation helpers.
 - `lib/ai/`: Groq and Gemini integrations for the standard runtime.
 - `lib/server/ai/`: server-side provider selection and NVIDIA integration for the Max plan.
 - `lib/db/`: Supabase clients, repositories, and data transformers.
@@ -65,4 +65,4 @@
 - The Max AI provider requires `NVIDIA_API_KEY`.
 - OCR depends on `GEMINI_API_KEY`.
 - News import uses `NEWSAPI_API_KEY` or `NEWSAPI_KEY`.
-- The project uses RLS in Supabase; prefer server-side routes for privileged writes.
+- The project uses RLS in Supabase, but application table access is routed through server handlers with `SUPABASE_SERVICE_ROLE_KEY`; direct public DB grants should stay minimal.

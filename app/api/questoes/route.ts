@@ -15,8 +15,6 @@ import {
   getStoredQuestionsForDisciplines,
   saveGeneratedQuestions,
 } from '@/lib/db/repositories/quizzes';
-import type { Database } from '@/types/supabase';
-import type { SupabaseClient } from '@supabase/supabase-js';
 
 const DISCIPLINES: Question['discipline'][] = ['Matemática', 'Português', 'Química', 'Física', 'Geografia'];
 const QUESTIONS_PER_DISCIPLINE = 3;
@@ -296,6 +294,11 @@ async function generateFreshQuestionsForDiscipline(
 
 export async function GET(request: NextRequest) {
   try {
+    const originError = ensureTrustedOrigin(request);
+    if (originError) {
+      return originError;
+    }
+
     const auth = await resolveRequestUserFromCookies();
     if ('error' in auth) {
       return auth.error;
@@ -359,8 +362,8 @@ export async function GET(request: NextRequest) {
     const [storedByDiscipline, recentExposure] = await Promise.all([
       aiRuntime.subscription.hasMaxAccess
         ? Promise.resolve(emptyStoredQuestions)
-        : getStoredQuestionsForDisciplines(auth.supabase, disciplines, { limit: 400 }),
-      getRecentUserQuestionExposure(auth.supabase, auth.userId, 10),
+        : getStoredQuestionsForDisciplines(adminClient, disciplines, { limit: 400 }),
+      getRecentUserQuestionExposure(adminClient, auth.userId, 10),
     ]);
 
     const selectedQuestions: Question[] = [];
@@ -511,8 +514,14 @@ export async function POST(request: NextRequest) {
     return auth.error;
   }
 
-  const supabase = auth.supabase as SupabaseClient<Database>;
   const { userId } = auth;
+  const adminClient = createAdminClient();
+  if (!adminClient) {
+    return NextResponse.json(
+      { error: 'Supabase service role não configurado.' },
+      { status: 500 }
+    );
+  }
 
   try {
     const answersData = parsedPayload.questions.map((question) => {
@@ -525,7 +534,7 @@ export async function POST(request: NextRequest) {
       };
     });
 
-    await createQuizResult(supabase, userId, {
+    await createQuizResult(adminClient, userId, {
       totalQuestions: parsedPayload.result.totalQuestions,
       correctAnswers: parsedPayload.result.correctAnswers,
       wrongAnswers: parsedPayload.result.wrongAnswers,
@@ -536,7 +545,7 @@ export async function POST(request: NextRequest) {
       answersData,
     });
 
-    const { error: statsError } = await supabase.rpc('recalculate_user_statistics', {
+    const { error: statsError } = await adminClient.rpc('recalculate_user_statistics', {
       target_user_id: userId,
     });
 
