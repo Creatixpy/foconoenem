@@ -7,6 +7,7 @@ import { cleanupCachedThemesIfDue } from '@/lib/server/local-maintenance';
 import { checkRateLimit } from '@/lib/server/rate-limit';
 import { trackEvent } from '@/lib/server/analytics';
 import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
+import { ensureTrustedOrigin } from '@/lib/server/request-origin';
 import {
   createCachedThemes,
   getCachedThemePool,
@@ -166,6 +167,11 @@ function pickThemeCandidate(
 }
 
 export async function GET(request: NextRequest) {
+  const originError = ensureTrustedOrigin(request);
+  if (originError) {
+    return originError;
+  }
+
   const auth = await resolveRequestUserFromCookies();
   if ('error' in auth) {
     return auth.error;
@@ -210,7 +216,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const recentThemes = await getRecentUserEssayThemes(auth.supabase, auth.userId, 10).catch(() => []);
+  const recentThemes = await getRecentUserEssayThemes(adminClient, auth.userId, 10).catch(() => []);
   const recentThemeKeys = new Set(recentThemes.map((theme) => normalizeThemeKey(theme)));
   const aiRuntime = await getUserAiRuntime(auth.userId);
 
@@ -253,7 +259,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  let pool = await getCachedThemePool(auth.supabase, { daysBack: 90, limit: 60 }).catch(() => []);
+  let pool = await getCachedThemePool(adminClient, { daysBack: 90, limit: 60 }).catch(() => []);
   let candidate = pickThemeCandidate(pool, recentThemeKeys);
   let generatedThemes: ThemeData[] = [];
   let providerUsed: string | null = null;
@@ -280,7 +286,7 @@ export async function GET(request: NextRequest) {
       generatedThemes = generated.themes;
       providerUsed = generated.provider;
       await createCachedThemes(adminClient, generatedThemes);
-      pool = await getCachedThemePool(auth.supabase, { daysBack: 90, limit: 80 }).catch(() => pool);
+      pool = await getCachedThemePool(adminClient, { daysBack: 90, limit: 80 }).catch(() => pool);
       candidate = pickThemeCandidate(pool, recentThemeKeys);
     } catch (error) {
       console.error('Erro ao gerar lote de temas com IA:', error);

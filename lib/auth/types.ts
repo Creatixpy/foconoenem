@@ -49,42 +49,6 @@ export interface UserStatistics {
   ultima_atualizacao: string;
 }
 
-// User goals
-export interface UserGoal {
-  id: string;
-  user_id: string;
-  tipo: 'redacao_nota_minima' | 'questoes_acerto_minimo' | 'estudar_disciplina' | 'praticar_competencia';
-  descricao: string;
-  valor_alvo: number | null;
-  disciplina: string | null;
-  competencia: number | null;
-  prazo: string | null;
-  concluida: boolean;
-  progresso: number;
-  created_at: string;
-  updated_at: string;
-}
-
-// Achievement types
-export interface Achievement {
-  id: string;
-  slug: string;
-  name: string;
-  description: string | null;
-  icon: string | null;
-  criteria: Record<string, unknown> | null;
-  created_at: string;
-}
-
-export interface UserAchievement {
-  id: string;
-  user_id: string;
-  achievement_id: string;
-  earned_at: string;
-  metadata: Record<string, unknown> | null;
-  achievement?: Achievement;
-}
-
 // Authentication state
 export interface AuthState {
   user: User | null;

@@ -1,20 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/types/supabase';
 import { trackEvent } from '@/lib/server/analytics';
 import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
+import { createAdminClient } from '@/lib/db/server';
 import { getEssayById } from '@/lib/db/repositories/essays';
+import { ensureTrustedOrigin } from '@/lib/server/request-origin';
 
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id?: string | string[] }> }
 ) {
+  const originError = ensureTrustedOrigin(request);
+  if (originError) {
+    return originError;
+  }
+
   const auth = await resolveRequestUserFromCookies();
   if ('error' in auth) {
     return auth.error;
   }
 
-  const supabase = auth.supabase as SupabaseClient<Database>;
+  const adminClient = createAdminClient();
+  if (!adminClient) {
+    return NextResponse.json(
+      { error: 'Supabase service role não configurado.' },
+      { status: 500 }
+    );
+  }
+
   const userId = auth.userId;
 
   const params = await context.params;
@@ -26,7 +38,7 @@ export async function GET(
     return NextResponse.json({ error: 'ID inválido' }, { status: 400 });
   }
 
-  const result = await getEssayById(supabase, id, userId);
+  const result = await getEssayById(adminClient, id, userId);
   if (!result) {
     return NextResponse.json({ error: 'Resultado não encontrado' }, { status: 404 });
   }

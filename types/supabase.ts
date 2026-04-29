@@ -14,36 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      achievements: {
-        Row: {
-          created_at: string
-          criteria: Json | null
-          description: string | null
-          icon: string | null
-          id: string
-          name: string
-          slug: string
-        }
-        Insert: {
-          created_at?: string
-          criteria?: Json | null
-          description?: string | null
-          icon?: string | null
-          id?: string
-          name: string
-          slug: string
-        }
-        Update: {
-          created_at?: string
-          criteria?: Json | null
-          description?: string | null
-          icon?: string | null
-          id?: string
-          name?: string
-          slug?: string
-        }
-        Relationships: []
-      }
       admin_audit_log: {
         Row: {
           action: string
@@ -654,83 +624,6 @@ export type Database = {
           stripe_subscription_id?: string | null
           updated_at?: string
           user_id?: string
-        }
-        Relationships: []
-      }
-      user_achievements: {
-        Row: {
-          achievement_id: string
-          earned_at: string
-          id: string
-          metadata: Json | null
-          user_id: string
-        }
-        Insert: {
-          achievement_id: string
-          earned_at?: string
-          id?: string
-          metadata?: Json | null
-          user_id: string
-        }
-        Update: {
-          achievement_id?: string
-          earned_at?: string
-          id?: string
-          metadata?: Json | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_achievements_achievement_id_fkey"
-            columns: ["achievement_id"]
-            isOneToOne: false
-            referencedRelation: "achievements"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      user_goals: {
-        Row: {
-          competencia: number | null
-          concluida: boolean
-          created_at: string
-          descricao: string
-          disciplina: string | null
-          id: string
-          prazo: string | null
-          progresso: number
-          tipo: string
-          updated_at: string
-          user_id: string
-          valor_alvo: number | null
-        }
-        Insert: {
-          competencia?: number | null
-          concluida?: boolean
-          created_at?: string
-          descricao: string
-          disciplina?: string | null
-          id?: string
-          prazo?: string | null
-          progresso?: number
-          tipo: string
-          updated_at?: string
-          user_id: string
-          valor_alvo?: number | null
-        }
-        Update: {
-          competencia?: number | null
-          concluida?: boolean
-          created_at?: string
-          descricao?: string
-          disciplina?: string | null
-          id?: string
-          prazo?: string | null
-          progresso?: number
-          tipo?: string
-          updated_at?: string
-          user_id?: string
-          valor_alvo?: number | null
         }
         Relationships: []
       }

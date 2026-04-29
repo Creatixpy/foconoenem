@@ -85,17 +85,17 @@ The repository does **not** currently ship local Supabase Edge Function code. `s
 
 | Route | Methods | Purpose |
 | --- | --- | --- |
-| `/api/conquistas` | `POST` | Evaluate and sync unlocked user achievements |
 | `/api/conta/dados` | `GET` | Account dashboard payload |
 | `/api/conta/excluir` | `POST` | Delete the authenticated account after password confirmation |
 | `/api/conta/recalcular` | `POST` | Recalculate aggregated user statistics |
-| `/api/corrigir` | `GET`, `POST` | Fetch stored essay by query-string ID / submit essay for correction |
+| `/api/corrigir` | `POST` | Submit essay for correction |
 | `/api/assinatura/checkout` | `POST` | Start Stripe Subscription Checkout for the Max plan, with a 7-day trial when eligible |
 | `/api/assinatura/portal` | `POST` | Open Stripe Billing Portal for the authenticated user |
 | `/api/destaques/remover` | `POST` | Remove highlight status from selected news |
 | `/api/doacao/checkout` | `POST` | Create Stripe Checkout session and persist `donation_checkouts` |
 | `/api/doacao/webhook` | `POST` | Process donation and subscription Stripe webhooks with idempotent persistence |
 | `/api/gerar-tema` | `GET` | Serve cached essay theme or generate a new one |
+| `/api/perfil` | `GET`, `POST`, `PATCH` | Server-side profile reads and writes for the authenticated user |
 | `/api/noticias` | `GET` | List approved news and refresh stale highlights on demand when requested |
 | `/api/noticias/[slug]` | `GET` | Fetch a single approved article |
 | `/api/noticias/admin` | `GET`, `POST` | Redirect helper to admin page / reject direct POST usage |
@@ -166,15 +166,12 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 
 | File | Purpose |
 | --- | --- |
-| `lib/auth/achievements-service.ts` | Achievement reads for the authenticated user |
 | `lib/auth/constants.ts` | Auth constants and route references |
 | `lib/auth/context.tsx` | `AuthProvider` and auth state management |
-| `lib/auth/goals-service.ts` | Goal CRUD |
 | `lib/auth/index.ts` | Barrel |
-| `lib/auth/profile-service.ts` | Profile CRUD |
+| `lib/auth/profile-service.ts` | Client wrapper around `/api/perfil` |
 | `lib/auth/security.ts` | Auth-side security helpers |
 | `lib/auth/service.ts` | Sign-in, sign-up, reset and session refresh flows |
-| `lib/auth/stats-service.ts` | Statistics reads and recalculation |
 | `lib/auth/types.ts` | Auth and profile-related types |
 | `lib/auth/validation.ts` | Email/password validation helpers |
 
@@ -302,11 +299,11 @@ The codebase does **not** currently read `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`.
 | Path | Purpose |
 | --- | --- |
 | `supabase/migrations/` | Local migration history |
-| `supabase/remote-latest.sql` | Remote schema snapshot/reference |
 | `supabase/scripts/20250210_export_user_data.sql` | Data export helper script |
 | `supabase/functions/README.md` | Legacy Edge Function audit and operational note |
 
 As of the latest audit documented in `supabase/functions/README.md`, remote Edge Functions may still exist in the Supabase project, but the repository no longer depends on them at runtime.
+The stale remote schema snapshot was removed; use Supabase migrations plus MCP/CLI inspection as the source of truth.
 
 ---
 

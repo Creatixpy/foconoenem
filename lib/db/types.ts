@@ -20,13 +20,6 @@ export type UserStatisticsRow = Tables['user_statistics']['Row'];
 export type UserStatisticsInsert = Tables['user_statistics']['Insert'];
 export type UserStatisticsUpdate = Tables['user_statistics']['Update'];
 
-export type UserGoalRow = Tables['user_goals']['Row'];
-export type UserGoalInsert = Tables['user_goals']['Insert'];
-export type UserGoalUpdate = Tables['user_goals']['Update'];
-
-export type UserAchievementRow = Tables['user_achievements']['Row'];
-export type AchievementRow = Tables['achievements']['Row'];
-
 // Content
 export type EssayResultRow = Tables['essay_results']['Row'];
 export type EssayResultInsert = Tables['essay_results']['Insert'];
@@ -53,7 +46,6 @@ export type ConfiguracaoRow = Tables['configuracoes']['Row'];
 
 export type EventType = Database['public']['Enums']['event_type_enum'];
 
-export type GoalType = 'redacao_nota_minima' | 'questoes_acerto_minimo' | 'estudar_disciplina' | 'praticar_competencia';
 export type EssayOrigin = 'IA' | 'Simulação';
 
 // ============================================================================

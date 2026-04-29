@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { buildGroqProviders, GROQ_MAX_ATTEMPTS, isRateLimitError } from '@/lib/ai/groq';
 import { searchNoticias as searchNoticiasAprovadas } from '@/lib/server/noticias';
 import { checkRateLimit } from '@/lib/server/rate-limit';
+import { ensureTrustedOrigin } from '@/lib/server/request-origin';
 
 const MAX_CONTEXT_ARTICLES = 6;
 
@@ -40,6 +41,11 @@ async function loadArticlesForQuery(query: string): Promise<SearchArticle[]> {
 
 export async function POST(request: NextRequest) {
   try {
+    const originError = ensureTrustedOrigin(request);
+    if (originError) {
+      return originError;
+    }
+
     const forwardedFor = request.headers.get('x-forwarded-for');
     const ip = forwardedFor?.split(',')[0].trim() ?? request.headers.get('x-real-ip') ?? 'unknown';
     const rateResult = await checkRateLimit(ip, '/api/noticias/gpt-busca', 5, 1);

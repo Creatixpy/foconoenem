@@ -9,7 +9,7 @@ Integracoes que antes passaram por Edge Functions agora rodam diretamente nas ro
 - Checkout e webhook do Stripe: `app/api/doacao/checkout`, `app/api/doacao/webhook`
 - Horario de funcionamento: `app/api/schedule/time`
 
-Auditoria mais recente: 2026-04-21.
+Auditoria mais recente: 2026-04-28.
 
 Funcoes remotas encontradas no projeto Supabase:
 
@@ -20,6 +20,8 @@ Funcoes remotas encontradas no projeto Supabase:
 Nenhuma dessas funcoes possui referencia no codigo atual do repositorio.
 Os logs do servico de Edge Functions vieram vazios nas ultimas 24 horas durante a auditoria.
 
-Se essas funcoes ainda existirem implantadas no projeto Supabase, trate-as como artefatos legados. Antes de apagar em producao, valide se nao ha consumidores externos fora deste repositorio.
+No projeto remoto `wywcpbgipufylnaauewe`, essas funcoes foram neutralizadas em 2026-04-28 com stubs `410 Gone` e `verify_jwt=true`.
+Elas continuam listadas como `ACTIVE` somente porque a exclusao via CLI exige `SUPABASE_ACCESS_TOKEN` ou acao manual no dashboard.
+Se precisar remover definitivamente, apague-as no dashboard do Supabase ou execute `supabase functions delete <slug> --project-ref wywcpbgipufylnaauewe` com um token de acesso valido.
 
 Nao adicione novas Edge Functions aqui sem uma decisao explicita de voltar a usar essa arquitetura.
