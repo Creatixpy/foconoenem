@@ -165,6 +165,7 @@ types/                  tipos compartilhados e tipos gerados do Supabase
 - A auditoria de produção de 2026-04-23 foi reconciliada localmente nas migrations `20260423010000_reconcile_production_schema_and_donations.sql` e `20260423011000_index_stripe_webhook_client_reference.sql`.
 - O plano Max foi introduzido localmente na migration `20260423100000_add_max_subscription_support.sql`.
 - O hardening de 2026-04-28 está na migration `20260429013052_harden_public_api_and_remove_dead_systems.sql`, que remove metas/conquistas sem uso e reduz grants públicos do Supabase.
+- A migration `20260429015252_revoke_public_noticias_grant.sql` remove o último grant direto de notícias; as leituras públicas passam pelas rotas server-side.
 - O snapshot antigo `supabase/remote-latest.sql` foi removido por estar divergente do schema real; use migrations e inspeção MCP/CLI como fonte de verdade.
 - O arquivo [supabase/functions/README.md](./supabase/functions/README.md) documenta o legado de Edge Functions remotas ainda implantadas.
 - Não há mais `vercel.json` com cron. Limpeza de `rate_limits`, `analytics_events` e `cached_themes` roda localmente no app em janelas controladas via `configuracoes`, e os destaques de notícias são atualizados sob demanda.

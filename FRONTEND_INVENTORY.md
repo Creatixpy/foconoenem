@@ -222,7 +222,7 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | `lib/server/donations.ts` | Donation webhook persistence and checkout-status synchronization |
 | `lib/server/local-maintenance.ts` | Throttled local cleanup of `rate_limits`, `analytics_events` and `cached_themes` |
 | `lib/server/news-highlights.ts` | On-demand highlight refresh/status logic backed by `configuracoes` |
-| `lib/server/noticias.ts` | Read-only approved news access for public routes |
+| `lib/server/noticias.ts` | Server-side approved news access for public routes |
 | `lib/server/operating-hours.ts` | Business-hours evaluation |
 | `lib/server/page-auth.ts` | Server-side page guards for authenticated routes |
 | `lib/server/rate-limit.ts` | Server-side rate limiting |
@@ -260,11 +260,11 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 
 | Variable | Used by | Notes |
 | --- | --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL` | app, SSR, admin and public DB access | Required for normal runtime |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | browser auth/public reads/SSR | Required for normal runtime |
+| `NEXT_PUBLIC_SUPABASE_URL` | app, SSR and server DB access | Required for normal runtime |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | browser auth and SSR session handling | Required for normal runtime |
 | `NEXT_PUBLIC_SITE_URL` | root metadata, redirect safety | Recommended |
 | `SITE_URL` | sitemap generation | Build-time |
-| `SUPABASE_SERVICE_ROLE_KEY` | admin writes, analytics, imports, maintenance, highlights and donation persistence | Required for privileged server flows |
+| `SUPABASE_SERVICE_ROLE_KEY` | server DB access, admin writes, analytics, imports, maintenance, highlights, public news reads and payment persistence | Required for privileged server flows |
 | `GROQ_API_KEY` | essay, themes, quiz generation, AI news summary | Standard IA key |
 | `GROQ_MODEL` | Groq integration | Optional override |
 | `GROQ_FALLBACK_API_KEY` | Groq integration | Optional fallback provider |
