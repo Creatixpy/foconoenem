@@ -1,29 +1,29 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import 'server-only';
+
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { unstable_cache } from 'next/cache';
+import { createAdminClient } from '@/lib/db/server';
 import type { Database } from '@/types/supabase';
 
 const NOTICIA_FIELDS =
   'id,titulo,slug,resumo,conteudo,imagem_url,autor,data_publicacao,tags,destaque,created_at,fonte_url,status';
 const NEWS_CACHE_SECONDS = 300;
 
-export function isReadonlyClientConfigured(): boolean {
-  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+export function isNewsServerClientConfigured(): boolean {
+  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
 }
 
-function requireReadonlyClient(): SupabaseClient<Database> {
-  if (!isReadonlyClientConfigured()) {
-    throw new Error('Supabase público não configurado.');
+function requireNewsServerClient(): SupabaseClient<Database> {
+  if (!isNewsServerClientConfigured()) {
+    throw new Error('Supabase service role não configurado para notícias.');
   }
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  const client = createAdminClient();
+  if (!client) {
+    throw new Error('Supabase service role não configurado para notícias.');
+  }
 
-  return createClient<Database>(url, anonKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
+  return client;
 }
 
 async function listNoticiasQuery(options: {
@@ -33,7 +33,7 @@ async function listNoticiasQuery(options: {
   destaque?: boolean;
 }) {
   const { limit, offset, tag, destaque } = options;
-  const supabase = requireReadonlyClient();
+  const supabase = requireNewsServerClient();
 
   const runQuery = async (highlightFilter?: boolean) => {
     let query = supabase
@@ -93,7 +93,7 @@ export async function listNoticias(options: {
 }
 
 async function fetchNoticiaBySlugQuery(slug: string) {
-  const supabase = requireReadonlyClient();
+  const supabase = requireNewsServerClient();
   const { data, error } = await supabase
     .from('noticias')
     .select(NOTICIA_FIELDS)
@@ -119,7 +119,7 @@ export async function fetchNoticiaBySlug(slug: string) {
 }
 
 async function searchNoticiasQuery(termo: string, limit: number) {
-  const supabase = requireReadonlyClient();
+  const supabase = requireNewsServerClient();
   const sanitizedTerm = termo.trim();
 
   if (!sanitizedTerm) {
@@ -155,7 +155,7 @@ export async function searchNoticias(termo: string, limit: number) {
 }
 
 async function fetchNoticiasPorTagQuery(tag: string, limit: number) {
-  const supabase = requireReadonlyClient();
+  const supabase = requireNewsServerClient();
   const { data, error } = await supabase
     .from('noticias')
     .select(NOTICIA_FIELDS)
