@@ -3,7 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import ShareButton from './ShareButton';
-import { fetchNoticiaBySlug, fetchNoticiasPorTag, isReadonlyClientConfigured } from '@/lib/server/noticias';
+import { fetchNoticiaBySlug, fetchNoticiasPorTag, isNewsServerClientConfigured } from '@/lib/server/noticias';
 import { sanitizeExternalUrl, sanitizeNewsHtml } from '@/lib/server/news-content';
 
 type NoticiaPageProps = {
@@ -28,7 +28,7 @@ function readTime(content: string): string {
 }
 
 export async function generateMetadata({ params }: NoticiaPageProps): Promise<Metadata> {
-  if (!isReadonlyClientConfigured()) {
+  if (!isNewsServerClientConfigured()) {
     return {
       title: 'Notícia não encontrada | Foco no ENEM',
     };
@@ -59,7 +59,7 @@ export async function generateMetadata({ params }: NoticiaPageProps): Promise<Me
 }
 
 export default async function NoticiaPage({ params }: NoticiaPageProps) {
-  if (!isReadonlyClientConfigured()) {
+  if (!isNewsServerClientConfigured()) {
     notFound();
   }
 
