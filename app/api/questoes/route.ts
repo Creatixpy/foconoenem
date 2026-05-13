@@ -114,6 +114,31 @@ function assertQuizPayload(payload: unknown): QuizRequestPayload {
   };
 }
 
+function isValidSubmittedQuestion(question: Question) {
+  if (
+    !question ||
+    typeof question.id !== 'string' ||
+    !question.id ||
+    typeof question.text !== 'string' ||
+    !question.text.trim() ||
+    !DISCIPLINES.includes(question.discipline)
+  ) {
+    return false;
+  }
+
+  if (!Array.isArray(question.alternatives) || question.alternatives.length < 2) {
+    return false;
+  }
+
+  const correctCount = question.alternatives.filter((alternative) => alternative.isCorrect).length;
+  return correctCount === 1 && question.alternatives.every((alternative) =>
+    typeof alternative.id === 'string' &&
+    Boolean(alternative.id) &&
+    typeof alternative.text === 'string' &&
+    Boolean(alternative.text.trim())
+  );
+}
+
 function normalizeGeneratedQuestion(
   discipline: Question['discipline'],
   rawQuestion: RawQuestion
@@ -524,23 +549,54 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    if (!parsedPayload.questions.every(isValidSubmittedQuestion)) {
+      return NextResponse.json(
+        { error: 'Lista de questões inválida' },
+        { status: 400 }
+      );
+    }
+
+    let correctAnswers = 0;
+    let unansweredQuestions = 0;
+
     const answersData = parsedPayload.questions.map((question) => {
       const selectedId = parsedPayload.selectedAnswers[question.id];
-      const isCorrect = question.alternatives.find((alternative) => alternative.id === selectedId)?.isCorrect || false;
+      const isAnswered = typeof selectedId === 'string' && selectedId.length > 0;
+      const selectedAlternative = isAnswered
+        ? question.alternatives.find((alternative) => alternative.id === selectedId)
+        : undefined;
+      const isCorrect = Boolean(selectedAlternative?.isCorrect);
+
+      if (!isAnswered) {
+        unansweredQuestions += 1;
+      } else if (isCorrect) {
+        correctAnswers += 1;
+      }
+
       return {
         question_id: question.id,
-        selected_alternative_id: selectedId,
+        selected_alternative_id: isAnswered ? selectedId : null,
         is_correct: isCorrect,
       };
     });
+    const totalQuestions = parsedPayload.questions.length;
+    const wrongAnswers = totalQuestions - correctAnswers - unansweredQuestions;
+    const score = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0;
+    const disciplines = Array.from(
+      new Set(
+        parsedPayload.questions
+          .map((question) => question.discipline)
+          .filter((discipline): discipline is Question['discipline'] => DISCIPLINES.includes(discipline))
+      )
+    );
 
     await createQuizResult(adminClient, userId, {
-      totalQuestions: parsedPayload.result.totalQuestions,
-      correctAnswers: parsedPayload.result.correctAnswers,
-      wrongAnswers: parsedPayload.result.wrongAnswers,
-      unansweredQuestions: parsedPayload.result.unansweredQuestions,
-      score: parsedPayload.result.score,
-      disciplines: parsedPayload.disciplines,
+      totalQuestions,
+      correctAnswers,
+      wrongAnswers,
+      unansweredQuestions,
+      score,
+      disciplines,
       questionsData: parsedPayload.questions,
       answersData,
     });

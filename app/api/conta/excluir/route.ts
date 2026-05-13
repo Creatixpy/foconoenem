@@ -76,6 +76,29 @@ function createVerificationClient() {
   });
 }
 
+async function deleteUserOwnedApplicationData(
+  adminClient: NonNullable<ReturnType<typeof createAdminClient>>,
+  userId: string
+) {
+  const userOwnedTables = ['essay_results', 'quiz_results', 'analytics_events'] as const;
+
+  for (const table of userOwnedTables) {
+    const { error } = await adminClient.from(table).delete().eq('user_id', userId);
+    if (error) {
+      throw new Error(`Falha ao remover dados da conta em ${table}.`);
+    }
+  }
+
+  const { error: rateLimitError } = await adminClient
+    .from('rate_limits')
+    .delete()
+    .or(`identifier.eq.${userId},identifier.like.${userId}:%`);
+
+  if (rateLimitError) {
+    console.error('Falha ao limpar rate limits da conta excluida:', rateLimitError);
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const requestOrigin = getRequestOrigin(request);
@@ -133,6 +156,8 @@ export async function POST(request: NextRequest) {
     if (!adminClient) {
       throw new Error('Supabase admin nao configurado');
     }
+
+    await deleteUserOwnedApplicationData(adminClient, auth.userId);
 
     const { error: deleteError } = await adminClient.auth.admin.deleteUser(auth.userId);
     if (deleteError) {
