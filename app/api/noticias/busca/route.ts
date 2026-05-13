@@ -5,11 +5,20 @@ const CACHE_HEADERS = {
   'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600',
 };
 
+function parseSearchLimit(value: string | null) {
+  const parsed = Number.parseInt(value ?? '', 10);
+  if (!Number.isFinite(parsed)) {
+    return 10;
+  }
+
+  return Math.min(Math.max(1, parsed), 50);
+}
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const termo = searchParams.get('q');
-    const limit = Math.max(1, parseInt(searchParams.get('limit') || '10', 10));
+    const limit = parseSearchLimit(searchParams.get('limit'));
 
     if (!termo) {
       return NextResponse.json({ error: 'Termo de busca não fornecido' }, { status: 400 });

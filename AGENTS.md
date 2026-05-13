@@ -35,8 +35,8 @@
 - Manual QA should follow the area changed, especially:
   - auth: `/login`, `/register`, `/forgot-password`, `/reset-password`
   - account: `/conta`, `/conta/editar`, account deletion
-  - essay flow: `/redacao` and `/resultados/[id]`
-  - quiz flow: `/questoes`
+  - essay flow: `/redacao` and `/resultados/[id]`, including account-deletion cleanup of essay rows
+  - quiz flow: `/questoes`, including backend-recomputed persisted aggregates
   - news admin: `/noticias/admin` when relevant
   - donations: `/doacao` and the webhook if Stripe is configured
   - subscriptions: `/conta`, `/api/assinatura/checkout`, `/api/assinatura/portal`, `/api/doacao/webhook`, including first-time 7-day trial eligibility
@@ -66,3 +66,4 @@
 - OCR depends on `GEMINI_API_KEY`.
 - News import uses `NEWSAPI_API_KEY` or `NEWSAPI_KEY`.
 - The project uses RLS in Supabase, but application table access is routed through server handlers with `SUPABASE_SERVICE_ROLE_KEY`; direct public DB grants should stay minimal.
+- Account deletion must remove app-owned user content before deleting the Supabase Auth user because some historical foreign keys use `ON DELETE SET NULL`.

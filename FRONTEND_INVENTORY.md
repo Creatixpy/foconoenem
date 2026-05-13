@@ -86,7 +86,7 @@ The repository does **not** currently ship local Supabase Edge Function code. `s
 | Route | Methods | Purpose |
 | --- | --- | --- |
 | `/api/conta/dados` | `GET` | Account dashboard payload |
-| `/api/conta/excluir` | `POST` | Delete the authenticated account after password confirmation |
+| `/api/conta/excluir` | `POST` | Delete the authenticated account after password confirmation and purge user-owned essays, quizzes and analytics |
 | `/api/conta/recalcular` | `POST` | Recalculate aggregated user statistics |
 | `/api/corrigir` | `POST` | Submit essay for correction |
 | `/api/assinatura/checkout` | `POST` | Start Stripe Subscription Checkout for the Max plan, with a 7-day trial when eligible |
@@ -101,12 +101,12 @@ The repository does **not** currently ship local Supabase Edge Function code. `s
 | `/api/noticias/admin` | `GET`, `POST` | Redirect helper to admin page / reject direct POST usage |
 | `/api/noticias/admin/moderar` | `POST` | Moderate news records |
 | `/api/noticias/admin/status` | `GET` | Admin authorization status |
-| `/api/noticias/busca` | `GET` | Text search over approved news |
+| `/api/noticias/busca` | `GET` | Bounded text search over approved news |
 | `/api/noticias/destaques/status` | `GET` | Status of the last highlights refresh |
 | `/api/noticias/gpt-busca` | `POST` | AI summary based only on approved news stored in DB |
 | `/api/noticias/importar` | `POST` | Admin import from NewsAPI |
 | `/api/ocr` | `POST` | OCR via Gemini Vision |
-| `/api/questoes` | `GET`, `POST` | Generate quiz questions / persist quiz result |
+| `/api/questoes` | `GET`, `POST` | Generate quiz questions / persist quiz result with backend-recomputed aggregates |
 | `/api/resultados/[id]` | `GET` | Fetch essay result by route param |
 | `/auth/callback` | `GET` | OAuth code exchange route |
 
@@ -304,6 +304,7 @@ The codebase does **not** currently read `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`.
 
 As of the latest audit documented in `supabase/functions/README.md`, remote Edge Functions may still exist in the Supabase project, but the repository no longer depends on them at runtime.
 The stale remote schema snapshot was removed; use Supabase migrations plus MCP/CLI inspection as the source of truth.
+Latest DB hardening in this repo: `20260513224619_harden_auth_profile_and_quiz_integrity.sql`.
 
 ---
 
