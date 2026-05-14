@@ -181,7 +181,16 @@ Completed before commit:
 - `npm run lint`: passed.
 - `npm run build`: passed.
 
-Production deployment verification is recorded later in this report after the pushed commit deploys.
+Production deployment verification after push:
+- Vercel production deployment for commit `ae86748` reached `READY` and was aliased to `foconoenem.vercel.app`.
+- `GET /`: 200.
+- `GET /api/questoes?disciplines=Matem%C3%A1tica&model=minimaxai%2Fminimax-m2.7` without auth: 401 `not_authenticated`.
+- `POST /api/corrigir` without auth: 401 `not_authenticated`.
+- `POST /api/ocr` without auth: 401 `not_authenticated`.
+- `POST /api/doacao/webhook` with an invalid Stripe signature: 400 signature-verification failure.
+- `GET /privacidade`: contains `minimaxai/minimax-m2.7` and fallback disclosure.
+- `vercel env ls production`: expected AI/payment/Supabase environment variable names present as encrypted values.
+- `vercel logs --environment production --level error --since 15m`: no logs found.
 
 ## 10. Files Changed
 
