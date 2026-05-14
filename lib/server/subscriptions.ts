@@ -75,7 +75,12 @@ function getStripeSubscriptionPeriodValue(
   key: 'current_period_start' | 'current_period_end'
 ) {
   const source = subscription as Stripe.Subscription & Partial<Record<'current_period_start' | 'current_period_end', number>>;
-  return typeof source[key] === 'number' ? source[key] : null;
+  if (typeof source[key] === 'number') {
+    return source[key];
+  }
+
+  const itemSource = subscription.items.data[0] as Partial<Record<'current_period_start' | 'current_period_end', number>> | undefined;
+  return typeof itemSource?.[key] === 'number' ? itemSource[key] : null;
 }
 
 function getStripeSubscriptionTrialValue(
@@ -116,11 +121,43 @@ export function hasMaxPlanAccess(subscription: Pick<SubscriptionRow, 'plan_code'
     return false;
   }
 
-  if (!subscription.current_period_end) {
-    return true;
+  const accessEndsAt = getSubscriptionAccessEnd(subscription);
+  if (!accessEndsAt) {
+    return false;
   }
 
-  return new Date(subscription.current_period_end).getTime() > Date.now();
+  return accessEndsAt.getTime() > Date.now();
+}
+
+function getMetadataTimestamp(metadata: Json | null | undefined, key: string) {
+  if (!isJsonRecord(metadata)) {
+    return null;
+  }
+
+  const rawValue = metadata[key];
+  if (typeof rawValue !== 'string' || !rawValue.trim()) {
+    return null;
+  }
+
+  const parsed = new Date(rawValue);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function getSubscriptionAccessEnd(
+  subscription: Pick<SubscriptionRow, 'current_period_end'> & { metadata?: Json | null }
+) {
+  if (subscription.current_period_end) {
+    const parsed = new Date(subscription.current_period_end);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed;
+    }
+  }
+
+  return getMetadataTimestamp(subscription.metadata, 'trial_ends_at');
+}
+
+function getSubscriptionAccessEndIso(subscription: SubscriptionRow) {
+  return getSubscriptionAccessEnd(subscription)?.toISOString() ?? null;
 }
 
 function hasUsedMaxTrial(
@@ -186,8 +223,8 @@ export function toSubscriptionSummary(subscription: SubscriptionRow | null): Use
     trialEligible: canStartMaxTrial(subscription),
     trialDays: MAX_PLAN_TRIAL_DAYS,
     cancelAtPeriodEnd: subscription.cancel_at_period_end,
-    currentPeriodEnd: subscription.current_period_end,
-    renewsAt: subscription.renews_at,
+    currentPeriodEnd: getSubscriptionAccessEndIso(subscription),
+    renewsAt: subscription.renews_at ?? getSubscriptionAccessEndIso(subscription),
     canceledAt: subscription.canceled_at,
     latestCheckoutSessionId: subscription.latest_checkout_session_id,
     stripeCustomerId: subscription.stripe_customer_id,

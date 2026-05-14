@@ -167,6 +167,7 @@ types/                  tipos compartilhados e tipos gerados do Supabase
 - O hardening de 2026-04-28 está na migration `20260429013052_harden_public_api_and_remove_dead_systems.sql`, que remove metas/conquistas sem uso e reduz grants públicos do Supabase.
 - A migration `20260429015252_revoke_public_noticias_grant.sql` remove o último grant direto de notícias; as leituras públicas passam pelas rotas server-side.
 - A migration `20260513224619_harden_auth_profile_and_quiz_integrity.sql` corrige o bootstrap de perfis a partir do Auth e adiciona constraints de integridade para resultados de quiz.
+- A migration `20260513231721_harden_max_subscription_periods.sql` preenche períodos de acesso Max ausentes a partir de metadados Stripe já sincronizados.
 - O snapshot antigo `supabase/remote-latest.sql` foi removido por estar divergente do schema real; use migrations e inspeção MCP/CLI como fonte de verdade.
 - O arquivo [supabase/functions/README.md](./supabase/functions/README.md) documenta o legado de Edge Functions remotas ainda implantadas.
 - Não há mais `vercel.json` com cron. Limpeza de `rate_limits`, `analytics_events` e `cached_themes` roda localmente no app em janelas controladas via `configuracoes`, e os destaques de notícias são atualizados sob demanda.
