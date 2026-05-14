@@ -48,6 +48,7 @@ Vercel CLI:
 - Production environment variable names and environment-run behavior.
 - Production route availability and API response checks where safe.
 - Local `npm run lint` and `npm run build`.
+- Post-push production deployment verification for the safe subscription hardening commit.
 
 AI verification:
 - Direct NVIDIA API smoke test for `minimaxai/minimax-m2.7`.
@@ -143,6 +144,15 @@ Verified with Vercel CLI:
 - `vercel env run -e production` did not expose usable values for some production-only variables in the local CLI shell, but runtime verification showed the deployed webhook has access to `STRIPE_WEBHOOK_SECRET`: a request with an invalid Stripe signature returned Stripe signature-verification failure instead of a missing-secret error.
 
 Production deployment of the MiniMax model was not performed because real feature testing failed before deployment.
+
+After committing the safe subscription-period hardening, Vercel created a production deployment that reached `READY` and was aliased to `foconoenem.vercel.app`. Post-deployment checks:
+- `GET /`: 200.
+- `GET /api/questoes` without auth: 401 `not_authenticated`.
+- `POST /api/corrigir` without auth: 401 `not_authenticated`.
+- `POST /api/assinatura/checkout` without auth: 401 `not_authenticated`.
+- `POST /api/doacao/webhook` with an invalid Stripe signature: 400 from Stripe signature verification.
+- `GET /privacidade`: did not contain `minimaxai/minimax-m2.7`, confirming the failed MiniMax migration was not deployed.
+- Vercel production error logs for the deployment window: no error logs found.
 
 ## 8. Problems Found
 
@@ -287,6 +297,10 @@ Completed:
 - Stripe CLI read-only live/test object inspection.
 - Stripe webhook signature behavior check against production endpoint.
 - Vercel CLI project/deployment/env-name inspection.
+- Vercel production deployment verification for the safe subscription hardening commit.
+- Production public/protected route checks after deployment.
+- Production webhook invalid-signature check after deployment.
+- Production Vercel error-log check after deployment.
 - `npm run lint`: passed.
 - `npm run build`: passed before the final report step.
 - Direct NVIDIA smoke test for `minimaxai/minimax-m2.7`: passed.
