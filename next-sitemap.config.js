@@ -22,6 +22,14 @@ module.exports = {
   outDir: 'public',
   changefreq: 'daily',
   priority: 0.7,
+  additionalPaths: async () => [
+    {
+      loc: '/planos',
+      changefreq: 'weekly',
+      priority: 0.8,
+      lastmod: new Date().toISOString(),
+    },
+  ],
   transform: async (config, path) => {
     // Personalizar prioridade para páginas específicas
     if (path === '/') {

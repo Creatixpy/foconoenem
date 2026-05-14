@@ -10,6 +10,7 @@ import {
   MAX_PLAN_TRIAL_DAYS,
   type UserSubscriptionSummary,
 } from '@/lib/constants/subscriptions';
+import { MAX_PLAN_BENEFITS } from '@/lib/constants/plans';
 import type { UserStatistics } from '@/lib/auth/types';
 import {
   RadarChart,
@@ -422,8 +423,16 @@ function SubscriptionCard({
           <div>
             <h2 className="text-xl font-semibold text-[var(--text-primary)]">{MAX_PLAN_NAME}</h2>
             <p className="mt-1 text-sm text-[var(--text-muted)]">
-              Correção de redação, geração de temas e simulados com provider NVIDIA no backend.
+              IA Max para correções, temas sob demanda e simulados com mais questões inéditas.
             </p>
+          </div>
+          <div className="grid gap-2 text-sm text-[var(--text-secondary)] sm:grid-cols-2">
+            {MAX_PLAN_BENEFITS.map((benefit) => (
+              <div key={benefit.title} className="flex gap-2">
+                <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--primary)]" />
+                <span>{benefit.title}</span>
+              </div>
+            ))}
           </div>
           {showTrialOffer && (
             <p className="rounded-xl border border-[var(--success)]/20 bg-[var(--success)]/10 px-4 py-3 text-sm text-[var(--success)]">
@@ -487,6 +496,12 @@ function SubscriptionCard({
           >
             {loading === 'portal' ? 'Abrindo portal...' : 'Gerenciar assinatura'}
           </button>
+          <Link
+            href="/planos"
+            className="inline-flex items-center justify-center rounded-xl border border-[var(--primary)]/25 px-4 py-3 text-sm font-medium text-[var(--primary)] transition-colors hover:bg-[var(--primary-light)]"
+          >
+            Comparar Free e Max
+          </Link>
         </div>
       </div>
     </div>

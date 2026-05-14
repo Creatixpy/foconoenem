@@ -5,6 +5,10 @@ import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
 import { checkRateLimit } from '@/lib/server/rate-limit';
 import { ensureTrustedOrigin } from '@/lib/server/request-origin';
 import { getStripe } from '@/lib/server/stripe';
+import {
+  buildSubscriptionReturnUrl,
+  normalizeSubscriptionReturnPath,
+} from '@/lib/server/subscription-return';
 import { getUserSubscription } from '@/lib/server/subscriptions';
 
 export async function POST(request: NextRequest) {
@@ -37,6 +41,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const body = await request.json().catch(() => null);
+    const returnPath = normalizeSubscriptionReturnPath(
+      body && typeof body === 'object' ? (body as Record<string, unknown>).returnPath : null
+    );
+
     const subscription = await getUserSubscription(adminClient, auth.userId);
     if (!subscription?.stripe_customer_id) {
       return NextResponse.json(
@@ -47,7 +56,7 @@ export async function POST(request: NextRequest) {
 
     const session = await getStripe().billingPortal.sessions.create({
       customer: subscription.stripe_customer_id,
-      return_url: `${request.nextUrl.origin}/conta`,
+      return_url: buildSubscriptionReturnUrl(request.nextUrl.origin, returnPath),
     });
 
     return NextResponse.json({ url: session.url });

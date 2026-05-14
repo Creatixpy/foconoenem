@@ -139,6 +139,12 @@ export default function HomePageClient() {
             >
               Ver questões
             </Link>
+            <Link
+              href="/planos"
+              className="inline-flex items-center gap-2 rounded-xl border border-[var(--primary)]/30 bg-[var(--primary-light)] px-6 py-3 text-base font-semibold text-[var(--primary)] transition-colors hover:border-[var(--primary)]/50 hover:bg-[var(--bg-elevated)]"
+            >
+              Conhecer Max
+            </Link>
           </div>
         </div>
       </section>
@@ -395,6 +401,12 @@ export default function HomePageClient() {
                 className="inline-flex items-center gap-2 rounded-xl border border-[var(--border-color)] px-8 py-3.5 text-base font-semibold text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]"
               >
                 Já tenho conta
+              </Link>
+              <Link
+                href="/planos"
+                className="inline-flex items-center gap-2 rounded-xl border border-[var(--primary)]/30 px-8 py-3.5 text-base font-semibold text-[var(--primary)] transition-colors hover:bg-[var(--primary-light)]"
+              >
+                Ver Max
               </Link>
             </div>
           </div>
