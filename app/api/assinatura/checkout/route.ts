@@ -8,6 +8,10 @@ import { checkRateLimit } from '@/lib/server/rate-limit';
 import { ensureTrustedOrigin } from '@/lib/server/request-origin';
 import { getStripe } from '@/lib/server/stripe';
 import {
+  buildSubscriptionReturnUrl,
+  normalizeSubscriptionReturnPath,
+} from '@/lib/server/subscription-return';
+import {
   canStartMaxTrial,
   ensureStripeCustomerForUser,
   getMaxSubscriptionPriceId,
@@ -74,6 +78,11 @@ export async function POST(request: NextRequest) {
     const stripe = getStripe();
     const existingSubscription = await getUserSubscription(adminClient, auth.userId);
     const trialEligible = canStartMaxTrial(existingSubscription);
+    const body = await request.json().catch(() => null);
+    const returnPath = normalizeSubscriptionReturnPath(
+      body && typeof body === 'object' ? (body as Record<string, unknown>).returnPath : null
+    );
+
     if (existingSubscription && hasMaxPlanAccess(existingSubscription)) {
       return NextResponse.json(
         { error: 'Você já possui uma assinatura Max ativa.' },
@@ -112,8 +121,8 @@ export async function POST(request: NextRequest) {
           mode: 'subscription',
           customer: stripeCustomerId,
           client_reference_id: auth.userId,
-          success_url: `${origin}/conta?subscription=success`,
-          cancel_url: `${origin}/conta?subscription=canceled`,
+          success_url: buildSubscriptionReturnUrl(origin, returnPath, 'success'),
+          cancel_url: buildSubscriptionReturnUrl(origin, returnPath, 'canceled'),
           allow_promotion_codes: true,
           payment_method_types: ['card'],
           line_items: [
@@ -125,7 +134,7 @@ export async function POST(request: NextRequest) {
           metadata: {
             plan_code: MAX_PLAN_CODE,
             supabase_user_id: auth.userId,
-            source: 'app/conta',
+            source: returnPath === '/planos' ? 'app/planos' : 'app/conta',
             trial_eligible: trialEligible ? 'true' : 'false',
             trial_days: trialEligible ? String(MAX_PLAN_TRIAL_DAYS) : '0',
           },
@@ -173,6 +182,7 @@ export async function POST(request: NextRequest) {
       metadata: {
         latest_checkout_source: 'subscription_checkout',
         latest_checkout_mode: 'subscription',
+        latest_checkout_return_path: returnPath,
         latest_checkout_url: session.url,
         latest_checkout_created_at: new Date().toISOString(),
         trial_eligible: trialEligible,
