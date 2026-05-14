@@ -233,8 +233,8 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 
 | File | Purpose |
 | --- | --- |
-| `lib/server/ai/nvidia.ts` | NVIDIA OpenAI-compatible client for the Max plan |
-| `lib/server/ai/provider.ts` | Server-side AI provider resolver by authenticated user's subscription state |
+| `lib/server/ai/nvidia.ts` | NVIDIA OpenAI-compatible client for the Max plan primary model `minimaxai/minimax-m2.7` |
+| `lib/server/ai/provider.ts` | Server-side AI provider resolver by authenticated user's subscription state, with Groq fallback for Max NVIDIA failures |
 
 ### `lib/supabase/`
 
@@ -270,7 +270,8 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | `GROQ_FALLBACK_API_KEY` | Groq integration | Optional fallback provider |
 | `GROQ_FALLBACK_MODEL` | Groq integration | Optional fallback model |
 | `GROQ_MAX_ATTEMPTS` | Groq retry logic | Optional |
-| `NVIDIA_API_KEY` | Max essay/theme/quiz generation | Required when active users should use the Max plan provider |
+| `NVIDIA_API_KEY` | Max essay/theme/quiz generation | Required for the primary Max plan NVIDIA attempt with `minimaxai/minimax-m2.7` |
+| `NVIDIA_MAX_TIMEOUT_MS` | Max essay/theme/quiz generation | Optional timeout for the primary NVIDIA attempt before server-side fallback |
 | `GEMINI_API_KEY` | `/api/ocr` | Optional OCR feature |
 | `NEWSAPI_API_KEY` | news import | Preferred NewsAPI variable |
 | `NEWSAPI_KEY` | news import | Accepted alias |

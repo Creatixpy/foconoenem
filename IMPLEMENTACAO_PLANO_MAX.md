@@ -181,7 +181,7 @@ const openai = new OpenAI({
 Modelo usado:
 
 ```ts
-model: 'z-ai/glm-5.1'
+model: 'minimaxai/minimax-m2.7'
 ```
 
 ### Estratégia de seleção do provider
@@ -191,7 +191,8 @@ model: 'z-ai/glm-5.1'
 - usuário sem Max ativo:
   - continua no fluxo padrão com Groq
 - usuário com Max ativo:
-  - usa NVIDIA
+  - tenta NVIDIA com `minimaxai/minimax-m2.7`
+  - usa fallback Groq server-side se a tentativa NVIDIA falhar ou não retornar conteúdo final
 
 Essa decisão é feita no backend com leitura de `subscriptions` via service role.
 
