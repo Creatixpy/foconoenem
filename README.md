@@ -20,7 +20,7 @@ O projeto atual concentra toda a lógica ativa no próprio app Next.js:
 - A atualização de sessão autenticada passa por `proxy.ts`.
 - O histórico de schema fica em `supabase/migrations/`.
 - Manutenção operacional é local ao app: limpeza de tabelas e atualização de destaques acontecem sob demanda, sem cron externo.
-- O plano Max usa Stripe para billing e NVIDIA para os fluxos premium de redação, temas e simulados.
+- O plano Max usa Stripe para billing e tenta a NVIDIA com `minimaxai/minimax-m2.7` para os fluxos premium de redação, temas e simulados; se a NVIDIA falhar, o backend usa fallback Groq para não deixar assinantes sem resposta.
 - O diretório `supabase/functions/` existe apenas para documentar Edge Functions remotas legadas; o runtime atual não depende delas.
 - O sistema de comunidade foi removido do produto, do código ativo e do schema atual.
 
@@ -32,7 +32,7 @@ O projeto atual concentra toda a lógica ativa no próprio app Next.js:
 - Tailwind CSS 4
 - Supabase SSR + PostgreSQL
 - Groq para o fluxo padrão de IA
-- NVIDIA via SDK `openai` compatível para o plano Max
+- NVIDIA via SDK `openai` compatível para o plano Max, com tentativa primária em `minimaxai/minimax-m2.7` e fallback server-side para Groq
 - Gemini para OCR
 - Stripe para doações, assinaturas Max e webhook
 - NewsAPI para importação de notícias
@@ -58,7 +58,8 @@ Crie `.env.local` na raiz do projeto. Nem todas as variáveis são obrigatórias
 | `GROQ_FALLBACK_API_KEY` | opcional | provedor secundário quando há rate limit |
 | `GROQ_FALLBACK_MODEL` | opcional | modelo secundário |
 | `GROQ_MAX_ATTEMPTS` | opcional | tentativas por provedor |
-| `NVIDIA_API_KEY` | obrigatória para o plano Max | `/api/corrigir`, `/api/gerar-tema`, `/api/questoes` quando o usuário tem assinatura Max ativa |
+| `NVIDIA_API_KEY` | obrigatória para a tentativa primária do plano Max | `/api/corrigir`, `/api/gerar-tema`, `/api/questoes` quando o usuário tem assinatura Max ativa |
+| `NVIDIA_MAX_TIMEOUT_MS` | opcional | tempo máximo da tentativa primária NVIDIA antes de fallback server-side |
 | `GEMINI_API_KEY` | opcional | OCR em `/api/ocr` |
 | `STRIPE_SECRET_KEY` | opcional | checkout de doações, assinatura Max e portal do cliente |
 | `STRIPE_WEBHOOK_SECRET` | opcional | validação do webhook do Stripe |
@@ -79,6 +80,7 @@ SUPABASE_SERVICE_ROLE_KEY=sua-service-role
 GROQ_API_KEY=sua-chave-groq
 GROQ_MODEL=openai/gpt-oss-120b
 NVIDIA_API_KEY=sua-chave-nvidia
+NVIDIA_MAX_TIMEOUT_MS=8000
 
 ADMIN_ALLOWED_EMAILS=admin@exemplo.com
 ```
@@ -152,7 +154,7 @@ types/                  tipos compartilhados e tipos gerados do Supabase
 - portal do cliente em `/api/assinatura/portal`
 - sincronização por webhook em `/api/doacao/webhook`
 - persistência em `subscriptions` e trilha em `subscription_events`
-- acesso Max validado no backend antes de selecionar NVIDIA para `/api/corrigir`, `/api/gerar-tema` e `/api/questoes`
+- acesso Max validado no backend antes de selecionar NVIDIA com `minimaxai/minimax-m2.7` para `/api/corrigir`, `/api/gerar-tema` e `/api/questoes`; falhas da NVIDIA usam fallback Groq server-side para preservar disponibilidade
 
 ### Doações
 

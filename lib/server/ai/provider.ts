@@ -66,21 +66,38 @@ function createStandardRuntime(subscription: UserSubscriptionSummary): UserAiRun
 }
 
 function createMaxRuntime(subscription: UserSubscriptionSummary): UserAiRuntime {
+  const standardFallback = createStandardRuntime(subscription);
+
   return {
     subscription,
     async complete(request) {
-      const result = await generateWithNvidia(request.messages, {
-        temperature: request.temperature,
-        topP: request.topP ?? 1,
-        maxTokens: request.maxTokens,
-      });
+      try {
+        const result = await generateWithNvidia(request.messages, {
+          temperature: request.temperature,
+          topP: request.topP ?? 1,
+          maxTokens: request.maxTokens,
+        });
 
-      return {
-        content: result.content,
-        provider: 'nvidia',
-        model: getNvidiaModel(),
-        tier: 'max',
-      };
+        return {
+          content: result.content,
+          provider: 'nvidia',
+          model: result.model,
+          tier: 'max',
+        };
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : 'Falha desconhecida';
+        console.warn('[Max AI] NVIDIA primary model failed; using standard fallback.', {
+          model: getNvidiaModel(),
+          detail,
+        });
+
+        const fallback = await standardFallback.complete(request);
+        return {
+          ...fallback,
+          provider: `nvidia-fallback:${fallback.provider}`,
+          tier: 'max',
+        };
+      }
     },
   };
 }

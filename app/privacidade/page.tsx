@@ -23,7 +23,7 @@ const sections = [
     id: 'ia',
     title: '4. Uso de inteligência artificial',
     content:
-      'A plataforma utiliza provedores de IA para correção de redações, geração de temas, textos de apoio, questões e resumos do acervo de notícias. No fluxo padrão, a integração principal segue usando Groq. Para usuários com assinatura Max ativa, os fluxos premium de redação, temas e questões podem ser processados pela API compatível com OpenAI da NVIDIA usando o modelo z-ai/glm-5.1. Redações, prompts e respostas podem ser enviados ao provedor aplicável para executar a solicitação. Os resultados retornados pela IA são armazenados no banco do Foco no ENEM quando necessários ao funcionamento do produto.',
+      'A plataforma utiliza provedores de IA para correção de redações, geração de temas, textos de apoio, questões e resumos do acervo de notícias. No fluxo padrão, a integração principal segue usando Groq. Para usuários com assinatura Max ativa, os fluxos premium de redação, temas e questões podem ser processados pela API compatível com OpenAI da NVIDIA usando o modelo minimaxai/minimax-m2.7; se essa tentativa falhar, o backend pode usar fallback Groq para preservar a disponibilidade do serviço. Redações, prompts e respostas podem ser enviados ao provedor aplicável para executar a solicitação. Os resultados retornados pela IA são armazenados no banco do Foco no ENEM quando necessários ao funcionamento do produto.',
   },
   {
     id: 'compartilhamento',
