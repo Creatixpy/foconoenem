@@ -76,7 +76,7 @@ async function updateLastRun(client: SupabaseClient<Database>) {
 }
 
 async function selectHighlightsWithGroq(noticias: NoticiaResumo[]) {
-  const providers = buildGroqProviders();
+  const providers = await buildGroqProviders();
   const attemptsLog: string[] = [];
   const prompt = `
 Analise as seguintes notícias e selecione no máximo ${HIGHLIGHTS_LIMIT} para destaque na página inicial de um site educacional focado no ENEM.

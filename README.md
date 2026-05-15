@@ -32,6 +32,7 @@ O projeto atual concentra toda a lógica ativa no próprio app Next.js:
 - Tailwind CSS 4
 - Supabase SSR + PostgreSQL
 - Groq para o fluxo padrão de IA
+- DeepsProxy local opcional como provedor primário de IA via endpoint compatível com OpenAI
 - NVIDIA via SDK `openai` compatível para o plano Max, com tentativa primária em `minimaxai/minimax-m2.7` e fallback server-side para Groq
 - Gemini para OCR
 - Stripe para doações, assinaturas Max e webhook
@@ -58,6 +59,12 @@ Crie `.env.local` na raiz do projeto. Nem todas as variáveis são obrigatórias
 | `GROQ_FALLBACK_API_KEY` | opcional | provedor secundário quando há rate limit |
 | `GROQ_FALLBACK_MODEL` | opcional | modelo secundário |
 | `GROQ_MAX_ATTEMPTS` | opcional | tentativas por provedor |
+| `DEEPSPROXY_API_KEY` | opcional | ativa o DeepsProxy local como provedor primário antes de Groq/NVIDIA |
+| `DEEPSPROXY_BASE_URL` | opcional | URL pública fixa do DeepsProxy; se ausente, lê `configuracoes.deepsproxy_public_url` |
+| `DEEPSPROXY_MODEL` | opcional | modelo legado/global do DeepsProxy; usado como fallback quando Free/Max não têm modelo próprio |
+| `DEEPSPROXY_FREE_MODEL` | opcional | modelo DeepsProxy para usuários sem Max; se ausente, lê `configuracoes.deepsproxy_free_model` |
+| `DEEPSPROXY_MAX_MODEL` | opcional | modelo DeepsProxy para usuários Max; se ausente, lê `configuracoes.deepsproxy_max_model` |
+| `DEEPSPROXY_TIMEOUT_MS` | opcional | tempo máximo por request ao DeepsProxy |
 | `NVIDIA_API_KEY` | obrigatória para a tentativa primária do plano Max | `/api/corrigir`, `/api/gerar-tema`, `/api/questoes` quando o usuário tem assinatura Max ativa |
 | `NVIDIA_MAX_TIMEOUT_MS` | opcional | tempo máximo da tentativa primária NVIDIA antes de fallback server-side |
 | `GEMINI_API_KEY` | opcional | OCR em `/api/ocr` |
@@ -79,6 +86,10 @@ SUPABASE_SERVICE_ROLE_KEY=sua-service-role
 
 GROQ_API_KEY=sua-chave-groq
 GROQ_MODEL=openai/gpt-oss-120b
+DEEPSPROXY_API_KEY=sua-chave-do-deepsproxy
+DEEPSPROXY_MODEL=deepseek-thinking
+DEEPSPROXY_FREE_MODEL=deepseek-no-thinking
+DEEPSPROXY_MAX_MODEL=deepseek-thinking
 NVIDIA_API_KEY=sua-chave-nvidia
 NVIDIA_MAX_TIMEOUT_MS=8000
 
@@ -93,12 +104,29 @@ npm run dev
 npm run lint
 npm run build
 npm run start
+npm run deepsproxy:tunnel
 ```
 
 Observações:
 
 - `npm run build` executa `next build` e depois `next-sitemap`, atualizando `public/sitemap.xml`.
+- `npm run deepsproxy:tunnel` abre um Cloudflare Quick Tunnel gratuito para o DeepsProxy local, publica a URL em `configuracoes.deepsproxy_public_url` e mantém o site da Vercel apontando para sua máquina enquanto o processo estiver aberto.
 - Hoje não há suíte automatizada de testes no repositório; a validação prática do projeto passa por `npm run lint`, `npm run build` e QA manual.
+
+### DeepsProxy local na Vercel
+
+O app tenta usar o DeepsProxy primeiro quando `DEEPSPROXY_API_KEY` está configurada. A URL pública pode vir de `DEEPSPROXY_BASE_URL` ou da tabela `configuracoes`, na chave `deepsproxy_public_url`. O modelo de usuários sem Max vem de `DEEPSPROXY_FREE_MODEL`, `configuracoes.deepsproxy_free_model`, `DEEPSPROXY_MODEL`, `configuracoes.deepsproxy_model` ou `deepseek-thinking`. O modelo de usuários Max segue a mesma ordem, trocando Free por Max.
+
+Para usar sem domínio e sem pagar túnel, deixe o DeepsProxy rodando em `http://127.0.0.1:3001` e execute:
+
+```bash
+vercel env pull .env.local --yes
+npm run deepsproxy:tunnel
+```
+
+Quando o túnel gerar uma URL `trycloudflare.com`, o script salva essa URL no Supabase. A Vercel passa a ler a URL em tempo de execução, sem precisar redeploy a cada reinício do túnel.
+
+Quick Tunnels são úteis para operação gratuita/testes e não têm garantia de uptime; para produção crítica, prefira um Cloudflare Tunnel nomeado com domínio próprio.
 
 ## Estrutura do repositório
 

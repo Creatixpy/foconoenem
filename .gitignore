@@ -29,6 +29,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.log
 
 # env files (can opt-in for committing if needed)
 .env*
@@ -44,3 +45,6 @@ yarn-error.log*
 next-env.d.ts
 .mcp.json
 supabase/.temp/
+.env*.local
+.bin/
+.deepsproxy-tunnel.pid

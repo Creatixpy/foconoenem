@@ -1,6 +1,8 @@
 import 'server-only';
 
 import OpenAI from 'openai';
+import { getDeepsProxyConfig } from '@/lib/ai/deepsproxy';
+import { createOpenAiCompatibleStreamingClient } from '@/lib/ai/openai-compatible';
 
 export type NvidiaMessage = {
   role: 'system' | 'user' | 'assistant';
@@ -9,6 +11,7 @@ export type NvidiaMessage = {
 
 export const NVIDIA_PRIMARY_MODEL = 'minimaxai/minimax-m2.7';
 const DEFAULT_NVIDIA_TIMEOUT_MS = 8_000;
+const DEFAULT_DEEPSPROXY_TIMEOUT_MS = 90_000;
 
 let nvidiaClient: OpenAI | null = null;
 
@@ -33,6 +36,11 @@ function getNvidiaClient() {
 function getNvidiaTimeoutMs() {
   const parsed = Number(process.env.NVIDIA_MAX_TIMEOUT_MS ?? DEFAULT_NVIDIA_TIMEOUT_MS);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_NVIDIA_TIMEOUT_MS;
+}
+
+function getDeepsProxyTimeoutMs() {
+  const parsed = Number(process.env.DEEPSPROXY_TIMEOUT_MS ?? DEFAULT_DEEPSPROXY_TIMEOUT_MS);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_DEEPSPROXY_TIMEOUT_MS;
 }
 
 function withMiniMaxInstructions(messages: NvidiaMessage[]): NvidiaMessage[] {
@@ -79,8 +87,35 @@ export async function generateWithNvidia(
     temperature?: number;
     topP?: number;
     maxTokens?: number;
+    deepsProxyTimeoutMs?: number;
+    skipDeepsProxy?: boolean;
   }
 ) {
+  const deepsProxy = options?.skipDeepsProxy ? null : await getDeepsProxyConfig('max');
+  if (deepsProxy) {
+    const client = createOpenAiCompatibleStreamingClient(deepsProxy.baseUrl, deepsProxy.apiKey);
+    const completion = await client.chat.completions.create(
+      {
+        model: deepsProxy.model,
+        messages,
+        temperature: options?.temperature ?? 1,
+        top_p: options?.topP ?? 1,
+        max_tokens: options?.maxTokens ?? 8192,
+      },
+      { timeout: options?.deepsProxyTimeoutMs ?? getDeepsProxyTimeoutMs() }
+    );
+    const content = completion.choices[0]?.message.content.trim() ?? '';
+    if (!content) {
+      throw new Error('O DeepsProxy não retornou conteúdo.');
+    }
+
+    return {
+      content,
+      completion,
+      model: deepsProxy.model,
+    };
+  }
+
   const request = {
     model: NVIDIA_PRIMARY_MODEL,
     messages: withMiniMaxInstructions(messages),
@@ -115,5 +150,8 @@ export async function generateWithNvidia(
 }
 
 export function getNvidiaModel() {
+  if (process.env.DEEPSPROXY_API_KEY) {
+    return process.env.DEEPSPROXY_MAX_MODEL || process.env.DEEPSPROXY_MODEL || 'deepsproxy';
+  }
   return NVIDIA_PRIMARY_MODEL;
 }

@@ -20,6 +20,7 @@ const DISCIPLINES: Question['discipline'][] = ['Matemática', 'Português', 'Qu�
 const QUESTIONS_PER_DISCIPLINE = 3;
 const REUSED_QUESTIONS_PER_DISCIPLINE = 2;
 const MAX_ATTEMPTS_PER_DISCIPLINE = 2;
+const DEFAULT_QUESTIONS_DEEPSPROXY_TIMEOUT_MS = 18_000;
 
 type QuizRequestPayload = {
   result: QuizResult;
@@ -49,6 +50,16 @@ type GeneratedQuestionCandidate = Question & {
 };
 
 type GenerationDiagnostics = Partial<Record<Question['discipline'], string>>;
+type ReuseSummary = Record<string, {
+  reused: number;
+  generated: number;
+  relaxedReuse?: number;
+}>;
+
+function getQuestionsDeepsProxyTimeoutMs() {
+  const parsed = Number(process.env.QUESTIONS_DEEPSPROXY_TIMEOUT_MS ?? DEFAULT_QUESTIONS_DEEPSPROXY_TIMEOUT_MS);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_QUESTIONS_DEEPSPROXY_TIMEOUT_MS;
+}
 
 function shuffleArray<T>(items: T[]): T[] {
   const copy = [...items];
@@ -66,6 +77,66 @@ function normalizeText(value: string): string {
     .toLowerCase()
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function tryAddQuestion(
+  question: Question,
+  target: Question[],
+  selectedIds: Set<string>,
+  selectedSignatures: Set<string>,
+  options: {
+    excludedIds?: Set<string>;
+    excludedSignatures?: Set<string>;
+    maxQuestions?: number;
+  } = {}
+) {
+  if (options.maxQuestions && target.length >= options.maxQuestions) {
+    return false;
+  }
+
+  const signature = getQuestionSignature(question);
+  if (
+    selectedIds.has(question.id) ||
+    selectedSignatures.has(signature) ||
+    options.excludedIds?.has(question.id) ||
+    options.excludedSignatures?.has(signature)
+  ) {
+    return false;
+  }
+
+  target.push(question);
+  selectedIds.add(question.id);
+  selectedSignatures.add(signature);
+  return true;
+}
+
+function fillQuestionsFromPool(
+  pool: Question[],
+  target: Question[],
+  targetCount: number,
+  selectedIds: Set<string>,
+  selectedSignatures: Set<string>,
+  options: {
+    excludedIds?: Set<string>;
+    excludedSignatures?: Set<string>;
+  } = {}
+) {
+  let added = 0;
+
+  for (const question of pool) {
+    if (target.length >= targetCount) break;
+
+    if (
+      tryAddQuestion(question, target, selectedIds, selectedSignatures, {
+        ...options,
+        maxQuestions: targetCount,
+      })
+    ) {
+      added += 1;
+    }
+  }
+
+  return added;
 }
 
 function assertQuizPayload(payload: unknown): QuizRequestPayload {
@@ -234,6 +305,7 @@ async function requestQuestionsForDiscipline(
     maxTokens: 4096,
     topP: 1,
     expectJson: true,
+    deepsProxyTimeoutMs: getQuestionsDeepsProxyTimeoutMs(),
   });
 
   const parsed = extractJson<Record<string, unknown>>(response.content);
@@ -377,17 +449,8 @@ export async function GET(request: NextRequest) {
     }
 
     const aiRuntime = await getUserAiRuntime(auth.userId);
-    const emptyStoredQuestions = disciplines.reduce<Record<Question['discipline'], Question[]>>(
-      (accumulator, discipline) => {
-        accumulator[discipline] = [];
-        return accumulator;
-      },
-      {} as Record<Question['discipline'], Question[]>
-    );
     const [storedByDiscipline, recentExposure] = await Promise.all([
-      aiRuntime.subscription.hasMaxAccess
-        ? Promise.resolve(emptyStoredQuestions)
-        : getStoredQuestionsForDisciplines(adminClient, disciplines, { limit: 400 }),
+      getStoredQuestionsForDisciplines(adminClient, disciplines, { limit: 400 }),
       getRecentUserQuestionExposure(adminClient, auth.userId, 10),
     ]);
 
@@ -395,30 +458,35 @@ export async function GET(request: NextRequest) {
     const diagnostics: GenerationDiagnostics = {};
     const missing: Question['discipline'][] = [];
     const providersUsed: Record<string, string> = {};
-    const reuseSummary: Record<string, { reused: number; generated: number }> = {};
+    const reuseSummary: ReuseSummary = {};
 
-    const usedIds = new Set(recentExposure.questionIds);
-    const usedSignatures = new Set(recentExposure.questionSignatures);
+    const recentIds = recentExposure.questionIds;
+    const recentSignatures = recentExposure.questionSignatures;
+    const selectedIds = new Set<string>();
+    const selectedSignatures = new Set<string>();
 
     for (const discipline of disciplines) {
       const disciplinePool = shuffleArray(storedByDiscipline[discipline] ?? []);
       const disciplineQuestions: Question[] = [];
+      let reusedCount = 0;
 
       if (!aiRuntime.subscription.hasMaxAccess) {
-        for (const question of disciplinePool) {
-          if (disciplineQuestions.length >= REUSED_QUESTIONS_PER_DISCIPLINE) break;
-
-          const signature = getQuestionSignature(question);
-          if (usedIds.has(question.id) || usedSignatures.has(signature)) continue;
-
-          disciplineQuestions.push(question);
-          usedIds.add(question.id);
-          usedSignatures.add(signature);
-        }
+        reusedCount += fillQuestionsFromPool(
+          disciplinePool,
+          disciplineQuestions,
+          REUSED_QUESTIONS_PER_DISCIPLINE,
+          selectedIds,
+          selectedSignatures,
+          {
+            excludedIds: recentIds,
+            excludedSignatures: recentSignatures,
+          }
+        );
       }
 
       const requiredFreshQuestions = QUESTIONS_PER_DISCIPLINE - disciplineQuestions.length;
       let generatedCount = 0;
+      let relaxedReuseCount = 0;
 
       if (requiredFreshQuestions > 0) {
         const excludedTexts = Array.from(
@@ -432,7 +500,7 @@ export async function GET(request: NextRequest) {
           aiRuntime,
           discipline,
           requiredFreshQuestions,
-          usedSignatures,
+          new Set([...selectedSignatures, ...recentSignatures]),
           excludedTexts
         );
 
@@ -446,14 +514,17 @@ export async function GET(request: NextRequest) {
             : await saveGeneratedQuestions(adminClient, generated.questions);
 
           for (const question of canonicalGenerated) {
-            const signature = getQuestionSignature(question);
             if (disciplineQuestions.length >= QUESTIONS_PER_DISCIPLINE) break;
-            if (usedIds.has(question.id) || usedSignatures.has(signature)) continue;
 
-            disciplineQuestions.push(question);
-            generatedCount += 1;
-            usedIds.add(question.id);
-            usedSignatures.add(signature);
+            if (
+              tryAddQuestion(question, disciplineQuestions, selectedIds, selectedSignatures, {
+                excludedIds: recentIds,
+                excludedSignatures: recentSignatures,
+                maxQuestions: QUESTIONS_PER_DISCIPLINE,
+              })
+            ) {
+              generatedCount += 1;
+            }
           }
         }
 
@@ -462,9 +533,34 @@ export async function GET(request: NextRequest) {
         }
       }
 
+      if (disciplineQuestions.length < QUESTIONS_PER_DISCIPLINE) {
+        reusedCount += fillQuestionsFromPool(
+          disciplinePool,
+          disciplineQuestions,
+          QUESTIONS_PER_DISCIPLINE,
+          selectedIds,
+          selectedSignatures,
+          {
+            excludedIds: recentIds,
+            excludedSignatures: recentSignatures,
+          }
+        );
+      }
+
+      if (disciplineQuestions.length < QUESTIONS_PER_DISCIPLINE) {
+        relaxedReuseCount += fillQuestionsFromPool(
+          disciplinePool,
+          disciplineQuestions,
+          QUESTIONS_PER_DISCIPLINE,
+          selectedIds,
+          selectedSignatures
+        );
+      }
+
       reuseSummary[discipline] = {
-        reused: disciplineQuestions.length - generatedCount,
+        reused: reusedCount + relaxedReuseCount,
         generated: generatedCount,
+        ...(relaxedReuseCount > 0 ? { relaxedReuse: relaxedReuseCount } : {}),
       };
 
       if (disciplineQuestions.length < QUESTIONS_PER_DISCIPLINE) {
