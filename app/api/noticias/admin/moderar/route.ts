@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
 
   let groqProviders: GroqProvider[];
   try {
-    groqProviders = buildGroqProviders();
+    groqProviders = await buildGroqProviders();
   } catch {
     return NextResponse.json({ error: "Serviço de IA indisponível." }, { status: 503 });
   }

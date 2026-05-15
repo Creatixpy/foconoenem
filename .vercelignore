@@ -1,0 +1,7 @@
+.env*
+.bin/
+node_modules/
+.next/
+out/
+coverage/
+*.log

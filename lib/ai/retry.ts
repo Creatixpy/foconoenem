@@ -5,6 +5,10 @@ export type RetryResult<T> = {
   provider: string;
 };
 
+type RetryOptions = {
+  includeDeepsProxy?: boolean;
+};
+
 /**
  * Execute an async operation with Groq provider retry/fallback.
  * Tries each provider up to GROQ_MAX_ATTEMPTS times, switching to
@@ -13,8 +17,9 @@ export type RetryResult<T> = {
 export async function withGroqRetry<T>(
   label: string,
   fn: (provider: GroqProvider) => Promise<T>,
+  options: RetryOptions = {},
 ): Promise<RetryResult<T>> {
-  const providers = buildGroqProviders();
+  const providers = await buildGroqProviders({ includeDeepsProxy: options.includeDeepsProxy });
   const attemptsLog: string[] = [];
 
   for (let providerIndex = 0; providerIndex < providers.length; providerIndex++) {
@@ -36,7 +41,7 @@ export async function withGroqRetry<T>(
         attemptsLog.push(`(${provider.name}) tentativa ${attempt}: ${detail}`);
         console.error(`[${label}] Erro com ${provider.name} (tentativa ${attempt}):`, error);
 
-        if (isRateLimitError(error) && providerIndex < providers.length - 1) {
+        if ((provider.name === 'deepsproxy' || isRateLimitError(error)) && providerIndex < providers.length - 1) {
           break;
         }
       }

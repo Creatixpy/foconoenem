@@ -83,9 +83,9 @@ export async function POST(request: NextRequest) {
 
     const articleContext = articles.map(formatArticleForPrompt).join('\n\n---\n\n');
 
-    let providers: ReturnType<typeof buildGroqProviders>;
+    let providers: Awaited<ReturnType<typeof buildGroqProviders>>;
     try {
-      providers = buildGroqProviders();
+      providers = await buildGroqProviders();
     } catch {
       return NextResponse.json(
         {

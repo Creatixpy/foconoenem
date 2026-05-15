@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "npx next build && npx next-sitemap",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "deepsproxy:tunnel": "node scripts/deepsproxy-tunnel.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
