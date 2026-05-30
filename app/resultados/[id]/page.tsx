@@ -5,10 +5,10 @@ import ResultadosPageClient from './ResultadosPageClient';
 export const dynamic = 'force-dynamic';
 
 export default async function ResultadosPage() {
-  await requireServerUser();
+  const user = await requireServerUser();
 
   return (
-    <AuthProviders>
+    <AuthProviders initialUser={user} initialAuthChecked>
       <ResultadosPageClient />
     </AuthProviders>
   );

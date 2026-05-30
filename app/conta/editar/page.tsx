@@ -5,10 +5,10 @@ import ContaEditarPageClient from './ContaEditarPageClient';
 export const dynamic = 'force-dynamic';
 
 export default async function ContaEditarPage() {
-  await requireServerUser();
+  const user = await requireServerUser();
 
   return (
-    <AuthProviders>
+    <AuthProviders initialUser={user} initialAuthChecked>
       <ContaEditarPageClient />
     </AuthProviders>
   );

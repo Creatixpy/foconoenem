@@ -19,13 +19,13 @@
     "groq-sdk": "^1.1.2",
     "luxon": "^3.7.2",
     "motion": "^12.38.0",
-    "next": "^16.2.3",
+    "next": "^16.2.6",
     "next-sitemap": "^4.2.3",
     "openai": "^6.34.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "recharts": "^3.8.1",
-    "sanitize-html": "^2.17.3",
+    "sanitize-html": "^2.17.4",
     "server-only": "^0.0.1",
     "stripe": "^22.0.1",
     "zod": "^4.3.6"
@@ -37,9 +37,12 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "eslint": "^9.39.1",
-    "eslint-config-next": "^16.2.3",
+    "eslint-config-next": "^16.2.6",
     "supabase": "^2.88.1",
     "tailwindcss": "^4.2.2",
     "typescript": "6.0.2"
+  },
+  "overrides": {
+    "postcss": "^8.5.15"
   }
 }

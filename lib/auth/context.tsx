@@ -62,10 +62,16 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 interface AuthProviderProps {
   children: ReactNode;
+  initialUser?: User | null;
+  initialAuthChecked?: boolean;
 }
 
-export function AuthProvider({ children }: AuthProviderProps) {
-  const [user, setUser] = useState<User | null>(null);
+export function AuthProvider({
+  children,
+  initialUser = null,
+  initialAuthChecked = false,
+}: AuthProviderProps) {
+  const [user, setUser] = useState<User | null>(initialUser);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -271,21 +277,32 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     const bootstrap = async () => {
       try {
-        // I07: Use getUser() for server-validated bootstrap instead of getSession()
-        const { data: userData, error: userError } = await supabase.auth.getUser();
-        
-        if (userError) throw userError;
+        if (initialAuthChecked) {
+          const sessionUser = initialUser ?? null;
+          const { data: sessionData } = await supabase.auth.getSession();
 
-        if (!isMountedRef.current) return;
+          if (!isMountedRef.current) return;
 
-        const sessionUser = userData.user ?? null;
-        setUser(sessionUser);
-        
-        // Still need session object for downstream consumers
-        const { data: sessionData } = await supabase.auth.getSession();
-        setSession(sessionData.session);
-        
-        await resolveProfile(sessionUser);
+          setUser(sessionUser);
+          setSession(sessionData.session);
+          await resolveProfile(sessionUser);
+        } else {
+          // I07: Use getUser() for server-validated bootstrap instead of getSession()
+          const { data: userData, error: userError } = await supabase.auth.getUser();
+
+          if (userError) throw userError;
+
+          if (!isMountedRef.current) return;
+
+          const sessionUser = userData.user ?? null;
+          setUser(sessionUser);
+
+          // Still need session object for downstream consumers
+          const { data: sessionData } = await supabase.auth.getSession();
+          setSession(sessionData.session);
+
+          await resolveProfile(sessionUser);
+        }
       } catch (error) {
         console.error('Erro ao obter sessão:', error);
         if (isMountedRef.current) {
@@ -334,7 +351,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       isMountedRef.current = false;
       subscription.unsubscribe();
     };
-  }, [resolveProfile]);
+  }, [initialAuthChecked, initialUser, resolveProfile]);
 
   const value: AuthContextType = {
     user,

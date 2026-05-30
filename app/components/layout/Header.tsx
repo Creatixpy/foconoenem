@@ -164,11 +164,11 @@ export default function Header() {
 
     const syncUser = async () => {
       const {
-        data: { user: currentUser },
-      } = await supabase.auth.getUser();
+        data: { session },
+      } = await supabase.auth.getSession();
 
       if (mounted) {
-        setUser(currentUser ?? null);
+        setUser(session?.user ?? null);
       }
     };
 
