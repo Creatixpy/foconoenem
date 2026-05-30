@@ -18,6 +18,7 @@ O projeto atual concentra toda a lógica ativa no próprio app Next.js:
 - O banco e a autenticação usam Supabase com tipos gerados em `types/supabase.ts`.
 - Operações privilegiadas usam `SUPABASE_SERVICE_ROLE_KEY` no servidor.
 - A atualização de sessão autenticada passa por `proxy.ts`.
+- Páginas autenticadas validam o usuário no servidor e repassam esse usuário ao `AuthProvider` para evitar uma validação duplicada no bootstrap do cliente.
 - O histórico de schema fica em `supabase/migrations/`.
 - Manutenção operacional é local ao app: limpeza de tabelas e atualização de destaques acontecem sob demanda, sem cron externo.
 - O plano Max usa Stripe para billing e tenta a NVIDIA com `minimaxai/minimax-m2.7` para os fluxos premium de redação, temas e simulados; se a NVIDIA falhar, o backend usa fallback Groq para não deixar assinantes sem resposta.
@@ -171,6 +172,7 @@ types/                  tipos compartilhados e tipos gerados do Supabase
 ### Conta e autenticação
 
 - login, cadastro, reset de senha e callback OAuth com Supabase
+- páginas protegidas usam `requireServerUser()` antes de renderizar e reutilizam o usuário validado no `AuthProvider`
 - dashboard em `/conta`
 - edição de perfil em `/conta/editar`
 - exclusão de conta em `/api/conta/excluir` com reconfirmação por senha e remoção explícita de redações, simulados e analytics do usuário antes da exclusão no Auth

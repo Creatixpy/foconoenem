@@ -24,6 +24,7 @@
 - Preserve the local style of the file you touch; the repository currently mixes single and double quotes.
 - Prefer Tailwind and the shared tokens in `app/styles/`.
 - Do not import server-only logic into client components.
+- Authenticated pages should validate with `requireServerUser()` server-side and pass the verified user into `AuthProviders` when the client needs `useAuth`, avoiding a second bootstrap `getUser()` call.
 - For Supabase access:
   - `lib/supabase/*` for low-level SSR/browser client creation.
   - `lib/db/*` for repository-oriented access.

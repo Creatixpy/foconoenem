@@ -5,10 +5,10 @@ import ContaPageClient from './ContaPageClient';
 export const dynamic = 'force-dynamic';
 
 export default async function ContaPage() {
-  await requireServerUser();
+  const user = await requireServerUser();
 
   return (
-    <AuthProviders>
+    <AuthProviders initialUser={user} initialAuthChecked>
       <ContaPageClient />
     </AuthProviders>
   );

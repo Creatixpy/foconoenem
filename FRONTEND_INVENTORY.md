@@ -76,7 +76,8 @@ The repository does **not** currently ship local Supabase Edge Function code. `s
 | File | Purpose |
 | --- | --- |
 | `app/layout.tsx` | Root metadata, global shell, telemetry toggles, theme boot script |
-| `app/providers.tsx` | Wraps `AuthProvider` and `ThemeProvider` |
+| `app/providers.tsx` | Wraps global `ThemeProvider` |
+| `app/auth-providers.tsx` | Client `AuthProvider` wrapper; protected server pages can pass the already validated user to avoid duplicate client auth validation |
 | `app/styles/index.css` | CSS entrypoint |
 
 ---
@@ -167,7 +168,7 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | File | Purpose |
 | --- | --- |
 | `lib/auth/constants.ts` | Auth constants and route references |
-| `lib/auth/context.tsx` | `AuthProvider` and auth state management |
+| `lib/auth/context.tsx` | `AuthProvider` and auth state management, including optional server-validated initial user bootstrap |
 | `lib/auth/index.ts` | Barrel |
 | `lib/auth/profile-service.ts` | Client wrapper around `/api/perfil` |
 | `lib/auth/security.ts` | Auth-side security helpers |
@@ -224,7 +225,7 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | `lib/server/news-highlights.ts` | On-demand highlight refresh/status logic backed by `configuracoes` |
 | `lib/server/noticias.ts` | Server-side approved news access for public routes |
 | `lib/server/operating-hours.ts` | Business-hours evaluation |
-| `lib/server/page-auth.ts` | Server-side page guards for authenticated routes |
+| `lib/server/page-auth.ts` | Cached server-side page guards for authenticated routes |
 | `lib/server/rate-limit.ts` | Server-side rate limiting |
 | `lib/server/subscriptions.ts` | Max subscription summary, Stripe sync, customer provisioning and webhook helpers |
 | `lib/server/stripe.ts` | Shared Stripe server client helpers |
@@ -240,7 +241,7 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 
 | File | Purpose |
 | --- | --- |
-| `lib/supabase/client.ts` | Browser Supabase client |
+| `lib/supabase/client.ts` | Browser Supabase client; throws when required public Supabase env vars are missing |
 | `lib/supabase/middleware.ts` | Session refresh and security headers used by `proxy.ts` |
 | `lib/supabase/server.ts` | SSR Supabase client with cookie bridge |
 

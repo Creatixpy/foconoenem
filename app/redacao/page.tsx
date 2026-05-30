@@ -5,10 +5,10 @@ import RedacaoPageClient from './RedacaoPageClient';
 export const dynamic = 'force-dynamic';
 
 export default async function RedacaoPage() {
-  await requireServerUser();
+  const user = await requireServerUser();
 
   return (
-    <AuthProviders>
+    <AuthProviders initialUser={user} initialAuthChecked>
       <RedacaoPageClient />
     </AuthProviders>
   );

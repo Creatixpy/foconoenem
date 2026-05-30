@@ -33,7 +33,14 @@ export async function POST(request: NextRequest) {
   const signature = request.headers.get('stripe-signature');
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-  if (!signature || !webhookSecret) {
+  if (!signature) {
+    return NextResponse.json(
+      { error: 'Assinatura Stripe ausente.' },
+      { status: 400 }
+    );
+  }
+
+  if (!webhookSecret) {
     return NextResponse.json(
       { error: 'Assinatura do webhook não configurada.' },
       { status: 400 }

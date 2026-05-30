@@ -1,8 +1,23 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import type { User } from '@supabase/supabase-js';
 import { AuthProvider } from '@/lib/auth/context';
 
-export default function AuthProviders({ children }: { children: ReactNode }) {
-  return <AuthProvider>{children}</AuthProvider>;
+type AuthProvidersProps = {
+  children: ReactNode;
+  initialUser?: User | null;
+  initialAuthChecked?: boolean;
+};
+
+export default function AuthProviders({
+  children,
+  initialUser = null,
+  initialAuthChecked = false,
+}: AuthProvidersProps) {
+  return (
+    <AuthProvider initialUser={initialUser} initialAuthChecked={initialAuthChecked}>
+      {children}
+    </AuthProvider>
+  );
 }

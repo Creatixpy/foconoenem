@@ -5,10 +5,10 @@ import QuestoesPageClient from './QuestoesPageClient';
 export const dynamic = 'force-dynamic';
 
 export default async function QuestoesPage() {
-  await requireServerUser();
+  const user = await requireServerUser();
 
   return (
-    <AuthProviders>
+    <AuthProviders initialUser={user} initialAuthChecked>
       <QuestoesPageClient />
     </AuthProviders>
   );
