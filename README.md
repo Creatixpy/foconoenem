@@ -44,9 +44,13 @@ O projeto atual concentra toda a lógica ativa no próprio app Next.js:
 
 Use uma versão atual do Node.js compatível com Next.js 16 e npm.
 
+## Licença
+
+Distribuído sob a licença MIT. Consulte `LICENSE`.
+
 ## Variáveis de ambiente
 
-Crie `.env.local` na raiz do projeto. Nem todas as variáveis são obrigatórias para todas as rotas; a tabela abaixo indica o uso real.
+Copie `.env.example` para `.env.local` e preencha os valores da sua instalação. Nem todas as variáveis são obrigatórias para todas as rotas; a tabela abaixo indica o uso real.
 
 | Variável | Status | Uso real |
 | --- | --- | --- |
@@ -66,6 +70,13 @@ Crie `.env.local` na raiz do projeto. Nem todas as variáveis são obrigatórias
 | `DEEPSPROXY_FREE_MODEL` | opcional | modelo DeepsProxy para usuários sem Max; se ausente, lê `configuracoes.deepsproxy_free_model` |
 | `DEEPSPROXY_MAX_MODEL` | opcional | modelo DeepsProxy para usuários Max; se ausente, lê `configuracoes.deepsproxy_max_model` |
 | `DEEPSPROXY_TIMEOUT_MS` | opcional | tempo máximo por request ao DeepsProxy |
+| `QUESTIONS_DEEPSPROXY_TIMEOUT_MS` | opcional | timeout específico da geração de questões via DeepsProxy |
+| `DEEPSPROXY_CONFIG_URL_KEY` | opcional | nome da chave em `configuracoes` para a URL pública do DeepsProxy |
+| `DEEPSPROXY_CONFIG_MODEL_KEY` | opcional | nome legado da chave em `configuracoes` para modelo DeepsProxy |
+| `DEEPSPROXY_CONFIG_FREE_MODEL_KEY` | opcional | nome da chave em `configuracoes` para modelo Free |
+| `DEEPSPROXY_CONFIG_MAX_MODEL_KEY` | opcional | nome da chave em `configuracoes` para modelo Max |
+| `DEEPSPROXY_ENV_FILE` | opcional | arquivo local lido por `npm run deepsproxy:tunnel`; padrão `.env.deepsproxy` |
+| `LOCAL_DEEPSPROXY_URL` | opcional | URL local usada pelo túnel; padrão `http://127.0.0.1:3001` |
 | `NVIDIA_API_KEY` | obrigatória para a tentativa primária do plano Max | `/api/corrigir`, `/api/gerar-tema`, `/api/questoes` quando o usuário tem assinatura Max ativa |
 | `NVIDIA_MAX_TIMEOUT_MS` | opcional | tempo máximo da tentativa primária NVIDIA antes de fallback server-side |
 | `GEMINI_API_KEY` | opcional | OCR em `/api/ocr` |
@@ -78,12 +89,13 @@ Crie `.env.local` na raiz do projeto. Nem todas as variáveis são obrigatórias
 Exemplo mínimo para desenvolvimento de boa parte do app:
 
 ```bash
+cp .env.example .env.local
 NEXT_PUBLIC_SUPABASE_URL=https://seu-projeto.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=sua-chave-anon
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 SITE_URL=http://localhost:3000
 
-SUPABASE_SERVICE_ROLE_KEY=sua-service-role
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
 
 GROQ_API_KEY=sua-chave-groq
 GROQ_MODEL=openai/gpt-oss-120b
@@ -106,13 +118,20 @@ npm run lint
 npm run build
 npm run start
 npm run deepsproxy:tunnel
+npm run verify:open-source
+npm run verify:history-clean
+npm run release:public-tree
 ```
 
 Observações:
 
 - `npm run build` executa `next build` e depois `next-sitemap`, atualizando `public/sitemap.xml`.
 - `npm run deepsproxy:tunnel` abre um Cloudflare Quick Tunnel gratuito para o DeepsProxy local, publica a URL em `configuracoes.deepsproxy_public_url` e mantém o site da Vercel apontando para sua máquina enquanto o processo estiver aberto.
+- `npm run verify:open-source` valida a árvore publicável contra formatos comuns de segredo e arquivos obrigatórios de release.
+- `npm run verify:history-clean` verifica o histórico Git local contra padrões de segredos; para publicar com histórico novo, use também `npm run release:public-tree`.
 - Hoje não há suíte automatizada de testes no repositório; a validação prática do projeto passa por `npm run lint`, `npm run build` e QA manual.
+- Contribuições devem seguir `CONTRIBUTING.md`; vulnerabilidades e segredos expostos devem seguir `SECURITY.md`.
+- Antes de tornar o repositório público, siga `OPEN_SOURCE_RELEASE.md`, adicione uma licença e publique a partir de histórico limpo.
 
 ### DeepsProxy local na Vercel
 
@@ -124,6 +143,8 @@ Para usar sem domínio e sem pagar túnel, deixe o DeepsProxy rodando em `http:/
 vercel env pull .env.local --yes
 npm run deepsproxy:tunnel
 ```
+
+O script lê credenciais locais do DeepsProxy em `.env.deepsproxy` por padrão. Se o arquivo estiver em outro local, defina `DEEPSPROXY_ENV_FILE=/caminho/para/.env` antes de executar o script. Esse arquivo é ignorado pelo Git.
 
 Quando o túnel gerar uma URL `trycloudflare.com`, o script salva essa URL no Supabase. A Vercel passa a ler a URL em tempo de execução, sem precisar redeploy a cada reinício do túnel.
 

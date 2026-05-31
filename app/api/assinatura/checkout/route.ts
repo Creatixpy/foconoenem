@@ -124,7 +124,6 @@ export async function POST(request: NextRequest) {
           success_url: buildSubscriptionReturnUrl(origin, returnPath, 'success'),
           cancel_url: buildSubscriptionReturnUrl(origin, returnPath, 'canceled'),
           allow_promotion_codes: true,
-          payment_method_types: ['card'],
           line_items: [
             {
               price: getMaxSubscriptionPriceId(),
