@@ -193,6 +193,7 @@ types/                  tipos compartilhados e tipos gerados do Supabase
 ## Documentação interna
 
 - [README.md](./README.md): visão geral, setup e operação
+- [SITE_GUIDE.md](./SITE_GUIDE.md): guia de funcionamento do site, impacto para estudantes e formas de contribuir
 - [FRONTEND_INVENTORY.md](./FRONTEND_INVENTORY.md): inventário fiel da estrutura atual do repositório
 - [AGENTS.md](./AGENTS.md): diretrizes de colaboração no código
 - [supabase/functions/README.md](./supabase/functions/README.md): estado do legado de Edge Functions
