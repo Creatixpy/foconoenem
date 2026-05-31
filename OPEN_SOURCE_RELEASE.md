@@ -9,7 +9,7 @@ This repository is intended to be public, but the release must be made from a cl
    - Supabase MCP access token from historical `.vscode/mcp.json`
    - Supabase service-role keys used locally
    - Stripe secret and webhook signing secrets used locally
-   - Groq, Gemini, NVIDIA, NewsAPI, DeepsProxy, and Vercel tokens used locally
+   - Groq, Gemini, NVIDIA, NewsAPI, and Vercel tokens used locally
 3. Enable Supabase Auth leaked-password protection in the Supabase dashboard.
 4. Publish from a history that does not include the old `.vscode/mcp.json` token-bearing commits.
 

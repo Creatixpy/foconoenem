@@ -64,7 +64,6 @@
 - Stripe depends on `STRIPE_SECRET_KEY`; the webhook also requires `STRIPE_WEBHOOK_SECRET`.
 - The Max subscription checkout requires `STRIPE_MAX_PRICE_ID`.
 - The Max AI provider requires `NVIDIA_API_KEY`, attempts `minimaxai/minimax-m2.7` first, and uses server-side Groq fallback after NVIDIA failures. `NVIDIA_MAX_TIMEOUT_MS` optionally controls the primary NVIDIA attempt timeout.
-- Optional DeepsProxy integration uses `DEEPSPROXY_API_KEY`, model/config overrides, `DEEPSPROXY_TIMEOUT_MS`, and `QUESTIONS_DEEPSPROXY_TIMEOUT_MS`; the local tunnel helper reads `.env.deepsproxy` by default or `DEEPSPROXY_ENV_FILE` when set.
 - OCR depends on `GEMINI_API_KEY`.
 - News import uses `NEWSAPI_API_KEY` or `NEWSAPI_KEY`.
 - The project uses RLS in Supabase, but application table access is routed through server handlers with `SUPABASE_SERVICE_ROLE_KEY`; direct public DB grants should stay minimal.
