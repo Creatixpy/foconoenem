@@ -5,8 +5,7 @@ import "./styles/index.css";
 import Providers from "./providers";
 import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
-import { SpeedInsights } from "@vercel/speed-insights/next";
-import { Analytics } from "@vercel/analytics/next";
+import ConsentAwareTelemetry from "./components/privacy/ConsentAwareTelemetry";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -92,12 +91,7 @@ export default function RootLayout({
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />
-          {isTelemetryEnabled && (
-            <>
-              <SpeedInsights debug={false} />
-              <Analytics debug={false} mode="production" />
-            </>
-          )}
+          <ConsentAwareTelemetry enabled={isTelemetryEnabled} />
         </Providers>
       </body>
     </html>
