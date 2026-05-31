@@ -20,7 +20,6 @@ const DISCIPLINES: Question['discipline'][] = ['Matemática', 'Português', 'Qu�
 const QUESTIONS_PER_DISCIPLINE = 3;
 const REUSED_QUESTIONS_PER_DISCIPLINE = 2;
 const MAX_ATTEMPTS_PER_DISCIPLINE = 2;
-const DEFAULT_QUESTIONS_DEEPSPROXY_TIMEOUT_MS = 18_000;
 
 type QuizRequestPayload = {
   result: QuizResult;
@@ -55,11 +54,6 @@ type ReuseSummary = Record<string, {
   generated: number;
   relaxedReuse?: number;
 }>;
-
-function getQuestionsDeepsProxyTimeoutMs() {
-  const parsed = Number(process.env.QUESTIONS_DEEPSPROXY_TIMEOUT_MS ?? DEFAULT_QUESTIONS_DEEPSPROXY_TIMEOUT_MS);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_QUESTIONS_DEEPSPROXY_TIMEOUT_MS;
-}
 
 function shuffleArray<T>(items: T[]): T[] {
   const copy = [...items];
@@ -305,7 +299,6 @@ async function requestQuestionsForDiscipline(
     maxTokens: 4096,
     topP: 1,
     expectJson: true,
-    deepsProxyTimeoutMs: getQuestionsDeepsProxyTimeoutMs(),
   });
 
   const parsed = extractJson<Record<string, unknown>>(response.content);

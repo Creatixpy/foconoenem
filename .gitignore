@@ -53,5 +53,3 @@ Screenshot_*.png
 next-env.d.ts
 .mcp.json
 supabase/.temp/
-.bin/
-.deepsproxy-tunnel.pid

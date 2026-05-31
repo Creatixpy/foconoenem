@@ -15,8 +15,6 @@ export type AiCompletionRequest = {
   maxTokens: number;
   topP?: number;
   expectJson?: boolean;
-  deepsProxyTimeoutMs?: number;
-  skipDeepsProxy?: boolean;
 };
 
 export type AiCompletionResult = {
@@ -69,10 +67,7 @@ function createStandardRuntime(subscription: UserSubscriptionSummary): UserAiRun
             top_p: request.topP ?? 1,
             stream: false,
             ...(request.expectJson ? { response_format: { type: 'json_object' as const } } : {}),
-          },
-          request.deepsProxyTimeoutMs && currentProvider.name === 'deepsproxy'
-            ? { timeout: request.deepsProxyTimeoutMs }
-            : undefined
+          }
         );
 
         const content = response.choices?.[0]?.message?.content?.trim() ?? '';
@@ -84,7 +79,7 @@ function createStandardRuntime(subscription: UserSubscriptionSummary): UserAiRun
           content,
           model: currentProvider.model,
         };
-      }, { includeDeepsProxy: !request.skipDeepsProxy });
+      });
 
       return {
         content: result.content,
@@ -107,8 +102,6 @@ function createMaxRuntime(subscription: UserSubscriptionSummary): UserAiRuntime 
           temperature: request.temperature,
           topP: request.topP ?? 1,
           maxTokens: request.maxTokens,
-          deepsProxyTimeoutMs: request.deepsProxyTimeoutMs,
-          skipDeepsProxy: request.skipDeepsProxy,
         });
 
         return {
@@ -124,7 +117,7 @@ function createMaxRuntime(subscription: UserSubscriptionSummary): UserAiRuntime 
           detail,
         });
 
-        const fallback = await standardFallback.complete({ ...request, skipDeepsProxy: true });
+        const fallback = await standardFallback.complete(request);
         return {
           ...fallback,
           provider: `nvidia-fallback:${fallback.provider}`,

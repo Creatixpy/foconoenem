@@ -8,7 +8,6 @@ coverage/
 *.log
 *.tsbuildinfo
 next-env.d.ts
-.deepsproxy-tunnel.pid
 skills-lock.json
 IMPLEMENTACAO_PLANO_MAX.md
 *_AUDIT_*.md
