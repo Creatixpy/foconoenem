@@ -271,6 +271,19 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | `GROQ_FALLBACK_API_KEY` | Groq integration | Optional fallback provider |
 | `GROQ_FALLBACK_MODEL` | Groq integration | Optional fallback model |
 | `GROQ_MAX_ATTEMPTS` | Groq retry logic | Optional |
+| `DEEPSPROXY_API_KEY` | optional OpenAI-compatible local proxy | Enables DeepsProxy before standard providers |
+| `DEEPSPROXY_BASE_URL` | optional OpenAI-compatible local proxy | Fixed public DeepsProxy URL; otherwise reads `configuracoes.deepsproxy_public_url` |
+| `DEEPSPROXY_MODEL` | optional OpenAI-compatible local proxy | Legacy/global fallback model |
+| `DEEPSPROXY_FREE_MODEL` | optional OpenAI-compatible local proxy | Free-user DeepsProxy model override |
+| `DEEPSPROXY_MAX_MODEL` | optional OpenAI-compatible local proxy | Max-user DeepsProxy model override |
+| `DEEPSPROXY_TIMEOUT_MS` | optional OpenAI-compatible local proxy | Request timeout |
+| `QUESTIONS_DEEPSPROXY_TIMEOUT_MS` | quiz generation | Optional shorter timeout for question generation |
+| `DEEPSPROXY_CONFIG_URL_KEY` | tunnel helper and runtime config | Optional `configuracoes` key override for public URL |
+| `DEEPSPROXY_CONFIG_MODEL_KEY` | tunnel helper and runtime config | Optional legacy model key override |
+| `DEEPSPROXY_CONFIG_FREE_MODEL_KEY` | runtime config | Optional Free model key override |
+| `DEEPSPROXY_CONFIG_MAX_MODEL_KEY` | runtime config | Optional Max model key override |
+| `DEEPSPROXY_ENV_FILE` | `npm run deepsproxy:tunnel` | Optional local DeepsProxy env-file path; default `.env.deepsproxy` |
+| `LOCAL_DEEPSPROXY_URL` | `npm run deepsproxy:tunnel` | Optional local proxy URL; default `http://127.0.0.1:3001` |
 | `NVIDIA_API_KEY` | Max essay/theme/quiz generation | Required for the primary Max plan NVIDIA attempt with `minimaxai/minimax-m2.7` |
 | `NVIDIA_MAX_TIMEOUT_MS` | Max essay/theme/quiz generation | Optional timeout for the primary NVIDIA attempt before server-side fallback |
 | `GEMINI_API_KEY` | `/api/ocr` | Optional OCR feature |

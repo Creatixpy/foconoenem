@@ -31,20 +31,27 @@ yarn-error.log*
 .pnpm-debug.log*
 *.log
 
-# env files (can opt-in for committing if needed)
+# env files
 .env*
+!.env.example
 
 # vercel
 .vercel
 
-# VS Code workspace settings (contains secrets)
-
+# local/editor/agent state
+.vscode/mcp.json
+.agents/
+skills-lock.json
+IMPLEMENTACAO_PLANO_MAX.md
+*_AUDIT_*.md
+FINAL_AUDIT_VERIFICATION_*.md
+RELATORIO_COMPLETO_SISTEMA_*.md
+Screenshot_*.png
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
 .mcp.json
 supabase/.temp/
-.env*.local
 .bin/
 .deepsproxy-tunnel.pid

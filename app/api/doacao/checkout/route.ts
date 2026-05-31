@@ -78,7 +78,6 @@ export async function POST(request: NextRequest) {
         mode: 'payment',
         client_reference_id: checkoutId,
         customer_creation: 'always',
-        payment_method_types: ['card'],
         success_url: successUrl,
         cancel_url: cancelUrl,
         metadata: {
