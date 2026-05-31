@@ -1,0 +1,3 @@
+-- Remote migration 20251007125950.
+-- Nenhuma alteração estrutural além do que já está em 20250210121000_rebuild_schema.sql.
+-- Confirmado via `npx supabase db diff --linked --schema public --use-migra`.

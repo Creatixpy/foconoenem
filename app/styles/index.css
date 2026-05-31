@@ -1,0 +1,10 @@
+/* ============================================================
+   FocoNoEnem — CSS Entry Point
+   Tailwind v4 + design tokens + base styles
+   ============================================================ */
+
+@import "tailwindcss";
+@config "../../tailwind.config.js";
+
+@import "./tokens.css";
+@import "./base.css";

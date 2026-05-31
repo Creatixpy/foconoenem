@@ -1,0 +1,17 @@
+.env*
+.agents/
+.bin/
+node_modules/
+.next/
+out/
+coverage/
+*.log
+*.tsbuildinfo
+next-env.d.ts
+.deepsproxy-tunnel.pid
+skills-lock.json
+IMPLEMENTACAO_PLANO_MAX.md
+*_AUDIT_*.md
+FINAL_AUDIT_VERIFICATION_*.md
+RELATORIO_COMPLETO_SISTEMA_*.md
+Screenshot_*.png

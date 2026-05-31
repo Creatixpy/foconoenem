@@ -1,0 +1,143 @@
+/* ============================================================
+   BASE STYLES — FocoNoEnem
+   Global resets, body defaults, and foundational styles.
+   Wrapped in @layer base so Tailwind utilities can override.
+   ============================================================ */
+
+@layer base {
+  /* Smooth scrolling for anchors */
+  html {
+    scroll-behavior: smooth;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-text-size-adjust: 100%;
+    scrollbar-gutter: stable;
+  }
+
+  /* Base body styling */
+  body {
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+    color: var(--text-primary);
+    background-color: var(--bg-base);
+    min-height: 100dvh;
+    transition:
+      background-color var(--duration-normal) var(--ease-default),
+      color var(--duration-normal) var(--ease-default);
+  }
+
+  /* Headings */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tight);
+    color: var(--text-primary);
+  }
+
+  /* Paragraphs */
+  p {
+    line-height: var(--leading-relaxed);
+    color: var(--text-secondary);
+  }
+
+  /* Links */
+  a {
+    color: var(--primary);
+    text-decoration: none;
+    transition: color var(--duration-fast) var(--ease-default);
+  }
+
+  a:hover {
+    color: var(--primary-hover);
+  }
+
+  /* Focus visible */
+  :focus-visible {
+    outline: 2px solid var(--ring-color);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Selection */
+  ::selection {
+    background-color: var(--primary);
+    color: white;
+  }
+
+  /* Remove default button styling */
+  button {
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  /* Scrollbar styling for dark/light themes */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-color-strong);
+    border-radius: var(--radius-full);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+  }
+}
+
+/* ============================================================
+   UTILITY CLASSES
+   ============================================================ */
+
+/* Container */
+.container {
+  width: 100%;
+  max-width: var(--container-max);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--container-padding);
+  padding-right: var(--container-padding);
+}
+
+/* Transition helpers */
+.transition-theme {
+  transition:
+    background-color var(--duration-normal) var(--ease-default),
+    border-color var(--duration-normal) var(--ease-default),
+    color var(--duration-normal) var(--ease-default),
+    box-shadow var(--duration-normal) var(--ease-default);
+}
+
+.transition-fast {
+  transition: all var(--duration-fast) var(--ease-default);
+}
+
+/* Visually hidden (accessible) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Hide scrollbar but keep scrolling */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

@@ -1,0 +1,3 @@
+-- Remote migration 20251005033714.
+-- `npx supabase db diff --linked --schema public --use-migra` não encontrou deltas para esta versão.
+-- Mantido para preservar o alinhamento de versões com o banco remoto.

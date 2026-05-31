@@ -1,0 +1,3 @@
+-- Remote migration 20251005020518.
+-- Nenhuma alteração foi retornada por `npx supabase db diff --linked --schema public --use-migra`.
+-- Mantido apenas para registrar a versão aplicada no banco remoto.

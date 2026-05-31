@@ -1,0 +1,57 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+*.log
+
+# env files
+.env*
+!.env.example
+
+# vercel
+.vercel
+
+# local/editor/agent state
+.vscode/mcp.json
+.agents/
+skills-lock.json
+IMPLEMENTACAO_PLANO_MAX.md
+*_AUDIT_*.md
+FINAL_AUDIT_VERIFICATION_*.md
+RELATORIO_COMPLETO_SISTEMA_*.md
+Screenshot_*.png
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+.mcp.json
+supabase/.temp/
+.bin/
+.deepsproxy-tunnel.pid
