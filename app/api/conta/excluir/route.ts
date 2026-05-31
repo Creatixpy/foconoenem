@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
 import { createAdminClient } from '@/lib/db/server';
 import { checkRateLimit } from '@/lib/server/rate-limit';
+import { ensureTrustedOrigin } from '@/lib/server/request-origin';
 import { handleApiError, passwordSchema, sanitizeString } from '@/lib/security';
 import type { Database } from '@/types/supabase';
 
@@ -12,38 +13,6 @@ export const dynamic = 'force-dynamic';
 const deleteAccountSchema = z.object({
   password: passwordSchema.transform(sanitizeString),
 });
-
-function getAllowedOrigins(request: NextRequest): Set<string> {
-  const candidates = [
-    request.nextUrl.origin,
-    process.env.NEXT_PUBLIC_SITE_URL,
-    process.env.SITE_URL,
-  ];
-
-  return new Set(
-    candidates
-      .map((candidate) => {
-        if (!candidate) return null;
-        try {
-          return new URL(candidate).origin;
-        } catch {
-          return null;
-        }
-      })
-      .filter((origin): origin is string => Boolean(origin))
-  );
-}
-
-function getRequestOrigin(request: NextRequest): string | null {
-  const rawOrigin = request.headers.get('origin') ?? request.headers.get('referer');
-  if (!rawOrigin) return null;
-
-  try {
-    return new URL(rawOrigin).origin;
-  } catch {
-    return null;
-  }
-}
 
 function supportsPasswordConfirmation(user: User): boolean {
   const providers = Array.isArray(user.app_metadata?.providers)
@@ -101,14 +70,9 @@ async function deleteUserOwnedApplicationData(
 
 export async function POST(request: NextRequest) {
   try {
-    const requestOrigin = getRequestOrigin(request);
-    const allowedOrigins = getAllowedOrigins(request);
-
-    if (!requestOrigin || !allowedOrigins.has(requestOrigin)) {
-      return NextResponse.json(
-        { error: 'forbidden_origin' },
-        { status: 403 }
-      );
+    const originError = ensureTrustedOrigin(request);
+    if (originError) {
+      return originError;
     }
 
     const auth = await resolveRequestUserFromCookies({ requireEmailConfirmed: true });

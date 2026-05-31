@@ -247,7 +247,6 @@ export function AuthProvider({
     // only called on-demand (e.g. before saving quiz results).
     const checkIdleTimeout = async () => {
       if (isSessionIdle()) {
-        console.log('Sessão inativa, fazendo logout...');
         await handleSignOut();
       }
     };
