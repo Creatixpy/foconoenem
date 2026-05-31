@@ -57,6 +57,26 @@ function persistPreferences(preferences: CookiePreferences) {
   }
 }
 
+function setConsentDocumentFlag(hasPreferences: boolean) {
+  if (typeof document === 'undefined') return;
+
+  if (hasPreferences) {
+    document.documentElement.dataset.fneCookieConsent = 'saved';
+  } else {
+    delete document.documentElement.dataset.fneCookieConsent;
+  }
+}
+
+function setPanelDocumentFlag(isOpen: boolean) {
+  if (typeof document === 'undefined') return;
+
+  if (isOpen) {
+    document.documentElement.dataset.fneCookiePanel = 'open';
+  } else {
+    delete document.documentElement.dataset.fneCookiePanel;
+  }
+}
+
 type ConsentSnapshot = {
   ready: boolean;
   preferences: CookiePreferences | null;
@@ -105,6 +125,7 @@ export default function ConsentAwareTelemetry({ enabled }: ConsentAwareTelemetry
   useEffect(() => {
     const openPreferences = () => {
       const current = readPreferences() ?? fallbackPreferences;
+      setPanelDocumentFlag(true);
       setAnalyticsDraft(current?.analytics ?? false);
       setIsPanelOpen(true);
     };
@@ -117,6 +138,8 @@ export default function ConsentAwareTelemetry({ enabled }: ConsentAwareTelemetry
     const nextPreferences = buildPreferences(analytics);
     const persisted = persistPreferences(nextPreferences);
     setFallbackPreferences(persisted ? null : nextPreferences);
+    setConsentDocumentFlag(true);
+    setPanelDocumentFlag(false);
     window.dispatchEvent(new Event('fne:cookie-consent-updated'));
     setAnalyticsDraft(analytics);
     setIsPanelOpen(false);
@@ -136,7 +159,7 @@ export default function ConsentAwareTelemetry({ enabled }: ConsentAwareTelemetry
 
       {shouldShowPanel && (
         <div
-          className="fixed inset-x-0 bottom-3 z-50 px-3 sm:bottom-5 sm:px-5"
+          className="fne-cookie-consent-panel fixed inset-x-0 bottom-3 z-50 px-3 sm:bottom-5 sm:px-5"
           role="region"
           aria-labelledby="cookie-consent-title"
         >

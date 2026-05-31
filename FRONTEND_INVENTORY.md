@@ -86,6 +86,7 @@ The repository does **not** currently ship local Supabase Edge Function code. `s
 | --- | --- |
 | `app/components/privacy/ConsentAwareTelemetry.tsx` | Cookie preferences panel and consent-gated Vercel Analytics/Speed Insights loading |
 | `app/components/privacy/CookiePreferencesButton.tsx` | Footer control that reopens cookie preferences |
+| `public/cookie-consent-init.js` | Pre-hydration flag that prevents a saved cookie preference from flashing the SSR banner on reload |
 
 ---
 
