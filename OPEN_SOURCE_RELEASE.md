@@ -31,7 +31,7 @@ npm run build
 ```
 
 The open-source verifier checks the current publishable tree for common secret formats and blocks release when required public-release files are missing.
-The history verifier checks all local Git revisions for high-risk secret patterns. It is expected to fail on the current private history until the historical `.vscode/mcp.json` exposure is removed or a fresh public history is used.
+The history verifier checks all local Git revisions for high-risk secret patterns. As of the current public `main` history, it still fails because historical commits include `.vscode/mcp.json`; a fresh public history or reviewed history rewrite is still required for a fully clean open-source release.
 
 After adding a license and rotating exposed secrets, create a fresh source tree with:
 

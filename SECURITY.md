@@ -4,7 +4,7 @@
 
 Do not open a public issue for vulnerabilities or exposed credentials.
 
-Send reports to `contato@foconoenem.com` with:
+Send reports to `creatixpy@gmail.com` with:
 
 - affected route, API, or component
 - steps to reproduce
