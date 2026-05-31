@@ -85,6 +85,7 @@ export default function RootLayout({
     <html lang="pt-BR" className={inter.variable} suppressHydrationWarning>
       <head>
         <Script src="/theme-init.js" strategy="beforeInteractive" />
+        <Script src="/cookie-consent-init.js" strategy="beforeInteractive" />
       </head>
       <body className="flex flex-col min-h-dvh">
         <Providers>

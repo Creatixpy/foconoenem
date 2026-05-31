@@ -67,6 +67,10 @@
     color: white;
   }
 
+  html[data-fne-cookie-consent="saved"]:not([data-fne-cookie-panel="open"]) .fne-cookie-consent-panel {
+    display: none;
+  }
+
   /* Remove default button styling */
   button {
     font-family: inherit;
