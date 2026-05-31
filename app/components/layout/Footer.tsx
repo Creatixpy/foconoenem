@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import CookiePreferencesButton from '@/app/components/privacy/CookiePreferencesButton';
 
 /* ------------------------------------------------------------------ */
 /*  Inline SVG Icons (social)                                          */
@@ -56,7 +57,7 @@ const SOCIAL = [
   { href: 'https://github.com/Creatixpy/foconoenem', label: 'GitHub', Icon: GitHubIcon },
   { href: 'https://x.com/foconoenem', label: 'X (Twitter)', Icon: XTwitterIcon },
   { href: 'https://instagram.com/foconoenem', label: 'Instagram', Icon: InstagramIcon },
-  { href: 'mailto:contato@foconoenem.com', label: 'E-mail', Icon: MailIcon },
+  { href: 'mailto:creatixpy@gmail.com', label: 'E-mail', Icon: MailIcon },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -165,7 +166,11 @@ export default function Footer() {
       <div className="border-t border-[var(--border-color)]">
         <div className="container flex flex-col sm:flex-row items-center justify-between py-5 gap-3 text-sm text-[var(--text-muted)]">
           <p>© {currentYear} Foco no ENEM. Todos os direitos reservados.</p>
-          <p>Feito com ❤️ para estudantes do Brasil</p>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <CookiePreferencesButton className="text-sm text-[var(--text-muted)] transition-colors hover:text-[var(--text-primary)]" />
+            <span aria-hidden="true" className="hidden sm:inline">•</span>
+            <p>Feito com ❤️ para estudantes do Brasil</p>
+          </div>
         </div>
       </div>
     </footer>
