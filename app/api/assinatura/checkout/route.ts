@@ -1,0 +1,201 @@
+import { randomUUID } from 'node:crypto';
+import { NextRequest, NextResponse } from 'next/server';
+import { MAX_PLAN_CODE, MAX_PLAN_TRIAL_DAYS } from '@/lib/constants/subscriptions';
+import { createAdminClient } from '@/lib/db/server';
+import { handleApiError } from '@/lib/security';
+import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
+import { checkRateLimit } from '@/lib/server/rate-limit';
+import { ensureTrustedOrigin } from '@/lib/server/request-origin';
+import { getStripe } from '@/lib/server/stripe';
+import {
+  buildSubscriptionReturnUrl,
+  normalizeSubscriptionReturnPath,
+} from '@/lib/server/subscription-return';
+import {
+  canStartMaxTrial,
+  ensureStripeCustomerForUser,
+  getMaxSubscriptionPriceId,
+  getUserSubscription,
+  hasMaxPlanAccess,
+  savePendingSubscriptionCheckout,
+} from '@/lib/server/subscriptions';
+
+function isStripeCheckoutPaymentMethodError(error: unknown) {
+  return (
+    error instanceof Error &&
+    error.message.includes('No valid payment method types for this Checkout Session')
+  );
+}
+
+function canReuseOpenCheckoutSession(
+  session: Awaited<ReturnType<ReturnType<typeof getStripe>['checkout']['sessions']['retrieve']>>,
+  trialEligible: boolean
+) {
+  if (!session.url || session.status !== 'open') {
+    return false;
+  }
+
+  // Stripe returns `amount_total = 0` for a new subscription checkout with a free trial.
+  // If the user is still eligible but the open session already totals the first invoice,
+  // the session was created without trial and must be replaced.
+  if (trialEligible && session.amount_total !== 0) {
+    return false;
+  }
+
+  return true;
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const originError = ensureTrustedOrigin(request);
+    if (originError) {
+      return originError;
+    }
+
+    const auth = await resolveRequestUserFromCookies({ requireEmailConfirmed: true });
+    if ('error' in auth) {
+      return auth.error;
+    }
+
+    const adminClient = createAdminClient();
+    if (!adminClient) {
+      return NextResponse.json(
+        { error: 'Serviço de assinatura indisponível.' },
+        { status: 500 }
+      );
+    }
+
+    const forwardedFor = request.headers.get('x-forwarded-for');
+    const ip = forwardedFor?.split(',')[0].trim() ?? request.headers.get('x-real-ip') ?? 'unknown';
+    const rateResult = await checkRateLimit(auth.userId || ip, '/api/assinatura/checkout', 5, 1);
+    if (!rateResult.allowed) {
+      return NextResponse.json(
+        { error: 'Muitas tentativas. Tente novamente em instantes.' },
+        { status: 429 }
+      );
+    }
+
+    const stripe = getStripe();
+    const existingSubscription = await getUserSubscription(adminClient, auth.userId);
+    const trialEligible = canStartMaxTrial(existingSubscription);
+    const body = await request.json().catch(() => null);
+    const returnPath = normalizeSubscriptionReturnPath(
+      body && typeof body === 'object' ? (body as Record<string, unknown>).returnPath : null
+    );
+
+    if (existingSubscription && hasMaxPlanAccess(existingSubscription)) {
+      return NextResponse.json(
+        { error: 'Você já possui uma assinatura Max ativa.' },
+        { status: 409 }
+      );
+    }
+
+    if (
+      existingSubscription?.latest_checkout_session_id &&
+      existingSubscription.latest_checkout_expires_at &&
+      new Date(existingSubscription.latest_checkout_expires_at).getTime() > Date.now()
+    ) {
+      const openSession = await stripe.checkout.sessions.retrieve(
+        existingSubscription.latest_checkout_session_id
+      );
+      if (canReuseOpenCheckoutSession(openSession, trialEligible)) {
+        return NextResponse.json({
+          url: openSession.url,
+          sessionId: openSession.id,
+          reused: true,
+        });
+      }
+    }
+
+    const stripeCustomerId = await ensureStripeCustomerForUser(
+      adminClient,
+      auth.user,
+      existingSubscription
+    );
+
+    const origin = request.nextUrl.origin;
+    let session;
+    try {
+      session = await stripe.checkout.sessions.create(
+        {
+          mode: 'subscription',
+          customer: stripeCustomerId,
+          client_reference_id: auth.userId,
+          success_url: buildSubscriptionReturnUrl(origin, returnPath, 'success'),
+          cancel_url: buildSubscriptionReturnUrl(origin, returnPath, 'canceled'),
+          allow_promotion_codes: true,
+          line_items: [
+            {
+              price: getMaxSubscriptionPriceId(),
+              quantity: 1,
+            },
+          ],
+          metadata: {
+            plan_code: MAX_PLAN_CODE,
+            supabase_user_id: auth.userId,
+            source: returnPath === '/planos' ? 'app/planos' : 'app/conta',
+            trial_eligible: trialEligible ? 'true' : 'false',
+            trial_days: trialEligible ? String(MAX_PLAN_TRIAL_DAYS) : '0',
+          },
+          subscription_data: {
+            metadata: {
+              plan_code: MAX_PLAN_CODE,
+              supabase_user_id: auth.userId,
+              trial_eligible: trialEligible ? 'true' : 'false',
+              trial_days: trialEligible ? String(MAX_PLAN_TRIAL_DAYS) : '0',
+            },
+            ...(trialEligible ? { trial_period_days: MAX_PLAN_TRIAL_DAYS } : {}),
+          },
+        },
+        {
+          idempotencyKey: randomUUID(),
+        }
+      );
+    } catch (error) {
+      if (isStripeCheckoutPaymentMethodError(error)) {
+        return NextResponse.json(
+          {
+            error: 'Checkout indisponível',
+            message:
+              'Os métodos de pagamento do Stripe ainda não estão prontos para esta assinatura. Tente novamente em instantes.',
+          },
+          { status: 503 }
+        );
+      }
+
+      throw error;
+    }
+
+    if (!session.url) {
+      throw new Error('Stripe não retornou URL de checkout para a assinatura.');
+    }
+
+    await savePendingSubscriptionCheckout(adminClient, {
+      userId: auth.userId,
+      stripeCustomerId,
+      stripePriceId: getMaxSubscriptionPriceId(),
+      checkoutSessionId: session.id,
+      checkoutExpiresAt: session.expires_at
+        ? new Date(session.expires_at * 1000).toISOString()
+        : null,
+      metadata: {
+        latest_checkout_source: 'subscription_checkout',
+        latest_checkout_mode: 'subscription',
+        latest_checkout_return_path: returnPath,
+        latest_checkout_url: session.url,
+        latest_checkout_created_at: new Date().toISOString(),
+        trial_eligible: trialEligible,
+        trial_days: trialEligible ? MAX_PLAN_TRIAL_DAYS : 0,
+      },
+    });
+
+    return NextResponse.json({
+      url: session.url,
+      sessionId: session.id,
+      trialEligible,
+      trialDays: trialEligible ? MAX_PLAN_TRIAL_DAYS : 0,
+    });
+  } catch (error) {
+    return handleApiError(error);
+  }
+}

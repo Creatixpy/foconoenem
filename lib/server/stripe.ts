@@ -1,0 +1,42 @@
+import 'server-only';
+
+import Stripe from 'stripe';
+
+let stripeClient: Stripe | null = null;
+
+export function getStripe() {
+  if (stripeClient) {
+    return stripeClient;
+  }
+
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+  if (!secretKey) {
+    throw new Error('STRIPE_SECRET_KEY não configurada.');
+  }
+
+  stripeClient = new Stripe(secretKey, {
+    apiVersion: '2026-03-25.dahlia',
+  });
+
+  return stripeClient;
+}
+
+export function getStripeStringId(
+  value:
+    | string
+    | { id: string }
+    | Stripe.PaymentIntent
+    | Stripe.Customer
+    | Stripe.DeletedCustomer
+    | Stripe.Subscription
+    | Stripe.Invoice
+    | Stripe.Checkout.Session
+    | null
+    | undefined
+) {
+  if (!value) {
+    return null;
+  }
+
+  return typeof value === 'string' ? value : value.id;
+}
