@@ -112,7 +112,7 @@ Observações:
 - `npm run verify:history-clean` verifica o histórico Git local contra padrões de segredos; para publicar com histórico novo, use também `npm run release:public-tree`.
 - Hoje não há suíte automatizada de testes no repositório; a validação prática do projeto passa por `npm run lint`, `npm run build` e QA manual.
 - Contribuições devem seguir `CONTRIBUTING.md`; vulnerabilidades e segredos expostos devem seguir `SECURITY.md`.
-- Antes de tornar o repositório público, siga `OPEN_SOURCE_RELEASE.md`, adicione uma licença e publique a partir de histórico limpo.
+- Para tratar a publicação como totalmente limpa, siga `OPEN_SOURCE_RELEASE.md`, mantenha a licença e publique a partir de histórico limpo.
 
 ## Estrutura do repositório
 
