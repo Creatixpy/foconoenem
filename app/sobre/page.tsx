@@ -99,8 +99,8 @@ export default function SobrePage() {
             Dúvidas sobre funcionamento, conta, privacidade ou uso do serviço podem ser enviadas pelos canais públicos da plataforma.
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
-            <a href="mailto:contato@foconoenem.com" className="text-sm font-medium text-primary hover:text-primary-hover">
-              contato@foconoenem.com
+            <a href="mailto:creatixpy@gmail.com" className="text-sm font-medium text-primary hover:text-primary-hover">
+              creatixpy@gmail.com
             </a>
             <Link href="/privacidade" className="text-sm font-medium text-primary hover:text-primary-hover">
               Política de Privacidade

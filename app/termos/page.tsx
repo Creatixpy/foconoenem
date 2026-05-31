@@ -56,8 +56,14 @@ const sections = [
       'O tratamento de dados pessoais segue a Política de Privacidade publicada na própria plataforma. Ao utilizar o serviço, o usuário declara ciência de que determinados dados precisam ser processados por fornecedores de infraestrutura, autenticação, pagamentos e IA para execução do produto.',
   },
   {
+    id: 'cookies',
+    title: '10. Cookies e métricas opcionais',
+    content:
+      'Cookies essenciais podem ser usados para autenticação, segurança e funcionamento da sessão. Métricas opcionais de navegação só devem ser ativadas quando o usuário aceitar essa finalidade no banner de cookies. A escolha pode ser alterada posteriormente pelo link de preferências no rodapé.',
+  },
+  {
     id: 'alteracoes',
-    title: '10. Alterações destes termos',
+    title: '11. Alterações destes termos',
     content:
       'Os termos podem ser revisados para refletir mudanças legais, operacionais ou técnicas. A versão vigente será sempre a publicada nesta página.',
   },
@@ -72,7 +78,7 @@ export default function TermosPage() {
           <p className="mt-4 max-w-2xl text-lg text-text-secondary">
             Estes termos descrevem as regras de uso do Foco no ENEM no estado atual da plataforma.
           </p>
-          <p className="mt-4 text-sm text-text-muted">Última atualização: 21 de abril de 2026</p>
+          <p className="mt-4 text-sm text-text-muted">Última atualização: 31 de maio de 2026</p>
         </div>
       </section>
 
@@ -109,8 +115,8 @@ export default function TermosPage() {
             <p className="mb-3 text-sm text-text-secondary">
               Questões sobre uso da plataforma ou funcionamento geral podem ser enviadas para:
             </p>
-            <a href="mailto:contato@foconoenem.com" className="text-sm text-primary hover:text-primary-hover">
-              contato@foconoenem.com
+            <a href="mailto:creatixpy@gmail.com" className="text-sm text-primary hover:text-primary-hover">
+              creatixpy@gmail.com
             </a>
           </div>
 
