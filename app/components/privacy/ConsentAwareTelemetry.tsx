@@ -13,6 +13,10 @@ type CookiePreferences = {
 };
 
 const STORAGE_KEY = 'fne.cookie-preferences.v1';
+const NO_CONSENT_SNAPSHOT = JSON.stringify({
+  ready: true,
+  preferences: null,
+} satisfies ConsentSnapshot);
 
 function buildPreferences(analytics: boolean): CookiePreferences {
   return {
@@ -37,7 +41,7 @@ function readPreferences(): CookiePreferences | null {
       version: 1,
       necessary: true,
       analytics: parsed.analytics,
-      updatedAt: typeof parsed.updatedAt === 'string' ? parsed.updatedAt : new Date().toISOString(),
+      updatedAt: typeof parsed.updatedAt === 'string' ? parsed.updatedAt : '',
     };
   } catch {
     return null;
@@ -59,14 +63,14 @@ type ConsentSnapshot = {
 
 function getConsentSnapshot(): string {
   if (typeof window === 'undefined') {
-    return JSON.stringify({ ready: true, preferences: null } satisfies ConsentSnapshot);
+    return NO_CONSENT_SNAPSHOT;
   }
 
   return JSON.stringify({ ready: true, preferences: readPreferences() } satisfies ConsentSnapshot);
 }
 
 function getServerConsentSnapshot(): string {
-  return JSON.stringify({ ready: true, preferences: null } satisfies ConsentSnapshot);
+  return NO_CONSENT_SNAPSHOT;
 }
 
 function subscribeToConsentChanges(callback: () => void) {
@@ -129,8 +133,7 @@ export default function ConsentAwareTelemetry({ enabled }: ConsentAwareTelemetry
       {shouldShowPanel && (
         <div
           className="fixed inset-x-0 bottom-0 z-50 border-t border-border-color bg-bg-base/95 px-4 py-4 shadow-2xl backdrop-blur-md"
-          role="dialog"
-          aria-modal="false"
+          role="region"
           aria-labelledby="cookie-consent-title"
         >
           <div className="mx-auto flex max-w-6xl flex-col gap-4 md:flex-row md:items-start md:justify-between">
