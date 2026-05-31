@@ -33,6 +33,15 @@ const SECRET_RULES = [
   ['vercel_token', /\bvercel_[A-Za-z0-9]{20,}\b/],
 ];
 
+const FORBIDDEN_PATH_RULES = [
+  ['local_env_file', /^\.env(?!\.example$)/],
+  ['local_mcp_config', /^\.vscode\/mcp\.json$/],
+  ['local_agent_state', /^\.agents\//],
+  ['local_skill_lock', /^skills-lock\.json$/],
+  ['diagnostic_screenshot', /^(erro|Screenshot_.*)\.(png|jpe?g|webp)$/i],
+  ['private_audit_report', /^(FINAL_AUDIT_VERIFICATION_|RELATORIO_COMPLETO_SISTEMA_|.*_AUDIT_).*\.md$/i],
+];
+
 function gitLsFiles() {
   const output = execFileSync(
     'git',
@@ -61,6 +70,13 @@ for (const file of REQUIRED_FILES) {
 }
 
 for (const file of gitLsFiles()) {
+  for (const [name, rule] of FORBIDDEN_PATH_RULES) {
+    if (rule.test(file)) {
+      failures.push(`${file}: forbidden public-release artifact (${name})`);
+    }
+    rule.lastIndex = 0;
+  }
+
   const buffer = fs.readFileSync(file);
   if (isBinary(buffer)) continue;
 
