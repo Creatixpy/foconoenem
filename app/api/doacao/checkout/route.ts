@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
               currency: 'brl',
               unit_amount: amountCents,
               product_data: {
-                name: 'Doação - Foco no ENEM',
+                name: 'Doação - AprovIA',
                 description: 'Contribuição para manter a plataforma gratuita para estudantes.',
               },
             },

@@ -34,16 +34,16 @@ export default function AuthCodeError() {
   }, [router]);
 
   return (
-    <div className="min-h-dvh flex items-center justify-center px-4 bg-[var(--bg-base)]">
+    <div className="min-h-dvh flex items-center justify-center px-4 bg-[var(--bg)]">
       <div className="w-full max-w-sm text-center">
         <div className="mx-auto mb-6 flex items-center justify-center">
           <WarningIcon />
         </div>
 
-        <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">
+        <h1 className="text-2xl font-bold text-[var(--text)] tracking-tight">
           Erro de autenticação
         </h1>
-        <p className="mt-3 text-[var(--text-muted)] text-sm leading-relaxed">
+        <p className="mt-3 text-[var(--text-3)] text-sm leading-relaxed">
           Ocorreu um problema ao autenticar. Tente novamente.
         </p>
 
@@ -52,8 +52,8 @@ export default function AuthCodeError() {
           className="
             inline-flex items-center justify-center gap-2 mt-8
             px-6 py-3 rounded-xl text-sm font-semibold
-            bg-[var(--primary)] text-white
-            hover:bg-[var(--primary-hover)] active:bg-[var(--primary-active)]
+            bg-[var(--brand)] text-white
+            hover:bg-[var(--brand-hover)] active:bg-[var(--brand-active)]
             transition-colors duration-[var(--duration-fast)]
             shadow-sm
           "
@@ -61,7 +61,7 @@ export default function AuthCodeError() {
           Voltar para login
         </Link>
 
-        <p className="mt-4 text-xs text-[var(--text-muted)]">
+        <p className="mt-4 text-xs text-[var(--text-3)]">
           Redirecionando em {countdown}s...
         </p>
       </div>

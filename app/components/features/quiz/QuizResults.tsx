@@ -18,11 +18,11 @@ import type { Question, QuizResult } from '@/types';
 // Discipline colors
 // ---------------------------------------------------------------------------
 const DISCIPLINE_COLORS: Record<string, string> = {
-  Matemática: '#3B82F6',
-  Português: '#8B5CF6',
-  Química: '#F59E0B',
-  Física: '#EF4444',
-  Geografia: '#10B981',
+  Matemática: 'var(--brand)',
+  Português: 'var(--brand-hover)',
+  Química: 'var(--warning)',
+  Física: 'var(--danger)',
+  Geografia: 'var(--ai)',
 };
 
 // ---------------------------------------------------------------------------
@@ -41,8 +41,8 @@ interface QuizResultsProps {
 function scoreColor(pct: number): string {
   if (pct < 40) return 'var(--danger)';
   if (pct < 60) return 'var(--warning)';
-  if (pct < 80) return '#eab308';
-  return 'var(--accent)';
+  if (pct < 80) return 'var(--warning-hover)';
+  return 'var(--ai)';
 }
 
 function scoreLabel(pct: number): string {
@@ -82,7 +82,7 @@ export default function QuizResults({
       name,
       acertos: correct,
       erros: total - correct,
-      fill: DISCIPLINE_COLORS[name] || 'var(--primary)',
+      fill: DISCIPLINE_COLORS[name] || 'var(--brand)',
     }));
   }, [questions, selectedAnswers]);
 
@@ -101,8 +101,8 @@ export default function QuizResults({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--border-color)] bg-[var(--bg-surface)] text-xs text-[var(--text-muted)]">
-          <svg className="w-3.5 h-3.5 text-[var(--primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] text-xs text-[var(--text-3)]">
+          <svg className="w-3.5 h-3.5 text-[var(--brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           Resultado do simulado
@@ -111,7 +111,7 @@ export default function QuizResults({
         {/* circular score */}
         <div className="relative inline-flex items-center justify-center">
           <svg width={radius * 2} height={radius * 2} className="-rotate-90">
-            <circle cx={radius} cy={radius} r={nr} fill="none" stroke="var(--border-color)" strokeWidth={stroke} />
+            <circle cx={radius} cy={radius} r={nr} fill="none" stroke="var(--border)" strokeWidth={stroke} />
             <motion.circle
               cx={radius} cy={radius} r={nr} fill="none"
               stroke={color} strokeWidth={stroke} strokeLinecap="round"
@@ -131,11 +131,11 @@ export default function QuizResults({
             >
               {pct}%
             </motion.span>
-            <span className="text-xs text-[var(--text-muted)]">de acerto</span>
+            <span className="text-xs text-[var(--text-3)]">de acerto</span>
           </div>
         </div>
 
-        <p className="text-lg font-semibold text-[var(--text-primary)]">
+        <p className="text-lg font-semibold text-[var(--text)]">
           {result.correctAnswers} / {result.totalQuestions} questões certas
         </p>
         <p className="text-sm font-medium" style={{ color }}>{scoreLabel(pct)}</p>
@@ -148,23 +148,23 @@ export default function QuizResults({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <div className="rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] p-5 sm:p-6">
-            <h3 className="text-sm font-bold text-[var(--text-primary)] mb-4">Desempenho por disciplina</h3>
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-6">
+            <h3 className="text-sm font-bold text-[var(--text)] mb-4">Desempenho por disciplina</h3>
             <div className="w-full h-[220px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData} barCategoryGap="20%">
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
-                  <XAxis dataKey="name" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} />
-                  <YAxis allowDecimals={false} tick={{ fill: 'var(--text-muted)', fontSize: 11 }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                  <XAxis dataKey="name" tick={{ fill: 'var(--text-3)', fontSize: 11 }} />
+                  <YAxis allowDecimals={false} tick={{ fill: 'var(--text-3)', fontSize: 11 }} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: 'var(--card-bg)',
-                      border: '1px solid var(--border-color)',
+                      backgroundColor: 'var(--surface)',
+                      border: '1px solid var(--border)',
                       borderRadius: '8px',
                       fontSize: '13px',
                     }}
                   />
-                  <Bar dataKey="acertos" name="Acertos" fill="var(--accent)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="acertos" name="Acertos" fill="var(--ai)" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="erros" name="Erros" fill="var(--danger)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -179,7 +179,7 @@ export default function QuizResults({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.35 }}
       >
-        <h3 className="text-sm font-bold text-[var(--text-primary)] mb-4">Revisão das questões</h3>
+        <h3 className="text-sm font-bold text-[var(--text)] mb-4">Revisão das questões</h3>
         <div className="space-y-3">
           {questions.map((q, i) => {
             const selected = selectedAnswers[q.id];
@@ -193,7 +193,7 @@ export default function QuizResults({
                 key={q.id}
                 className={`rounded-xl border overflow-hidden transition-colors ${
                   isCorrect
-                    ? 'border-[var(--accent)]/30 bg-[var(--accent)]/5'
+                    ? 'border-[var(--ai)]/30 bg-[var(--ai)]/5'
                     : 'border-[var(--danger)]/30 bg-[var(--danger)]/5'
                 }`}
               >
@@ -206,25 +206,25 @@ export default function QuizResults({
                   {/* status icon */}
                   <span
                     className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold ${
-                      isCorrect ? 'bg-[var(--accent)]' : 'bg-[var(--danger)]'
+                      isCorrect ? 'bg-[var(--ai)]' : 'bg-[var(--danger)]'
                     }`}
                   >
                     {isCorrect ? '✓' : '✗'}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-[var(--text-primary)] font-medium truncate">
+                    <p className="text-sm text-[var(--text)] font-medium truncate">
                       Questão {i + 1}
                     </p>
-                    <p className="text-xs text-[var(--text-muted)]">{q.discipline}</p>
+                    <p className="text-xs text-[var(--text-3)]">{q.discipline}</p>
                   </div>
                   <span
                     className="text-xs font-medium px-2 py-0.5 rounded-full text-white"
-                    style={{ backgroundColor: DISCIPLINE_COLORS[q.discipline] || 'var(--primary)' }}
+                    style={{ backgroundColor: DISCIPLINE_COLORS[q.discipline] || 'var(--brand)' }}
                   >
                     {q.discipline}
                   </span>
                   <svg
-                    className={`w-4 h-4 text-[var(--text-muted)] transition-transform duration-200 flex-shrink-0 ${
+                    className={`w-4 h-4 text-[var(--text-3)] transition-transform duration-200 flex-shrink-0 ${
                       expanded ? 'rotate-180' : ''
                     }`}
                     fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
@@ -234,23 +234,23 @@ export default function QuizResults({
                 </button>
 
                 {expanded && (
-                  <div className="px-4 pb-4 space-y-3 border-t border-[var(--border-color)]/30">
+                  <div className="px-4 pb-4 space-y-3 border-t border-[var(--border)]/30">
                     {/* question text */}
-                    <p className="text-sm text-[var(--text-secondary)] leading-relaxed mt-3 whitespace-pre-line">
+                    <p className="text-sm text-[var(--text-2)] leading-relaxed mt-3 whitespace-pre-line">
                       {q.text}
                     </p>
                     {/* your answer vs correct */}
                     <div className="grid sm:grid-cols-2 gap-2 text-sm">
-                      <div className={`px-3 py-2 rounded-lg ${isCorrect ? 'bg-[var(--accent)]/10' : 'bg-[var(--danger)]/10'}`}>
-                        <span className="text-xs text-[var(--text-muted)]">Sua resposta</span>
-                        <p className="text-[var(--text-primary)] font-medium">
+                      <div className={`px-3 py-2 rounded-lg ${isCorrect ? 'bg-[var(--ai)]/10' : 'bg-[var(--danger)]/10'}`}>
+                        <span className="text-xs text-[var(--text-3)]">Sua resposta</span>
+                        <p className="text-[var(--text)] font-medium">
                           {selectedAlt ? `${selected}) ${selectedAlt.text}` : 'Não respondida'}
                         </p>
                       </div>
                       {!isCorrect && correctAlt && (
-                        <div className="px-3 py-2 rounded-lg bg-[var(--accent)]/10">
-                          <span className="text-xs text-[var(--text-muted)]">Resposta correta</span>
-                          <p className="text-[var(--accent)] font-medium">
+                        <div className="px-3 py-2 rounded-lg bg-[var(--ai)]/10">
+                          <span className="text-xs text-[var(--text-3)]">Resposta correta</span>
+                          <p className="text-[var(--ai)] font-medium">
                             {correctAlt.id}) {correctAlt.text}
                           </p>
                         </div>
@@ -258,8 +258,8 @@ export default function QuizResults({
                     </div>
                     {/* explanation */}
                     {q.explanation && (
-                      <div className="text-sm text-[var(--text-secondary)] leading-relaxed bg-[var(--bg-surface)] rounded-lg p-3">
-                        <span className="text-xs font-semibold text-[var(--primary)] block mb-1">Explicação</span>
+                      <div className="text-sm text-[var(--text-2)] leading-relaxed bg-[var(--surface)] rounded-lg p-3">
+                        <span className="text-xs font-semibold text-[var(--brand)] block mb-1">Explicação</span>
                         {q.explanation}
                       </div>
                     )}
@@ -280,13 +280,13 @@ export default function QuizResults({
       >
         <button
           onClick={onNewQuiz}
-          className="w-full sm:w-auto px-6 py-3 rounded-lg bg-[var(--primary)] text-white font-medium hover:bg-[var(--primary-hover)] transition-colors cursor-pointer"
+          className="w-full sm:w-auto px-6 py-3 rounded-lg bg-[var(--brand)] text-white font-medium hover:bg-[var(--brand-hover)] transition-colors cursor-pointer"
         >
           Novo simulado
         </button>
         <Link
           href="/conta"
-          className="w-full sm:w-auto px-6 py-3 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] font-medium hover:bg-[var(--bg-surface)] transition-colors text-center"
+          className="w-full sm:w-auto px-6 py-3 rounded-lg border border-[var(--border)] text-[var(--text-2)] font-medium hover:bg-[var(--surface)] transition-colors text-center"
         >
           Ver meu perfil
         </Link>

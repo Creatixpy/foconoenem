@@ -1,5 +1,5 @@
 /* ============================================================
-   BASE STYLES — FocoNoEnem
+   BASE STYLES — AprovIA
    Global resets, body defaults, and foundational styles.
    Wrapped in @layer base so Tailwind utilities can override.
    ============================================================ */
@@ -20,8 +20,8 @@
     font-family: var(--font-sans);
     font-size: var(--text-base);
     line-height: var(--leading-normal);
-    color: var(--text-primary);
-    background-color: var(--bg-base);
+    color: var(--text);
+    background-color: var(--bg);
     min-height: 100dvh;
     transition:
       background-color var(--duration-normal) var(--ease-default),
@@ -29,41 +29,48 @@
   }
 
   /* Headings */
-  h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-sans);
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    line-height: var(--leading-tight);
+    letter-spacing: -0.03em;
+    color: var(--text);
+  }
+
+  h4, h5, h6 {
+    font-family: var(--font-display);
     font-weight: 700;
     line-height: var(--leading-tight);
-    letter-spacing: var(--tracking-tight);
-    color: var(--text-primary);
+    color: var(--text);
   }
 
   /* Paragraphs */
   p {
     line-height: var(--leading-relaxed);
-    color: var(--text-secondary);
+    color: var(--text-2);
   }
 
   /* Links */
   a {
-    color: var(--primary);
+    color: var(--brand);
     text-decoration: none;
     transition: color var(--duration-fast) var(--ease-default);
   }
 
   a:hover {
-    color: var(--primary-hover);
+    color: var(--brand-hover);
   }
 
   /* Focus visible */
   :focus-visible {
-    outline: 2px solid var(--ring-color);
+    outline: 2px solid var(--ring);
     outline-offset: 2px;
     border-radius: var(--radius-sm);
   }
 
   /* Selection */
   ::selection {
-    background-color: var(--primary);
+    background-color: var(--brand);
     color: white;
   }
 
@@ -77,7 +84,7 @@
     cursor: pointer;
   }
 
-  /* Scrollbar styling for dark/light themes */
+  /* Scrollbar styling */
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -88,12 +95,12 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: var(--border-color-strong);
+    background: var(--border-strong);
     border-radius: var(--radius-full);
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: var(--text-muted);
+    background: var(--text-3);
   }
 }
 

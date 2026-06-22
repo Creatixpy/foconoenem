@@ -1,51 +1,58 @@
 import { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import Script from "next/script";
 import "./styles/index.css";
-import Providers from "./providers";
 import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
 import ConsentAwareTelemetry from "./components/privacy/ConsentAwareTelemetry";
+import RebrandingBanner from "./components/shared/RebrandingBanner";
 
 const inter = Inter({
   subsets: ["latin"],
+  weight: ["400", "500"],
   display: "swap",
   variable: "--font-inter",
 });
 
-const siteTitle = "Foco no ENEM - Plataforma de Simulados e Redações";
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  weight: ["700", "800"],
+  display: "swap",
+  variable: "--font-plus-jakarta",
+});
+
+const siteTitle = "AprovIA - Sua aprovação, potencializada por IA";
 const siteDescription =
-  "Simule redações e questões do ENEM com feedback por IA, dashboards personalizados e notícias atualizadas.";
+  "Redações, questões e evolução para o ENEM com inteligência artificial e feedback personalizado.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://foconoenem.vercel.app"
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://aproviaedu.vercel.app"
   ),
   title: {
     default: siteTitle,
-    template: "%s | Foco no ENEM",
+    template: "%s | AprovIA",
   },
   description: siteDescription,
   icons: {
     icon: [
-      { url: "/foconoenemicon.png", type: "image/png", sizes: "512x512" },
-      { url: "/foconoenemicon.png", rel: "shortcut icon" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
     ],
-    apple: "/foconoenemicon.png",
   },
+  manifest: "/manifest.json",
   openGraph: {
     title: siteTitle,
     description: siteDescription,
-    url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://foconoenem.vercel.app",
-    siteName: "Foco no ENEM",
+    url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://aproviaedu.vercel.app",
+    siteName: "AprovIA",
     locale: "pt_BR",
     type: "website",
     images: [
       {
-        url: "/foconoenemicon.png",
-        width: 512,
-        height: 512,
-        alt: "Foco no ENEM",
+        url: "/favicon.svg",
+        width: 48,
+        height: 48,
+        alt: "AprovIA",
       },
     ],
   },
@@ -53,8 +60,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: siteTitle,
     description: siteDescription,
-    creator: "@foconoenem",
-    images: ["/foconoenemicon.png"],
+    images: ["/favicon.svg"],
   },
   robots: {
     index: true,
@@ -66,10 +72,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0A0F1E" },
-  ],
+  colorScheme: "dark",
+  themeColor: "#080A0F",
 };
 
 export default function RootLayout({
@@ -82,18 +86,16 @@ export default function RootLayout({
     process.env.VERCEL === "1";
 
   return (
-    <html lang="pt-BR" className={inter.variable} suppressHydrationWarning>
+    <html lang="pt-BR" className={`${inter.variable} ${plusJakartaSans.variable}`}>
       <head>
-        <Script src="/theme-init.js" strategy="beforeInteractive" />
         <Script src="/cookie-consent-init.js" strategy="beforeInteractive" />
       </head>
       <body className="flex flex-col min-h-dvh">
-        <Providers>
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
-          <ConsentAwareTelemetry enabled={isTelemetryEnabled} />
-        </Providers>
+        <RebrandingBanner />
+        <Header />
+        <main className="flex-1">{children}</main>
+        <Footer />
+        <ConsentAwareTelemetry enabled={isTelemetryEnabled} />
       </body>
     </html>
   );

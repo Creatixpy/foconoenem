@@ -1,6 +1,6 @@
 /** @type {import('next-sitemap').IConfig} */
 module.exports = {
-  siteUrl: process.env.SITE_URL || 'https://foconoenem.vercel.app',
+  siteUrl: process.env.SITE_URL || 'https://aproviaedu.vercel.app',
   generateRobotsTxt: true,
   robotsTxtOptions: {
     policies: [

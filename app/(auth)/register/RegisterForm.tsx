@@ -65,10 +65,10 @@ function EyeOffIcon() {
 function GoogleIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-      <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4" />
-      <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853" />
-      <path d="M3.964 10.706A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.706V4.962H.957A8.997 8.997 0 0 0 0 9c0 1.452.348 2.827.957 4.038l3.007-2.332z" fill="#FBBC05" />
-      <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.962L3.964 7.294C4.672 5.166 6.656 3.58 9 3.58z" fill="#EA4335" />
+      <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="var(--brand)" />
+      <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="var(--ai)" />
+      <path d="M3.964 10.706A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.706V4.962H.957A8.997 8.997 0 0 0 0 9c0 1.452.348 2.827.957 4.038l3.007-2.332z" fill="var(--warning)" />
+      <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.962L3.964 7.294C4.672 5.166 6.656 3.58 9 3.58z" fill="var(--danger)" />
     </svg>
   );
 }
@@ -97,7 +97,7 @@ function CheckIcon() {
 const STRENGTH_COLORS: Record<PasswordStrength, string> = {
   weak: 'var(--danger)',
   fair: 'var(--warning)',
-  good: 'var(--primary)',
+  good: 'var(--brand)',
   strong: 'var(--success)',
 };
 
@@ -221,19 +221,19 @@ export default function RegisterForm() {
         <div className="mx-auto w-14 h-14 rounded-full bg-[var(--success)]/10 flex items-center justify-center text-[var(--success)] mb-5">
           <CheckIcon />
         </div>
-        <h2 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">
+        <h2 className="text-2xl font-bold text-[var(--text)] tracking-tight">
           Verifique seu email
         </h2>
-        <p className="mt-3 text-[var(--text-muted)] text-sm leading-relaxed">
+        <p className="mt-3 text-[var(--text-3)] text-sm leading-relaxed">
           Enviamos um link de confirmação para <br />
-          <span className="font-medium text-[var(--text-secondary)]">{email}</span>
+          <span className="font-medium text-[var(--text-2)]">{email}</span>
         </p>
         <Link
           href={AUTH_PATHS.LOGIN}
           className="
             inline-flex mt-8 px-6 py-2.5 rounded-xl text-sm font-medium
-            text-[var(--primary)] border border-[var(--primary)]/30
-            hover:bg-[var(--primary)]/10 transition-colors
+            text-[var(--brand)] border border-[var(--brand)]/30
+            hover:bg-[var(--brand)]/10 transition-colors
           "
         >
           Ir para o login
@@ -245,10 +245,10 @@ export default function RegisterForm() {
   return (
     <div>
       {/* Header */}
-      <h2 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">
+      <h2 className="text-2xl font-bold text-[var(--text)] tracking-tight">
         Crie sua conta grátis
       </h2>
-      <p className="mt-2 text-[var(--text-muted)]">
+      <p className="mt-2 text-[var(--text-3)]">
         Comece sua preparação para o ENEM hoje
       </p>
 
@@ -260,9 +260,9 @@ export default function RegisterForm() {
         className="
           mt-8 w-full flex items-center justify-center gap-3
           px-4 py-3 rounded-xl text-sm font-medium
-          border border-[var(--border-color)]
-          text-[var(--text-primary)] bg-[var(--bg-surface)]
-          hover:bg-[var(--bg-elevated)]
+          border border-[var(--border)]
+          text-[var(--text)] bg-[var(--surface)]
+          hover:bg-[var(--surface-2)]
           disabled:opacity-50 disabled:cursor-not-allowed
           transition-colors duration-[var(--duration-fast)]
         "
@@ -274,10 +274,10 @@ export default function RegisterForm() {
       {/* Divider */}
       <div className="relative my-7">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-[var(--border-color)]" />
+          <div className="w-full border-t border-[var(--border)]" />
         </div>
         <div className="relative flex justify-center text-xs">
-          <span className="px-3 bg-[var(--bg-base)] text-[var(--text-muted)]">
+          <span className="px-3 bg-[var(--bg)] text-[var(--text-3)]">
             ou cadastre-se com email
           </span>
         </div>
@@ -285,7 +285,7 @@ export default function RegisterForm() {
 
       {/* Error alert */}
       {error && (
-        <div className="mb-5 px-4 py-3 rounded-xl text-sm bg-[var(--danger-light)] text-[var(--danger)] border border-[var(--danger)]/20">
+        <div className="mb-5 px-4 py-3 rounded-xl text-sm bg-[var(--danger-soft)] text-[var(--danger)] border border-[var(--danger)]/20">
           {error}
         </div>
       )}
@@ -294,11 +294,11 @@ export default function RegisterForm() {
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Nome */}
         <div>
-          <label htmlFor="nome" className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
+          <label htmlFor="nome" className="block text-sm font-medium text-[var(--text-2)] mb-1.5">
             Nome completo
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-3)]">
               <UserIcon />
             </span>
             <input
@@ -311,9 +311,9 @@ export default function RegisterForm() {
               placeholder="Seu nome"
               className="
                 w-full pl-10 pr-4 py-3 rounded-xl text-sm
-                bg-[var(--bg-surface)] border border-[var(--border-color)]
-                text-[var(--text-primary)] placeholder:text-[var(--text-muted)]
-                focus:outline-none focus:ring-2 focus:ring-[var(--ring-color)] focus:border-transparent
+                bg-[var(--surface)] border border-[var(--border)]
+                text-[var(--text)] placeholder:text-[var(--text-3)]
+                focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:border-transparent
                 transition-all duration-[var(--duration-fast)]
               "
             />
@@ -322,11 +322,11 @@ export default function RegisterForm() {
 
         {/* Email */}
         <div>
-          <label htmlFor="reg-email" className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
+          <label htmlFor="reg-email" className="block text-sm font-medium text-[var(--text-2)] mb-1.5">
             Email
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-3)]">
               <MailIcon />
             </span>
             <input
@@ -340,11 +340,11 @@ export default function RegisterForm() {
               placeholder="seu@email.com"
               className={`
                 w-full pl-10 pr-4 py-3 rounded-xl text-sm
-                bg-[var(--bg-surface)] border
-                text-[var(--text-primary)] placeholder:text-[var(--text-muted)]
-                focus:outline-none focus:ring-2 focus:ring-[var(--ring-color)] focus:border-transparent
+                bg-[var(--surface)] border
+                text-[var(--text)] placeholder:text-[var(--text-3)]
+                focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:border-transparent
                 transition-all duration-[var(--duration-fast)]
-                ${emailError ? 'border-[var(--danger)]' : 'border-[var(--border-color)]'}
+                ${emailError ? 'border-[var(--danger)]' : 'border-[var(--border)]'}
               `}
             />
           </div>
@@ -355,11 +355,11 @@ export default function RegisterForm() {
 
         {/* Password */}
         <div>
-          <label htmlFor="reg-password" className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
+          <label htmlFor="reg-password" className="block text-sm font-medium text-[var(--text-2)] mb-1.5">
             Senha
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-3)]">
               <LockIcon />
             </span>
             <input
@@ -374,16 +374,16 @@ export default function RegisterForm() {
               placeholder="Mínimo 8 caracteres"
               className="
                 w-full pl-10 pr-11 py-3 rounded-xl text-sm
-                bg-[var(--bg-surface)] border border-[var(--border-color)]
-                text-[var(--text-primary)] placeholder:text-[var(--text-muted)]
-                focus:outline-none focus:ring-2 focus:ring-[var(--ring-color)] focus:border-transparent
+                bg-[var(--surface)] border border-[var(--border)]
+                text-[var(--text)] placeholder:text-[var(--text-3)]
+                focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:border-transparent
                 transition-all duration-[var(--duration-fast)]
               "
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-3)] hover:text-[var(--text-2)] transition-colors"
               aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
             >
               {showPassword ? <EyeOffIcon /> : <EyeIcon />}
@@ -401,7 +401,7 @@ export default function RegisterForm() {
                     style={{
                       backgroundColor: seg <= STRENGTH_SEGMENTS[passwordValidation.strength]
                         ? STRENGTH_COLORS[passwordValidation.strength]
-                        : 'var(--border-color)',
+                        : 'var(--border)',
                     }}
                   />
                 ))}
@@ -415,7 +415,7 @@ export default function RegisterForm() {
 
         {/* Objetivo */}
         <div>
-          <label htmlFor="objetivo" className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
+          <label htmlFor="objetivo" className="block text-sm font-medium text-[var(--text-2)] mb-1.5">
             Objetivo
           </label>
           <select
@@ -425,9 +425,9 @@ export default function RegisterForm() {
             onChange={(e) => setObjetivo(e.target.value)}
             className="
               w-full px-4 py-3 rounded-xl text-sm appearance-none
-              bg-[var(--bg-surface)] border border-[var(--border-color)]
-              text-[var(--text-primary)]
-              focus:outline-none focus:ring-2 focus:ring-[var(--ring-color)] focus:border-transparent
+              bg-[var(--surface)] border border-[var(--border)]
+              text-[var(--text)]
+              focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:border-transparent
               transition-all duration-[var(--duration-fast)]
             "
           >
@@ -444,13 +444,13 @@ export default function RegisterForm() {
             checked={terms}
             onChange={(e) => setTerms(e.target.checked)}
             required
-            className="mt-0.5 w-4 h-4 rounded accent-[var(--primary)] shrink-0"
+            className="mt-0.5 w-4 h-4 rounded accent-[var(--brand)] shrink-0"
           />
-          <span className="text-xs text-[var(--text-muted)] leading-relaxed">
+          <span className="text-xs text-[var(--text-3)] leading-relaxed">
             Concordo com os{' '}
-            <Link href="/termos" className="text-[var(--primary)] hover:underline">Termos de Uso</Link>
+            <Link href="/termos" className="text-[var(--brand)] hover:underline">Termos de Uso</Link>
             {' '}e{' '}
-            <Link href="/privacidade" className="text-[var(--primary)] hover:underline">Privacidade</Link>
+            <Link href="/privacidade" className="text-[var(--brand)] hover:underline">Privacidade</Link>
           </span>
         </label>
 
@@ -461,8 +461,8 @@ export default function RegisterForm() {
           className="
             w-full flex items-center justify-center gap-2
             px-4 py-3 rounded-xl text-sm font-semibold
-            bg-[var(--primary)] text-white
-            hover:bg-[var(--primary-hover)] active:bg-[var(--primary-active)]
+            bg-[var(--brand)] text-white
+            hover:bg-[var(--brand-hover)] active:bg-[var(--brand-active)]
             disabled:opacity-50 disabled:cursor-not-allowed
             transition-colors duration-[var(--duration-fast)]
             shadow-sm
@@ -474,9 +474,9 @@ export default function RegisterForm() {
       </form>
 
       {/* Footer */}
-      <p className="mt-8 text-center text-sm text-[var(--text-muted)]">
+      <p className="mt-8 text-center text-sm text-[var(--text-3)]">
         Já tem conta?{' '}
-        <Link href={AUTH_PATHS.LOGIN} className="font-medium text-[var(--primary)] hover:text-[var(--primary-hover)] transition-colors">
+        <Link href={AUTH_PATHS.LOGIN} className="font-medium text-[var(--brand)] hover:text-[var(--brand-hover)] transition-colors">
           Entrar →
         </Link>
       </p>

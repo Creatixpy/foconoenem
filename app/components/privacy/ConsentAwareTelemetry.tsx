@@ -163,44 +163,44 @@ export default function ConsentAwareTelemetry({ enabled }: ConsentAwareTelemetry
           role="region"
           aria-labelledby="cookie-consent-title"
         >
-          <div className="mx-auto w-full max-w-5xl overflow-hidden rounded-lg border border-[var(--border-color)] bg-[var(--card-bg)] shadow-[0_24px_70px_rgba(15,23,42,0.24)] ring-1 ring-white/5 backdrop-blur-md">
-            <div className="h-1 bg-[linear-gradient(90deg,var(--primary),#22C55E,#F59E0B)]" />
+          <div className="mx-auto w-full max-w-5xl overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)] shadow-2xl ring-1 ring-white/5 backdrop-blur-md">
+            <div className="h-1 bg-[linear-gradient(90deg,var(--brand),var(--ai),var(--warning))]" />
 
             <div className="grid gap-4 p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-center">
               <div className="flex gap-3">
                 <span
                   aria-hidden="true"
-                  className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--primary-light)] text-[var(--primary)]"
+                  className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--brand-soft)] text-[var(--brand)]"
                 >
                   <span className="h-3 w-5 -rotate-45 border-b-2 border-l-2 border-current" />
                 </span>
 
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 id="cookie-consent-title" className="text-base font-semibold text-[var(--text-primary)]">
+                    <h2 id="cookie-consent-title" className="text-base font-semibold text-[var(--text)]">
                       Preferências de cookies
                     </h2>
-                    <span className="rounded-full border border-[var(--primary)]/20 bg-[var(--primary-light)] px-2.5 py-1 text-xs font-medium text-[var(--primary)]">
+                    <span className="rounded-full border border-[var(--brand)]/20 bg-[var(--brand-soft)] px-2.5 py-1 text-xs font-medium text-[var(--brand)]">
                       Essenciais ativos
                     </span>
                   </div>
-                  <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--text-secondary)]">
+                  <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--text-2)]">
                     Usamos cookies de sessão e segurança. Métricas opcionais só carregam se você permitir.
                   </p>
                   <Link
                     href="/privacidade"
-                    className="mt-2 inline-flex text-sm font-medium text-[var(--primary)] transition-colors hover:text-[var(--primary-hover)]"
+                    className="mt-2 inline-flex text-sm font-medium text-[var(--brand)] transition-colors hover:text-[var(--brand-hover)]"
                   >
                     Ver Política de Privacidade
                   </Link>
                 </div>
               </div>
 
-              <div className="rounded-lg border border-[var(--border-color)] bg-[var(--bg-surface)]/80 p-3">
+              <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)]/80 p-3">
                 <label className="flex cursor-pointer items-center justify-between gap-4">
                   <span className="min-w-0">
-                    <span className="block text-sm font-semibold text-[var(--text-primary)]">Métricas opcionais</span>
-                    <span className="mt-1 block text-xs leading-relaxed text-[var(--text-muted)]">
+                    <span className="block text-sm font-semibold text-[var(--text)]">Métricas opcionais</span>
+                    <span className="mt-1 block text-xs leading-relaxed text-[var(--text-3)]">
                       Vercel Analytics e Speed Insights
                     </span>
                   </span>
@@ -210,27 +210,27 @@ export default function ConsentAwareTelemetry({ enabled }: ConsentAwareTelemetry
                     checked={analyticsDraft}
                     onChange={(event) => setAnalyticsDraft(event.target.checked)}
                   />
-                  <span className="relative inline-flex h-6 w-11 shrink-0 rounded-full bg-[var(--border-color-strong)] transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:bg-[var(--primary)] peer-checked:after:translate-x-5 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--primary)]" />
+                  <span className="relative inline-flex h-6 w-11 shrink-0 rounded-full bg-[var(--border-strong)] transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:bg-[var(--brand)] peer-checked:after:translate-x-5 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--brand)]" />
                 </label>
 
                 <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3 lg:grid-cols-1">
                   <button
                     type="button"
-                    className="rounded-lg bg-[var(--primary)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[var(--primary-hover)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
+                    className="rounded-lg bg-[var(--brand)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[var(--brand-hover)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
                     onClick={() => savePreferences(true)}
                   >
                     Aceitar métricas
                   </button>
                   <button
                     type="button"
-                    className="rounded-lg border border-[var(--border-color)] px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] transition-colors hover:bg-[var(--muted-bg)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
+                    className="rounded-lg border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--text)] transition-colors hover:bg-[var(--surface-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
                     onClick={() => savePreferences(analyticsDraft)}
                   >
                     Salvar escolha
                   </button>
                   <button
                     type="button"
-                    className="rounded-lg px-4 py-2.5 text-sm font-semibold text-[var(--text-secondary)] transition-colors hover:bg-[var(--muted-bg)] hover:text-[var(--text-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
+                    className="rounded-lg px-4 py-2.5 text-sm font-semibold text-[var(--text-2)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
                     onClick={() => savePreferences(false)}
                   >
                     Recusar

@@ -4,27 +4,24 @@
  */
 
 export const SEO = {
-    SITE_NAME: 'Foco no ENEM',
-    SITE_URL: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://foconoenem.vercel.app',
+    SITE_NAME: 'AprovIA',
+    SITE_URL: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://aproviaedu.vercel.app',
 
-    DEFAULT_TITLE: 'Foco no ENEM - Plataforma de Simulados e Redações',
-    TITLE_TEMPLATE: '%s | Foco no ENEM',
+    DEFAULT_TITLE: 'AprovIA - Sua aprovação, potencializada por IA',
+    TITLE_TEMPLATE: '%s | AprovIA',
 
     DEFAULT_DESCRIPTION:
-        'Simule redações e questões do ENEM com feedback por IA, dashboards personalizados e notícias atualizadas.',
+        'Redações, questões e evolução para o ENEM com inteligência artificial e feedback personalizado.',
 
     LOCALE: 'pt_BR',
-    TWITTER_HANDLE: '@foconoenem',
-
     IMAGES: {
-        DEFAULT: '/foconoenemicon.png',
-        WIDTH: 512,
-        HEIGHT: 512,
-        ALT: 'Foco no ENEM',
+        DEFAULT: '/favicon.svg',
+        WIDTH: 48,
+        HEIGHT: 48,
+        ALT: 'AprovIA',
     },
 } as const;
 
 export const THEME_COLORS = {
-    LIGHT: '#ffffff',
-    DARK: '#0a0a0f',
+    DARK: '#080A0F',
 } as const;

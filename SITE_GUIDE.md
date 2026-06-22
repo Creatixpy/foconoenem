@@ -1,10 +1,10 @@
-# Guia do Foco no ENEM
+# Guia do AprovIA
 
-Este guia explica como o Foco no ENEM funciona, quem ele tenta ajudar e como pessoas podem contribuir com o projeto de forma responsavel.
+Este guia explica como o AprovIA funciona, quem ele tenta ajudar e como pessoas podem contribuir com o projeto de forma responsavel.
 
 ## Proposito
 
-O Foco no ENEM e uma plataforma de estudo para estudantes que se preparam para o Exame Nacional do Ensino Medio. A ideia central e reduzir atrito: o estudante entra, pratica redacao, resolve questoes, acompanha resultados e consulta noticias relevantes sem precisar montar tudo manualmente.
+O AprovIA e uma plataforma de estudo para estudantes que se preparam para o Exame Nacional do Ensino Medio. A ideia central e reduzir atrito: o estudante entra, pratica redacao, resolve questoes, acompanha resultados e consulta noticias relevantes sem precisar montar tudo manualmente.
 
 O projeto prioriza:
 
@@ -72,7 +72,7 @@ Doacoes tambem usam Checkout Sessions e trilha de eventos para auditoria.
 
 ## Como o site ajuda estudantes
 
-O Foco no ENEM deve ajudar sem prometer resultado garantido. A plataforma serve como apoio de estudo, nao como substituto de professor, escola ou preparacao completa.
+O AprovIA deve ajudar sem prometer resultado garantido. A plataforma serve como apoio de estudo, nao como substituto de professor, escola ou preparacao completa.
 
 Boas formas de usar:
 
@@ -152,7 +152,7 @@ O projeto deve coletar apenas o necessario para conta, seguranca, funcionamento,
 
 Pontos importantes:
 
-- emails profissionais do dominio `foconoenem.com` nao devem ser usados enquanto o projeto nao tiver dominio proprio e caixa configurada
+- o endereco publico atual e `https://aproviaedu.vercel.app`; emails profissionais em dominio proprio nao devem ser usados enquanto um dominio e uma caixa profissional nao estiverem configurados
 - o email publico atual e `creatixpy@gmail.com`
 - dados de cartao nao sao armazenados pelo app
 - chaves privilegiadas devem ficar somente no servidor
@@ -182,4 +182,3 @@ npm run release:public-tree
 ```
 
 Consulte `OPEN_SOURCE_RELEASE.md` antes de tratar uma copia como release publico final.
-

@@ -5,7 +5,7 @@ const sections = [
     id: 'servico',
     title: '1. Objeto do serviço',
     content:
-      'O Foco no ENEM é uma plataforma digital de apoio ao estudo que oferece redação com IA, simulados de questões, notícias publicadas na própria plataforma, painel de resultados e recebimento de doações voluntárias.',
+      'A AprovIA é uma plataforma digital de apoio ao estudo que oferece redação com IA, simulados de questões, notícias publicadas na própria plataforma, painel de resultados e recebimento de doações voluntárias.',
   },
   {
     id: 'conta',
@@ -29,7 +29,7 @@ const sections = [
     id: 'propriedade',
     title: '5. Conteúdo e propriedade intelectual',
     content:
-      'O código, design, textos institucionais e marca da plataforma pertencem ao Foco no ENEM ou a seus respectivos titulares. Redações e conteúdos criados pelo usuário permanecem vinculados ao próprio usuário. O usuário não deve enviar conteúdo de terceiros sem autorização.',
+      'O código, design, textos institucionais e marca da plataforma pertencem ao AprovIA ou a seus respectivos titulares. Redações e conteúdos criados pelo usuário permanecem vinculados ao próprio usuário. O usuário não deve enviar conteúdo de terceiros sem autorização.',
   },
   {
     id: 'doacoes',
@@ -41,13 +41,13 @@ const sections = [
     id: 'disponibilidade',
     title: '7. Disponibilidade e mudanças',
     content:
-      'A plataforma pode evoluir, passar por manutenção, alterar fluxos, ajustar limites de uso e corrigir bugs sem aviso prévio. O serviço é fornecido conforme disponibilidade técnica. O Foco no ENEM busca estabilidade operacional, mas não garante funcionamento ininterrupto, ausência total de falhas ou aderência integral a cronogramas externos do ENEM.',
+      'A plataforma pode evoluir, passar por manutenção, alterar fluxos, ajustar limites de uso e corrigir bugs sem aviso prévio. O serviço é fornecido conforme disponibilidade técnica. A AprovIA busca estabilidade operacional, mas não garante funcionamento ininterrupto, ausência total de falhas ou aderência integral a cronogramas externos do ENEM.',
   },
   {
     id: 'responsabilidade',
     title: '8. Limitações de responsabilidade',
     content:
-      'O Foco no ENEM responde pelo que controla dentro de sua operação, mas não garante aprovação em prova, pontuação específica, compatibilidade absoluta entre saída de IA e correção humana ou disponibilidade contínua de fornecedores terceiros. O uso da plataforma deve ser entendido como instrumento de apoio ao estudo, não como promessa de resultado acadêmico.',
+      'A AprovIA responde pelo que controla dentro de sua operação, mas não garante aprovação em prova, pontuação específica, compatibilidade absoluta entre saída de IA e correção humana ou disponibilidade contínua de fornecedores terceiros. O uso da plataforma deve ser entendido como instrumento de apoio ao estudo, não como promessa de resultado acadêmico.',
   },
   {
     id: 'privacidade',
@@ -71,26 +71,26 @@ const sections = [
 
 export default function TermosPage() {
   return (
-    <div className="min-h-screen bg-bg-base">
-      <section className="border-b border-border-color px-4 py-16 md:py-20">
+    <div className="min-h-screen bg-bg">
+      <section className="border-b border-border px-4 py-16 md:py-20">
         <div className="mx-auto max-w-4xl">
-          <h1 className="text-3xl font-bold text-text-primary md:text-4xl">Termos de Uso</h1>
-          <p className="mt-4 max-w-2xl text-lg text-text-secondary">
-            Estes termos descrevem as regras de uso do Foco no ENEM no estado atual da plataforma.
+          <h1 className="text-3xl font-bold text-text md:text-4xl">Termos de Uso</h1>
+          <p className="mt-4 max-w-2xl text-lg text-text-2">
+            Estes termos descrevem as regras de uso da AprovIA no estado atual da plataforma.
           </p>
-          <p className="mt-4 text-sm text-text-muted">Última atualização: 31 de maio de 2026</p>
+          <p className="mt-4 text-sm text-text-3">Última atualização: 31 de maio de 2026</p>
         </div>
       </section>
 
       <div className="mx-auto flex max-w-4xl gap-12 px-4 py-12">
         <aside className="hidden w-56 flex-shrink-0 lg:block">
           <nav className="sticky top-24 space-y-1">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-text-muted">Índice</p>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-text-3">Índice</p>
             {sections.map((section) => (
               <a
                 key={section.id}
                 href={`#${section.id}`}
-                className="block rounded-lg px-3 py-1.5 text-sm text-text-secondary transition-colors hover:bg-muted-bg hover:text-text-primary"
+                className="block rounded-lg px-3 py-1.5 text-sm text-text-2 transition-colors hover:bg-surface-2 hover:text-text"
               >
                 {section.title}
               </a>
@@ -102,26 +102,26 @@ export default function TermosPage() {
           <div className="space-y-10">
             {sections.map((section) => (
               <section key={section.id} id={section.id} className="scroll-mt-24">
-                <h2 className="mb-3 text-xl font-semibold text-text-primary">{section.title}</h2>
-                <p className="whitespace-pre-line text-[15px] leading-relaxed text-text-secondary">
+                <h2 className="mb-3 text-xl font-semibold text-text">{section.title}</h2>
+                <p className="whitespace-pre-line text-[15px] leading-relaxed text-text-2">
                   {section.content}
                 </p>
               </section>
             ))}
           </div>
 
-          <div className="mt-16 rounded-xl border border-border-color bg-card-bg p-6">
-            <h3 className="mb-2 text-base font-semibold text-text-primary">Contato</h3>
-            <p className="mb-3 text-sm text-text-secondary">
+          <div className="mt-16 rounded-xl border border-border bg-surface p-6">
+            <h3 className="mb-2 text-base font-semibold text-text">Contato</h3>
+            <p className="mb-3 text-sm text-text-2">
               Questões sobre uso da plataforma ou funcionamento geral podem ser enviadas para:
             </p>
-            <a href="mailto:creatixpy@gmail.com" className="text-sm text-primary hover:text-primary-hover">
+            <a href="mailto:creatixpy@gmail.com" className="text-sm text-brand hover:text-brand-hover">
               creatixpy@gmail.com
             </a>
           </div>
 
           <div className="mt-8">
-            <Link href="/" className="text-sm text-text-muted transition-colors hover:text-text-secondary">
+            <Link href="/" className="text-sm text-text-3 transition-colors hover:text-text-2">
               ← Voltar ao início
             </Link>
           </div>

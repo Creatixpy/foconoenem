@@ -1,4 +1,4 @@
-# PROJECT INVENTORY — Foco no ENEM
+# PROJECT INVENTORY — AprovIA
 
 > Snapshot generated from the repository state on 2026-04-23.
 > This document is repo-first: if something is not present in the tree or current import graph, it is intentionally not claimed here.
@@ -75,8 +75,7 @@ The repository does **not** currently ship local Supabase Edge Function code. `s
 
 | File | Purpose |
 | --- | --- |
-| `app/layout.tsx` | Root metadata, global shell, telemetry toggles, theme boot script |
-| `app/providers.tsx` | Wraps global `ThemeProvider` |
+| `app/layout.tsx` | Root metadata, fonts, dark-only global shell, rebranding banner and consent-aware telemetry |
 | `app/auth-providers.tsx` | Client `AuthProvider` wrapper; protected server pages can pass the already validated user to avoid duplicate client auth validation |
 | `app/styles/index.css` | CSS entrypoint |
 
@@ -127,9 +126,11 @@ The repository does **not** currently ship local Supabase Edge Function code. `s
 
 | File | Purpose |
 | --- | --- |
-| `app/components/layout/Header.tsx` | Header, auth menu, theme toggle and mobile navigation |
+| `app/components/layout/Header.tsx` | Header, auth menu and mobile navigation |
 | `app/components/layout/Footer.tsx` | Footer links and branding |
 | `app/components/layout/index.ts` | Barrel for layout components |
+| `app/components/shared/AprovIALogo.tsx` | Reusable responsive AprovIA symbol and wordmark |
+| `app/components/shared/RebrandingBanner.tsx` | Dismissible transition notice backed by local storage |
 
 ### Quiz feature components
 
@@ -143,7 +144,7 @@ The repository does **not** currently ship local Supabase Edge Function code. `s
 
 | File | Current state |
 | --- | --- |
-| `app/components/shared/index.ts` | Empty barrel |
+| `app/components/shared/index.ts` | Shared AprovIA component exports |
 | `app/components/ui/index.ts` | Empty barrel |
 
 ---
@@ -153,7 +154,7 @@ The repository does **not** currently ship local Supabase Edge Function code. `s
 | File | Purpose |
 | --- | --- |
 | `app/styles/index.css` | Imports design tokens and base styles |
-| `app/styles/tokens.css` | CSS variables and theme tokens |
+| `app/styles/tokens.css` | Dark-only AprovIA design tokens |
 | `app/styles/base.css` | Base element styles and utilities used by the app shell |
 
 There are currently no separate `components.css`, `forms.css` or `utilities.css` files in the repository.
@@ -192,13 +193,6 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | `lib/constants/navigation.ts` | Centralized nav/footer link definitions |
 | `lib/constants/routes.ts` | Route constants |
 | `lib/constants/seo.ts` | Reusable SEO constants |
-
-### `lib/contexts/`
-
-| File | Purpose |
-| --- | --- |
-| `lib/contexts/ThemeContext.tsx` | Theme state, persistence and `themeScript` |
-| `lib/contexts/index.ts` | Barrel |
 
 ### `lib/db/`
 
@@ -328,7 +322,8 @@ Latest DB hardening in this repo: `20260513224619_harden_auth_profile_and_quiz_i
 | `public/BingSiteAuth.xml` | Bing verification |
 | `public/google085fc0ba40da0037.html` | Google verification |
 | `public/.well-known/discord` | External verification/integration artifact |
-| `public/foconoenemicon.png` | Primary app icon |
+| `public/favicon.svg` | Primary vector app icon |
+| `public/manifest.json` | Web app manifest using the vector icon |
 | `public/file.svg`, `globe.svg`, `next.svg`, `vercel.svg`, `window.svg` | Static SVG assets currently present in the repo |
 
 ---

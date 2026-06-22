@@ -70,7 +70,7 @@ function CheckCircleIcon() {
 const STRENGTH_COLORS: Record<PasswordStrength, string> = {
   weak: 'var(--danger)',
   fair: 'var(--warning)',
-  good: 'var(--primary)',
+  good: 'var(--brand)',
   strong: 'var(--success)',
 };
 
@@ -168,10 +168,10 @@ function ResetPasswordPageContent() {
         <div className="mx-auto mb-5 flex items-center justify-center">
           <CheckCircleIcon />
         </div>
-        <h2 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">
+        <h2 className="text-2xl font-bold text-[var(--text)] tracking-tight">
           Senha redefinida!
         </h2>
-        <p className="mt-3 text-[var(--text-muted)] text-sm">
+        <p className="mt-3 text-[var(--text-3)] text-sm">
           Redirecionando para seu painel...
         </p>
       </div>
@@ -187,16 +187,16 @@ function ResetPasswordPageContent() {
   return (
     <div>
       {/* Header */}
-      <h2 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">
+      <h2 className="text-2xl font-bold text-[var(--text)] tracking-tight">
         Nova senha
       </h2>
-      <p className="mt-2 text-[var(--text-muted)]">
+      <p className="mt-2 text-[var(--text-3)]">
         Escolha uma senha forte para sua conta
       </p>
 
       {/* Error alert */}
       {error && (
-        <div className="mt-6 px-4 py-3 rounded-xl text-sm bg-[var(--danger-light)] text-[var(--danger)] border border-[var(--danger)]/20">
+        <div className="mt-6 px-4 py-3 rounded-xl text-sm bg-[var(--danger-soft)] text-[var(--danger)] border border-[var(--danger)]/20">
           {error}
         </div>
       )}
@@ -205,11 +205,11 @@ function ResetPasswordPageContent() {
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
         {/* New password */}
         <div>
-          <label htmlFor="new-password" className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
+          <label htmlFor="new-password" className="block text-sm font-medium text-[var(--text-2)] mb-1.5">
             Nova senha
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-3)]">
               <LockIcon />
             </span>
             <input
@@ -224,16 +224,16 @@ function ResetPasswordPageContent() {
               placeholder="Mínimo 8 caracteres"
               className="
                 w-full pl-10 pr-11 py-3 rounded-xl text-sm
-                bg-[var(--bg-surface)] border border-[var(--border-color)]
-                text-[var(--text-primary)] placeholder:text-[var(--text-muted)]
-                focus:outline-none focus:ring-2 focus:ring-[var(--ring-color)] focus:border-transparent
+                bg-[var(--surface)] border border-[var(--border)]
+                text-[var(--text)] placeholder:text-[var(--text-3)]
+                focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:border-transparent
                 transition-all duration-[var(--duration-fast)]
               "
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-3)] hover:text-[var(--text-2)] transition-colors"
               aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
             >
               {showPassword ? <EyeOffIcon /> : <EyeIcon />}
@@ -251,7 +251,7 @@ function ResetPasswordPageContent() {
                     style={{
                       backgroundColor: seg <= STRENGTH_SEGMENTS[passwordValidation.strength]
                         ? STRENGTH_COLORS[passwordValidation.strength]
-                        : 'var(--border-color)',
+                        : 'var(--border)',
                     }}
                   />
                 ))}
@@ -265,11 +265,11 @@ function ResetPasswordPageContent() {
 
         {/* Confirm password */}
         <div>
-          <label htmlFor="confirm-password" className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
+          <label htmlFor="confirm-password" className="block text-sm font-medium text-[var(--text-2)] mb-1.5">
             Confirmar senha
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-3)]">
               <LockIcon />
             </span>
             <input
@@ -284,17 +284,17 @@ function ResetPasswordPageContent() {
               placeholder="Repita a senha"
               className={`
                 w-full pl-10 pr-11 py-3 rounded-xl text-sm
-                bg-[var(--bg-surface)] border
-                text-[var(--text-primary)] placeholder:text-[var(--text-muted)]
-                focus:outline-none focus:ring-2 focus:ring-[var(--ring-color)] focus:border-transparent
+                bg-[var(--surface)] border
+                text-[var(--text)] placeholder:text-[var(--text-3)]
+                focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:border-transparent
                 transition-all duration-[var(--duration-fast)]
-                ${passwordsMismatch ? 'border-[var(--danger)]' : passwordsMatch ? 'border-[var(--success)]' : 'border-[var(--border-color)]'}
+                ${passwordsMismatch ? 'border-[var(--danger)]' : passwordsMatch ? 'border-[var(--success)]' : 'border-[var(--border)]'}
               `}
             />
             <button
               type="button"
               onClick={() => setShowConfirm(!showConfirm)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-3)] hover:text-[var(--text-2)] transition-colors"
               aria-label={showConfirm ? 'Ocultar senha' : 'Mostrar senha'}
             >
               {showConfirm ? <EyeOffIcon /> : <EyeIcon />}
@@ -315,8 +315,8 @@ function ResetPasswordPageContent() {
           className="
             w-full flex items-center justify-center gap-2
             px-4 py-3 rounded-xl text-sm font-semibold
-            bg-[var(--primary)] text-white
-            hover:bg-[var(--primary-hover)] active:bg-[var(--primary-active)]
+            bg-[var(--brand)] text-white
+            hover:bg-[var(--brand-hover)] active:bg-[var(--brand-active)]
             disabled:opacity-50 disabled:cursor-not-allowed
             transition-colors duration-[var(--duration-fast)]
             shadow-sm
@@ -331,7 +331,7 @@ function ResetPasswordPageContent() {
       <p className="mt-8 text-center">
         <Link
           href={AUTH_PATHS.LOGIN}
-          className="text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+          className="text-sm text-[var(--text-3)] hover:text-[var(--text-2)] transition-colors"
         >
           Voltar para o login
         </Link>

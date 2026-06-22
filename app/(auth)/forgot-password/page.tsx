@@ -84,21 +84,21 @@ export default function ForgotPasswordPage() {
         <div className="mx-auto mb-5 flex items-center justify-center">
           <CheckCircleIcon />
         </div>
-        <h2 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">
+        <h2 className="text-2xl font-bold text-[var(--text)] tracking-tight">
           Verifique seu email
         </h2>
-        <p className="mt-3 text-[var(--text-muted)] text-sm leading-relaxed">
+        <p className="mt-3 text-[var(--text-3)] text-sm leading-relaxed">
           Enviamos um link de recuperação para <br />
-          <span className="font-medium text-[var(--text-secondary)]">{email}</span>
+          <span className="font-medium text-[var(--text-2)]">{email}</span>
         </p>
-        <p className="mt-2 text-xs text-[var(--text-muted)]">
+        <p className="mt-2 text-xs text-[var(--text-3)]">
           Não recebeu? Verifique a pasta de spam.
         </p>
         <Link
           href={AUTH_PATHS.LOGIN}
           className="
             inline-flex items-center gap-2 mt-8
-            text-sm font-medium text-[var(--primary)] hover:text-[var(--primary-hover)] transition-colors
+            text-sm font-medium text-[var(--brand)] hover:text-[var(--brand-hover)] transition-colors
           "
         >
           <ArrowLeftIcon /> Voltar para o login
@@ -112,22 +112,22 @@ export default function ForgotPasswordPage() {
       {/* Back link */}
       <Link
         href={AUTH_PATHS.LOGIN}
-        className="inline-flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors mb-8"
+        className="inline-flex items-center gap-1.5 text-sm text-[var(--text-3)] hover:text-[var(--text-2)] transition-colors mb-8"
       >
         <ArrowLeftIcon /> Voltar
       </Link>
 
       {/* Header */}
-      <h2 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">
+      <h2 className="text-2xl font-bold text-[var(--text)] tracking-tight">
         Recuperar senha
       </h2>
-      <p className="mt-2 text-[var(--text-muted)]">
+      <p className="mt-2 text-[var(--text-3)]">
         Digite seu email e enviaremos um link de recuperação
       </p>
 
       {/* Error alert */}
       {error && (
-        <div className="mt-6 px-4 py-3 rounded-xl text-sm bg-[var(--danger-light)] text-[var(--danger)] border border-[var(--danger)]/20">
+        <div className="mt-6 px-4 py-3 rounded-xl text-sm bg-[var(--danger-soft)] text-[var(--danger)] border border-[var(--danger)]/20">
           {error}
         </div>
       )}
@@ -135,11 +135,11 @@ export default function ForgotPasswordPage() {
       {/* Form */}
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
         <div>
-          <label htmlFor="forgot-email" className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
+          <label htmlFor="forgot-email" className="block text-sm font-medium text-[var(--text-2)] mb-1.5">
             Email
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-3)]">
               <MailIcon />
             </span>
             <input
@@ -153,9 +153,9 @@ export default function ForgotPasswordPage() {
               placeholder="seu@email.com"
               className="
                 w-full pl-10 pr-4 py-3 rounded-xl text-sm
-                bg-[var(--bg-surface)] border border-[var(--border-color)]
-                text-[var(--text-primary)] placeholder:text-[var(--text-muted)]
-                focus:outline-none focus:ring-2 focus:ring-[var(--ring-color)] focus:border-transparent
+                bg-[var(--surface)] border border-[var(--border)]
+                text-[var(--text)] placeholder:text-[var(--text-3)]
+                focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:border-transparent
                 transition-all duration-[var(--duration-fast)]
               "
             />
@@ -168,8 +168,8 @@ export default function ForgotPasswordPage() {
           className="
             w-full flex items-center justify-center gap-2
             px-4 py-3 rounded-xl text-sm font-semibold
-            bg-[var(--primary)] text-white
-            hover:bg-[var(--primary-hover)] active:bg-[var(--primary-active)]
+            bg-[var(--brand)] text-white
+            hover:bg-[var(--brand-hover)] active:bg-[var(--brand-active)]
             disabled:opacity-50 disabled:cursor-not-allowed
             transition-colors duration-[var(--duration-fast)]
             shadow-sm

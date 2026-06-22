@@ -30,7 +30,7 @@ function readTime(content: string): string {
 export async function generateMetadata({ params }: NoticiaPageProps): Promise<Metadata> {
   if (!isNewsServerClientConfigured()) {
     return {
-      title: 'Notícia não encontrada | Foco no ENEM',
+      title: 'Notícia não encontrada | AprovIA',
     };
   }
 
@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: NoticiaPageProps): Promise<Me
 
   if (!noticia) {
     return {
-      title: 'Notícia não encontrada | Foco no ENEM',
+      title: 'Notícia não encontrada | AprovIA',
     };
   }
 
@@ -89,7 +89,7 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
 
   return (
     <div className="min-h-[80vh] pb-20">
-      <div className="relative overflow-hidden bg-[var(--bg-surface)]">
+      <div className="relative overflow-hidden bg-[var(--surface)]">
         {safeImageUrl ? (
           <div className="relative aspect-[21/9] w-full">
             <Image
@@ -101,17 +101,17 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
               className="object-cover"
               sizes="100vw"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-base)]/75 via-[var(--bg-base)]/20 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)]/75 via-[var(--bg)]/20 to-transparent" />
           </div>
         ) : (
-          <div className="aspect-[21/9] w-full bg-[var(--bg-surface)]" />
+          <div className="aspect-[21/9] w-full bg-[var(--surface)]" />
         )}
       </div>
 
       <div className="mx-auto max-w-3xl px-4 py-4 sm:px-6">
         <Link
           href="/noticias"
-          className="inline-flex items-center gap-1.5 text-xs text-[var(--text-muted)] transition-colors hover:text-[var(--primary)]"
+          className="inline-flex items-center gap-1.5 text-xs text-[var(--text-3)] transition-colors hover:text-[var(--brand)]"
         >
           <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
@@ -126,7 +126,7 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
             {noticia.tags.map((tag) => (
               <span
                 key={tag}
-                className="rounded-full bg-[var(--primary)]/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--primary)]"
+                className="rounded-full bg-[var(--brand)]/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--brand)]"
               >
                 {tag}
               </span>
@@ -135,12 +135,12 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
         )}
 
         <header className="mb-8 space-y-4">
-          <h1 className="text-2xl font-bold leading-tight text-[var(--text-primary)] sm:text-3xl lg:text-4xl">
+          <h1 className="text-2xl font-bold leading-tight text-[var(--text)] sm:text-3xl lg:text-4xl">
             {noticia.titulo}
           </h1>
 
-          <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--text-muted)]">
-            {noticia.autor ? <span className="font-medium text-[var(--text-secondary)]">{noticia.autor}</span> : null}
+          <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--text-3)]">
+            {noticia.autor ? <span className="font-medium text-[var(--text-2)]">{noticia.autor}</span> : null}
             <span>{formatDate(noticia.data_publicacao)}</span>
             <span>·</span>
             <span>{readTime(noticia.conteudo)}</span>
@@ -153,7 +153,7 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
                 href={safeSourceUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-color)] px-3 py-1.5 text-xs text-[var(--text-muted)] transition-colors hover:border-[var(--border-hover)] hover:text-[var(--text-secondary)]"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs text-[var(--text-3)] transition-colors hover:border-[var(--border-hover)] hover:text-[var(--text-2)]"
               >
                 Fonte original
               </a>
@@ -162,7 +162,7 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
         </header>
 
         <div
-          className="prose prose-neutral max-w-none prose-headings:text-[var(--text-primary)] prose-p:text-[var(--text-secondary)] prose-a:text-[var(--primary)] prose-strong:text-[var(--text-primary)]"
+          className="prose prose-neutral max-w-none prose-headings:text-[var(--text)] prose-p:text-[var(--text-2)] prose-a:text-[var(--brand)] prose-strong:text-[var(--text)]"
           dangerouslySetInnerHTML={{ __html: safeContent }}
         />
       </article>
@@ -170,8 +170,8 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
       {related.length > 0 && (
         <section className="mx-auto mt-16 max-w-6xl px-4 sm:px-6">
           <div className="mb-5 flex items-center justify-between gap-4">
-            <h2 className="text-lg font-bold text-[var(--text-primary)]">Leituras relacionadas</h2>
-            <Link href="/noticias" className="text-sm text-[var(--primary)] transition-colors hover:text-[var(--primary-hover)]">
+            <h2 className="text-lg font-bold text-[var(--text)]">Leituras relacionadas</h2>
+            <Link href="/noticias" className="text-sm text-[var(--brand)] transition-colors hover:text-[var(--brand-hover)]">
               Ver todas
             </Link>
           </div>
@@ -181,9 +181,9 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
               <Link
                 key={item.id}
                 href={`/noticias/${item.slug}`}
-                className="group overflow-hidden rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] transition-colors hover:border-[var(--border-hover)]"
+                className="group overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] transition-colors hover:border-[var(--border-hover)]"
               >
-                <div className="relative aspect-[16/9] bg-[var(--bg-surface)]">
+                <div className="relative aspect-[16/9] bg-[var(--surface)]">
                   {item.safeImageUrl ? (
                     <Image
                       src={item.safeImageUrl}
@@ -196,11 +196,11 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
                   ) : null}
                 </div>
                 <div className="space-y-2 p-4">
-                  <h3 className="line-clamp-2 text-sm font-semibold text-[var(--text-primary)] transition-colors group-hover:text-[var(--primary)]">
+                  <h3 className="line-clamp-2 text-sm font-semibold text-[var(--text)] transition-colors group-hover:text-[var(--brand)]">
                     {item.titulo}
                   </h3>
-                  <p className="line-clamp-2 text-xs text-[var(--text-muted)]">{stripHtml(item.resumo)}</p>
-                  <p className="text-[10px] text-[var(--text-muted)]">{formatDate(item.data_publicacao)}</p>
+                  <p className="line-clamp-2 text-xs text-[var(--text-3)]">{stripHtml(item.resumo)}</p>
+                  <p className="text-[10px] text-[var(--text-3)]">{formatDate(item.data_publicacao)}</p>
                 </div>
               </Link>
             ))}
