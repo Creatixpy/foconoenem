@@ -172,11 +172,11 @@ function AccordionPanel({ title, children }: { title: string; children: React.Re
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="border border-[var(--border-color)] rounded-xl overflow-hidden">
+    <div className="border border-[var(--border)] rounded-xl overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] transition-colors"
+        className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-[var(--text-2)] hover:bg-[var(--surface-2)] transition-colors"
       >
         {title}
         <span className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`}>
@@ -186,7 +186,7 @@ function AccordionPanel({ title, children }: { title: string; children: React.Re
       <div
         className={`overflow-hidden transition-all duration-300 ${open ? 'max-h-96' : 'max-h-0'}`}
       >
-        <div className="px-4 pb-4 text-sm text-[var(--text-muted)] leading-relaxed">
+        <div className="px-4 pb-4 text-sm text-[var(--text-3)] leading-relaxed">
           {children}
         </div>
       </div>
@@ -209,20 +209,20 @@ function CorrectionOverlay() {
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg-base)]/80 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg)]/80 backdrop-blur-sm">
       <div className="text-center space-y-6 px-4">
         {/* Animated spinner */}
         <div className="relative mx-auto w-16 h-16">
-          <div className="absolute inset-0 rounded-full border-2 border-[var(--border-color)]" />
-          <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[var(--primary)] animate-spin" />
+          <div className="absolute inset-0 rounded-full border-2 border-[var(--border)]" />
+          <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[var(--brand)] animate-spin" />
         </div>
 
         {/* Progress message */}
         <div className="space-y-2">
-          <p className="text-lg font-semibold text-[var(--text-primary)]">
+          <p className="text-lg font-semibold text-[var(--text)]">
             {CORRECTION_MESSAGES[msgIndex]}
           </p>
-          <p className="text-sm text-[var(--text-muted)]">
+          <p className="text-sm text-[var(--text-3)]">
             Isso pode levar até 30 segundos
           </p>
         </div>
@@ -233,7 +233,7 @@ function CorrectionOverlay() {
             <div
               key={i}
               className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                i <= msgIndex ? 'bg-[var(--primary)]' : 'bg-[var(--border-color)]'
+                i <= msgIndex ? 'bg-[var(--brand)]' : 'bg-[var(--border)]'
               }`}
             />
           ))}
@@ -267,19 +267,19 @@ function ThemeSection({
   onGenerate: () => void;
 }) {
   return (
-    <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--card-bg)] p-6">
-      <h3 className="text-sm font-semibold text-[var(--text-primary)] uppercase tracking-wider mb-4">
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
+      <h3 className="text-sm font-semibold text-[var(--text)] uppercase tracking-wider mb-4">
         Tema da sua redação
       </h3>
 
-      <div className="mb-4 grid grid-cols-2 gap-2 rounded-xl bg-[var(--bg-surface)] p-1 border border-[var(--border-color)]">
+      <div className="mb-4 grid grid-cols-2 gap-2 rounded-xl bg-[var(--surface)] p-1 border border-[var(--border)]">
         <button
           type="button"
           onClick={() => onModeChange('generated')}
           className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
             mode === 'generated'
-              ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-sm'
-              : 'text-[var(--text-muted)]'
+              ? 'bg-[var(--surface-2)] text-[var(--text)] shadow-sm'
+              : 'text-[var(--text-3)]'
           }`}
         >
           Tema com IA
@@ -289,8 +289,8 @@ function ThemeSection({
           onClick={() => onModeChange('manual')}
           className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
             mode === 'manual'
-              ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-sm'
-              : 'text-[var(--text-muted)]'
+              ? 'bg-[var(--surface-2)] text-[var(--text)] shadow-sm'
+              : 'text-[var(--text-3)]'
           }`}
         >
           Tema manual
@@ -298,14 +298,14 @@ function ThemeSection({
       </div>
 
       {themeError && (
-        <div className="mb-4 px-4 py-3 rounded-xl text-sm bg-[var(--danger-light)] text-[var(--danger)] border border-[var(--danger)]/20">
+        <div className="mb-4 px-4 py-3 rounded-xl text-sm bg-[var(--danger-soft)] text-[var(--danger)] border border-[var(--danger)]/20">
           {themeError}
         </div>
       )}
 
       {mode === 'manual' ? (
         <div className="space-y-4">
-          <p className="text-sm text-[var(--text-muted)]">
+          <p className="text-sm text-[var(--text-3)]">
             Digite seu próprio tema. Se você não enviar textos de apoio, a IA vai gerá-los automaticamente durante a correção.
           </p>
           <textarea
@@ -313,15 +313,15 @@ function ThemeSection({
             onChange={(e) => onManualThemeChange(e.target.value)}
             placeholder="Ex.: Caminhos para combater a evasão escolar no Brasil"
             className="
-              w-full min-h-[120px] rounded-xl border border-[var(--border-color)]
-              bg-[var(--bg-base)] px-4 py-3 text-sm text-[var(--text-primary)]
-              placeholder:text-[var(--text-muted)] outline-none resize-none
+              w-full min-h-[120px] rounded-xl border border-[var(--border)]
+              bg-[var(--bg)] px-4 py-3 text-sm text-[var(--text)]
+              placeholder:text-[var(--text-3)] outline-none resize-none
             "
           />
         </div>
       ) : !theme ? (
         <div className="text-center py-6">
-          <p className="text-sm text-[var(--text-muted)] mb-5">
+          <p className="text-sm text-[var(--text-3)] mb-5">
             Gere um tema inédito com nossa IA para começar sua redação.
           </p>
           <button
@@ -331,8 +331,8 @@ function ThemeSection({
             className="
               inline-flex items-center justify-center gap-2
               px-6 py-3 rounded-xl text-sm font-semibold
-              bg-[var(--primary)] text-white
-              hover:bg-[var(--primary-hover)] active:bg-[var(--primary-active)]
+              bg-[var(--brand)] text-white
+              hover:bg-[var(--brand-hover)] active:bg-[var(--brand-active)]
               disabled:opacity-60 disabled:cursor-not-allowed
               transition-all duration-[var(--duration-fast)]
               shadow-sm
@@ -349,7 +349,7 @@ function ThemeSection({
       ) : (
         <div className="space-y-4">
           {/* Theme title */}
-          <p className="text-base font-semibold text-[var(--text-primary)] leading-relaxed">
+          <p className="text-base font-semibold text-[var(--text)] leading-relaxed">
             {theme.tema}
           </p>
 
@@ -370,7 +370,7 @@ function ThemeSection({
             disabled={themeLoading}
             className="
               inline-flex items-center gap-1.5 text-xs font-medium
-              text-[var(--text-muted)] hover:text-[var(--text-secondary)]
+              text-[var(--text-3)] hover:text-[var(--text-2)]
               disabled:opacity-50 disabled:cursor-not-allowed
               transition-colors
             "
@@ -405,10 +405,10 @@ function RequirementsChecklist({
     <div className="space-y-2.5">
       {items.map((item) => (
         <div key={item.label} className="flex items-center gap-2.5">
-          <span className={`shrink-0 ${item.met ? 'text-[var(--success)]' : 'text-[var(--text-muted)]'}`}>
-            {item.met ? <CheckIcon color="var(--success)" /> : <XIcon color="var(--text-muted)" />}
+          <span className={`shrink-0 ${item.met ? 'text-[var(--success)]' : 'text-[var(--text-3)]'}`}>
+            {item.met ? <CheckIcon color="var(--success)" /> : <XIcon color="var(--text-3)" />}
           </span>
-          <span className={`text-sm ${item.met ? 'text-[var(--text-secondary)]' : 'text-[var(--text-muted)]'}`}>
+          <span className={`text-sm ${item.met ? 'text-[var(--text-2)]' : 'text-[var(--text-3)]'}`}>
             {item.label}
           </span>
         </div>
@@ -559,22 +559,22 @@ export default function RedacaoPageClient() {
         {/* ---- Page Header ---- */}
         <div className="mb-8">
           <div className="flex flex-wrap items-center gap-3 mb-3">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/20">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--brand)]/10 text-[var(--brand)] border border-[var(--brand)]/20">
               <SparkleIcon /> Redação com IA
             </span>
             <OperatingHoursPill info={opHours} />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text)] tracking-tight">
             Escreva sua redação
           </h1>
-          <p className="mt-2 text-sm text-[var(--text-muted)] max-w-xl">
+          <p className="mt-2 text-sm text-[var(--text-3)] max-w-xl">
             Gere um tema com IA ou escreva o seu próprio tema, produza sua redação dissertativa-argumentativa e receba feedback detalhado com nota por competência.
           </p>
         </div>
 
         {/* ---- Mobile Tabs (lg:hidden) ---- */}
         <div className="lg:hidden mb-6">
-          <div className="flex gap-1 p-1 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)]">
+          <div className="flex gap-1 p-1 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
             {MOBILE_TABS.map((tab) => (
               <button
                 key={tab.key}
@@ -583,8 +583,8 @@ export default function RedacaoPageClient() {
                   flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-xs font-medium
                   transition-all duration-200
                   ${mobileTab === tab.key
-                    ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-sm'
-                    : 'text-[var(--text-muted)]'
+                    ? 'bg-[var(--surface-2)] text-[var(--text)] shadow-sm'
+                    : 'text-[var(--text-3)]'
                   }
                 `}
               >
@@ -602,13 +602,13 @@ export default function RedacaoPageClient() {
             {/* Theme pill (mobile compact — shown only in write tab) */}
             {hasSelectedTheme && (
               <div className="lg:hidden">
-                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)]">
-                  <span className="text-xs font-medium text-[var(--text-muted)]">Tema:</span>
-                  <span className="text-xs text-[var(--text-secondary)] truncate flex-1">{selectedThemeTitle}</span>
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
+                  <span className="text-xs font-medium text-[var(--text-3)]">Tema:</span>
+                  <span className="text-xs text-[var(--text-2)] truncate flex-1">{selectedThemeTitle}</span>
                   <button
                     type="button"
                     onClick={() => setMobileTab('theme')}
-                    className="text-xs text-[var(--primary)] font-medium shrink-0"
+                    className="text-xs text-[var(--brand)] font-medium shrink-0"
                   >
                     Ver
                   </button>
@@ -617,13 +617,13 @@ export default function RedacaoPageClient() {
             )}
 
             {/* Editor card */}
-            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--card-bg)] overflow-hidden">
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
               {/* Editor toolbar */}
-              <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--border-color)]">
-                <span className="text-xs text-[var(--text-muted)]">
+              <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--border)]">
+                <span className="text-xs text-[var(--text-3)]">
                   Redação dissertativa-argumentativa · Máximo 30 linhas
                 </span>
-                <span className="text-xs text-[var(--text-muted)] tabular-nums">
+                <span className="text-xs text-[var(--text-3)] tabular-nums">
                   {wordCount} {wordCount === 1 ? 'palavra' : 'palavras'} · {charCount} caracteres
                 </span>
               </div>
@@ -647,17 +647,17 @@ export default function RedacaoPageClient() {
                 className="
                   w-full min-h-[400px] sm:min-h-[500px] p-5 sm:p-6
                   text-[15px] leading-[1.8] font-[var(--font-inter)]
-                  bg-transparent text-[var(--text-primary)]
-                  placeholder:text-[var(--text-muted)]/50
+                  bg-transparent text-[var(--text)]
+                  placeholder:text-[var(--text-3)]/50
                   resize-none outline-none
                   disabled:opacity-50 disabled:cursor-not-allowed
                 "
               />
 
               {/* Word count bar */}
-              <div className="px-5 py-3 border-t border-[var(--border-color)] flex items-center justify-between">
+              <div className="px-5 py-3 border-t border-[var(--border)] flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-32 h-1.5 rounded-full bg-[var(--bg-elevated)] overflow-hidden">
+                  <div className="w-32 h-1.5 rounded-full bg-[var(--surface-2)] overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all duration-300"
                       style={{
@@ -667,11 +667,11 @@ export default function RedacaoPageClient() {
                             ? 'var(--danger)'
                             : wordCount >= MIN_WORDS
                             ? 'var(--success)'
-                            : 'var(--primary)',
+                            : 'var(--brand)',
                       }}
                     />
                   </div>
-                  <span className="text-xs text-[var(--text-muted)]">
+                  <span className="text-xs text-[var(--text-3)]">
                     {wordCount}/{MAX_WORDS}
                   </span>
                 </div>
@@ -708,8 +708,8 @@ export default function RedacaoPageClient() {
 
             {/* Submit section (shown in submit tab on mobile, always on desktop) */}
             <div className={`${mobileTab !== 'submit' ? 'hidden lg:block' : ''}`}>
-              <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--card-bg)] p-6 space-y-5">
-                <h3 className="text-sm font-semibold text-[var(--text-primary)] uppercase tracking-wider">
+              <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 space-y-5">
+                <h3 className="text-sm font-semibold text-[var(--text)] uppercase tracking-wider">
                   Enviar para correção
                 </h3>
 
@@ -718,7 +718,7 @@ export default function RedacaoPageClient() {
 
                 {/* Error */}
                 {correctionError && (
-                  <div className="px-4 py-3 rounded-xl text-sm bg-[var(--danger-light)] text-[var(--danger)] border border-[var(--danger)]/20 flex items-start gap-2.5">
+                  <div className="px-4 py-3 rounded-xl text-sm bg-[var(--danger-soft)] text-[var(--danger)] border border-[var(--danger)]/20 flex items-start gap-2.5">
                     <span className="shrink-0 mt-0.5"><AlertTriangleIcon /></span>
                     <span>{correctionError}</span>
                   </div>
@@ -732,8 +732,8 @@ export default function RedacaoPageClient() {
                   className="
                     w-full flex items-center justify-center gap-2
                     px-5 py-3.5 rounded-xl text-sm font-semibold
-                    bg-[var(--primary)] text-white
-                    hover:bg-[var(--primary-hover)] active:bg-[var(--primary-active)]
+                    bg-[var(--brand)] text-white
+                    hover:bg-[var(--brand-hover)] active:bg-[var(--brand-active)]
                     disabled:opacity-40 disabled:cursor-not-allowed
                     transition-all duration-[var(--duration-fast)]
                     shadow-sm

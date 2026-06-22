@@ -47,10 +47,10 @@ function NewsImage({
   const [error, setError] = useState(false);
   const fallback = (
     <div
-      className={`flex items-center justify-center bg-[var(--bg-surface)] ${className}`}
+      className={`flex items-center justify-center bg-[var(--surface)] ${className}`}
       style={fill ? { position: 'absolute', inset: 0 } : {}}
     >
-      <svg className="w-12 h-12 text-[var(--text-muted)] opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+      <svg className="w-12 h-12 text-[var(--text-3)] opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6V7.5z" />
       </svg>
     </div>
@@ -88,7 +88,7 @@ function ArticleCardSmall({ noticia }: { noticia: NoticiaAPI }) {
   return (
     <Link href={`/noticias/${noticia.slug}`} className="group block">
       <article
-        className="rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] overflow-hidden hover:border-[var(--border-hover)] transition-colors"
+        className="rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden hover:border-[var(--border-hover)] transition-colors"
       >
         <div className="relative aspect-[16/9] overflow-hidden">
           <NewsImage src={noticia.imagem_url} alt={noticia.titulo} fill />
@@ -96,15 +96,15 @@ function ArticleCardSmall({ noticia }: { noticia: NoticiaAPI }) {
         </div>
         <div className="p-4 space-y-2">
           {noticia.tags.length > 0 && (
-            <span className="inline-block text-[10px] font-semibold uppercase tracking-wider text-[var(--primary)] bg-[var(--primary)]/10 px-2 py-0.5 rounded-full">
+            <span className="inline-block text-[10px] font-semibold uppercase tracking-wider text-[var(--brand)] bg-[var(--brand)]/10 px-2 py-0.5 rounded-full">
               {noticia.tags[0]}
             </span>
           )}
-          <h3 className="text-sm font-semibold text-[var(--text-primary)] line-clamp-2 group-hover:text-[var(--primary)] transition-colors leading-snug">
+          <h3 className="text-sm font-semibold text-[var(--text)] line-clamp-2 group-hover:text-[var(--brand)] transition-colors leading-snug">
             {noticia.titulo}
           </h3>
-          <p className="text-xs text-[var(--text-muted)] line-clamp-2">{stripHtml(noticia.resumo)}</p>
-          <div className="flex items-center gap-2 text-[10px] text-[var(--text-muted)] pt-1">
+          <p className="text-xs text-[var(--text-3)] line-clamp-2">{stripHtml(noticia.resumo)}</p>
+          <div className="flex items-center gap-2 text-[10px] text-[var(--text-3)] pt-1">
             <span>{formatDate(noticia.data_publicacao)}</span>
             <span>·</span>
             <span>{readTime(noticia.conteudo)}</span>
@@ -119,22 +119,22 @@ function ArticleCardMedium({ noticia }: { noticia: NoticiaAPI }) {
   return (
     <Link href={`/noticias/${noticia.slug}`} className="group block">
       <article
-        className="rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] overflow-hidden hover:border-[var(--border-hover)] transition-colors h-full"
+        className="rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden hover:border-[var(--border-hover)] transition-colors h-full"
       >
         <div className="relative aspect-[16/10] overflow-hidden">
           <NewsImage src={noticia.imagem_url} alt={noticia.titulo} fill />
         </div>
         <div className="p-5 space-y-2">
           {noticia.tags.length > 0 && (
-            <span className="inline-block text-[10px] font-semibold uppercase tracking-wider text-[var(--primary)] bg-[var(--primary)]/10 px-2 py-0.5 rounded-full">
+            <span className="inline-block text-[10px] font-semibold uppercase tracking-wider text-[var(--brand)] bg-[var(--brand)]/10 px-2 py-0.5 rounded-full">
               {noticia.tags[0]}
             </span>
           )}
-          <h3 className="text-base font-bold text-[var(--text-primary)] line-clamp-2 group-hover:text-[var(--primary)] transition-colors">
+          <h3 className="text-base font-bold text-[var(--text)] line-clamp-2 group-hover:text-[var(--brand)] transition-colors">
             {noticia.titulo}
           </h3>
-          <p className="text-sm text-[var(--text-muted)] line-clamp-2">{stripHtml(noticia.resumo)}</p>
-          <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] pt-1">
+          <p className="text-sm text-[var(--text-3)] line-clamp-2">{stripHtml(noticia.resumo)}</p>
+          <div className="flex items-center gap-2 text-xs text-[var(--text-3)] pt-1">
             <span>{formatDate(noticia.data_publicacao)}</span>
             <span>·</span>
             <span>{readTime(noticia.conteudo)}</span>
@@ -169,7 +169,7 @@ function SearchBar({
     <form onSubmit={handleSubmit} className="space-y-3">
       <div className="relative">
         <svg
-          className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-[var(--text-muted)]"
+          className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-[var(--text-3)]"
           fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
         >
           <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
@@ -179,11 +179,11 @@ function SearchBar({
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={isAI ? 'Peça um resumo das notícias recentes sobre um tema...' : 'Buscar notícias...'}
-          className="w-full pl-10 pr-28 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--ring-color)] text-sm"
+          className="w-full pl-10 pr-28 py-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] placeholder:text-[var(--text-3)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] text-sm"
         />
         <button
           type="submit"
-          className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:bg-[var(--primary-hover)] transition-colors cursor-pointer"
+          className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 rounded-lg bg-[var(--brand)] text-white text-sm font-medium hover:bg-[var(--brand-hover)] transition-colors cursor-pointer"
         >
           Buscar
         </button>
@@ -194,8 +194,8 @@ function SearchBar({
           onClick={() => setIsAI(!isAI)}
           className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors cursor-pointer border ${
             isAI
-              ? 'bg-[var(--primary)]/10 text-[var(--primary)] border-[var(--primary)]/30'
-              : 'bg-[var(--bg-surface)] text-[var(--text-muted)] border-[var(--border-color)] hover:text-[var(--text-secondary)]'
+              ? 'bg-[var(--brand)]/10 text-[var(--brand)] border-[var(--brand)]/30'
+              : 'bg-[var(--surface)] text-[var(--text-3)] border-[var(--border)] hover:text-[var(--text-2)]'
           }`}
         >
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -204,8 +204,8 @@ function SearchBar({
           Resumo com IA
         </button>
         {isAI && (
-          <span className="text-[10px] text-[var(--text-muted)]">
-            A IA resume notícias aprovadas já publicadas no Foco no ENEM
+          <span className="text-[10px] text-[var(--text-3)]">
+            A IA resume notícias aprovadas já publicadas na AprovIA
           </span>
         )}
       </div>
@@ -266,14 +266,14 @@ export default function NoticiasPageClient({
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
         {/* page header */}
         <div className="mb-8 space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--border-color)] bg-[var(--bg-surface)] text-xs text-[var(--text-muted)]">
-            <span className="text-[var(--primary)]">✦</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] text-xs text-[var(--text-3)]">
+            <span className="text-[var(--brand)]">✦</span>
             Notícias
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)]">
+          <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text)]">
             Notícias do ENEM
           </h1>
-          <p className="text-[var(--text-muted)] text-sm max-w-xl">
+          <p className="text-[var(--text-3)] text-sm max-w-xl">
             Fique por dentro das últimas notícias sobre o ENEM, vestibulares e educação no Brasil.
           </p>
         </div>
@@ -287,9 +287,9 @@ export default function NoticiasPageClient({
         {(showingSearch || showingAI) && (
           <div className="mb-10">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
+              <h2 className="text-lg font-bold text-[var(--text)] flex items-center gap-2">
                 {showingAI && (
-                  <span className="inline-flex items-center gap-1 text-xs font-medium text-[var(--primary)] bg-[var(--primary)]/10 px-2 py-0.5 rounded-full">
+                  <span className="inline-flex items-center gap-1 text-xs font-medium text-[var(--brand)] bg-[var(--brand)]/10 px-2 py-0.5 rounded-full">
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
                     </svg>
@@ -300,7 +300,7 @@ export default function NoticiasPageClient({
               </h2>
               <button
                 onClick={handleClearResults}
-                className="text-xs text-[var(--text-muted)] hover:text-[var(--primary)] transition-colors cursor-pointer"
+                className="text-xs text-[var(--text-3)] hover:text-[var(--brand)] transition-colors cursor-pointer"
               >
                 Limpar busca
               </button>
@@ -309,20 +309,20 @@ export default function NoticiasPageClient({
             {(searchLoading || aiLoading) && (
               <div className="space-y-4">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-24 rounded-xl bg-[var(--bg-surface)] animate-pulse" />
+                  <div key={i} className="h-24 rounded-xl bg-[var(--surface)] animate-pulse" />
                 ))}
               </div>
             )}
 
             {showingAI && aiContent && (
-              <div className="rounded-xl border border-[var(--primary)]/20 bg-[var(--card-bg)] p-5 sm:p-6">
+              <div className="rounded-xl border border-[var(--brand)]/20 bg-[var(--surface)] p-5 sm:p-6">
                 <div className="flex items-center gap-2 mb-3">
-                  <svg className="w-4 h-4 text-[var(--primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg className="w-4 h-4 text-[var(--brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
                   </svg>
-                  <span className="text-xs font-medium text-[var(--primary)]">Resumo da IA</span>
+                  <span className="text-xs font-medium text-[var(--brand)]">Resumo da IA</span>
                 </div>
-                <div className="text-sm text-[var(--text-secondary)] leading-relaxed whitespace-pre-line">
+                <div className="text-sm text-[var(--text-2)] leading-relaxed whitespace-pre-line">
                   {aiContent}
                 </div>
               </div>
@@ -336,12 +336,12 @@ export default function NoticiasPageClient({
 
             {showingSearch && searched && !searchLoading && searchResults.length === 0 && (
               <div className="text-center py-12">
-                <p className="text-[var(--text-muted)] text-sm mb-2">Nenhum resultado encontrado.</p>
-                <p className="text-[var(--text-muted)] text-xs">
+                <p className="text-[var(--text-3)] text-sm mb-2">Nenhum resultado encontrado.</p>
+                <p className="text-[var(--text-3)] text-xs">
                   Tente a{' '}
                   <button
                     onClick={() => setShowingSearch(false)}
-                    className="text-[var(--primary)] hover:underline cursor-pointer"
+                    className="text-[var(--brand)] hover:underline cursor-pointer"
                   >
                     resumo com IA
                   </button>{' '}
@@ -365,10 +365,10 @@ export default function NoticiasPageClient({
           <>
             {destaquesLoading ? (
               <div className="mb-10 space-y-4">
-                <div className="h-[400px] rounded-2xl bg-[var(--bg-surface)] animate-pulse" />
+                <div className="h-[400px] rounded-2xl bg-[var(--surface)] animate-pulse" />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="h-[260px] rounded-xl bg-[var(--bg-surface)] animate-pulse" />
-                  <div className="h-[260px] rounded-xl bg-[var(--bg-surface)] animate-pulse" />
+                  <div className="h-[260px] rounded-xl bg-[var(--surface)] animate-pulse" />
+                  <div className="h-[260px] rounded-xl bg-[var(--surface)] animate-pulse" />
                 </div>
               </div>
             ) : heroArticle ? (
@@ -414,21 +414,21 @@ export default function NoticiasPageClient({
             ) : null}
 
             {/* divider */}
-            <div className="border-t border-[var(--border-color)] mb-8" />
+            <div className="border-t border-[var(--border)] mb-8" />
 
             {/* news grid */}
             <div className="mb-8">
-              <h2 className="text-lg font-bold text-[var(--text-primary)] mb-5">Últimas notícias</h2>
+              <h2 className="text-lg font-bold text-[var(--text)] mb-5">Últimas notícias</h2>
 
               {loading ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <div key={i} className="rounded-xl bg-[var(--bg-surface)] animate-pulse">
+                    <div key={i} className="rounded-xl bg-[var(--surface)] animate-pulse">
                       <div className="aspect-[16/9]" />
                       <div className="p-4 space-y-2">
-                        <div className="h-3 w-16 rounded bg-[var(--bg-elevated)]" />
-                        <div className="h-4 w-full rounded bg-[var(--bg-elevated)]" />
-                        <div className="h-3 w-3/4 rounded bg-[var(--bg-elevated)]" />
+                        <div className="h-3 w-16 rounded bg-[var(--surface-2)]" />
+                        <div className="h-4 w-full rounded bg-[var(--surface-2)]" />
+                        <div className="h-3 w-3/4 rounded bg-[var(--surface-2)]" />
                       </div>
                     </div>
                   ))}
@@ -438,19 +438,19 @@ export default function NoticiasPageClient({
                   <p className="text-[var(--danger)] text-sm mb-3">{error}</p>
                   <button
                     onClick={() => window.location.reload()}
-                    className="text-sm text-[var(--primary)] hover:underline cursor-pointer"
+                    className="text-sm text-[var(--brand)] hover:underline cursor-pointer"
                   >
                     Tentar novamente
                   </button>
                 </div>
               ) : noticias.length === 0 ? (
                 <div className="text-center py-16">
-                  <div className="w-16 h-16 rounded-full bg-[var(--bg-surface)] flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-8 h-8 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <div className="w-16 h-16 rounded-full bg-[var(--surface)] flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-[var(--text-3)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6V7.5z" />
                     </svg>
                   </div>
-                  <p className="text-[var(--text-muted)] text-sm">Nenhuma notícia disponível no momento.</p>
+                  <p className="text-[var(--text-3)] text-sm">Nenhuma notícia disponível no momento.</p>
                 </div>
               ) : (
                 <>
@@ -465,7 +465,7 @@ export default function NoticiasPageClient({
                       <button
                         onClick={loadMore}
                         disabled={loadingMore}
-                        className="px-6 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-surface)] hover:border-[var(--border-hover)] transition-colors disabled:opacity-50 cursor-pointer"
+                        className="px-6 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm font-medium text-[var(--text-2)] hover:bg-[var(--surface)] hover:border-[var(--border-hover)] transition-colors disabled:opacity-50 cursor-pointer"
                       >
                         {loadingMore ? (
                           <span className="inline-flex items-center gap-2">

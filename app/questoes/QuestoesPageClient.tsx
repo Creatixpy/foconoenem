@@ -223,11 +223,11 @@ export default function QuestoesPageClient() {
   if (authLoading || !initialized) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-12 animate-pulse space-y-6">
-        <div className="h-8 w-64 rounded bg-[var(--bg-surface)]" />
-        <div className="h-4 w-96 rounded bg-[var(--bg-surface)]" />
+        <div className="h-8 w-64 rounded bg-[var(--surface)]" />
+        <div className="h-4 w-96 rounded bg-[var(--surface)]" />
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-28 rounded-xl bg-[var(--bg-surface)]" />
+            <div key={i} className="h-28 rounded-xl bg-[var(--surface)]" />
           ))}
         </div>
       </div>
@@ -250,14 +250,14 @@ export default function QuestoesPageClient() {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-3"
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--border-color)] bg-[var(--bg-surface)] text-xs text-[var(--text-muted)]">
-              <span className="text-[var(--primary)]">✦</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] text-xs text-[var(--text-3)]">
+              <span className="text-[var(--brand)]">✦</span>
               Simulado com IA
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)]">
+            <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text)]">
               Simulado inteligente de questões
             </h1>
-            <p className="text-[var(--text-muted)] max-w-lg">
+            <p className="text-[var(--text-3)] max-w-lg">
               Escolha as disciplinas e receba um simulado inteligente com banco próprio de questões
               e novas gerações no estilo ENEM, sempre com explicações comentadas.
             </p>
@@ -267,10 +267,10 @@ export default function QuestoesPageClient() {
           {hoursInfo && (
             <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${
               hoursInfo.isOpen
-                ? 'bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20'
+                ? 'bg-[var(--ai)]/10 text-[var(--ai)] border border-[var(--ai)]/20'
                 : 'bg-[var(--warning)]/10 text-[var(--warning)] border border-[var(--warning)]/20'
             }`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${hoursInfo.isOpen ? 'bg-[var(--accent)]' : 'bg-[var(--warning)]'}`} />
+              <span className={`w-1.5 h-1.5 rounded-full ${hoursInfo.isOpen ? 'bg-[var(--ai)]' : 'bg-[var(--warning)]'}`} />
               {hoursInfo.isOpen ? 'Sistema disponível' : hoursInfo.message}
             </div>
           )}
@@ -289,11 +289,11 @@ export default function QuestoesPageClient() {
             ].map((info) => (
               <div
                 key={info.label}
-                className="text-center p-3 rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)]"
+                className="text-center p-3 rounded-xl border border-[var(--border)] bg-[var(--surface)]"
               >
                 <span className="text-xl">{info.icon}</span>
-                <p className="text-sm font-semibold text-[var(--text-primary)] mt-1">{info.label}</p>
-                <p className="text-xs text-[var(--text-muted)]">{info.sub}</p>
+                <p className="text-sm font-semibold text-[var(--text)] mt-1">{info.label}</p>
+                <p className="text-xs text-[var(--text-3)]">{info.sub}</p>
               </div>
             ))}
           </motion.div>
@@ -304,7 +304,7 @@ export default function QuestoesPageClient() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
           >
-            <h2 className="text-sm font-bold text-[var(--text-primary)] mb-3">
+            <h2 className="text-sm font-bold text-[var(--text)] mb-3">
               Escolha suas disciplinas
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -316,20 +316,20 @@ export default function QuestoesPageClient() {
                     onClick={() => toggleDiscipline(d.id)}
                     className={`relative text-left p-4 rounded-xl border transition-all duration-200 cursor-pointer ${
                       isSelected
-                        ? 'border-[var(--primary)] bg-[var(--primary)]/10 ring-1 ring-[var(--primary)]/30'
-                        : 'border-[var(--border-color)] bg-[var(--card-bg)] hover:border-[var(--border-hover)]'
+                        ? 'border-[var(--brand)] bg-[var(--brand)]/10 ring-1 ring-[var(--brand)]/30'
+                        : 'border-[var(--border)] bg-[var(--surface)] hover:border-[var(--border-hover)]'
                     }`}
                   >
                     {isSelected && (
-                      <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-[var(--primary)] flex items-center justify-center">
+                      <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-[var(--brand)] flex items-center justify-center">
                         <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                         </svg>
                       </span>
                     )}
                     <span className="text-2xl">{d.icon}</span>
-                    <p className="text-sm font-semibold text-[var(--text-primary)] mt-2">{d.label}</p>
-                    <p className="text-xs text-[var(--text-muted)] mt-0.5">{d.description}</p>
+                    <p className="text-sm font-semibold text-[var(--text)] mt-2">{d.label}</p>
+                    <p className="text-xs text-[var(--text-3)] mt-0.5">{d.description}</p>
                   </button>
                 );
               })}
@@ -344,10 +344,10 @@ export default function QuestoesPageClient() {
             transition={{ delay: 0.2 }}
           >
             {selectedDisciplines.size > 0 && (
-              <p className="text-sm text-[var(--text-muted)]">
-                <span className="font-semibold text-[var(--text-primary)]">{selectedDisciplines.size}</span>
+              <p className="text-sm text-[var(--text-3)]">
+                <span className="font-semibold text-[var(--text)]">{selectedDisciplines.size}</span>
                 {' '}disciplina{selectedDisciplines.size > 1 ? 's' : ''} •{' '}
-                <span className="font-semibold text-[var(--text-primary)]">{totalQuestions}</span>
+                <span className="font-semibold text-[var(--text)]">{totalQuestions}</span>
                 {' '}questões serão preparadas
               </p>
             )}
@@ -364,7 +364,7 @@ export default function QuestoesPageClient() {
             <button
               onClick={startQuiz}
               disabled={selectedDisciplines.size === 0 || (hoursInfo !== null && !hoursInfo.isOpen)}
-              className="w-full sm:w-auto px-8 py-3 rounded-lg bg-[var(--primary)] text-white font-medium hover:bg-[var(--primary-hover)] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-8 py-3 rounded-lg bg-[var(--brand)] text-white font-medium hover:bg-[var(--brand-hover)] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               Iniciar simulado
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -382,18 +382,18 @@ export default function QuestoesPageClient() {
   // -------------------------------------------------------------------------
   if (phase === 'loading') {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg-base)]/95 backdrop-blur-sm">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg)]/95 backdrop-blur-sm">
         <div className="text-center space-y-6 px-4">
           {/* spinner */}
           <div className="relative w-16 h-16 mx-auto">
-            <div className="absolute inset-0 rounded-full border-2 border-[var(--border-color)]" />
-            <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[var(--primary)] animate-spin" />
+            <div className="absolute inset-0 rounded-full border-2 border-[var(--border)]" />
+            <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[var(--brand)] animate-spin" />
           </div>
 
           <AnimatePresence mode="wait">
             <motion.p
               key={loadingMsgIndex}
-              className="text-[var(--text-primary)] font-medium"
+              className="text-[var(--text)] font-medium"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
@@ -408,7 +408,7 @@ export default function QuestoesPageClient() {
             {Array.from(selectedDisciplines).map((d) => (
               <span
                 key={d}
-                className="px-3 py-1 rounded-full text-xs font-medium border border-[var(--border-color)] bg-[var(--bg-surface)] text-[var(--text-muted)]"
+                className="px-3 py-1 rounded-full text-xs font-medium border border-[var(--border)] bg-[var(--surface)] text-[var(--text-3)]"
               >
                 {d}
               </span>

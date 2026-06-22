@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const prompt = `Você é um assistente do Foco no ENEM.
+    const prompt = `Você é um assistente da AprovIA.
 
 Use exclusivamente as notícias fornecidas abaixo para responder à pergunta do usuário.
 Não invente fatos, não diga que pesquisou na web e não mencione fontes que não estejam no contexto.

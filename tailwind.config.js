@@ -1,6 +1,5 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  darkMode: ["selector", '[data-theme="dark"]'],
   content: [
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -8,80 +7,57 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Base semantic colors
-        background: "var(--background)",
-        foreground: "var(--foreground)",
-
-        // Primary palette
-        primary: {
-          DEFAULT: "var(--primary)",
-          dark: "var(--primary-dark)",
-          light: "var(--primary-light)",
-          50: "var(--color-primary-50)",
-          100: "var(--color-primary-100)",
-          200: "var(--color-primary-200)",
-          300: "var(--color-primary-300)",
-          400: "var(--color-primary-400)",
-          500: "var(--color-primary-500)",
-          600: "var(--color-primary-600)",
-          700: "var(--color-primary-700)",
-          800: "var(--color-primary-800)",
-          900: "var(--color-primary-900)",
+        bg: "var(--bg)",
+        surface: {
+          DEFAULT: "var(--surface)",
+          2: "var(--surface-2)",
+          3: "var(--surface-3)",
         },
-
-        // Accent palette
-        accent: {
-          DEFAULT: "var(--accent)",
-          light: "var(--accent-light)",
-          50: "var(--color-accent-50)",
-          100: "var(--color-accent-100)",
-          200: "var(--color-accent-200)",
-          300: "var(--color-accent-300)",
-          400: "var(--color-accent-400)",
-          500: "var(--color-accent-500)",
-          600: "var(--color-accent-600)",
-          700: "var(--color-accent-700)",
+        text: {
+          DEFAULT: "var(--text)",
+          2: "var(--text-2)",
+          3: "var(--text-3)",
+          "on-brand": "var(--text-on-brand)",
         },
-
-        // UI colors
-        secondary: "var(--secondary)",
-        "card-bg": "var(--card-bg)",
-        "muted-bg": "var(--muted-bg)",
-        "border-color": "var(--border-color)",
-
-        // Semantic states
+        border: {
+          DEFAULT: "var(--border)",
+          subtle: "var(--border-subtle)",
+          strong: "var(--border-strong)",
+          hover: "var(--border-hover)",
+        },
+        brand: {
+          DEFAULT: "var(--brand)",
+          hover: "var(--brand-hover)",
+          active: "var(--brand-active)",
+          soft: "var(--brand-soft)",
+          strong: "var(--brand-strong)",
+        },
+        ai: {
+          DEFAULT: "var(--ai)",
+          hover: "var(--ai-hover)",
+          soft: "var(--ai-soft)",
+        },
         success: {
           DEFAULT: "var(--success)",
-          light: "var(--success-light)",
-          50: "var(--color-success-50)",
-          100: "var(--color-success-100)",
-          500: "var(--color-success-500)",
-          600: "var(--color-success-600)",
-          700: "var(--color-success-700)",
+          hover: "var(--success-hover)",
+          soft: "var(--success-soft)",
         },
         warning: {
           DEFAULT: "var(--warning)",
-          light: "var(--warning-light)",
-          50: "var(--color-warning-50)",
-          100: "var(--color-warning-100)",
-          500: "var(--color-warning-500)",
-          600: "var(--color-warning-600)",
-          700: "var(--color-warning-700)",
+          hover: "var(--warning-hover)",
+          soft: "var(--warning-soft)",
         },
         danger: {
           DEFAULT: "var(--danger)",
-          light: "var(--danger-light)",
-          50: "var(--color-danger-50)",
-          100: "var(--color-danger-100)",
-          500: "var(--color-danger-500)",
-          600: "var(--color-danger-600)",
-          700: "var(--color-danger-700)",
+          hover: "var(--danger-hover)",
+          soft: "var(--danger-soft)",
         },
       },
 
       // Typography
       fontFamily: {
         sans: ["var(--font-sans)"],
+        display: ["var(--font-display)"],
         mono: ["var(--font-mono)"],
       },
 
@@ -171,35 +147,24 @@ module.exports = {
     },
   },
   safelist: [
-    // Status colors
-    "bg-green-600",
-    "bg-blue-600",
-    "bg-yellow-600",
-    "bg-red-600",
-    "text-green-600",
-    "text-blue-600",
-    "text-yellow-600",
-    "text-red-600",
-    // Theme colors
-    "text-foreground",
-    "bg-card",
-    "bg-card-bg",
-    "bg-muted-bg",
-    "border-border-color",
-    // Primary shades
-    "bg-primary",
-    "bg-primary-light",
-    "text-primary",
-    "text-primary-dark",
-    // Semantic states
+    "bg-bg",
+    "bg-surface",
+    "bg-surface-2",
+    "border-border",
+    "bg-brand",
+    "bg-brand-soft",
+    "text-brand",
+    "text-text",
+    "text-text-2",
+    "text-text-3",
     "bg-success",
-    "bg-success-light",
+    "bg-success-soft",
     "text-success",
     "bg-warning",
-    "bg-warning-light",
+    "bg-warning-soft",
     "text-warning",
     "bg-danger",
-    "bg-danger-light",
+    "bg-danger-soft",
     "text-danger",
   ],
   plugins: [],

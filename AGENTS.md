@@ -23,6 +23,8 @@
 - Current stack: TypeScript, React 19, and Next.js 16 App Router.
 - Preserve the local style of the file you touch; the repository currently mixes single and double quotes.
 - Prefer Tailwind and the shared tokens in `app/styles/`.
+- The product is dark-only. Do not add theme providers, light-mode selectors, or a theme toggle.
+- Use `AprovIALogo` for visible branding and the `--brand`, `--ai`, `--bg`, `--surface*`, `--text*`, and semantic tokens for product colors.
 - Do not import server-only logic into client components.
 - Optional telemetry must remain consent-aware: Vercel Analytics and Speed Insights should only mount after the user accepts metrics in the cookie preferences UI.
 - Authenticated pages should validate with `requireServerUser()` server-side and pass the verified user into `AuthProviders` when the client needs `useAuth`, avoiding a second bootstrap `getUser()` call.

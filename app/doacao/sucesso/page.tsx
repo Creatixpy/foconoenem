@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'motion/react';
 
-const CONFETTI_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+const CONFETTI_COLORS = ['var(--brand)', 'var(--ai)', 'var(--warning)', 'var(--danger)', 'var(--brand-hover)'];
 
 interface ConfettiConfig {
   color: string;
@@ -57,7 +57,7 @@ function SucessoContent() {
 
   const handleShare = async () => {
     const shareUrl = window.location.origin;
-    const text = `Acabei de apoiar o FocoNoEnem! 💙 Uma plataforma gratuita que ajuda estudantes a se prepararem para o ENEM com IA. Conheça: ${shareUrl}`;
+    const text = `Acabei de apoiar a AprovIA! 💚 Uma plataforma gratuita que ajuda estudantes a se prepararem para o ENEM com IA. Conheça: ${shareUrl}`;
     if (navigator.share) {
       try {
         await navigator.share({ text });
@@ -70,7 +70,7 @@ function SucessoContent() {
   };
 
   return (
-    <div className="min-h-screen bg-bg-base flex items-center justify-center px-4 relative overflow-hidden">
+    <div className="min-h-screen bg-bg flex items-center justify-center px-4 relative overflow-hidden">
       {/* Confetti */}
       {showConfetti && (
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -97,7 +97,7 @@ function SucessoContent() {
         </motion.div>
 
         <motion.h1
-          className="text-3xl md:text-4xl font-bold text-text-primary mb-3"
+          className="text-3xl md:text-4xl font-bold text-text mb-3"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
@@ -106,7 +106,7 @@ function SucessoContent() {
         </motion.h1>
 
         <motion.p
-          className="text-text-secondary text-lg mb-2 leading-relaxed"
+          className="text-text-2 text-lg mb-2 leading-relaxed"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
@@ -115,7 +115,7 @@ function SucessoContent() {
         </motion.p>
 
         <motion.p
-          className="text-text-muted text-sm mb-8"
+          className="text-text-3 text-sm mb-8"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
@@ -125,13 +125,13 @@ function SucessoContent() {
 
         {sessionId && (
           <motion.div
-            className="mb-8 p-4 rounded-xl bg-card-bg border border-border-color"
+            className="mb-8 p-4 rounded-xl bg-surface border border-border"
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
           >
-            <p className="text-xs text-text-muted mb-1">ID da transação</p>
-            <p className="text-sm text-text-secondary font-mono break-all">
+            <p className="text-xs text-text-3 mb-1">ID da transação</p>
+            <p className="text-sm text-text-2 font-mono break-all">
               {sessionId.slice(0, 28)}...
             </p>
           </motion.div>
@@ -145,7 +145,7 @@ function SucessoContent() {
         >
           <Link
             href="/"
-            className="px-6 py-3 rounded-xl bg-primary text-white font-semibold hover:bg-primary-hover transition-colors inline-flex items-center justify-center gap-2"
+            className="px-6 py-3 rounded-xl bg-brand text-white font-semibold hover:bg-brand-hover transition-colors inline-flex items-center justify-center gap-2"
           >
             Voltar para o início
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -154,7 +154,7 @@ function SucessoContent() {
           </Link>
           <button
             onClick={handleShare}
-            className="px-6 py-3 rounded-xl border border-border-color text-text-secondary hover:text-text-primary hover:border-border-hover transition-colors font-medium inline-flex items-center justify-center gap-2"
+            className="px-6 py-3 rounded-xl border border-border text-text-2 hover:text-text hover:border-border-hover transition-colors font-medium inline-flex items-center justify-center gap-2"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
@@ -170,8 +170,8 @@ function SucessoContent() {
 export default function DoacaoSucessoPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-bg-base flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" />
+      <div className="min-h-screen bg-bg flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-2 border-brand border-t-transparent rounded-full" />
       </div>
     }>
       <SucessoContent />

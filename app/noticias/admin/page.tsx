@@ -152,13 +152,13 @@ function AdminNoticiasPageContent() {
   if (authLoading || !initialized || authChecking) {
     return (
       <div className="max-w-5xl mx-auto px-4 py-12 animate-pulse space-y-6">
-        <div className="h-8 w-48 rounded bg-[var(--bg-surface)]" />
+        <div className="h-8 w-48 rounded bg-[var(--surface)]" />
         <div className="grid grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-24 rounded-xl bg-[var(--bg-surface)]" />
+            <div key={i} className="h-24 rounded-xl bg-[var(--surface)]" />
           ))}
         </div>
-        <div className="h-96 rounded-xl bg-[var(--bg-surface)]" />
+        <div className="h-96 rounded-xl bg-[var(--surface)]" />
       </div>
     );
   }
@@ -171,8 +171,8 @@ function AdminNoticiasPageContent() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
           </svg>
         </div>
-        <h2 className="text-lg font-bold text-[var(--text-primary)] mb-2">Acesso restrito</h2>
-        <p className="text-sm text-[var(--text-muted)]">Você não tem permissão para acessar esta página.</p>
+        <h2 className="text-lg font-bold text-[var(--text)] mb-2">Acesso restrito</h2>
+        <p className="text-sm text-[var(--text-3)]">Você não tem permissão para acessar esta página.</p>
       </div>
     );
   }
@@ -192,40 +192,40 @@ function AdminNoticiasPageContent() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--border-color)] bg-[var(--bg-surface)] text-xs text-[var(--text-muted)]">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] text-xs text-[var(--text-3)]">
             <span className="text-[var(--warning)]">⚡</span>
             Admin
           </div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Gerenciar Notícias</h1>
+          <h1 className="text-2xl font-bold text-[var(--text)]">Gerenciar Notícias</h1>
         </motion.div>
 
         {/* stats cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          <div className="rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] p-4">
-            <p className="text-xs text-[var(--text-muted)] mb-1">Total de notícias</p>
-            <p className="text-2xl font-bold text-[var(--text-primary)]">{noticias.length}</p>
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+            <p className="text-xs text-[var(--text-3)] mb-1">Total de notícias</p>
+            <p className="text-2xl font-bold text-[var(--text)]">{noticias.length}</p>
           </div>
-          <div className="rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] p-4">
-            <p className="text-xs text-[var(--text-muted)] mb-1">Destaques</p>
-            <p className="text-2xl font-bold text-[var(--primary)]">
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+            <p className="text-xs text-[var(--text-3)] mb-1">Destaques</p>
+            <p className="text-2xl font-bold text-[var(--brand)]">
               {noticias.filter((n) => n.destaque).length}
             </p>
           </div>
-          <div className="rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] p-4">
-            <p className="text-xs text-[var(--text-muted)] mb-1">Status atualização</p>
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+            <p className="text-xs text-[var(--text-3)] mb-1">Status atualização</p>
             <p className="text-sm font-medium">
               {statusData ? (
                 <span className={
                   statusData.status === 'updated' ? 'text-[var(--success)]' :
                   statusData.status === 'pending' ? 'text-[var(--warning)]' :
-                  'text-[var(--text-muted)]'
+                  'text-[var(--text-3)]'
                 }>
                   {statusData.status === 'updated' ? '✓ Atualizado' :
                    statusData.status === 'pending' ? '⏳ Pendente' :
                    'Nunca atualizado'}
                 </span>
               ) : (
-                <span className="text-[var(--text-muted)]">—</span>
+                <span className="text-[var(--text-3)]">—</span>
               )}
             </p>
           </div>
@@ -236,7 +236,7 @@ function AdminNoticiasPageContent() {
           <button
             onClick={handleImport}
             disabled={importing}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:bg-[var(--primary-hover)] transition-colors disabled:opacity-50 cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[var(--brand)] text-white text-sm font-medium hover:bg-[var(--brand-hover)] transition-colors disabled:opacity-50 cursor-pointer"
           >
             {importing ? (
               <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -254,7 +254,7 @@ function AdminNoticiasPageContent() {
           <button
             onClick={handleModerate}
             disabled={moderating}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-[var(--border-color)] text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-surface)] transition-colors disabled:opacity-50 cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-[var(--border)] text-sm font-medium text-[var(--text-2)] hover:bg-[var(--surface)] transition-colors disabled:opacity-50 cursor-pointer"
           >
             {moderating ? (
               <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -289,12 +289,12 @@ function AdminNoticiasPageContent() {
         )}
 
         {/* news table */}
-        <div className="rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] overflow-hidden">
-          <div className="px-4 py-3 border-b border-[var(--border-color)] flex items-center justify-between">
-            <h2 className="text-sm font-bold text-[var(--text-primary)]">Artigos ({noticias.length})</h2>
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
+          <div className="px-4 py-3 border-b border-[var(--border)] flex items-center justify-between">
+            <h2 className="text-sm font-bold text-[var(--text)]">Artigos ({noticias.length})</h2>
             <button
               onClick={fetchNoticias}
-              className="text-xs text-[var(--text-muted)] hover:text-[var(--primary)] transition-colors cursor-pointer"
+              className="text-xs text-[var(--text-3)] hover:text-[var(--brand)] transition-colors cursor-pointer"
             >
               Atualizar lista
             </button>
@@ -303,33 +303,33 @@ function AdminNoticiasPageContent() {
           {noticiasLoading ? (
             <div className="p-4 space-y-3">
               {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="h-10 rounded bg-[var(--bg-surface)] animate-pulse" />
+                <div key={i} className="h-10 rounded bg-[var(--surface)] animate-pulse" />
               ))}
             </div>
           ) : noticias.length === 0 ? (
-            <div className="p-8 text-center text-sm text-[var(--text-muted)]">
+            <div className="p-8 text-center text-sm text-[var(--text-3)]">
               Nenhuma notícia encontrada.
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-[var(--border-color)] text-left">
-                    <th className="px-4 py-2.5 font-medium text-xs text-[var(--text-muted)] uppercase tracking-wider">Título</th>
-                    <th className="px-4 py-2.5 font-medium text-xs text-[var(--text-muted)] uppercase tracking-wider hidden sm:table-cell">Tags</th>
-                    <th className="px-4 py-2.5 font-medium text-xs text-[var(--text-muted)] uppercase tracking-wider hidden md:table-cell">Data</th>
-                    <th className="px-4 py-2.5 font-medium text-xs text-[var(--text-muted)] uppercase tracking-wider text-center">Destaque</th>
+                  <tr className="border-b border-[var(--border)] text-left">
+                    <th className="px-4 py-2.5 font-medium text-xs text-[var(--text-3)] uppercase tracking-wider">Título</th>
+                    <th className="px-4 py-2.5 font-medium text-xs text-[var(--text-3)] uppercase tracking-wider hidden sm:table-cell">Tags</th>
+                    <th className="px-4 py-2.5 font-medium text-xs text-[var(--text-3)] uppercase tracking-wider hidden md:table-cell">Data</th>
+                    <th className="px-4 py-2.5 font-medium text-xs text-[var(--text-3)] uppercase tracking-wider text-center">Destaque</th>
                   </tr>
                 </thead>
                 <tbody>
                   {noticias.map((n) => (
-                    <tr key={n.id} className="border-b border-[var(--border-color)] last:border-b-0 hover:bg-[var(--bg-surface)] transition-colors">
+                    <tr key={n.id} className="border-b border-[var(--border)] last:border-b-0 hover:bg-[var(--surface)] transition-colors">
                       <td className="px-4 py-3">
                         <a
                           href={`/noticias/${n.slug}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[var(--text-primary)] hover:text-[var(--primary)] transition-colors line-clamp-1 max-w-xs block"
+                          className="text-[var(--text)] hover:text-[var(--brand)] transition-colors line-clamp-1 max-w-xs block"
                         >
                           {n.titulo}
                         </a>
@@ -337,23 +337,23 @@ function AdminNoticiasPageContent() {
                       <td className="px-4 py-3 hidden sm:table-cell">
                         <div className="flex flex-wrap gap-1">
                           {n.tags.slice(0, 2).map((tag) => (
-                            <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--bg-surface)] text-[var(--text-muted)]">
+                            <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--surface)] text-[var(--text-3)]">
                               {tag}
                             </span>
                           ))}
                           {n.tags.length > 2 && (
-                            <span className="text-[10px] text-[var(--text-muted)]">+{n.tags.length - 2}</span>
+                            <span className="text-[10px] text-[var(--text-3)]">+{n.tags.length - 2}</span>
                           )}
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-xs text-[var(--text-muted)] hidden md:table-cell whitespace-nowrap">
+                      <td className="px-4 py-3 text-xs text-[var(--text-3)] hidden md:table-cell whitespace-nowrap">
                         {formatDate(n.data_publicacao)}
                       </td>
                       <td className="px-4 py-3 text-center">
                         {n.destaque ? (
                           <span className="text-[var(--warning)]">★</span>
                         ) : (
-                          <span className="text-[var(--text-muted)] opacity-30">☆</span>
+                          <span className="text-[var(--text-3)] opacity-30">☆</span>
                         )}
                       </td>
                     </tr>

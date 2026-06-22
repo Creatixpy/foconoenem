@@ -35,8 +35,8 @@ function ResultCard({ noticia }: { noticia: NoticiaAPI }) {
   const [imgError, setImgError] = useState(false);
   return (
     <Link href={`/noticias/${noticia.slug}`} className="group block">
-      <article className="flex gap-4 rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] p-4 hover:border-[var(--border-hover)] transition-colors">
-        <div className="relative w-24 h-24 sm:w-32 sm:h-24 rounded-lg overflow-hidden flex-shrink-0 bg-[var(--bg-surface)]">
+      <article className="flex gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 hover:border-[var(--border-hover)] transition-colors">
+        <div className="relative w-24 h-24 sm:w-32 sm:h-24 rounded-lg overflow-hidden flex-shrink-0 bg-[var(--surface)]">
           {noticia.imagem_url && !imgError ? (
             <Image
               src={noticia.imagem_url}
@@ -49,7 +49,7 @@ function ResultCard({ noticia }: { noticia: NoticiaAPI }) {
             />
           ) : (
             <div className="flex items-center justify-center h-full">
-              <svg className="w-6 h-6 text-[var(--text-muted)] opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+              <svg className="w-6 h-6 text-[var(--text-3)] opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6V7.5z" />
               </svg>
             </div>
@@ -57,15 +57,15 @@ function ResultCard({ noticia }: { noticia: NoticiaAPI }) {
         </div>
         <div className="flex-1 min-w-0 space-y-1">
           {noticia.tags.length > 0 && (
-            <span className="inline-block text-[10px] font-semibold uppercase tracking-wider text-[var(--primary)] bg-[var(--primary)]/10 px-2 py-0.5 rounded-full">
+            <span className="inline-block text-[10px] font-semibold uppercase tracking-wider text-[var(--brand)] bg-[var(--brand)]/10 px-2 py-0.5 rounded-full">
               {noticia.tags[0]}
             </span>
           )}
-          <h3 className="text-sm font-semibold text-[var(--text-primary)] line-clamp-2 group-hover:text-[var(--primary)] transition-colors">
+          <h3 className="text-sm font-semibold text-[var(--text)] line-clamp-2 group-hover:text-[var(--brand)] transition-colors">
             {noticia.titulo}
           </h3>
-          <p className="text-xs text-[var(--text-muted)] line-clamp-2">{stripHtml(noticia.resumo)}</p>
-          <div className="flex items-center gap-2 text-[10px] text-[var(--text-muted)]">
+          <p className="text-xs text-[var(--text-3)] line-clamp-2">{stripHtml(noticia.resumo)}</p>
+          <div className="flex items-center gap-2 text-[10px] text-[var(--text-3)]">
             <span>{formatDate(noticia.data_publicacao)}</span>
             <span>·</span>
             <span>{readTime(noticia.conteudo)}</span>
@@ -118,14 +118,14 @@ function PesquisaPageInner() {
         >
           <Link
             href="/noticias"
-            className="inline-flex items-center gap-1.5 text-xs text-[var(--text-muted)] hover:text-[var(--primary)] transition-colors mb-2"
+            className="inline-flex items-center gap-1.5 text-xs text-[var(--text-3)] hover:text-[var(--brand)] transition-colors mb-2"
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
             </svg>
             Voltar para notícias
           </Link>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Pesquisar notícias</h1>
+          <h1 className="text-2xl font-bold text-[var(--text)]">Pesquisar notícias</h1>
         </motion.div>
 
         {/* search form */}
@@ -138,7 +138,7 @@ function PesquisaPageInner() {
         >
           <div className="relative">
             <svg
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-[var(--text-muted)]"
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-[var(--text-3)]"
               fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
@@ -148,12 +148,12 @@ function PesquisaPageInner() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={isAI ? 'Peça um resumo das notícias recentes sobre um tema...' : 'Buscar por título ou conteúdo...'}
-              className="w-full pl-10 pr-28 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--ring-color)] text-sm"
+              className="w-full pl-10 pr-28 py-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] placeholder:text-[var(--text-3)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] text-sm"
             />
             <button
               type="submit"
               disabled={loading || !query.trim()}
-              className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:bg-[var(--primary-hover)] transition-colors disabled:opacity-50 cursor-pointer"
+              className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 rounded-lg bg-[var(--brand)] text-white text-sm font-medium hover:bg-[var(--brand-hover)] transition-colors disabled:opacity-50 cursor-pointer"
             >
               {loading ? '...' : 'Buscar'}
             </button>
@@ -163,8 +163,8 @@ function PesquisaPageInner() {
             onClick={() => setIsAI(!isAI)}
             className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors cursor-pointer border ${
               isAI
-                ? 'bg-[var(--primary)]/10 text-[var(--primary)] border-[var(--primary)]/30'
-                : 'bg-[var(--bg-surface)] text-[var(--text-muted)] border-[var(--border-color)]'
+                ? 'bg-[var(--brand)]/10 text-[var(--brand)] border-[var(--brand)]/30'
+                : 'bg-[var(--surface)] text-[var(--text-3)] border-[var(--border)]'
             }`}
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -178,7 +178,7 @@ function PesquisaPageInner() {
         {loading && (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-28 rounded-xl bg-[var(--bg-surface)] animate-pulse" />
+              <div key={i} className="h-28 rounded-xl bg-[var(--surface)] animate-pulse" />
             ))}
           </div>
         )}
@@ -186,17 +186,17 @@ function PesquisaPageInner() {
         {/* AI results */}
         {!loading && aiContent && (
           <motion.div
-            className="rounded-xl border border-[var(--primary)]/20 bg-[var(--card-bg)] p-5 sm:p-6 mb-6"
+            className="rounded-xl border border-[var(--brand)]/20 bg-[var(--surface)] p-5 sm:p-6 mb-6"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
           >
             <div className="flex items-center gap-2 mb-3">
-              <svg className="w-4 h-4 text-[var(--primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg className="w-4 h-4 text-[var(--brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
               </svg>
-              <span className="text-xs font-medium text-[var(--primary)]">Resumo da IA</span>
+              <span className="text-xs font-medium text-[var(--brand)]">Resumo da IA</span>
             </div>
-            <div className="text-sm text-[var(--text-secondary)] leading-relaxed whitespace-pre-line">
+            <div className="text-sm text-[var(--text-2)] leading-relaxed whitespace-pre-line">
               {aiContent}
             </div>
           </motion.div>
@@ -215,7 +215,7 @@ function PesquisaPageInner() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <p className="text-xs text-[var(--text-muted)] mb-3">
+            <p className="text-xs text-[var(--text-3)] mb-3">
               {results.length} resultado{results.length !== 1 ? 's' : ''} encontrado{results.length !== 1 ? 's' : ''}
             </p>
             {results.map((n) => (
@@ -227,15 +227,15 @@ function PesquisaPageInner() {
         {/* empty state */}
         {!loading && searched && results.length === 0 && !aiContent && (
           <div className="text-center py-16">
-            <div className="w-14 h-14 rounded-full bg-[var(--bg-surface)] flex items-center justify-center mx-auto mb-4">
-              <svg className="w-7 h-7 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <div className="w-14 h-14 rounded-full bg-[var(--surface)] flex items-center justify-center mx-auto mb-4">
+              <svg className="w-7 h-7 text-[var(--text-3)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
               </svg>
             </div>
-            <p className="text-[var(--text-primary)] font-medium text-sm mb-1">
+            <p className="text-[var(--text)] font-medium text-sm mb-1">
               Nenhum resultado encontrado
             </p>
-            <p className="text-[var(--text-muted)] text-xs mb-4">
+            <p className="text-[var(--text-3)] text-xs mb-4">
               Tente termos diferentes ou peça um resumo com IA baseado nas notícias já publicadas.
             </p>
             {!isAI && (
@@ -247,7 +247,7 @@ function PesquisaPageInner() {
                     aiSearch(query.trim());
                   }
                 }}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:bg-[var(--primary-hover)] transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[var(--brand)] text-white text-sm font-medium hover:bg-[var(--brand-hover)] transition-colors cursor-pointer"
               >
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
@@ -267,10 +267,10 @@ export default function PesquisaPage() {
     <Suspense
       fallback={
         <div className="max-w-3xl mx-auto px-4 py-12 animate-pulse space-y-4">
-          <div className="h-8 w-48 rounded bg-[var(--bg-surface)]" />
-          <div className="h-12 rounded-xl bg-[var(--bg-surface)]" />
+          <div className="h-8 w-48 rounded bg-[var(--surface)]" />
+          <div className="h-12 rounded-xl bg-[var(--surface)]" />
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-28 rounded-xl bg-[var(--bg-surface)]" />
+            <div key={i} className="h-28 rounded-xl bg-[var(--surface)]" />
           ))}
         </div>
       }

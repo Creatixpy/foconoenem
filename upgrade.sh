@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "=== Foco no ENEM - Dependency Upgrade Script ==="
+echo "=== AprovIA - Dependency Upgrade Script ==="
 echo ""
 
 # Step 1: Stop any running dev server

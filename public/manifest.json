@@ -1,0 +1,17 @@
+{
+  "name": "AprovIA",
+  "short_name": "AprovIA",
+  "description": "Sua aprovação, potencializada por IA.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#080A0F",
+  "theme_color": "#080A0F",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

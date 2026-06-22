@@ -157,15 +157,15 @@ export default function PhotoUpload({ onTextExtracted, disabled }: PhotoUploadPr
   // ---- Idle state: just the trigger button ----
   if (state === 'idle') {
     return (
-      <div className="px-5 py-3 border-b border-[var(--border-color)]">
+      <div className="px-5 py-3 border-b border-[var(--border)]">
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={disabled}
           className="
             inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium
-            border border-[var(--border-color)] text-[var(--text-secondary)]
-            hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]
+            border border-[var(--border)] text-[var(--text-2)]
+            hover:bg-[var(--surface-2)] hover:text-[var(--text)]
             disabled:opacity-40 disabled:cursor-not-allowed
             transition-all duration-[var(--duration-fast)]
           "
@@ -186,7 +186,7 @@ export default function PhotoUpload({ onTextExtracted, disabled }: PhotoUploadPr
 
   // ---- All other states: expanded panel ----
   return (
-    <div className="border-b border-[var(--border-color)]">
+    <div className="border-b border-[var(--border)]">
       <input
         ref={fileInputRef}
         type="file"
@@ -198,14 +198,14 @@ export default function PhotoUpload({ onTextExtracted, disabled }: PhotoUploadPr
       <div className="px-5 py-4 space-y-4">
         {/* Header with close button */}
         <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider flex items-center gap-2">
+          <span className="text-xs font-semibold text-[var(--text-2)] uppercase tracking-wider flex items-center gap-2">
             <CameraIcon />
             Foto da redação
           </span>
           <button
             type="button"
             onClick={reset}
-            className="p-1 rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors"
+            className="p-1 rounded-md text-[var(--text-3)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
           >
             <XIcon />
           </button>
@@ -214,7 +214,7 @@ export default function PhotoUpload({ onTextExtracted, disabled }: PhotoUploadPr
         {/* Preview state */}
         {(state === 'preview' || state === 'extracting') && previewUrl && (
           <div className="space-y-3">
-            <div className="relative rounded-xl overflow-hidden border border-[var(--border-color)] bg-[var(--bg-elevated)]">
+            <div className="relative rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--surface-2)]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={previewUrl}
@@ -222,9 +222,9 @@ export default function PhotoUpload({ onTextExtracted, disabled }: PhotoUploadPr
                 className="w-full max-h-48 object-contain"
               />
               {state === 'extracting' && (
-                <div className="absolute inset-0 bg-[var(--bg-base)]/80 flex flex-col items-center justify-center gap-3">
+                <div className="absolute inset-0 bg-[var(--bg)]/80 flex flex-col items-center justify-center gap-3">
                   <SpinnerIcon size={24} />
-                  <span className="text-sm text-[var(--text-secondary)] font-medium">
+                  <span className="text-sm text-[var(--text-2)] font-medium">
                     Extraindo texto da imagem...
                   </span>
                 </div>
@@ -239,8 +239,8 @@ export default function PhotoUpload({ onTextExtracted, disabled }: PhotoUploadPr
                   className="
                     flex-1 flex items-center justify-center gap-2
                     px-4 py-2.5 rounded-xl text-sm font-semibold
-                    bg-[var(--primary)] text-white
-                    hover:bg-[var(--primary-hover)] active:bg-[var(--primary-active)]
+                    bg-[var(--brand)] text-white
+                    hover:bg-[var(--brand-hover)] active:bg-[var(--brand-active)]
                     transition-all duration-[var(--duration-fast)]
                     shadow-sm
                   "
@@ -252,8 +252,8 @@ export default function PhotoUpload({ onTextExtracted, disabled }: PhotoUploadPr
                   onClick={() => fileInputRef.current?.click()}
                   className="
                     px-4 py-2.5 rounded-xl text-sm font-medium
-                    border border-[var(--border-color)] text-[var(--text-secondary)]
-                    hover:bg-[var(--bg-elevated)]
+                    border border-[var(--border)] text-[var(--text-2)]
+                    hover:bg-[var(--surface-2)]
                     transition-all duration-[var(--duration-fast)]
                   "
                 >
@@ -267,7 +267,7 @@ export default function PhotoUpload({ onTextExtracted, disabled }: PhotoUploadPr
         {/* Review state */}
         {state === 'review' && (
           <div className="space-y-3">
-            <p className="text-xs text-[var(--text-muted)]">
+            <p className="text-xs text-[var(--text-3)]">
               Revise o texto extraído. Você pode editá-lo antes de usar.
             </p>
             <textarea
@@ -276,10 +276,10 @@ export default function PhotoUpload({ onTextExtracted, disabled }: PhotoUploadPr
               className="
                 w-full min-h-[160px] p-4 rounded-xl
                 text-sm leading-relaxed
-                bg-[var(--bg-elevated)] text-[var(--text-primary)]
-                border border-[var(--border-color)]
+                bg-[var(--surface-2)] text-[var(--text)]
+                border border-[var(--border)]
                 resize-none outline-none
-                focus:border-[var(--primary)]/50 focus:ring-1 focus:ring-[var(--primary)]/20
+                focus:border-[var(--brand)]/50 focus:ring-1 focus:ring-[var(--brand)]/20
                 transition-all
               "
             />
@@ -306,8 +306,8 @@ export default function PhotoUpload({ onTextExtracted, disabled }: PhotoUploadPr
                 onClick={reset}
                 className="
                   px-4 py-2.5 rounded-xl text-sm font-medium
-                  border border-[var(--border-color)] text-[var(--text-secondary)]
-                  hover:bg-[var(--bg-elevated)]
+                  border border-[var(--border)] text-[var(--text-2)]
+                  hover:bg-[var(--surface-2)]
                   transition-all duration-[var(--duration-fast)]
                 "
               >
@@ -320,7 +320,7 @@ export default function PhotoUpload({ onTextExtracted, disabled }: PhotoUploadPr
         {/* Error state */}
         {state === 'error' && (
           <div className="space-y-3">
-            <div className="flex items-start gap-2.5 px-4 py-3 rounded-xl text-sm bg-[var(--danger-light)] text-[var(--danger)] border border-[var(--danger)]/20">
+            <div className="flex items-start gap-2.5 px-4 py-3 rounded-xl text-sm bg-[var(--danger-soft)] text-[var(--danger)] border border-[var(--danger)]/20">
               <span className="shrink-0 mt-0.5"><AlertTriangleIcon /></span>
               <span>{errorMessage}</span>
             </div>
@@ -331,8 +331,8 @@ export default function PhotoUpload({ onTextExtracted, disabled }: PhotoUploadPr
                 className="
                   flex-1 flex items-center justify-center gap-2
                   px-4 py-2.5 rounded-xl text-sm font-medium
-                  border border-[var(--border-color)] text-[var(--text-secondary)]
-                  hover:bg-[var(--bg-elevated)]
+                  border border-[var(--border)] text-[var(--text-2)]
+                  hover:bg-[var(--surface-2)]
                   transition-all duration-[var(--duration-fast)]
                 "
               >
@@ -344,7 +344,7 @@ export default function PhotoUpload({ onTextExtracted, disabled }: PhotoUploadPr
                 onClick={reset}
                 className="
                   px-4 py-2.5 rounded-xl text-sm font-medium
-                  text-[var(--text-muted)] hover:text-[var(--text-secondary)]
+                  text-[var(--text-3)] hover:text-[var(--text-2)]
                   transition-colors
                 "
               >

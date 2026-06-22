@@ -37,18 +37,18 @@ const principios = [
 
 export default function SobrePage() {
   return (
-    <div className="min-h-screen bg-bg-base">
-      <section className="relative overflow-hidden border-b border-border-color py-20 md:py-28">
+    <div className="min-h-screen bg-bg">
+      <section className="relative overflow-hidden border-b border-border py-20 md:py-28">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" aria-hidden="true" />
         <div className="relative mx-auto max-w-4xl px-4 text-center">
-          <span className="inline-block rounded-full bg-primary-light px-3 py-1 text-xs font-medium text-primary">
-            Sobre o projeto
+          <span className="inline-block rounded-full bg-brand-soft px-3 py-1 text-xs font-medium text-brand">
+            Sobre a AprovIA
           </span>
-          <h1 className="mt-6 text-4xl font-bold tracking-tight text-text-primary md:text-5xl">
+          <h1 className="mt-6 text-4xl font-bold tracking-tight text-text md:text-5xl">
             Uma plataforma de estudo focada em prática, correção e acompanhamento
           </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-text-secondary">
-            O Foco no ENEM reúne redação, questões, notícias e histórico em um fluxo único. A proposta é reduzir atrito operacional e dar ao estudante uma rotina mais consistente.
+          <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-text-2">
+            A AprovIA reúne redação, questões, notícias e histórico em um fluxo único. A proposta é reduzir atrito operacional e dar ao estudante uma rotina mais consistente.
           </p>
         </div>
       </section>
@@ -56,8 +56,8 @@ export default function SobrePage() {
       <section className="px-4 py-16 md:py-20">
         <div className="mx-auto max-w-5xl">
           <div className="mb-10">
-            <h2 className="text-2xl font-bold text-text-primary md:text-3xl">O que a plataforma entrega hoje</h2>
-            <p className="mt-3 max-w-2xl text-text-secondary">
+            <h2 className="text-2xl font-bold text-text md:text-3xl">O que a plataforma entrega hoje</h2>
+            <p className="mt-3 max-w-2xl text-text-2">
               A descrição abaixo foi alinhada ao estado atual do código e da infraestrutura publicada.
             </p>
           </div>
@@ -66,24 +66,24 @@ export default function SobrePage() {
             {pilares.map((item) => (
               <article
                 key={item.title}
-                className="rounded-xl border border-border-color bg-card-bg p-6 transition-colors hover:border-border-hover"
+                className="rounded-xl border border-border bg-surface p-6 transition-colors hover:border-border-hover"
               >
-                <h3 className="text-base font-semibold text-text-primary">{item.title}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-text-secondary">{item.description}</p>
+                <h3 className="text-base font-semibold text-text">{item.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-text-2">{item.description}</p>
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="bg-bg-surface px-4 py-16 md:py-20">
+      <section className="bg-surface px-4 py-16 md:py-20">
         <div className="mx-auto max-w-4xl">
-          <h2 className="text-2xl font-bold text-text-primary md:text-3xl">Princípios de operação</h2>
+          <h2 className="text-2xl font-bold text-text md:text-3xl">Princípios de operação</h2>
           <div className="mt-8 space-y-4">
             {principios.map((item) => (
               <div
                 key={item}
-                className="rounded-xl border border-border-color bg-card-bg px-5 py-4 text-sm leading-relaxed text-text-secondary"
+                className="rounded-xl border border-border bg-surface px-5 py-4 text-sm leading-relaxed text-text-2"
               >
                 {item}
               </div>
@@ -93,19 +93,19 @@ export default function SobrePage() {
       </section>
 
       <section className="px-4 py-16 md:py-20">
-        <div className="mx-auto max-w-4xl rounded-2xl border border-border-color bg-card-bg p-8 text-center">
-          <h2 className="text-2xl font-bold text-text-primary md:text-3xl">Contato e transparência</h2>
-          <p className="mx-auto mt-4 max-w-2xl text-text-secondary">
+        <div className="mx-auto max-w-4xl rounded-2xl border border-border bg-surface p-8 text-center">
+          <h2 className="text-2xl font-bold text-text md:text-3xl">Contato e transparência</h2>
+          <p className="mx-auto mt-4 max-w-2xl text-text-2">
             Dúvidas sobre funcionamento, conta, privacidade ou uso do serviço podem ser enviadas pelos canais públicos da plataforma.
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
-            <a href="mailto:creatixpy@gmail.com" className="text-sm font-medium text-primary hover:text-primary-hover">
+            <a href="mailto:creatixpy@gmail.com" className="text-sm font-medium text-brand hover:text-brand-hover">
               creatixpy@gmail.com
             </a>
-            <Link href="/privacidade" className="text-sm font-medium text-primary hover:text-primary-hover">
+            <Link href="/privacidade" className="text-sm font-medium text-brand hover:text-brand-hover">
               Política de Privacidade
             </Link>
-            <Link href="/termos" className="text-sm font-medium text-primary hover:text-primary-hover">
+            <Link href="/termos" className="text-sm font-medium text-brand hover:text-brand-hover">
               Termos de Uso
             </Link>
           </div>

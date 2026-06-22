@@ -155,7 +155,7 @@ function getInitials(name: string | null | undefined): string {
 
 function getScoreColor(score: number): string {
   if (score >= 800) return 'var(--success)';
-  if (score >= 600) return 'var(--primary)';
+  if (score >= 600) return 'var(--brand)';
   if (score >= 400) return 'var(--warning)';
   return 'var(--danger)';
 }
@@ -220,7 +220,7 @@ function getSubscriptionStatusTone(subscription: UserSubscriptionSummary) {
     return 'var(--danger)';
   }
 
-  return 'var(--text-muted)';
+  return 'var(--text-3)';
 }
 
 function calcLevel(stats: UserStatistics | null): { level: number; xp: number; nextXp: number } {
@@ -263,13 +263,13 @@ function AnimatedNumber({ value, suffix = '' }: { value: number; suffix?: string
 
 function SkeletonPulse({ className }: { className?: string }) {
   return (
-    <div className={`animate-pulse rounded-lg bg-[var(--bg-elevated)] ${className ?? ''}`} />
+    <div className={`animate-pulse rounded-lg bg-[var(--surface-2)] ${className ?? ''}`} />
   );
 }
 
 function ProfileSkeleton() {
   return (
-    <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--card-bg)] p-6 sm:p-8">
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-8">
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
         <SkeletonPulse className="w-20 h-20 !rounded-full shrink-0" />
         <div className="flex-1 space-y-3 w-full">
@@ -286,7 +286,7 @@ function StatsSkeleton() {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="rounded-2xl border border-[var(--border-color)] bg-[var(--card-bg)] p-5">
+        <div key={i} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
           <SkeletonPulse className="h-4 w-16 mb-3" />
           <SkeletonPulse className="h-8 w-20" />
         </div>
@@ -299,7 +299,7 @@ function ContentSkeleton() {
   return (
     <div className="space-y-4 mt-6">
       {[1, 2, 3].map((i) => (
-        <div key={i} className="rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] p-5">
+        <div key={i} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
           <div className="flex items-center gap-4">
             <SkeletonPulse className="w-12 h-12 !rounded-xl" />
             <div className="flex-1 space-y-2">
@@ -331,14 +331,14 @@ function StatCard({
   accent: string;
 }) {
   return (
-    <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--card-bg)] p-5 group hover:border-[var(--border-hover)] transition-colors">
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 group hover:border-[var(--border-hover)] transition-colors">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">{label}</span>
+        <span className="text-xs font-medium text-[var(--text-3)] uppercase tracking-wider">{label}</span>
         <span className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: `color-mix(in srgb, ${accent} 12%, transparent)`, color: accent }}>
           {icon}
         </span>
       </div>
-      <div className="text-3xl font-bold text-[var(--text-primary)] tracking-tight">
+      <div className="text-3xl font-bold text-[var(--text)] tracking-tight">
         <AnimatedNumber value={value} suffix={suffix} />
       </div>
     </div>
@@ -362,18 +362,18 @@ const TABS: { key: TabKey; label: string }[] = [
 function EmptyState({ title, description, href, cta }: { title: string; description: string; href: string; cta: string }) {
   return (
     <div className="text-center py-16 px-4">
-      <div className="mx-auto w-16 h-16 rounded-2xl bg-[var(--bg-elevated)] flex items-center justify-center text-[var(--text-muted)] mb-5">
+      <div className="mx-auto w-16 h-16 rounded-2xl bg-[var(--surface-2)] flex items-center justify-center text-[var(--text-3)] mb-5">
         <BookOpenIcon />
       </div>
-      <h3 className="text-lg font-semibold text-[var(--text-primary)]">{title}</h3>
-      <p className="mt-2 text-sm text-[var(--text-muted)] max-w-sm mx-auto">{description}</p>
+      <h3 className="text-lg font-semibold text-[var(--text)]">{title}</h3>
+      <p className="mt-2 text-sm text-[var(--text-3)] max-w-sm mx-auto">{description}</p>
       <Link
         href={href}
         className="
           inline-flex items-center gap-2 mt-6
           px-5 py-2.5 rounded-xl text-sm font-semibold
-          bg-[var(--primary)] text-white
-          hover:bg-[var(--primary-hover)] transition-colors
+          bg-[var(--brand)] text-white
+          hover:bg-[var(--brand-hover)] transition-colors
         "
       >
         {cta}
@@ -403,11 +403,11 @@ function SubscriptionCard({
   const showTrialOffer = subscription.trialEligible && subscription.status !== 'trialing';
 
   return (
-    <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--card-bg)] p-6 sm:p-7">
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-3">
-            <span className="inline-flex items-center rounded-full border border-[var(--primary)]/20 bg-[var(--primary)]/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[var(--primary)]">
+            <span className="inline-flex items-center rounded-full border border-[var(--brand)]/20 bg-[var(--brand)]/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[var(--brand)]">
               Plano {subscription.planCode === 'max' ? MAX_PLAN_NAME : 'Gratuito'}
             </span>
             <span
@@ -421,15 +421,15 @@ function SubscriptionCard({
             </span>
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-[var(--text-primary)]">{MAX_PLAN_NAME}</h2>
-            <p className="mt-1 text-sm text-[var(--text-muted)]">
+            <h2 className="text-xl font-semibold text-[var(--text)]">{MAX_PLAN_NAME}</h2>
+            <p className="mt-1 text-sm text-[var(--text-3)]">
               IA Max para correções, temas sob demanda e simulados com mais questões inéditas.
             </p>
           </div>
-          <div className="grid gap-2 text-sm text-[var(--text-secondary)] sm:grid-cols-2">
+          <div className="grid gap-2 text-sm text-[var(--text-2)] sm:grid-cols-2">
             {MAX_PLAN_BENEFITS.map((benefit) => (
               <div key={benefit.title} className="flex gap-2">
-                <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--primary)]" />
+                <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--brand)]" />
                 <span>{benefit.title}</span>
               </div>
             ))}
@@ -440,19 +440,19 @@ function SubscriptionCard({
             </p>
           )}
           {subscription.status === 'trialing' && periodEnd && (
-            <p className="rounded-xl border border-[var(--primary)]/20 bg-[var(--primary)]/10 px-4 py-3 text-sm text-[var(--primary)]">
+            <p className="rounded-xl border border-[var(--brand)]/20 bg-[var(--brand)]/10 px-4 py-3 text-sm text-[var(--brand)]">
               Seu teste grátis do {MAX_PLAN_NAME} está ativo até {periodEnd}.
             </p>
           )}
           <div className="flex items-end gap-2">
-            <span className="text-3xl font-bold tracking-tight text-[var(--text-primary)]">{MAX_PLAN_PRICE_DISPLAY}</span>
+            <span className="text-3xl font-bold tracking-tight text-[var(--text)]">{MAX_PLAN_PRICE_DISPLAY}</span>
           </div>
-          <div className="grid gap-3 text-sm text-[var(--text-secondary)] sm:grid-cols-2">
-            <p>Plano atual: <strong className="text-[var(--text-primary)]">{subscription.planCode === 'max' ? MAX_PLAN_NAME : 'Gratuito'}</strong></p>
-            <p>Acesso Max: <strong className="text-[var(--text-primary)]">{subscription.hasMaxAccess ? 'Liberado' : 'Não liberado'}</strong></p>
-            <p>Próxima renovação: <strong className="text-[var(--text-primary)]">{nextRenewal ?? 'Não agendada'}</strong></p>
-            <p>Fim do período atual: <strong className="text-[var(--text-primary)]">{periodEnd ?? 'Não disponível'}</strong></p>
-            <p>Teste grátis: <strong className="text-[var(--text-primary)]">{subscription.trialEligible ? `${subscription.trialDays ?? MAX_PLAN_TRIAL_DAYS} dias disponíveis` : 'Já utilizado'}</strong></p>
+          <div className="grid gap-3 text-sm text-[var(--text-2)] sm:grid-cols-2">
+            <p>Plano atual: <strong className="text-[var(--text)]">{subscription.planCode === 'max' ? MAX_PLAN_NAME : 'Gratuito'}</strong></p>
+            <p>Acesso Max: <strong className="text-[var(--text)]">{subscription.hasMaxAccess ? 'Liberado' : 'Não liberado'}</strong></p>
+            <p>Próxima renovação: <strong className="text-[var(--text)]">{nextRenewal ?? 'Não agendada'}</strong></p>
+            <p>Fim do período atual: <strong className="text-[var(--text)]">{periodEnd ?? 'Não disponível'}</strong></p>
+            <p>Teste grátis: <strong className="text-[var(--text)]">{subscription.trialEligible ? `${subscription.trialDays ?? MAX_PLAN_TRIAL_DAYS} dias disponíveis` : 'Já utilizado'}</strong></p>
           </div>
           {subscription.cancelAtPeriodEnd && periodEnd && (
             <p className="rounded-xl border border-[var(--warning)]/30 bg-[var(--warning)]/10 px-4 py-3 text-sm text-[var(--warning)]">
@@ -465,7 +465,7 @@ function SubscriptionCard({
             </p>
           )}
           {error && (
-            <p className="rounded-xl border border-[var(--danger)]/20 bg-[var(--danger-light)] px-4 py-3 text-sm text-[var(--danger)]">
+            <p className="rounded-xl border border-[var(--danger)]/20 bg-[var(--danger-soft)] px-4 py-3 text-sm text-[var(--danger)]">
               {error}
             </p>
           )}
@@ -476,7 +476,7 @@ function SubscriptionCard({
             type="button"
             onClick={() => void onSubscribe()}
             disabled={loading !== null || subscription.hasMaxAccess}
-            className="inline-flex items-center justify-center rounded-xl bg-[var(--primary)] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[var(--primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center justify-center rounded-xl bg-[var(--brand)] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[var(--brand-hover)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading === 'checkout'
               ? 'Abrindo checkout...'
@@ -492,13 +492,13 @@ function SubscriptionCard({
             type="button"
             onClick={() => void onManage()}
             disabled={loading !== null || !subscription.stripeCustomerId}
-            className="inline-flex items-center justify-center rounded-xl border border-[var(--border-color)] px-4 py-3 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)] disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center justify-center rounded-xl border border-[var(--border)] px-4 py-3 text-sm font-medium text-[var(--text-2)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--text)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading === 'portal' ? 'Abrindo portal...' : 'Gerenciar assinatura'}
           </button>
           <Link
             href="/planos"
-            className="inline-flex items-center justify-center rounded-xl border border-[var(--primary)]/25 px-4 py-3 text-sm font-medium text-[var(--primary)] transition-colors hover:bg-[var(--primary-light)]"
+            className="inline-flex items-center justify-center rounded-xl border border-[var(--brand)]/25 px-4 py-3 text-sm font-medium text-[var(--brand)] transition-colors hover:bg-[var(--brand-soft)]"
           >
             Comparar Free e Max
           </Link>
@@ -527,22 +527,22 @@ function CompetencyChart({ stats }: { stats: UserStatistics }) {
   });
 
   return (
-    <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--card-bg)] p-6">
-      <h3 className="text-base font-semibold text-[var(--text-primary)] mb-1">Competências</h3>
-      <p className="text-xs text-[var(--text-muted)] mb-6">Média por competência ENEM (máx. 200)</p>
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
+      <h3 className="text-base font-semibold text-[var(--text)] mb-1">Competências</h3>
+      <p className="text-xs text-[var(--text-3)] mb-6">Média por competência ENEM (máx. 200)</p>
       <div className="w-full h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
           <RadarChart data={data} cx="50%" cy="50%" outerRadius="70%">
-            <PolarGrid stroke="var(--border-color)" />
+            <PolarGrid stroke="var(--border)" />
             <PolarAngleAxis
               dataKey="subject"
-              tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
+              tick={{ fill: 'var(--text-3)', fontSize: 11 }}
             />
             <PolarRadiusAxis angle={90} domain={[0, 200]} tick={false} axisLine={false} />
             <Radar
               dataKey="value"
-              stroke="var(--primary)"
-              fill="var(--primary)"
+              stroke="var(--brand)"
+              fill="var(--brand)"
               fillOpacity={0.15}
               strokeWidth={2}
             />
@@ -576,37 +576,37 @@ function DisciplineChart({ stats }: { stats: UserStatistics }) {
   if (data.length === 0) return null;
 
   return (
-    <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--card-bg)] p-6">
-      <h3 className="text-base font-semibold text-[var(--text-primary)] mb-1">Taxa de acerto por disciplina</h3>
-      <p className="text-xs text-[var(--text-muted)] mb-6">Percentual de acerto (%)</p>
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
+      <h3 className="text-base font-semibold text-[var(--text)] mb-1">Taxa de acerto por disciplina</h3>
+      <p className="text-xs text-[var(--text-3)] mb-6">Percentual de acerto (%)</p>
       <div className="w-full h-[260px]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} barCategoryGap="30%">
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
             <XAxis
               dataKey="name"
-              tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
-              axisLine={{ stroke: 'var(--border-color)' }}
+              tick={{ fill: 'var(--text-3)', fontSize: 11 }}
+              axisLine={{ stroke: 'var(--border)' }}
               tickLine={false}
             />
             <YAxis
               domain={[0, 100]}
-              tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
+              tick={{ fill: 'var(--text-3)', fontSize: 11 }}
               axisLine={false}
               tickLine={false}
               width={35}
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: 'var(--card-bg)',
-                border: '1px solid var(--border-color)',
+                backgroundColor: 'var(--surface)',
+                border: '1px solid var(--border)',
                 borderRadius: '12px',
                 fontSize: '13px',
-                color: 'var(--text-primary)',
+                color: 'var(--text)',
               }}
               formatter={(value) => [`${value}%`, 'Acerto']}
             />
-            <Bar dataKey="taxa" fill="var(--primary)" radius={[6, 6, 0, 0]} />
+            <Bar dataKey="taxa" fill="var(--brand)" radius={[6, 6, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -624,7 +624,7 @@ function EssayRow({ essay, compact }: { essay: EssaySummary; compact?: boolean }
   return (
     <Link
       href={`/resultados/${essay.id}`}
-      className="flex items-center gap-4 px-4 py-3.5 rounded-xl hover:bg-[var(--bg-elevated)] transition-colors group"
+      className="flex items-center gap-4 px-4 py-3.5 rounded-xl hover:bg-[var(--surface-2)] transition-colors group"
     >
       <span
         className="shrink-0 w-12 h-12 rounded-xl flex items-center justify-center text-sm font-bold"
@@ -633,13 +633,13 @@ function EssayRow({ essay, compact }: { essay: EssaySummary; compact?: boolean }
         {essay.nota}
       </span>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-[var(--text-primary)] truncate">
+        <p className="text-sm font-medium text-[var(--text)] truncate">
           Redação #{essay.id.slice(0, 8)}
         </p>
-        <p className="text-xs text-[var(--text-muted)]">{formatDate(essay.created_at)}</p>
+        <p className="text-xs text-[var(--text-3)]">{formatDate(essay.created_at)}</p>
       </div>
       {!compact && (
-        <span className="text-[var(--text-muted)] group-hover:text-[var(--primary)] transition-colors shrink-0">
+        <span className="text-[var(--text-3)] group-hover:text-[var(--brand)] transition-colors shrink-0">
           <ExternalLinkIcon />
         </span>
       )}
@@ -672,23 +672,23 @@ function OverviewTab({ stats, essays }: { stats: UserStatistics | null; essays: 
       {stats.total_questoes_respondidas > 0 && <DisciplineChart stats={stats} />}
 
       {/* Recent essays */}
-      <div className={`rounded-2xl border border-[var(--border-color)] bg-[var(--card-bg)] p-6 ${stats.total_redacoes > 0 && stats.total_questoes_respondidas > 0 ? 'lg:col-span-2' : ''}`}>
+      <div className={`rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 ${stats.total_redacoes > 0 && stats.total_questoes_respondidas > 0 ? 'lg:col-span-2' : ''}`}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold text-[var(--text-primary)]">Redações recentes</h3>
+          <h3 className="text-base font-semibold text-[var(--text)]">Redações recentes</h3>
           {essays.length > 0 && (
-            <Link href="/redacao" className="text-xs font-medium text-[var(--primary)] hover:text-[var(--primary-hover)] transition-colors">
+            <Link href="/redacao" className="text-xs font-medium text-[var(--brand)] hover:text-[var(--brand-hover)] transition-colors">
               Ver todas →
             </Link>
           )}
         </div>
         {essays.length > 0 ? (
-          <div className="divide-y divide-[var(--border-color)]">
+          <div className="divide-y divide-[var(--border)]">
             {essays.slice(0, 5).map((e) => (
               <EssayRow key={e.id} essay={e} compact />
             ))}
           </div>
         ) : (
-          <p className="text-sm text-[var(--text-muted)] py-4 text-center">
+          <p className="text-sm text-[var(--text-3)] py-4 text-center">
             Nenhuma redação enviada ainda.
           </p>
         )}
@@ -710,8 +710,8 @@ function EssaysTab({ essays }: { essays: EssaySummary[] }) {
   }
 
   return (
-    <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--card-bg)] overflow-hidden">
-      <div className="divide-y divide-[var(--border-color)]">
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
+      <div className="divide-y divide-[var(--border)]">
         {essays.map((e) => (
           <EssayRow key={e.id} essay={e} />
         ))}
@@ -736,17 +736,17 @@ function QuestionsTab({ stats }: { stats: UserStatistics | null }) {
     <div className="space-y-6">
       {/* Summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--card-bg)] p-5 text-center">
-          <p className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider mb-1">Total de questões</p>
-          <p className="text-2xl font-bold text-[var(--text-primary)]">{stats.total_questoes_respondidas}</p>
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 text-center">
+          <p className="text-xs font-medium text-[var(--text-3)] uppercase tracking-wider mb-1">Total de questões</p>
+          <p className="text-2xl font-bold text-[var(--text)]">{stats.total_questoes_respondidas}</p>
         </div>
-        <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--card-bg)] p-5 text-center">
-          <p className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider mb-1">Acertos</p>
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 text-center">
+          <p className="text-xs font-medium text-[var(--text-3)] uppercase tracking-wider mb-1">Acertos</p>
           <p className="text-2xl font-bold text-[var(--success)]">{stats.total_acertos}</p>
         </div>
-        <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--card-bg)] p-5 text-center">
-          <p className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider mb-1">Taxa de acerto</p>
-          <p className="text-2xl font-bold text-[var(--primary)]">{Math.round(stats.taxa_acerto ?? 0)}%</p>
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 text-center">
+          <p className="text-xs font-medium text-[var(--text-3)] uppercase tracking-wider mb-1">Taxa de acerto</p>
+          <p className="text-2xl font-bold text-[var(--brand)]">{Math.round(stats.taxa_acerto ?? 0)}%</p>
         </div>
       </div>
 
@@ -754,8 +754,8 @@ function QuestionsTab({ stats }: { stats: UserStatistics | null }) {
       <DisciplineChart stats={stats} />
 
       {/* Discipline breakdown */}
-      <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--card-bg)] p-6">
-        <h3 className="text-base font-semibold text-[var(--text-primary)] mb-4">Detalhamento por disciplina</h3>
+      <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
+        <h3 className="text-base font-semibold text-[var(--text)] mb-4">Detalhamento por disciplina</h3>
         <div className="space-y-3">
           {DISCIPLINES.map(({ key, label }) => {
             const acertos = stats[`acertos_${key}` as keyof UserStatistics] as number;
@@ -764,17 +764,17 @@ function QuestionsTab({ stats }: { stats: UserStatistics | null }) {
             const pct = Math.round((acertos / total) * 100);
             return (
               <div key={key} className="flex items-center gap-3">
-                <span className="text-sm text-[var(--text-secondary)] w-24 shrink-0">{label}</span>
-                <div className="flex-1 h-2 rounded-full bg-[var(--bg-elevated)] overflow-hidden">
+                <span className="text-sm text-[var(--text-2)] w-24 shrink-0">{label}</span>
+                <div className="flex-1 h-2 rounded-full bg-[var(--surface-2)] overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all duration-500"
                     style={{
                       width: `${pct}%`,
-                      backgroundColor: pct >= 70 ? 'var(--success)' : pct >= 50 ? 'var(--primary)' : 'var(--warning)',
+                      backgroundColor: pct >= 70 ? 'var(--success)' : pct >= 50 ? 'var(--brand)' : 'var(--warning)',
                     }}
                   />
                 </div>
-                <span className="text-xs font-medium text-[var(--text-muted)] w-14 text-right">
+                <span className="text-xs font-medium text-[var(--text-3)] w-14 text-right">
                   {acertos}/{total} ({pct}%)
                 </span>
               </div>
@@ -996,37 +996,37 @@ export default function ContaPageClient() {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 space-y-8">
       {/* ---- Profile Header Card ---- */}
-      <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--card-bg)] p-6 sm:p-8">
+      <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-8">
         <div className="flex flex-col sm:flex-row gap-6">
           {/* Avatar */}
           <div className="relative shrink-0 self-start">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[var(--primary)] to-[#6366F1] flex items-center justify-center text-2xl font-bold text-white select-none">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[var(--brand)] to-[var(--ai)] flex items-center justify-center text-2xl font-bold text-white select-none">
               {getInitials(profile?.nome_completo)}
             </div>
             {/* Online dot */}
-            <span className="absolute bottom-0.5 right-0.5 w-4 h-4 rounded-full bg-[var(--success)] border-[3px] border-[var(--card-bg)]" />
+            <span className="absolute bottom-0.5 right-0.5 w-4 h-4 rounded-full bg-[var(--success)] border-[3px] border-[var(--surface)]" />
           </div>
 
           {/* Info */}
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight truncate">
+            <h1 className="text-2xl font-bold text-[var(--text)] tracking-tight truncate">
               {displayName}
             </h1>
-            <p className="text-sm text-[var(--text-muted)] mt-0.5 truncate">{user.email}</p>
+            <p className="text-sm text-[var(--text-3)] mt-0.5 truncate">{user.email}</p>
 
             {/* Level badge + XP bar */}
             <div className="mt-4 flex items-center gap-3">
-              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/20">
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-[var(--brand)]/10 text-[var(--brand)] border border-[var(--brand)]/20">
                 Estudante Nível {level}
               </span>
               <div className="flex items-center gap-2 flex-1 max-w-[200px]">
-                <div className="flex-1 h-1.5 rounded-full bg-[var(--bg-elevated)] overflow-hidden">
+                <div className="flex-1 h-1.5 rounded-full bg-[var(--surface-2)] overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-[var(--primary)] transition-all duration-700"
+                    className="h-full rounded-full bg-[var(--brand)] transition-all duration-700"
                     style={{ width: `${(xp / nextXp) * 100}%` }}
                   />
                 </div>
-                <span className="text-xs text-[var(--text-muted)] whitespace-nowrap">{xp}/{nextXp} XP</span>
+                <span className="text-xs text-[var(--text-3)] whitespace-nowrap">{xp}/{nextXp} XP</span>
               </div>
             </div>
 
@@ -1037,8 +1037,8 @@ export default function ContaPageClient() {
                 disabled={recalculating}
                 className="
                   inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium
-                  border border-[var(--border-color)] text-[var(--text-secondary)]
-                  bg-transparent hover:bg-[var(--bg-elevated)]
+                  border border-[var(--border)] text-[var(--text-2)]
+                  bg-transparent hover:bg-[var(--surface-2)]
                   disabled:opacity-50 disabled:cursor-not-allowed
                   transition-colors
                 "
@@ -1050,8 +1050,8 @@ export default function ContaPageClient() {
                 href="/conta/editar"
                 className="
                   inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold
-                  bg-[var(--primary)] text-white
-                  hover:bg-[var(--primary-hover)] transition-colors
+                  bg-[var(--brand)] text-white
+                  hover:bg-[var(--brand-hover)] transition-colors
                 "
               >
                 Editar Perfil
@@ -1074,10 +1074,10 @@ export default function ContaPageClient() {
       {dataLoading ? (
         <StatsSkeleton />
       ) : dataError ? (
-        <div className="rounded-2xl border border-[var(--danger)]/30 bg-[var(--danger-light)] p-5 flex items-center gap-3">
+        <div className="rounded-2xl border border-[var(--danger)]/30 bg-[var(--danger-soft)] p-5 flex items-center gap-3">
           <span className="text-[var(--danger)]"><AlertTriangleIcon /></span>
           <span className="text-sm text-[var(--danger)] flex-1">{dataError}</span>
-          <button onClick={fetchData} className="text-sm font-medium text-[var(--primary)] hover:underline">
+          <button onClick={fetchData} className="text-sm font-medium text-[var(--brand)] hover:underline">
             Tentar novamente
           </button>
         </div>
@@ -1087,13 +1087,13 @@ export default function ContaPageClient() {
             label="Redações"
             value={stats?.total_redacoes ?? 0}
             icon={<PenIcon />}
-            accent="var(--primary)"
+            accent="var(--brand)"
           />
           <StatCard
             label="Simulados"
             value={stats?.total_simulados ?? 0}
             icon={<BrainIcon />}
-            accent="#8B5CF6"
+            accent="var(--brand-hover)"
           />
           <StatCard
             label="Taxa de acerto"
@@ -1113,7 +1113,7 @@ export default function ContaPageClient() {
 
       {/* ---- Tabs ---- */}
       <div>
-        <div className="flex gap-1 p-1 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] w-fit">
+        <div className="flex gap-1 p-1 rounded-xl bg-[var(--surface)] border border-[var(--border)] w-fit">
           {TABS.map((tab) => (
             <button
               key={tab.key}
@@ -1121,8 +1121,8 @@ export default function ContaPageClient() {
               className={`
                 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
                 ${activeTab === tab.key
-                  ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-sm'
-                  : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
+                  ? 'bg-[var(--surface-2)] text-[var(--text)] shadow-sm'
+                  : 'text-[var(--text-3)] hover:text-[var(--text-2)]'
                 }
               `}
             >
@@ -1145,22 +1145,22 @@ export default function ContaPageClient() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-[var(--danger)]/30 bg-[var(--card-bg)] p-6">
+      <div className="rounded-2xl border border-[var(--danger)]/30 bg-[var(--surface)] p-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div className="max-w-2xl">
             <div className="flex items-center gap-3">
-              <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--danger-light)] text-[var(--danger)]">
+              <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--danger-soft)] text-[var(--danger)]">
                 <AlertTriangleIcon />
               </span>
               <div>
-                <h2 className="text-lg font-semibold text-[var(--text-primary)]">Excluir conta</h2>
-                <p className="text-sm text-[var(--text-muted)]">
+                <h2 className="text-lg font-semibold text-[var(--text)]">Excluir conta</h2>
+                <p className="text-sm text-[var(--text-3)]">
                   Essa acao remove seu acesso e apaga a conta de autenticacao. Alguns registros podem permanecer pelo prazo legal ou para seguranca.
                 </p>
               </div>
             </div>
             {!canConfirmDeletionWithPassword && (
-              <p className="mt-4 text-sm text-[var(--text-muted)]">
+              <p className="mt-4 text-sm text-[var(--text-3)]">
                 Esta conta usa login externo sem senha local. Para excluir, sera preciso primeiro ter autenticacao por senha ou tratar o pedido pelo canal de privacidade.
               </p>
             )}
@@ -1173,15 +1173,15 @@ export default function ContaPageClient() {
               setDeletePassword('');
             }}
             disabled={!canConfirmDeletionWithPassword}
-            className="inline-flex items-center justify-center rounded-xl border border-[var(--danger)]/40 px-4 py-2.5 text-sm font-semibold text-[var(--danger)] transition-colors hover:bg-[var(--danger-light)] disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center justify-center rounded-xl border border-[var(--danger)]/40 px-4 py-2.5 text-sm font-semibold text-[var(--danger)] transition-colors hover:bg-[var(--danger-soft)] disabled:cursor-not-allowed disabled:opacity-50"
           >
             Excluir conta
           </button>
         </div>
 
         {showDeleteForm && canConfirmDeletionWithPassword && (
-          <form onSubmit={handleDeleteAccount} className="mt-6 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] p-5">
-            <label htmlFor="delete-password" className="block text-sm font-medium text-[var(--text-secondary)]">
+          <form onSubmit={handleDeleteAccount} className="mt-6 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
+            <label htmlFor="delete-password" className="block text-sm font-medium text-[var(--text-2)]">
               Confirme sua senha para excluir a conta
             </label>
             <input
@@ -1193,10 +1193,10 @@ export default function ContaPageClient() {
               minLength={8}
               value={deletePassword}
               onChange={(event) => setDeletePassword(event.target.value)}
-              className="mt-2 w-full rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none transition-colors focus:border-[var(--danger)]"
+              className="mt-2 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--text)] outline-none transition-colors focus:border-[var(--danger)]"
               placeholder="Digite sua senha atual"
             />
-            <p className="mt-3 text-xs leading-relaxed text-[var(--text-muted)]">
+            <p className="mt-3 text-xs leading-relaxed text-[var(--text-3)]">
               A exclusao e irreversivel. Seu login sera removido e a conta nao podera ser restaurada depois da confirmacao.
             </p>
             {deleteError && (
@@ -1210,7 +1210,7 @@ export default function ContaPageClient() {
                   setDeletePassword('');
                   setDeleteError('');
                 }}
-                className="rounded-xl border border-[var(--border-color)] px-4 py-2.5 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-elevated)]"
+                className="rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-medium text-[var(--text-2)] transition-colors hover:bg-[var(--surface-2)]"
               >
                 Cancelar
               </button>

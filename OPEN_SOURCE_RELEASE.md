@@ -39,7 +39,7 @@ After rotating exposed secrets, create a fresh source tree with:
 npm run release:public-tree
 ```
 
-By default this writes to `../foconoenem-public-release`. Initialize a new Git repository there only after `npm run verify:open-source` passes.
+By default this writes to `../aprovia-public-release`. Initialize a new Git repository there only after `npm run verify:open-source` passes.
 
 ## External Verification Performed
 
@@ -48,5 +48,5 @@ Current audit evidence:
 - Supabase MCP: public app tables have RLS enabled and no direct table grants to `anon`, `authenticated`, or `public`.
 - Supabase MCP: generated TypeScript types match `types/supabase.ts`.
 - Supabase MCP: only security advisor warning found was leaked-password protection disabled.
-- Vercel CLI: project is linked to `foconoenem`, production deployment is Ready, and environment variables are encrypted in Vercel.
+- Vercel CLI: project is linked to `aprovia`, production deployment is Ready, and environment variables are encrypted in Vercel.
 - Stripe CLI: live product, price, and webhook endpoint metadata were checked without exporting customer/payment data.

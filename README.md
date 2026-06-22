@@ -1,6 +1,6 @@
-# Foco no ENEM
+# AprovIA
 
-Plataforma web para preparação para o ENEM construída com Next.js 16, React 19 e Supabase.
+Plataforma web dark-first para preparação para o ENEM, construída com Next.js 16, React 19 e Supabase.
 
 O projeto atual concentra toda a lógica ativa no próprio app Next.js:
 
@@ -22,6 +22,8 @@ O projeto atual concentra toda a lógica ativa no próprio app Next.js:
 - O histórico de schema fica em `supabase/migrations/`.
 - Manutenção operacional é local ao app: limpeza de tabelas e atualização de destaques acontecem sob demanda, sem cron externo.
 - O banner de cookies mantém cookies essenciais de sessão/segurança sempre ativos e só carrega métricas opcionais da Vercel após consentimento do usuário.
+- A identidade AprovIA usa um sistema visual dark exclusivo, logo vetorial e tokens semânticos centralizados em `app/styles/`.
+- O banner de transição de marca pode ser dispensado e persiste essa escolha localmente no navegador.
 - O plano Max usa Stripe para billing e tenta a NVIDIA com `minimaxai/minimax-m2.7` para os fluxos premium de redação, temas e simulados; se a NVIDIA falhar, o backend usa fallback Groq para não deixar assinantes sem resposta.
 - O diretório `supabase/functions/` existe apenas para documentar Edge Functions remotas legadas; o runtime atual não depende delas.
 - O sistema de comunidade foi removido do produto, do código ativo e do schema atual.
@@ -130,6 +132,8 @@ supabase/migrations/    histórico local de schema
 supabase/functions/     documentação do legado de Edge Functions
 types/                  tipos compartilhados e tipos gerados do Supabase
 ```
+
+Os ícones instaláveis usam `public/favicon.svg` e `public/manifest.json`. Versões ICO e Apple Touch PNG devem ser geradas manualmente antes de uma publicação com cobertura completa de navegadores antigos.
 
 ## Áreas funcionais
 

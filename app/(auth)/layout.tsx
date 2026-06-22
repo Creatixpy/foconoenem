@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react';
 import type { Metadata } from 'next';
-import Image from 'next/image';
 import Link from 'next/link';
+import AprovIALogo from '@/app/components/shared/AprovIALogo';
 
 export const metadata: Metadata = {
-  title: 'Autenticação | Foco no ENEM',
+  title: 'Autenticação | AprovIA',
   description: 'Acesse sua conta ou crie uma nova para começar a estudar',
   robots: 'noindex, nofollow',
 };
@@ -55,63 +55,49 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         style={{ background: 'var(--auth-panel-bg)' }}
       >
         {/* Decorative gradient blurs */}
-        <div className="absolute top-[-10%] right-[-20%] w-[400px] h-[400px] rounded-full blur-[120px]" style={{ background: 'var(--auth-panel-glow-blue)' }} aria-hidden="true" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[300px] h-[300px] rounded-full blur-[100px]" style={{ background: 'var(--auth-panel-glow-green)' }} aria-hidden="true" />
+        <div className="absolute top-[-10%] right-[-20%] w-[400px] h-[400px] rounded-full blur-[120px]" style={{ background: 'var(--auth-panel-glow-brand)' }} aria-hidden="true" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[300px] h-[300px] rounded-full blur-[100px]" style={{ background: 'var(--auth-panel-glow-ai)' }} aria-hidden="true" />
 
         {/* Top: Logo */}
         <div className="relative z-10">
-          <Link href="/" className="inline-flex transition-transform duration-200 group-hover:scale-[1.02]" aria-label="Foco no ENEM — Página inicial">
-            <Image
-              src="/foconoenem-logo.png"
-              alt="Foco no ENEM"
-              width={188}
-              height={56}
-              priority
-              className="h-12 w-auto"
-            />
+          <Link href="/" className="inline-flex transition-transform duration-200 hover:scale-[1.02]" aria-label="AprovIA — Página inicial">
+            <AprovIALogo size="lg" />
           </Link>
         </div>
 
         {/* Middle: Tagline + features */}
         <div className="relative z-10 -mt-8">
-          <h1 className="text-3xl xl:text-4xl font-bold leading-tight tracking-tight" style={{ color: 'var(--auth-panel-text)' }}>
+          <h1 className="text-3xl xl:text-4xl font-bold leading-tight tracking-tight" style={{ color: 'var(--text)' }}>
             Sua preparação para o ENEM começa aqui.
           </h1>
-          <p className="mt-4 leading-relaxed" style={{ color: 'var(--auth-panel-text-secondary)' }}>
+          <p className="mt-4 leading-relaxed" style={{ color: 'var(--text-2)' }}>
             Ferramentas inteligentes, feedback personalizado e acompanhamento contínuo da sua evolução.
           </p>
 
           <ul className="mt-10 space-y-5">
             {FEATURES.map(({ icon, text }) => (
               <li key={text} className="flex items-center gap-3">
-                <span className="flex items-center justify-center w-9 h-9 rounded-lg text-[var(--primary)] shrink-0" style={{ background: 'var(--auth-panel-feature-bg)' }}>
+                <span className="flex items-center justify-center w-9 h-9 rounded-lg text-[var(--brand)] shrink-0" style={{ background: 'var(--auth-panel-feature-bg)' }}>
                   {icon}
                 </span>
-                <span className="font-medium" style={{ color: 'var(--auth-panel-feature-text)' }}>{text}</span>
+                <span className="font-medium" style={{ color: 'var(--text)' }}>{text}</span>
               </li>
             ))}
           </ul>
         </div>
 
         {/* Bottom: Social proof */}
-        <p className="relative z-10 text-sm" style={{ color: 'var(--auth-panel-text-muted)' }}>
+        <p className="relative z-10 text-sm" style={{ color: 'var(--text-3)' }}>
           Usado por centenas de estudantes em todo o Brasil.
         </p>
       </div>
 
       {/* ---- Right form panel ---- */}
-      <div className="flex-1 flex flex-col min-h-dvh bg-[var(--bg-base)]">
+      <div className="flex-1 flex flex-col min-h-dvh bg-[var(--bg)]">
         {/* Mobile logo (lg:hidden) */}
         <div className="lg:hidden flex items-center justify-center pt-8 pb-2">
-          <Link href="/" className="inline-flex transition-transform duration-200 hover:scale-[1.02]" aria-label="Foco no ENEM">
-            <Image
-              src="/foconoenem-logo.png"
-              alt="Foco no ENEM"
-              width={164}
-              height={48}
-              priority
-              className="h-10 w-auto"
-            />
+          <Link href="/" className="inline-flex transition-transform duration-200 hover:scale-[1.02]" aria-label="AprovIA">
+            <AprovIALogo size="md" />
           </Link>
         </div>
 
@@ -123,10 +109,10 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         </div>
 
         {/* Bottom legal links */}
-        <div className="flex items-center justify-center gap-4 pb-6 text-xs text-[var(--text-muted)]">
-          <Link href="/privacidade" className="hover:text-[var(--text-secondary)] transition-colors">Privacidade</Link>
+        <div className="flex items-center justify-center gap-4 pb-6 text-xs text-[var(--text-3)]">
+          <Link href="/privacidade" className="hover:text-[var(--text-2)] transition-colors">Privacidade</Link>
           <span>·</span>
-          <Link href="/termos" className="hover:text-[var(--text-secondary)] transition-colors">Termos de Uso</Link>
+          <Link href="/termos" className="hover:text-[var(--text-2)] transition-colors">Termos de Uso</Link>
         </div>
       </div>
     </div>

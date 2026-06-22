@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 const ROOT = process.cwd();
-const DEFAULT_OUTPUT = path.resolve(ROOT, '..', 'foconoenem-public-release');
+const DEFAULT_OUTPUT = path.resolve(ROOT, '..', 'aprovia-public-release');
 const outputDir = path.resolve(process.argv[2] || DEFAULT_OUTPUT);
 
 function run(command, args, options = {}) {
@@ -45,7 +45,7 @@ function copyFile(relativePath) {
 assertReleaseReady();
 
 if (fs.existsSync(outputDir)) {
-  const marker = path.join(outputDir, '.foconoenem-public-release');
+  const marker = path.join(outputDir, '.aprovia-public-release');
   if (!fs.existsSync(marker)) {
     throw new Error(`Refusing to overwrite ${outputDir}; marker file is missing.`);
   }
@@ -54,7 +54,7 @@ if (fs.existsSync(outputDir)) {
 
 fs.mkdirSync(outputDir, { recursive: true });
 fs.writeFileSync(
-  path.join(outputDir, '.foconoenem-public-release'),
+  path.join(outputDir, '.aprovia-public-release'),
   `Generated from ${run('git', ['rev-parse', '--short', 'HEAD']).trim()} on ${new Date().toISOString()}${os.EOL}`
 );
 

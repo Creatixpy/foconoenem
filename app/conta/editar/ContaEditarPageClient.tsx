@@ -146,11 +146,11 @@ export default function ContaEditarPageClient() {
     return (
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
         <div className="animate-pulse space-y-6">
-          <div className="h-6 w-48 rounded bg-[var(--bg-elevated)]" />
-          <div className="h-12 w-full rounded-xl bg-[var(--bg-elevated)]" />
-          <div className="h-12 w-full rounded-xl bg-[var(--bg-elevated)]" />
-          <div className="h-24 w-full rounded-xl bg-[var(--bg-elevated)]" />
-          <div className="h-12 w-full rounded-xl bg-[var(--bg-elevated)]" />
+          <div className="h-6 w-48 rounded bg-[var(--surface-2)]" />
+          <div className="h-12 w-full rounded-xl bg-[var(--surface-2)]" />
+          <div className="h-12 w-full rounded-xl bg-[var(--surface-2)]" />
+          <div className="h-24 w-full rounded-xl bg-[var(--surface-2)]" />
+          <div className="h-12 w-full rounded-xl bg-[var(--surface-2)]" />
         </div>
       </div>
     );
@@ -163,22 +163,22 @@ export default function ContaEditarPageClient() {
       {/* Back link */}
       <Link
         href="/conta"
-        className="inline-flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors mb-8"
+        className="inline-flex items-center gap-1.5 text-sm text-[var(--text-3)] hover:text-[var(--text-2)] transition-colors mb-8"
       >
         <ArrowLeftIcon /> Voltar para o painel
       </Link>
 
       {/* Header */}
-      <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">
+      <h1 className="text-2xl font-bold text-[var(--text)] tracking-tight">
         Editar Perfil
       </h1>
-      <p className="mt-2 text-sm text-[var(--text-muted)]">
+      <p className="mt-2 text-sm text-[var(--text-3)]">
         Atualize suas informações pessoais
       </p>
 
       {/* Error */}
       {error && (
-        <div className="mt-6 px-4 py-3 rounded-xl text-sm bg-[var(--danger-light)] text-[var(--danger)] border border-[var(--danger)]/20">
+        <div className="mt-6 px-4 py-3 rounded-xl text-sm bg-[var(--danger-soft)] text-[var(--danger)] border border-[var(--danger)]/20">
           {error}
         </div>
       )}
@@ -187,7 +187,7 @@ export default function ContaEditarPageClient() {
       <form onSubmit={handleSubmit} className="mt-8 space-y-6">
         {/* Nome completo */}
         <div>
-          <label htmlFor="edit-nome" className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
+          <label htmlFor="edit-nome" className="block text-sm font-medium text-[var(--text-2)] mb-1.5">
             Nome completo
           </label>
           <input
@@ -198,9 +198,9 @@ export default function ContaEditarPageClient() {
             placeholder="Seu nome"
             className="
               w-full px-4 py-3 rounded-xl text-sm
-              bg-[var(--bg-surface)] border border-[var(--border-color)]
-              text-[var(--text-primary)] placeholder:text-[var(--text-muted)]
-              focus:outline-none focus:ring-2 focus:ring-[var(--ring-color)] focus:border-transparent
+              bg-[var(--surface)] border border-[var(--border)]
+              text-[var(--text)] placeholder:text-[var(--text-3)]
+              focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:border-transparent
               transition-all duration-[var(--duration-fast)]
             "
           />
@@ -208,7 +208,7 @@ export default function ContaEditarPageClient() {
 
         {/* Bio */}
         <div>
-          <label htmlFor="edit-bio" className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
+          <label htmlFor="edit-bio" className="block text-sm font-medium text-[var(--text-2)] mb-1.5">
             Bio
           </label>
           <textarea
@@ -220,18 +220,18 @@ export default function ContaEditarPageClient() {
             maxLength={300}
             className="
               w-full px-4 py-3 rounded-xl text-sm resize-none
-              bg-[var(--bg-surface)] border border-[var(--border-color)]
-              text-[var(--text-primary)] placeholder:text-[var(--text-muted)]
-              focus:outline-none focus:ring-2 focus:ring-[var(--ring-color)] focus:border-transparent
+              bg-[var(--surface)] border border-[var(--border)]
+              text-[var(--text)] placeholder:text-[var(--text-3)]
+              focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:border-transparent
               transition-all duration-[var(--duration-fast)]
             "
           />
-          <p className="mt-1 text-xs text-[var(--text-muted)] text-right">{bio.length}/300</p>
+          <p className="mt-1 text-xs text-[var(--text-3)] text-right">{bio.length}/300</p>
         </div>
 
         {/* Objetivo */}
         <div>
-          <label htmlFor="edit-objetivo" className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
+          <label htmlFor="edit-objetivo" className="block text-sm font-medium text-[var(--text-2)] mb-1.5">
             Objetivo
           </label>
           <select
@@ -240,9 +240,9 @@ export default function ContaEditarPageClient() {
             onChange={(e) => setObjetivo(e.target.value)}
             className="
               w-full px-4 py-3 rounded-xl text-sm appearance-none
-              bg-[var(--bg-surface)] border border-[var(--border-color)]
-              text-[var(--text-primary)]
-              focus:outline-none focus:ring-2 focus:ring-[var(--ring-color)] focus:border-transparent
+              bg-[var(--surface)] border border-[var(--border)]
+              text-[var(--text)]
+              focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:border-transparent
               transition-all duration-[var(--duration-fast)]
             "
           >
@@ -254,7 +254,7 @@ export default function ContaEditarPageClient() {
 
         {/* Ano do ENEM */}
         <div>
-          <label htmlFor="edit-ano" className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
+          <label htmlFor="edit-ano" className="block text-sm font-medium text-[var(--text-2)] mb-1.5">
             Ano do ENEM
           </label>
           <select
@@ -263,9 +263,9 @@ export default function ContaEditarPageClient() {
             onChange={(e) => setAnoEnem(e.target.value)}
             className="
               w-full px-4 py-3 rounded-xl text-sm appearance-none
-              bg-[var(--bg-surface)] border border-[var(--border-color)]
-              text-[var(--text-primary)]
-              focus:outline-none focus:ring-2 focus:ring-[var(--ring-color)] focus:border-transparent
+              bg-[var(--surface)] border border-[var(--border)]
+              text-[var(--text)]
+              focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:border-transparent
               transition-all duration-[var(--duration-fast)]
             "
           >
@@ -283,8 +283,8 @@ export default function ContaEditarPageClient() {
             className="
               inline-flex items-center justify-center gap-2
               px-6 py-3 rounded-xl text-sm font-semibold
-              bg-[var(--primary)] text-white
-              hover:bg-[var(--primary-hover)] active:bg-[var(--primary-active)]
+              bg-[var(--brand)] text-white
+              hover:bg-[var(--brand-hover)] active:bg-[var(--brand-active)]
               disabled:opacity-50 disabled:cursor-not-allowed
               transition-colors duration-[var(--duration-fast)]
               shadow-sm
@@ -297,8 +297,8 @@ export default function ContaEditarPageClient() {
             href="/conta"
             className="
               px-6 py-3 rounded-xl text-sm font-medium
-              text-[var(--text-secondary)]
-              hover:bg-[var(--bg-elevated)] transition-colors
+              text-[var(--text-2)]
+              hover:bg-[var(--surface-2)] transition-colors
             "
           >
             Cancelar

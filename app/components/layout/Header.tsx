@@ -1,12 +1,11 @@
 'use client';
 
 import { startTransition, useEffect, useMemo, useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
-import { useTheme } from '@/lib/contexts/ThemeContext';
+import AprovIALogo from '@/app/components/shared/AprovIALogo';
 
 const NAV_LINKS = [
   { href: '/', label: 'Início' },
@@ -29,41 +28,9 @@ function isActivePath(pathname: string, href: string): boolean {
 
 function Logo() {
   return (
-    <Link href="/" className="shrink-0 transition-transform duration-[var(--duration-normal)] group-hover:scale-[1.02]" aria-label="Foco no ENEM — Página inicial">
-      <Image
-        src="/foconoenem-logo.png"
-        alt="Foco no ENEM"
-        width={164}
-        height={48}
-        priority
-        className="h-10 w-auto sm:h-11"
-      />
+    <Link href="/" className="shrink-0 transition-transform duration-[var(--duration-normal)] hover:scale-[1.02]" aria-label="AprovIA — Página inicial">
+      <AprovIALogo size="md" />
     </Link>
-  );
-}
-
-function ThemeToggle() {
-  const { resolvedTheme, toggleTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark';
-
-  return (
-    <button
-      type="button"
-      onClick={toggleTheme}
-      className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]"
-      aria-label={isDark ? 'Ativar modo claro' : 'Ativar modo escuro'}
-    >
-      {isDark ? (
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M17.09 11.05A7 7 0 018.95 2.91 7.5 7.5 0 1017.09 11.05z" />
-        </svg>
-      ) : (
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="10" cy="10" r="3.5" />
-          <path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.93 4.93l1.41 1.41M13.66 13.66l1.41 1.41M4.93 15.07l1.41-1.41M13.66 6.34l1.41-1.41" />
-        </svg>
-      )}
-    </button>
   );
 }
 
@@ -113,14 +80,14 @@ function AuthActions({
         <Link
           href="/login"
           onClick={onAction}
-          className="rounded-lg px-4 py-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]"
+          className="rounded-lg px-4 py-2 text-sm font-medium text-[var(--text-2)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
         >
           Entrar
         </Link>
         <Link
           href="/register"
           onClick={onAction}
-          className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--primary-hover)]"
+          className="rounded-lg bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-hover)]"
         >
           Começar grátis
         </Link>
@@ -133,7 +100,7 @@ function AuthActions({
       <Link
         href="/conta"
         onClick={onAction}
-        className="rounded-lg px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-elevated)]"
+        className="rounded-lg px-4 py-2 text-sm font-medium text-[var(--text)] transition-colors hover:bg-[var(--surface-2)]"
       >
         {compact ? 'Minha conta' : displayName}
       </Link>
@@ -141,7 +108,7 @@ function AuthActions({
         type="button"
         onClick={handleSignOut}
         disabled={submitting}
-        className="rounded-lg border border-[var(--border-color)] px-4 py-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--border-hover)] hover:text-[var(--text-primary)] disabled:cursor-not-allowed disabled:opacity-60"
+        className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--text-2)] transition-colors hover:border-[var(--border-hover)] hover:text-[var(--text)] disabled:cursor-not-allowed disabled:opacity-60"
       >
         {submitting ? 'Saindo...' : 'Sair'}
       </button>
@@ -211,8 +178,8 @@ export default function Header() {
     <header
       className={`sticky top-0 z-[var(--z-sticky)] border-b transition-all duration-[var(--duration-normal)] ${
         isScrolled
-          ? 'border-[var(--border-color)] bg-[var(--bg-base)]/90 shadow-sm backdrop-blur-xl'
-          : 'border-transparent bg-[var(--bg-base)]/70'
+          ? 'border-[var(--border)] bg-[var(--bg)]/90 shadow-sm backdrop-blur-xl'
+          : 'border-transparent bg-[var(--bg)]/70'
       }`}
     >
       <nav className="container flex h-16 items-center justify-between gap-4" aria-label="Navegação principal">
@@ -225,8 +192,8 @@ export default function Header() {
                 href={href}
                 className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                   isActivePath(pathname, href)
-                    ? 'text-[var(--primary)]'
-                    : 'text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]'
+                    ? 'text-[var(--brand)]'
+                    : 'text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]'
                 }`}
               >
                 {label}
@@ -236,18 +203,16 @@ export default function Header() {
         </ul>
 
         <div className="hidden items-center gap-2 md:flex">
-          <ThemeToggle />
           <AuthActions user={user} />
         </div>
 
         <div className="flex items-center gap-2 md:hidden">
-          <ThemeToggle />
           <button
             type="button"
             onClick={() => {
               setMobileOpen((current) => !current);
             }}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[var(--text-2)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
             aria-label={mobileOpen ? 'Fechar menu' : 'Abrir menu'}
             aria-expanded={mobileOpen}
           >
@@ -268,7 +233,7 @@ export default function Header() {
       </nav>
 
       {mobileOpen && (
-        <div className="border-t border-[var(--border-color)] bg-[var(--bg-base)] md:hidden">
+        <div className="border-t border-[var(--border)] bg-[var(--bg)] md:hidden">
           <div className="container flex flex-col gap-3 py-4">
             <div className="flex flex-col gap-1">
               {NAV_LINKS.map(({ href, label }) => (
@@ -278,15 +243,15 @@ export default function Header() {
                   onClick={closeMobileMenu}
                   className={`rounded-lg px-3 py-3 text-base font-medium transition-colors ${
                     isActivePath(pathname, href)
-                      ? 'bg-[var(--primary-light)] text-[var(--primary)]'
-                      : 'text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]'
+                      ? 'bg-[var(--brand-soft)] text-[var(--brand)]'
+                      : 'text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]'
                   }`}
                 >
                   {label}
                 </Link>
               ))}
             </div>
-            <div className="my-2 border-t border-[var(--border-color)]" />
+            <div className="my-2 border-t border-[var(--border)]" />
             <AuthActions user={user} compact onAction={closeMobileMenu} />
           </div>
         </div>
