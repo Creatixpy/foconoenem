@@ -1,6 +1,6 @@
 # PROJECT INVENTORY — AprovIA
 
-> Snapshot generated from the repository state on 2026-04-23.
+> Snapshot verified against the repository state on 2026-07-17.
 > This document is repo-first: if something is not present in the tree or current import graph, it is intentionally not claimed here.
 > Despite the historical file name, this inventory covers both frontend and active backend code in the Next.js app.
 
@@ -37,6 +37,7 @@ The repository does **not** currently ship local Supabase Edge Function code. `s
 | `/` | `app/page.tsx`, `app/HomePageClient.tsx` | Landing page |
 | `/redacao` | `app/redacao/page.tsx`, `app/redacao/RedacaoPageClient.tsx`, `app/redacao/PhotoUpload.tsx` | Essay workflow, OCR upload support, correction UI |
 | `/questoes` | `app/questoes/page.tsx`, `app/questoes/QuestoesPageClient.tsx` | Quiz generation, answering and result flow |
+| `/planos` | `app/planos/page.tsx`, `app/planos/PlanosPageClient.tsx` | Free/Max comparison, subscription status, checkout and portal entry points |
 | `/noticias` | `app/noticias/page.tsx`, `app/noticias/NoticiasPageClient.tsx` | Public news feed |
 | `/noticias/[slug]` | `app/noticias/[slug]/page.tsx` | Approved news detail |
 | `/noticias/pesquisa` | `app/noticias/pesquisa/page.tsx` | News search page |
@@ -99,6 +100,7 @@ The repository does **not** currently ship local Supabase Edge Function code. `s
 | `/api/corrigir` | `POST` | Submit essay for correction |
 | `/api/assinatura/checkout` | `POST` | Start Stripe Subscription Checkout for the Max plan, with a 7-day trial when eligible |
 | `/api/assinatura/portal` | `POST` | Open Stripe Billing Portal for the authenticated user |
+| `/api/assinatura/status` | `GET` | Return authentication state and the current Free/Max subscription summary |
 | `/api/destaques/remover` | `POST` | Remove highlight status from selected news |
 | `/api/doacao/checkout` | `POST` | Create Stripe Checkout session and persist `donation_checkouts` |
 | `/api/doacao/webhook` | `POST` | Process donation and subscription Stripe webhooks with idempotent persistence |
@@ -139,6 +141,13 @@ The repository does **not** currently ship local Supabase Edge Function code. `s
 | `app/components/features/quiz/QuestionCard.tsx` | Quiz question card |
 | `app/components/features/quiz/QuizResults.tsx` | Quiz result summary |
 | `app/components/features/quiz/index.ts` | Barrel for quiz components |
+
+### News feature files
+
+| File | Purpose |
+| --- | --- |
+| `app/noticias/hooks.ts` | Client hooks for public feed, highlights, article lookup and text search |
+| `app/noticias/[slug]/ShareButton.tsx` | Native-share/copy-link control for an approved article |
 
 ### Placeholder barrels
 
@@ -191,8 +200,10 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | --- | --- |
 | `lib/constants/index.ts` | Barrel |
 | `lib/constants/navigation.ts` | Centralized nav/footer link definitions |
+| `lib/constants/plans.ts` | Free/Max marketing comparison and shared plan presentation data |
 | `lib/constants/routes.ts` | Route constants |
 | `lib/constants/seo.ts` | Reusable SEO constants |
+| `lib/constants/subscriptions.ts` | Max plan code, monthly price, trial length and subscription types |
 
 ### `lib/db/`
 
@@ -224,11 +235,14 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | `lib/server/conta.ts` | Account dashboard data assembly and stat recalculation |
 | `lib/server/donations.ts` | Donation webhook persistence and checkout-status synchronization |
 | `lib/server/local-maintenance.ts` | Throttled local cleanup of `rate_limits`, `analytics_events` and `cached_themes` |
+| `lib/server/news-content.ts` | Server-only sanitization of approved news HTML and external URLs |
 | `lib/server/news-highlights.ts` | On-demand highlight refresh/status logic backed by `configuracoes` |
 | `lib/server/noticias.ts` | Server-side approved news access for public routes |
 | `lib/server/operating-hours.ts` | Business-hours evaluation |
 | `lib/server/page-auth.ts` | Cached server-side page guards for authenticated routes |
 | `lib/server/rate-limit.ts` | Server-side rate limiting |
+| `lib/server/request-origin.ts` | Trusted-origin enforcement for stateful and authenticated APIs |
+| `lib/server/subscription-return.ts` | Allowlisted return-path normalization for Stripe subscription flows |
 | `lib/server/subscriptions.ts` | Max subscription summary, Stripe sync, customer provisioning and webhook helpers |
 | `lib/server/stripe.ts` | Shared Stripe server client helpers |
 
@@ -283,6 +297,9 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | `STRIPE_WEBHOOK_SECRET` | donation and subscription webhook validation | Required if webhook is enabled |
 | `STRIPE_MAX_PRICE_ID` | Max subscription checkout | Required recurring monthly price ID for the Max plan |
 | `NODE_ENV` | root layout telemetry toggle | Standard runtime variable |
+| `VERCEL` | root layout telemetry toggle | Automatically provided by Vercel |
+| `VERCEL_PROJECT_PRODUCTION_URL` | trusted-origin validation | Automatically provided by Vercel when available |
+| `VERCEL_URL` | trusted-origin validation | Automatically provided by Vercel when available |
 
 The codebase does **not** currently read `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`.
 
@@ -308,7 +325,7 @@ The codebase does **not** currently read `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`.
 
 As of the latest audit documented in `supabase/functions/README.md`, remote Edge Functions may still exist in the Supabase project, but the repository no longer depends on them at runtime.
 The stale remote schema snapshot was removed; use Supabase migrations plus MCP/CLI inspection as the source of truth.
-Latest DB hardening in this repo: `20260513224619_harden_auth_profile_and_quiz_integrity.sql`.
+Latest DB hardening in this repo: `20260513231721_harden_max_subscription_periods.sql`.
 
 ---
 
@@ -348,7 +365,7 @@ Latest DB hardening in this repo: `20260513224619_harden_auth_profile_and_quiz_i
 - `npm run build` performs both the production build and sitemap regeneration.
 - `npm run lint` is the active static validation command in the repo.
 - There is no automated test suite checked into the project today.
-- `app/components/shared/index.ts` and `app/components/ui/index.ts` are present but currently empty.
+- `app/components/shared/index.ts` exports the shared brand components; `app/components/ui/index.ts` remains an empty placeholder barrel.
 - `app/auth/login/LoginPageClient.tsx` and `app/auth/register/RegisterPageClient.tsx` are deprecated placeholders.
 - The current runtime path is Next.js route handlers under `app/api`; Supabase Edge Functions are legacy only.
 - There is no external cron scheduler in the repo anymore. Maintenance and highlights now run locally, on demand, with timestamps persisted in `configuracoes`.
