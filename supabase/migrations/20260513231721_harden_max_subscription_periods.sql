@@ -27,4 +27,4 @@ where status in ('active', 'trialing')
     current_period_end is null
     or (not cancel_at_period_end and renews_at is null)
   )
-  and nullif(metadata ->> 'trial_ends_at', '') is not null;
+  and nullif(metadata ->> 'trial_ends_at', '') is not null;;

@@ -1,3 +1,0 @@
--- Remote migration 20251005023517.
--- Nenhuma alteração identificada com `npx supabase db diff --linked --schema public --use-migra`.
--- Serve apenas para alinhar o histórico com o projeto Supabase.

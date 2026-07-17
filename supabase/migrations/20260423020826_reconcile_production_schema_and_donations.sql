@@ -260,4 +260,4 @@ create policy stripe_webhook_events_service_only
   for all
   to service_role
   using (true)
-  with check (true);
+  with check (true);;

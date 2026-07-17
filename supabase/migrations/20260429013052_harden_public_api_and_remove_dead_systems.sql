@@ -18,4 +18,4 @@ revoke execute on all functions in schema public from authenticated;
 grant execute on function public.recalculate_user_statistics(uuid) to service_role;
 
 create index if not exists idx_subscription_events_subscription_id
-  on public.subscription_events (subscription_id);
+  on public.subscription_events (subscription_id);;

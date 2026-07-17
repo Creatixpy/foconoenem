@@ -1,12 +1,10 @@
--- Fix recalculate_user_statistics to handle answers_data stored as JSON array
--- Previously expected flat object {question_id: answer_id}, now handles
--- array format [{question_id, selected_alternative_id, is_correct}] with fallback
+
 CREATE OR REPLACE FUNCTION public.recalculate_user_statistics(target_user_id uuid)
- RETURNS user_statistics
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO ''
-AS $function$
+RETURNS public.user_statistics
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
 DECLARE
   requester_role text := auth.role();
   requester_id uuid := auth.uid();
@@ -109,4 +107,5 @@ BEGIN
 
   RETURN v_result;
 END;
-$function$;
+$$;
+;

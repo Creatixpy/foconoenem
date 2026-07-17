@@ -27,4 +27,4 @@ CREATE POLICY generated_questions_service
   FOR ALL
   TO public
   USING (auth.role() = 'service_role')
-  WITH CHECK (auth.role() = 'service_role');
+  WITH CHECK (auth.role() = 'service_role');;
