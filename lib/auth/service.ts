@@ -88,7 +88,7 @@ export async function signUp(data: SignUpData): Promise<AuthResult<{ needsConfir
     // Create profile if session is available (email confirmed or confirmation disabled)
     if (authData.session?.user) {
       try {
-        await createUserProfile(authData.session.user.id, nomeCompleto, objetivo);
+        await createUserProfile(nomeCompleto, objetivo);
       } catch (profileError) {
         console.warn('Perfil será criado ao confirmar email:', profileError);
       }
@@ -383,5 +383,4 @@ export async function updatePassword(newPassword: string): Promise<AuthResult> {
     };
   }
 }
-
 

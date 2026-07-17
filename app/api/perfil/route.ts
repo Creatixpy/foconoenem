@@ -53,9 +53,13 @@ async function ensureProfile(userId: string, payload?: z.infer<typeof profilePay
     throw new Error(`Falha ao salvar perfil: ${error.message}`);
   }
 
-  await adminClient
+  const { error: statisticsError } = await adminClient
     .from('user_statistics')
     .upsert({ user_id: userId }, { onConflict: 'user_id', ignoreDuplicates: true });
+
+  if (statisticsError) {
+    throw new Error(`Falha ao garantir estatísticas: ${statisticsError.message}`);
+  }
 
   return data;
 }

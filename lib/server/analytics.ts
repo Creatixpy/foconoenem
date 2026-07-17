@@ -1,9 +1,10 @@
 'use server';
 
-import { type EventType } from '@/lib/db';
 import { createAdminClient } from '@/lib/db/server';
 import { cleanupAnalyticsIfDue } from '@/lib/server/local-maintenance';
-import type { Json } from '@/types/supabase';
+import type { Database, Json } from '@/types/supabase';
+
+type EventType = Database['public']['Enums']['event_type_enum'];
 
 type TrackEventParams = {
   eventType: EventType;
@@ -22,10 +23,9 @@ export async function trackEvent({ eventType, metadata, userIp, userAgent, userI
   }
 
   try {
-    const mergedMetadata = userId ? { ...metadata, user_id: userId } : metadata;
     const { error } = await supabase.from('analytics_events').insert({
       event_type: eventType,
-      metadata: mergedMetadata as Json,
+      metadata: metadata as Json,
       user_ip: userIp ?? null,
       user_agent: userAgent ?? null,
       user_id: userId ?? null,

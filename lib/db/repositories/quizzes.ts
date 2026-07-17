@@ -6,10 +6,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, Json } from '@/types/supabase';
 import type { Question } from '@/types';
-import { withTimeout, DatabaseError } from '../client';
-import type { GeneratedQuestionRow } from '../types';
+import { withTimeout, DatabaseError } from '../query';
 
 type Discipline = Question['discipline'];
+type GeneratedQuestionRow = Database['public']['Tables']['generated_questions']['Row'];
 type StoredQuestion = Question & {
   createdAt: string;
   topic?: string | null;
@@ -123,44 +123,6 @@ function normalizeQuestionHistoryEntry(entry: unknown): Question | null {
         : 'Sem explicação disponível.',
     alternatives,
   };
-}
-
-// ============================================================================
-// Quiz Result Operations
-// ============================================================================
-
-export async function createQuizResult(
-  client: SupabaseClient<Database>,
-  userId: string,
-  quiz: {
-    totalQuestions: number;
-    correctAnswers: number;
-    wrongAnswers: number;
-    unansweredQuestions: number;
-    score: number;
-    disciplines: string[];
-    questionsData: unknown;
-    answersData: unknown;
-  }
-): Promise<void> {
-  await withTimeout(async (signal) => {
-    const { error } = await client
-      .from('quiz_results')
-      .insert({
-        user_id: userId,
-        total_questions: quiz.totalQuestions,
-        correct_answers: quiz.correctAnswers,
-        wrong_answers: quiz.wrongAnswers,
-        unanswered_questions: quiz.unansweredQuestions,
-        score: quiz.score,
-        disciplines: quiz.disciplines,
-        questions_data: quiz.questionsData as Json,
-        answers_data: quiz.answersData as Json,
-      })
-      .abortSignal(signal);
-
-    if (error) throw DatabaseError.fromPostgrestError(error);
-  });
 }
 
 export async function getStoredQuestionsForDisciplines(
@@ -330,4 +292,50 @@ export async function saveGeneratedQuestions(
   }
 
   return canonicalQuestions;
+}
+
+export async function createQuizAttempt(
+  client: SupabaseClient<Database>,
+  userId: string,
+  questions: Question[]
+) {
+  const { data, error } = await client.rpc('create_quiz_attempt', {
+    p_user_id: userId,
+    p_question_ids: questions.map((question) => question.id),
+  });
+
+  if (error) {
+    throw DatabaseError.fromPostgrestError(error);
+  }
+
+  if (!data) {
+    throw new DatabaseError('A tentativa de quiz não foi criada.', 'EMPTY_RESULT');
+  }
+
+  return data;
+}
+
+export async function submitQuizAttempt(
+  client: SupabaseClient<Database>,
+  input: {
+    attemptId: string;
+    userId: string;
+    selectedAnswers: Record<string, string>;
+  }
+) {
+  const { data, error } = await client.rpc('submit_quiz_attempt', {
+    p_attempt_id: input.attemptId,
+    p_user_id: input.userId,
+    p_selected_answers: input.selectedAnswers as Json,
+  });
+
+  if (error) {
+    throw DatabaseError.fromPostgrestError(error);
+  }
+
+  if (!data) {
+    throw new DatabaseError('O resultado do quiz não foi persistido.', 'EMPTY_RESULT');
+  }
+
+  return data;
 }

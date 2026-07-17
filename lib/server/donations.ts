@@ -70,6 +70,25 @@ export function buildDonationEventInsert(event: Stripe.Event) {
   };
 }
 
+export async function claimDonationEvent(
+  adminClient: AdminClient,
+  payload: NonNullable<ReturnType<typeof buildDonationEventInsert>>
+) {
+  const { data, error } = await adminClient.rpc('claim_donation_event', {
+    p_event: payload as unknown as Json,
+  });
+
+  if (error) {
+    throw new Error(`Falha ao reivindicar evento de doação: ${error.message}`);
+  }
+
+  if (data !== 'claimed' && data !== 'duplicate' && data !== 'in_progress') {
+    throw new Error('Estado inválido ao reivindicar evento de doação.');
+  }
+
+  return data;
+}
+
 export async function updateDonationEvent(
   adminClient: AdminClient,
   stripeEventId: string,
@@ -168,7 +187,7 @@ async function handlePaymentIntentFailed(
   const paymentIntent = event.data.object as Stripe.PaymentIntent;
   const failureReason = paymentIntent.last_payment_error?.message ?? 'payment_intent_failed';
 
-  const { error } = await adminClient
+  const { data, error } = await adminClient
     .from('donation_checkouts')
     .update({
       stripe_payment_intent_id: paymentIntent.id,
@@ -178,10 +197,20 @@ async function handlePaymentIntentFailed(
       latest_event_type: event.type,
       latest_event_created_at: new Date(event.created * 1000).toISOString(),
     })
-    .eq('stripe_payment_intent_id', paymentIntent.id);
+    .eq('stripe_payment_intent_id', paymentIntent.id)
+    .select('id');
 
   if (error) {
     throw new Error(`Falha ao registrar pagamento recusado: ${error.message}`);
+  }
+
+  if (!data?.length) {
+    return {
+      checkoutSessionId: null,
+      clientReferenceId: null,
+      status: 'ignored',
+      reason: 'checkout_not_found_for_payment_intent',
+    };
   }
 
   return {

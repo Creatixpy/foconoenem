@@ -49,7 +49,12 @@ async function deleteUserOwnedApplicationData(
   adminClient: NonNullable<ReturnType<typeof createAdminClient>>,
   userId: string
 ) {
-  const userOwnedTables = ['essay_results', 'quiz_results', 'analytics_events'] as const;
+  const userOwnedTables = [
+    'quiz_attempts',
+    'essay_results',
+    'quiz_results',
+    'analytics_events',
+  ] as const;
 
   for (const table of userOwnedTables) {
     const { error } = await adminClient.from(table).delete().eq('user_id', userId);

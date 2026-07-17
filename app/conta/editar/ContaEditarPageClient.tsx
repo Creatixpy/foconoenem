@@ -4,7 +4,6 @@ import { useState, useEffect, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth/context';
-import { updateUserProfile } from '@/lib/auth/profile-service';
 
 /* ================================================================== */
 /*  Icons                                                              */
@@ -86,7 +85,7 @@ function SuccessToast({ message, visible }: { message: string; visible: boolean 
 
 export default function ContaEditarPageClient() {
   const router = useRouter();
-  const { user, profile, initialized, loading: authLoading, refreshProfile } = useAuth();
+  const { user, profile, initialized, loading: authLoading, updateProfile } = useAuth();
 
   const [nome, setNome] = useState('');
   const [bio, setBio] = useState('');
@@ -122,14 +121,12 @@ export default function ContaEditarPageClient() {
     setSaving(true);
 
     try {
-      await updateUserProfile(user.id, {
+      await updateProfile({
         nome_completo: nome || null,
         bio: bio || null,
         objetivo: objetivo || null,
         ano_enem: anoEnem ? parseInt(anoEnem, 10) : null,
       });
-
-      await refreshProfile();
 
       // Show success toast
       setShowToast(true);
