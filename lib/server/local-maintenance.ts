@@ -7,7 +7,9 @@ type MaintenanceTaskName =
   | 'rate_limits'
   | 'analytics_events'
   | 'cached_themes'
-  | 'quiz_attempts';
+  | 'quiz_attempts'
+  | 'generated_questions'
+  | 'essay_submissions';
 
 type MaintenanceTaskResult = {
   deleted: number;
@@ -59,4 +61,12 @@ export async function cleanupCachedThemesIfDue() {
 
 export async function cleanupQuizAttemptsIfDue() {
   return runTask('quiz_attempts');
+}
+
+export async function cleanupGeneratedQuestionsIfDue() {
+  return runTask('generated_questions');
+}
+
+export async function cleanupEssaySubmissionsIfDue() {
+  return runTask('essay_submissions');
 }

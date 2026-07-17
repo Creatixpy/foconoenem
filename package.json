@@ -7,12 +7,13 @@
     "build": "npx next build && npx next-sitemap",
     "start": "next start",
     "lint": "eslint .",
+    "test:systems": "vitest run tests/systems",
     "verify:open-source": "node scripts/verify-open-source.mjs",
     "verify:history-clean": "node scripts/verify-history-clean.mjs",
     "release:public-tree": "node scripts/create-public-release.mjs"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
+    "@google/genai": "^2.12.0",
     "@supabase/ssr": "^0.10.0",
     "@supabase/supabase-js": "^2.102.1",
     "@types/sanitize-html": "^2.16.1",
@@ -20,7 +21,6 @@
     "@vercel/speed-insights": "^2.0.0",
     "groq-sdk": "^1.1.2",
     "lucide-react": "^0.468.0",
-    "luxon": "^3.7.2",
     "motion": "^12.38.0",
     "next": "^16.2.6",
     "next-sitemap": "^4.2.3",
@@ -34,15 +34,15 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.2",
-    "@types/luxon": "^3.7.1",
     "@types/node": "^25.5.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "eslint": "^9.39.1",
     "eslint-config-next": "^16.2.6",
-    "supabase": "^2.88.1",
+    "supabase": "^2.109.1",
     "tailwindcss": "^4.2.2",
-    "typescript": "6.0.2"
+    "typescript": "6.0.2",
+    "vitest": "^4.1.10"
   },
   "overrides": {
     "postcss": "^8.5.15"

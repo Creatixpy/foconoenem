@@ -17,6 +17,8 @@ export type AiCompletionRequest = {
   maxTokens: number;
   topP?: number;
   expectJson?: boolean;
+  maxAttempts?: number;
+  providerOffset?: number;
 };
 
 export type AiCompletionResult = {
@@ -72,7 +74,8 @@ function createGroqRuntime(
             top_p: request.topP ?? 1,
             stream: false,
             ...(request.expectJson ? { response_format: { type: 'json_object' as const } } : {}),
-          }
+          },
+          { timeout: 30_000 }
         );
 
         const content = response.choices?.[0]?.message?.content?.trim() ?? '';
@@ -84,6 +87,9 @@ function createGroqRuntime(
           content,
           model: currentProvider.model,
         };
+      }, {
+        maxAttempts: request.maxAttempts,
+        providerOffset: request.providerOffset,
       });
 
       return {

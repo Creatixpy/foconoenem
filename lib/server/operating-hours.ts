@@ -1,20 +1,11 @@
 'use server';
 
 import { extractHourMinute, formatBrazilTime, getBrazilNow } from '@/lib/server/brazil-time';
+import type { OperatingHoursInfo } from '@/lib/contracts/operating-hours';
 
 const OPEN_HOUR = 7;
 const CLOSE_HOUR = 23;
 const CLOSE_MINUTE = 30;
-
-export type OperatingHoursInfo = {
-  isOpen: boolean;
-  opensAt: string;
-  closesAt: string;
-  nextOpenTime: string;
-  message: string;
-  currentTime: string;
-  usedFallback: boolean;
-};
 
 function evaluateOperatingHours(date: Date): boolean {
   const { hour, minute } = extractHourMinute(date);

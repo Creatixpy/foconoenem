@@ -1,247 +1,202 @@
-/**
- * Essays Repository
- * Database operations for essay results and themes
- */
+import 'server-only';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { EssayResult, GeneratedTheme } from '@/lib/contracts/essay';
 import type { Database, Json } from '@/types/supabase';
-import { withTimeout, DatabaseError, isNotFoundError } from '../query';
+import { DatabaseError, isNotFoundError, withTimeout } from '@/lib/db/query';
 
 type EssayRow = Database['public']['Tables']['essay_results']['Row'];
-type EssayResultRow = EssayRow;
 type CachedThemeRow = Database['public']['Tables']['cached_themes']['Row'];
-type EssayCompetence = {
-  nota: number;
-  comentario: string;
-};
-const THEME_LOOKBACK_DAYS = 90;
 
-function normalizeThemeKey(value: string): string {
-  return value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/\s+/g, ' ')
-    .trim();
-}
+export type EssaySubmissionClaim =
+  | { state: 'claimed' }
+  | { state: 'completed'; resultId: string }
+  | { state: 'in_progress' }
+  | { state: 'conflict' }
+  | { state: 'off_topic'; justification: string };
 
-/** Normalized essay result shape returned to API consumers */
-export type NormalizedEssayResult = {
-  id: string;
-  nota: number;
-  competencia1: EssayCompetence;
-  competencia2: EssayCompetence;
-  competencia3: EssayCompetence;
-  competencia4: EssayCompetence;
-  competencia5: EssayCompetence;
-  feedbackGeral: string;
-  pontoFortes: string[];
-  pontosAMelhorar: string[];
-  redacaoOriginal: string;
-  createdAt: string;
-  origem: 'IA' | 'Simulação';
-  tema?: string;
-  textoApoio1?: string;
-  textoApoio2?: string;
-};
-
-/** Convert a DB row to the normalized camelCase shape */
-export function normalizeEssayRow(row: EssayRow): NormalizedEssayResult {
+export function normalizeEssayRow(row: EssayRow): EssayResult {
   return {
     id: row.id,
     nota: row.nota,
-    competencia1: row.competencia1 as unknown as EssayCompetence,
-    competencia2: row.competencia2 as unknown as EssayCompetence,
-    competencia3: row.competencia3 as unknown as EssayCompetence,
-    competencia4: row.competencia4 as unknown as EssayCompetence,
-    competencia5: row.competencia5 as unknown as EssayCompetence,
+    competencia1: row.competencia1 as EssayResult['competencia1'],
+    competencia2: row.competencia2 as EssayResult['competencia2'],
+    competencia3: row.competencia3 as EssayResult['competencia3'],
+    competencia4: row.competencia4 as EssayResult['competencia4'],
+    competencia5: row.competencia5 as EssayResult['competencia5'],
     feedbackGeral: row.feedback_geral,
-    pontoFortes: (row.ponto_fortes as string[] | null) ?? [],
-    pontosAMelhorar: (row.pontos_a_melhorar as string[] | null) ?? [],
+    pontoFortes: row.ponto_fortes ?? [],
+    pontosAMelhorar: row.pontos_a_melhorar ?? [],
     redacaoOriginal: row.redacao_original,
     createdAt: row.created_at,
-    origem: row.origem as NormalizedEssayResult['origem'],
+    origem: row.origem as EssayResult['origem'],
     tema: row.tema ?? undefined,
     textoApoio1: row.texto_apoio1 ?? undefined,
     textoApoio2: row.texto_apoio2 ?? undefined,
   };
 }
 
-// ============================================================================
-// Essay Result Operations
-// ============================================================================
+function normalizeTheme(row: CachedThemeRow): GeneratedTheme {
+  return {
+    id: row.id,
+    tema: row.tema,
+    textoApoio1: row.texto_apoio1,
+    textoApoio2: row.texto_apoio2,
+  };
+}
 
 export async function getEssayById(
   client: SupabaseClient<Database>,
   essayId: string,
-  userId?: string
-): Promise<NormalizedEssayResult | null> {
-  const data = await withTimeout(async (signal) => {
-    let query = client
+  userId: string
+): Promise<EssayResult | null> {
+  const row = await withTimeout(async (signal) => {
+    const { data, error } = await client
       .from('essay_results')
       .select('*')
-      .eq('id', essayId);
-
-    if (userId) {
-      query = query.eq('user_id', userId);
-    }
-
-    const { data, error } = await query.abortSignal(signal).maybeSingle();
+      .eq('id', essayId)
+      .eq('user_id', userId)
+      .abortSignal(signal)
+      .maybeSingle();
 
     if (error && !isNotFoundError(error)) throw DatabaseError.fromPostgrestError(error);
     return data;
   });
 
-  return data ? normalizeEssayRow(data as EssayResultRow) : null;
+  return row ? normalizeEssayRow(row as EssayRow) : null;
 }
 
-export async function createEssayResult(
-  client: SupabaseClient<Database>,
-  result: NormalizedEssayResult,
-  userId: string
-): Promise<void> {
-  const payload: Database['public']['Tables']['essay_results']['Insert'] = {
-    id: result.id,
-    nota: result.nota,
-    competencia1: result.competencia1 as unknown as Json,
-    competencia2: result.competencia2 as unknown as Json,
-    competencia3: result.competencia3 as unknown as Json,
-    competencia4: result.competencia4 as unknown as Json,
-    competencia5: result.competencia5 as unknown as Json,
-    feedback_geral: result.feedbackGeral,
-    ponto_fortes: result.pontoFortes,
-    pontos_a_melhorar: result.pontosAMelhorar,
-    redacao_original: result.redacaoOriginal,
-    created_at: result.createdAt,
-    origem: result.origem,
-    tema: result.tema ?? null,
-    texto_apoio1: result.textoApoio1 ?? null,
-    texto_apoio2: result.textoApoio2 ?? null,
-    user_id: userId,
-  };
-
-  await withTimeout(async (signal) => {
-    const { error } = await client
-      .from('essay_results')
-      .insert(payload)
-      .abortSignal(signal);
-
-    if (error) throw DatabaseError.fromPostgrestError(error);
-  });
-}
-
-// ============================================================================
-// Cached Themes Operations
-// ============================================================================
-
-export async function getCachedThemePool(
-  client: SupabaseClient<Database>,
-  options?: { daysBack?: number; limit?: number }
-): Promise<CachedThemeRow[]> {
-  const daysBack = options?.daysBack ?? THEME_LOOKBACK_DAYS;
-  const limit = options?.limit ?? 50;
-  const since = new Date(Date.now() - daysBack * 24 * 60 * 60 * 1000).toISOString();
-
-  return withTimeout(async (signal) => {
-    const { data, error } = await client
-      .from('cached_themes')
-      .select('*')
-      .gte('created_at', since)
-      .order('created_at', { ascending: false })
-      .limit(limit)
-      .abortSignal(signal);
-
-    if (error) throw DatabaseError.fromPostgrestError(error);
-    return (data ?? []) as CachedThemeRow[];
-  }, 'fast');
-}
-
-export async function getRecentUserEssayThemes(
+export async function getRecentEssayThemeTitles(
   client: SupabaseClient<Database>,
   userId: string,
   limit = 10
 ): Promise<string[]> {
-  const data = await withTimeout(async (signal) => {
-    const { data, error } = await client
-      .from('essay_results')
-      .select('tema')
-      .eq('user_id', userId)
-      .not('tema', 'is', null)
-      .order('created_at', { ascending: false })
-      .limit(limit)
-      .abortSignal(signal);
-
-    if (error) throw DatabaseError.fromPostgrestError(error);
-    return data ?? [];
-  }, 'fast');
-
-  return data
+  const { data, error } = await client
+    .from('essay_results')
+    .select('tema')
+    .eq('user_id', userId)
+    .not('tema', 'is', null)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) throw DatabaseError.fromPostgrestError(error);
+  return (data ?? [])
     .map((row) => row.tema?.trim())
-    .filter((tema): tema is string => Boolean(tema));
+    .filter((theme): theme is string => Boolean(theme));
 }
 
-export async function findCachedThemeByTema(
+export async function claimEssaySubmission(
   client: SupabaseClient<Database>,
-  tema: string
-): Promise<CachedThemeRow | null> {
-  const normalizedTarget = normalizeThemeKey(tema);
-  if (!normalizedTarget) return null;
-
-  const pool = await getCachedThemePool(client, { daysBack: 3650, limit: 500 });
-  return (
-    pool.find((item) => normalizeThemeKey(item.tema) === normalizedTarget) ?? null
-  );
-}
-
-export async function markCachedThemeAsUsed(
-  client: SupabaseClient<Database>,
-  themeId: string
-): Promise<void> {
-  const { error } = await client.rpc('increment_cached_theme_usage', {
-    p_theme_id: themeId,
+  input: { submissionId: string; userId: string; inputFingerprint: string }
+): Promise<EssaySubmissionClaim> {
+  const { data, error } = await client.rpc('claim_essay_submission', {
+    p_submission_id: input.submissionId,
+    p_user_id: input.userId,
+    p_input_fingerprint: input.inputFingerprint,
   });
-
-  if (error) {
-    throw DatabaseError.fromPostgrestError(error);
+  if (error) throw DatabaseError.fromPostgrestError(error);
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    throw new DatabaseError('Claim de redação inválido.', 'INVALID_CLAIM');
   }
+
+  const state = (data as Record<string, Json | undefined>).state;
+  if (state === 'completed') {
+    const resultId = (data as Record<string, Json | undefined>).resultId;
+    if (typeof resultId !== 'string') {
+      throw new DatabaseError('Claim concluído sem resultado.', 'INVALID_CLAIM');
+    }
+    return { state, resultId };
+  }
+  if (state === 'off_topic') {
+    const justification = (data as Record<string, Json | undefined>).justification;
+    if (typeof justification !== 'string') {
+      throw new DatabaseError('Rejeição sem justificativa.', 'INVALID_CLAIM');
+    }
+    return { state, justification };
+  }
+  if (state === 'claimed' || state === 'in_progress' || state === 'conflict') {
+    return { state };
+  }
+  throw new DatabaseError('Estado de claim desconhecido.', 'INVALID_CLAIM');
 }
 
-export async function createCachedThemes(
+export async function completeEssaySubmission(
   client: SupabaseClient<Database>,
-  themes: Array<{ tema: string; textoApoio1: string; textoApoio2: string }>
-): Promise<CachedThemeRow[]> {
-  if (themes.length === 0) return [];
+  input: {
+    submissionId: string;
+    userId: string;
+    inputFingerprint: string;
+    result: Omit<EssayResult, 'createdAt' | 'origem'>;
+  }
+): Promise<EssayResult> {
+  const { data, error } = await client.rpc('complete_essay_submission', {
+    p_submission_id: input.submissionId,
+    p_user_id: input.userId,
+    p_input_fingerprint: input.inputFingerprint,
+    p_result: input.result as unknown as Json,
+  });
+  if (error) throw DatabaseError.fromPostgrestError(error);
+  if (!data) throw new DatabaseError('A correção não foi persistida.', 'EMPTY_RESULT');
+  return normalizeEssayRow(data as EssayRow);
+}
 
-  const existing = await getCachedThemePool(client, { daysBack: 3650, limit: 500 });
-  const existingByKey = new Map(
-    existing.map((item) => [normalizeThemeKey(item.tema), item] as const)
+export async function failEssaySubmission(
+  client: SupabaseClient<Database>,
+  input: {
+    submissionId: string;
+    userId: string;
+    inputFingerprint: string;
+    errorMessage: string;
+  }
+) {
+  const { error } = await client.rpc('fail_essay_submission', {
+    p_submission_id: input.submissionId,
+    p_user_id: input.userId,
+    p_input_fingerprint: input.inputFingerprint,
+    p_error_message: input.errorMessage,
+  });
+  if (error) throw DatabaseError.fromPostgrestError(error);
+}
+
+export async function getGeneratedTheme(
+  client: SupabaseClient<Database>,
+  themeId: string,
+  userId: string
+): Promise<GeneratedTheme | null> {
+  const { data, error } = await client.rpc('get_cached_theme', {
+    p_theme_id: themeId,
+    p_user_id: userId,
+  });
+  if (error) throw DatabaseError.fromPostgrestError(error);
+  return data ? normalizeTheme(data as CachedThemeRow) : null;
+}
+
+export async function claimSharedTheme(
+  client: SupabaseClient<Database>,
+  userId: string
+): Promise<GeneratedTheme | null> {
+  const { data, error } = await client.rpc('claim_cached_theme', { p_user_id: userId });
+  if (error) throw DatabaseError.fromPostgrestError(error);
+  return data ? normalizeTheme(data as CachedThemeRow) : null;
+}
+
+export async function upsertGeneratedThemes(
+  client: SupabaseClient<Database>,
+  input: {
+    userId: string;
+    privateThemes: boolean;
+    themes: Array<Omit<GeneratedTheme, 'id'>>;
+  }
+): Promise<GeneratedTheme[]> {
+  return Promise.all(
+    input.themes.map(async (theme) => {
+      const { data, error } = await client.rpc('upsert_cached_theme', {
+        p_user_id: input.userId,
+        p_private: input.privateThemes,
+        p_theme: theme as unknown as Json,
+      });
+      if (error) throw DatabaseError.fromPostgrestError(error);
+      if (!data) throw new DatabaseError('O tema não foi persistido.', 'EMPTY_RESULT');
+      return normalizeTheme(data as CachedThemeRow);
+    })
   );
-
-  const seenKeys = new Set<string>();
-  const toInsert = themes
-    .map((theme) => ({
-      tema: theme.tema.trim(),
-      texto_apoio1: theme.textoApoio1.trim(),
-      texto_apoio2: theme.textoApoio2.trim(),
-      usado_count: 0,
-    }))
-    .filter((theme) => {
-      const key = normalizeThemeKey(theme.tema);
-      if (!key || seenKeys.has(key) || existingByKey.has(key)) return false;
-      seenKeys.add(key);
-      return Boolean(theme.tema && theme.texto_apoio1 && theme.texto_apoio2);
-    });
-
-  if (toInsert.length === 0) return [];
-
-  return withTimeout(async (signal) => {
-    const { data, error } = await client
-      .from('cached_themes')
-      .insert(toInsert)
-      .select('*')
-      .abortSignal(signal);
-
-    if (error) throw DatabaseError.fromPostgrestError(error);
-    return (data ?? []) as CachedThemeRow[];
-  }, 'fast');
 }
