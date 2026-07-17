@@ -80,26 +80,35 @@ export type Database = {
       cached_themes: {
         Row: {
           created_at: string
+          fingerprint: string
           id: string
+          owner_user_id: string | null
           tema: string
           texto_apoio1: string
           texto_apoio2: string
+          updated_at: string
           usado_count: number
         }
         Insert: {
           created_at?: string
+          fingerprint: string
           id?: string
+          owner_user_id?: string | null
           tema: string
           texto_apoio1: string
           texto_apoio2: string
+          updated_at?: string
           usado_count?: number
         }
         Update: {
           created_at?: string
+          fingerprint?: string
           id?: string
+          owner_user_id?: string | null
           tema?: string
           texto_apoio1?: string
           texto_apoio2?: string
+          updated_at?: string
           usado_count?: number
         }
         Relationships: []
@@ -275,34 +284,78 @@ export type Database = {
         }
         Relationships: []
       }
+      essay_submissions: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          input_fingerprint: string
+          result_id: string | null
+          status: string
+          submission_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          input_fingerprint: string
+          result_id?: string | null
+          status?: string
+          submission_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          input_fingerprint?: string
+          result_id?: string | null
+          status?: string
+          submission_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "essay_submissions_result_id_fkey"
+            columns: ["result_id"]
+            isOneToOne: false
+            referencedRelation: "essay_results"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       generated_questions: {
         Row: {
           alternatives: Json
           content: string
-          created_at: string | null
+          created_at: string
           difficulty: string | null
           discipline: string
-          explanation: string | null
+          explanation: string
+          fingerprint: string
           id: string
           topic: string | null
         }
         Insert: {
           alternatives: Json
           content: string
-          created_at?: string | null
+          created_at?: string
           difficulty?: string | null
           discipline: string
-          explanation?: string | null
+          explanation: string
+          fingerprint: string
           id?: string
           topic?: string | null
         }
         Update: {
           alternatives?: Json
           content?: string
-          created_at?: string | null
+          created_at?: string
           difficulty?: string | null
           discipline?: string
-          explanation?: string | null
+          explanation?: string
+          fingerprint?: string
           id?: string
           topic?: string | null
         }
@@ -403,6 +456,7 @@ export type Database = {
           expires_at: string
           id: string
           quiz_result_id: string | null
+          request_id: string
           user_id: string
         }
         Insert: {
@@ -412,6 +466,7 @@ export type Database = {
           expires_at?: string
           id?: string
           quiz_result_id?: string | null
+          request_id: string
           user_id: string
         }
         Update: {
@@ -421,6 +476,7 @@ export type Database = {
           expires_at?: string
           id?: string
           quiz_result_id?: string | null
+          request_id?: string
           user_id?: string
         }
         Relationships: [
@@ -829,8 +885,70 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_cached_theme: {
+        Args: { p_user_id: string }
+        Returns: {
+          created_at: string
+          fingerprint: string
+          id: string
+          owner_user_id: string | null
+          tema: string
+          texto_apoio1: string
+          texto_apoio2: string
+          updated_at: string
+          usado_count: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "cached_themes"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       claim_donation_event: { Args: { p_event: Json }; Returns: string }
+      claim_essay_submission: {
+        Args: {
+          p_input_fingerprint: string
+          p_submission_id: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       claim_subscription_event: { Args: { p_event: Json }; Returns: string }
+      complete_essay_submission: {
+        Args: {
+          p_input_fingerprint: string
+          p_result: Json
+          p_submission_id: string
+          p_user_id: string
+        }
+        Returns: {
+          competencia1: Json
+          competencia2: Json
+          competencia3: Json
+          competencia4: Json
+          competencia5: Json
+          created_at: string
+          feedback_geral: string
+          id: string
+          nota: number
+          origem: string
+          ponto_fortes: string[]
+          pontos_a_melhorar: string[]
+          redacao_original: string
+          tema: string | null
+          texto_apoio1: string | null
+          texto_apoio2: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "essay_results"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       consume_rate_limit: {
         Args: {
           p_endpoint: string
@@ -847,6 +965,7 @@ export type Database = {
       create_quiz_attempt: {
         Args: {
           p_question_ids: string[]
+          p_request_id: string
           p_ttl_minutes?: number
           p_user_id: string
         }
@@ -857,6 +976,7 @@ export type Database = {
           expires_at: string
           id: string
           quiz_result_id: string | null
+          request_id: string
           user_id: string
         }
         SetofOptions: {
@@ -866,14 +986,46 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      increment_cached_theme_usage: {
-        Args: { p_theme_id: string }
+      fail_essay_submission: {
+        Args: {
+          p_error_message: string
+          p_input_fingerprint: string
+          p_submission_id: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
+      get_balanced_questions: {
+        Args: { p_disciplines: string[]; p_limit_per_discipline?: number }
+        Returns: {
+          alternatives: Json
+          content: string
+          created_at: string
+          difficulty: string | null
+          discipline: string
+          explanation: string
+          fingerprint: string
+          id: string
+          topic: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "generated_questions"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      get_cached_theme: {
+        Args: { p_theme_id: string; p_user_id: string }
         Returns: {
           created_at: string
+          fingerprint: string
           id: string
+          owner_user_id: string | null
           tema: string
           texto_apoio1: string
           texto_apoio2: string
+          updated_at: string
           usado_count: number
         }
         SetofOptions: {
@@ -952,6 +1104,46 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "quiz_results"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      upsert_cached_theme: {
+        Args: { p_private: boolean; p_theme: Json; p_user_id: string }
+        Returns: {
+          created_at: string
+          fingerprint: string
+          id: string
+          owner_user_id: string | null
+          tema: string
+          texto_apoio1: string
+          texto_apoio2: string
+          updated_at: string
+          usado_count: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "cached_themes"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      upsert_generated_question: {
+        Args: { p_question: Json }
+        Returns: {
+          alternatives: Json
+          content: string
+          created_at: string
+          difficulty: string | null
+          discipline: string
+          explanation: string
+          fingerprint: string
+          id: string
+          topic: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "generated_questions"
           isOneToOne: true
           isSetofReturn: false
         }

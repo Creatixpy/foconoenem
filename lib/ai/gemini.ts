@@ -1,5 +1,5 @@
 import 'server-only';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 
 const GEMINI_MODEL = 'gemini-2.5-flash';
 const TIMEOUT_MS = 30_000;
@@ -18,12 +18,12 @@ RULES:
 - If you cannot read a word, use [ilegível] as placeholder
 - If the image contains no readable handwritten text, respond with exactly: [EMPTY]`;
 
-function getGeminiClient(): GoogleGenerativeAI {
+function getGeminiClient(): GoogleGenAI {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error('GEMINI_API_KEY não configurada.');
   }
-  return new GoogleGenerativeAI(apiKey);
+  return new GoogleGenAI({ apiKey });
 }
 
 /**
@@ -35,33 +35,25 @@ export async function extractTextFromImage(
   mimeType: string,
 ): Promise<string> {
   const client = getGeminiClient();
-  const model = client.getGenerativeModel({ model: GEMINI_MODEL });
-
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
   try {
-    const result = await model.generateContent(
-      {
-        contents: [
-          {
-            role: 'user',
-            parts: [
-              { text: OCR_PROMPT },
-              {
-                inlineData: {
-                  mimeType,
-                  data: base64Data,
-                },
-              },
-            ],
-          },
-        ],
-      },
-      { signal: controller.signal } as never,
-    );
+    const result = await client.models.generateContent({
+      model: GEMINI_MODEL,
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            { text: OCR_PROMPT },
+            { inlineData: { mimeType, data: base64Data } },
+          ],
+        },
+      ],
+      config: { abortSignal: controller.signal },
+    });
 
-    const text = result.response.text().trim();
+    const text = result.text?.trim() ?? '';
 
     if (!text || text === '[EMPTY]') {
       throw new Error('Não foi possível identificar texto na imagem.');
