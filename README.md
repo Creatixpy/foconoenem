@@ -25,8 +25,8 @@ O feedback produzido por IA é uma orientação de estudo. Ele não substitui pr
 - Supabase fornece autenticação e PostgreSQL. Os clientes SSR/browser estão em `lib/supabase/`, o acesso orientado a repositórios em `lib/db/` e os fluxos server-only em `lib/server/`.
 - Páginas autenticadas usam `requireServerUser()` no servidor e entregam o usuário validado a `AuthProviders`, evitando um segundo bootstrap de autenticação no cliente.
 - Operações privilegiadas passam pelo servidor com `SUPABASE_SERVICE_ROLE_KEY`; os grants públicos do banco devem permanecer mínimos.
-- Groq atende os fluxos textuais de IA nos planos Free e Max, com retry e fallback server-side entre as configurações disponíveis.
-- Gemini é usado para OCR, NewsAPI para importação de notícias e Stripe para assinaturas e doações.
+- Groq atende os fluxos textuais de IA nos planos Free e Max. O SDK não faz retries internos; o orquestrador aplica timeout de 30 segundos e no máximo duas tentativas globais, usando fallback apenas para falhas transitórias ou uma segunda saída estruturada inválida.
+- Gemini é usado para OCR pelo SDK oficial `@google/genai`, NewsAPI para importação de notícias e Stripe para assinaturas e doações.
 - Limpezas, rate limiting e destaques usam RPCs transacionais acionadas sob demanda pelo próprio app, sem cron externo.
 - A interface é exclusivamente dark e usa tokens semânticos em `app/styles/` e o componente `AprovIALogo` para a marca.
 - Vercel Analytics e Speed Insights só são montados depois do consentimento para métricas opcionais.
@@ -73,7 +73,7 @@ Use `.env.example` como referência e nunca versione `.env.local` ou chaves reai
 | `GROQ_MODEL` | opcional | modelo primário da Groq |
 | `GROQ_FALLBACK_API_KEY` | opcional | chave do fallback Groq |
 | `GROQ_FALLBACK_MODEL` | opcional | modelo do fallback |
-| `GROQ_MAX_ATTEMPTS` | opcional | quantidade de tentativas por provedor |
+| `GROQ_MAX_ATTEMPTS` | opcional | teto global de tentativas Groq, limitado pelo código a 2 |
 | `GEMINI_API_KEY` | necessária para OCR | extração de texto em `/api/ocr` |
 | `STRIPE_SECRET_KEY` | necessária para pagamentos | checkout, portal e sincronização Stripe |
 | `STRIPE_WEBHOOK_SECRET` | necessária para o webhook | validação da assinatura dos eventos |
@@ -89,13 +89,14 @@ Use `.env.example` como referência e nunca versione `.env.local` ou chaves reai
 | --- | --- |
 | `npm run dev` | iniciar o desenvolvimento com Turbopack |
 | `npm run lint` | executar ESLint no repositório |
+| `npm run test:systems` | executar os testes focados dos contratos de redação e quiz |
 | `npm run build` | gerar o build de produção e atualizar `public/sitemap.xml` |
 | `npm run start` | servir o build de produção |
 | `npm run verify:open-source` | verificar arquivos obrigatórios, artefatos privados e padrões comuns de segredo |
 | `npm run verify:history-clean` | verificar o histórico Git local contra arquivos e segredos de alto risco |
 | `npm run release:public-tree` | criar uma árvore publicável limpa em `../aprovia-public-release` |
 
-Não há uma suíte automatizada de testes neste repositório. Mudanças não triviais devem passar por `npm run lint`, `npm run build` e QA manual do fluxo afetado.
+A suíte Vitest é deliberadamente pequena e cobre schemas, serialização segura do quiz, notas ENEM, fingerprint idempotente e mapeamento do resultado persistido. Mudanças não triviais nesses sistemas devem passar por `npm run test:systems`, `npm run lint`, build e QA do fluxo afetado.
 
 ## Estrutura do repositório
 
@@ -106,8 +107,9 @@ app/components/         componentes de layout, privacidade e funcionalidades
 app/styles/             tokens e estilos do sistema visual dark
 lib/auth/               autenticação, contexto, perfil, segurança e validação
 lib/ai/                 integrações padrão com Groq e Gemini
+lib/contracts/          contratos Zod e tipos neutros compartilhados
 lib/db/                 cliente server-side, repositórios e utilitários de consulta
-lib/server/             regras server-only, pagamentos, conta, notícias e IA por plano
+lib/server/             regras server-only, incluindo orquestração de redação, quiz e IA por plano
 lib/supabase/           clientes SSR/browser e atualização de sessão
 public/                 assets, verificações, robots, manifest e sitemap
 scripts/                verificações e geração da árvore de release
@@ -120,8 +122,8 @@ types/                  tipos compartilhados e tipos gerados do Supabase
 | Área | Interface | Backend |
 | --- | --- | --- |
 | Autenticação | `/login`, `/register`, `/forgot-password`, `/reset-password` | `/auth/callback` e Supabase Auth |
-| Redação | `/redacao`, `/resultados/[id]` | `/api/gerar-tema`, `/api/corrigir`, `/api/resultados/[id]`, `/api/ocr` |
-| Questões | `/questoes` | `GET` cria uma tentativa canônica e `POST` corrige/persiste a tentativa em `/api/questoes` |
+| Redação | `/redacao`, `/resultados/[id]` | `POST /api/gerar-tema`, `POST /api/corrigir`, `POST /api/ocr`; o resultado é carregado no Server Component |
+| Questões | `/questoes` | `POST /api/questoes` cria a tentativa e `PATCH /api/questoes` corrige/persiste no servidor |
 | Notícias | `/noticias`, `/noticias/[slug]`, `/noticias/pesquisa`, `/noticias/admin` | rotas sob `/api/noticias`, além de moderação, importação e destaques |
 | Conta | `/conta`, `/conta/editar` | `/api/conta/dados`, `/api/conta/recalcular`, `/api/conta/excluir`, `/api/perfil` |
 | Plano Max | `/planos`, gerenciamento também em `/conta` | `/api/assinatura/status`, `/api/assinatura/checkout`, `/api/assinatura/portal` |
@@ -137,9 +139,12 @@ Na exclusão de uma conta, o app remove primeiro tentativas de quiz, redações,
 - O histórico local está reconciliado com o remoto; não use `migration repair`, reescrita do histórico ou `db reset` em produção.
 - Os tipos gerados pelo Supabase ficam em `types/supabase.ts`.
 - O snapshot remoto antigo foi removido; não recrie snapshots paralelos às migrations.
-- `quiz_attempts` e `quiz_attempt_questions` guardam por 24 horas a seleção canônica entregue ao usuário. O servidor calcula a correção a partir do catálogo, e retries retornam o mesmo `quiz_result`.
+- `quiz_attempts` e `quiz_attempt_questions` guardam por 24 horas a seleção canônica entregue ao usuário. O browser nunca recebe `isCorrect` ou explicações antes da finalização; o servidor calcula a correção a partir do catálogo, e retries retornam o mesmo `quiz_result`.
+- Questões reutilizáveis têm fingerprint normalizado, validação estrutural e retenção de 30 dias quando não estão referenciadas. O Free reaproveita o catálogo controlado; o Max recebe conteúdo novo, persistido com deduplicação atômica.
+- Temas Free são compartilhados e balanceados; temas Max são privados e vinculados ao usuário. Ambos expiram do catálogo após 7 dias, enquanto o snapshot histórico em `essay_results` permanece preservado.
+- Correções usam `submissionId` e fingerprint da entrada. Repetições retornam o resultado ou a mesma rejeição por fuga ao tema; colisões de conteúdo são recusadas. Novas notas por competência aceitam somente 0, 40, 80, 120, 160 ou 200 e precisam somar a nota total.
 - Estatísticas de redação e quiz são recalculadas por triggers transacionais; questões sem resposta não entram no denominador da taxa de acerto.
-- Limpeza de `rate_limits`, `analytics_events`, `cached_themes` e tentativas de quiz ocorre em janelas controladas por uma RPC de manutenção.
+- Limpeza de `rate_limits`, `analytics_events`, `cached_themes`, tentativas, questões sem referência e claims de redação ocorre em janelas controladas por uma RPC de manutenção.
 - Rate limit, incremento de temas, destaques e claims de webhooks Stripe usam operações atômicas restritas a `service_role`.
 - Destaques de notícias são recalculados após moderação ou quando estão vazios ou vencidos.
 
