@@ -74,4 +74,4 @@ alter table public.quiz_results
 
 alter table public.quiz_results validate constraint quiz_results_counts_nonnegative;
 alter table public.quiz_results validate constraint quiz_results_counts_match_total;
-alter table public.quiz_results validate constraint quiz_results_payload_lengths_match_total;
+alter table public.quiz_results validate constraint quiz_results_payload_lengths_match_total;;

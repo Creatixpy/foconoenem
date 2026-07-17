@@ -362,6 +362,77 @@ export type Database = {
         }
         Relationships: []
       }
+      quiz_attempt_questions: {
+        Row: {
+          attempt_id: string
+          position: number
+          question_id: string
+        }
+        Insert: {
+          attempt_id: string
+          position: number
+          question_id: string
+        }
+        Update: {
+          attempt_id?: string
+          position?: number
+          question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_attempt_questions_attempt_id_fkey"
+            columns: ["attempt_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_attempts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_attempt_questions_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "generated_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quiz_attempts: {
+        Row: {
+          consumed_at: string | null
+          created_at: string
+          disciplines: string[]
+          expires_at: string
+          id: string
+          quiz_result_id: string | null
+          user_id: string
+        }
+        Insert: {
+          consumed_at?: string | null
+          created_at?: string
+          disciplines?: string[]
+          expires_at?: string
+          id?: string
+          quiz_result_id?: string | null
+          user_id: string
+        }
+        Update: {
+          consumed_at?: string | null
+          created_at?: string
+          disciplines?: string[]
+          expires_at?: string
+          id?: string
+          quiz_result_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_attempts_quiz_result_id_fkey"
+            columns: ["quiz_result_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_results"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quiz_results: {
         Row: {
           answers_data: Json
@@ -758,6 +829,60 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_donation_event: { Args: { p_event: Json }; Returns: string }
+      claim_subscription_event: { Args: { p_event: Json }; Returns: string }
+      consume_rate_limit: {
+        Args: {
+          p_endpoint: string
+          p_identifier: string
+          p_max_requests: number
+          p_window_minutes: number
+        }
+        Returns: {
+          allowed: boolean
+          remaining: number
+          reset_at: string
+        }[]
+      }
+      create_quiz_attempt: {
+        Args: {
+          p_question_ids: string[]
+          p_ttl_minutes?: number
+          p_user_id: string
+        }
+        Returns: {
+          consumed_at: string | null
+          created_at: string
+          disciplines: string[]
+          expires_at: string
+          id: string
+          quiz_result_id: string | null
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "quiz_attempts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      increment_cached_theme_usage: {
+        Args: { p_theme_id: string }
+        Returns: {
+          created_at: string
+          id: string
+          tema: string
+          texto_apoio1: string
+          texto_apoio2: string
+          usado_count: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "cached_themes"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       recalculate_user_statistics: {
         Args: { target_user_id: string }
         Returns: {
@@ -792,6 +917,41 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "user_statistics"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      replace_news_highlights: { Args: { p_ids: string[] }; Returns: string[] }
+      run_maintenance_task: {
+        Args: { p_task: string }
+        Returns: {
+          deleted: number
+          ran: boolean
+          ran_at: string
+        }[]
+      }
+      submit_quiz_attempt: {
+        Args: {
+          p_attempt_id: string
+          p_selected_answers: Json
+          p_user_id: string
+        }
+        Returns: {
+          answers_data: Json
+          correct_answers: number
+          created_at: string
+          disciplines: string[]
+          id: string
+          questions_data: Json
+          score: number
+          total_questions: number
+          unanswered_questions: number
+          user_id: string | null
+          wrong_answers: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "quiz_results"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -947,3 +1107,4 @@ export const Constants = {
     },
   },
 } as const
+

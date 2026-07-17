@@ -1,3 +1,0 @@
--- Remote migration 20250210122000.
--- CLI/Migra não identificou comandos além do estado já aplicado localmente.
--- Arquivo mantido para refletir a versão existente em wywcpbgipufylnaauewe.

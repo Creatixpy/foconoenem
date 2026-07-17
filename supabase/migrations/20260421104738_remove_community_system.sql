@@ -22,4 +22,4 @@ drop table if exists backup_user_data.community_comments cascade;
 drop table if exists backup_user_data.community_posts cascade;
 drop table if exists backup_user_data.community_topics cascade;
 
-commit;
+commit;;

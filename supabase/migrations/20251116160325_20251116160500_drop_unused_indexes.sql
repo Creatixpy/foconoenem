@@ -1,0 +1,9 @@
+DROP INDEX IF EXISTS public.idx_user_profiles_created_at;
+DROP INDEX IF EXISTS public.idx_user_goals_user;
+DROP INDEX IF EXISTS public.idx_user_goals_status;
+DROP INDEX IF EXISTS public.idx_user_achievements_achievement;
+DROP INDEX IF EXISTS public.idx_noticias_search;
+DROP INDEX IF EXISTS public.idx_essay_results_created;
+DROP INDEX IF EXISTS public.idx_analytics_events_user;
+DROP INDEX IF EXISTS public.idx_community_posts_user;
+DROP INDEX IF EXISTS public.idx_community_post_likes_user;;

@@ -1,3 +1,0 @@
--- Remote migration 20251107193457.
--- Não há delta estrutural; verificação feita com `npx supabase db diff --linked --schema public --use-migra`.
--- Mantido para registrar a versão aplicada no Supabase remoto.
