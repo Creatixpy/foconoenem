@@ -4,7 +4,8 @@
 - `app/`: App Router routes, layouts, public pages, authenticated areas, and Route Handlers under `app/api`.
 - `lib/auth/`: authentication flows, profile client wrapper, session security, and validation helpers.
 - `lib/ai/`: Groq and Gemini integrations for textual AI and OCR.
-- `lib/server/ai/`: plan-aware Groq runtime shared by Free and Max flows.
+- `lib/contracts/`: strict neutral Zod contracts shared across server and browser boundaries.
+- `lib/server/ai/`, `lib/server/essay/`, `lib/server/quiz/`: bounded AI runtime and server-only orchestration for the canonical systems.
 - `lib/db/`: server-side Supabase client, repositories, and neutral query helpers.
 - `lib/server/`: server-only helpers for account data, cookie auth, analytics, news, operating hours, payments, and rate limiting.
 - `lib/supabase/`: SSR/browser Supabase clients plus session refresh logic used by `proxy.ts`.
@@ -15,6 +16,7 @@
 ## Build, Test, and Development Commands
 - `npm run dev`: starts the Next.js app with Turbopack.
 - `npm run lint`: runs ESLint across the repository.
+- `npm run test:systems`: runs the focused Vitest suite for essay and quiz contracts.
 - `npm run build`: runs `next build` and then regenerates `public/sitemap.xml`.
 - `npm run start`: serves the production build locally.
 
@@ -33,13 +35,13 @@
   - `lib/server/*` for route-level and server-page helpers.
 
 ## Testing Guidelines
-- There is no automated test suite in the repository yet.
-- For non-trivial changes, the minimum expected validation is `npm run lint` and `npm run build`.
+- Keep `tests/systems/` small and specific to schemas, safe serialization, ENEM scores, idempotency and persistence mapping; do not add generic component tests without a demonstrated need.
+- For non-trivial essay/quiz changes, the minimum expected validation is `npm run test:systems`, `npm run lint` and `npm run build`.
 - Manual QA should follow the area changed, especially:
   - auth: `/login`, `/register`, `/forgot-password`, `/reset-password`
   - account: `/conta`, `/conta/editar`, account deletion
-  - essay flow: `/redacao` and `/resultados/[id]`, including account-deletion cleanup of essay rows
-  - quiz flow: `/questoes`, including attempt creation, canonical server-side correction, save status/retry, and backend-recomputed persisted aggregates
+  - essay flow: `/redacao` and `/resultados/[id]`, including theme ownership, stable `submissionId`, off-topic retries and account-deletion cleanup
+  - quiz flow: `/questoes`, including POST attempt creation, no pre-submit answer leakage, PATCH canonical correction and answer-preserving retry
   - news admin: `/noticias/admin` when relevant
   - donations: `/doacao` and the webhook if Stripe is configured
   - subscriptions: `/conta`, `/api/assinatura/checkout`, `/api/assinatura/portal`, `/api/doacao/webhook`, including first-time 7-day trial eligibility
@@ -65,10 +67,12 @@
 - Admin flows use `ADMIN_ALLOWED_EMAILS`. Maintenance and news highlights now run locally in the app and no longer depend on cron secrets.
 - Stripe depends on `STRIPE_SECRET_KEY`; the webhook also requires `STRIPE_WEBHOOK_SECRET`.
 - The Max subscription checkout requires `STRIPE_MAX_PRICE_ID`.
-- Textual AI depends on `GROQ_API_KEY`; `GROQ_FALLBACK_API_KEY`, `GROQ_FALLBACK_MODEL`, and `GROQ_MAX_ATTEMPTS` optionally control retry and fallback behavior for both Free and Max.
-- OCR depends on `GEMINI_API_KEY`.
+- Textual AI depends on `GROQ_API_KEY`; `GROQ_FALLBACK_API_KEY`, `GROQ_FALLBACK_MODEL`, and `GROQ_MAX_ATTEMPTS` control a maximum global budget of two attempts. Do not re-enable Groq SDK retries.
+- OCR depends on `GEMINI_API_KEY` and the official `@google/genai` SDK.
 - News import uses `NEWSAPI_API_KEY` or `NEWSAPI_KEY`.
 - The project uses RLS in Supabase, but application table access is routed through server handlers with `SUPABASE_SERVICE_ROLE_KEY`; direct public DB grants should stay minimal.
 - Canonical quiz attempts and their questions are service-role-only; do not expose catalog correction or attempt mutation directly to browser clients.
+- Free themes are shared, Max themes are private, and generated theme text must be resolved from the database by ID before correction. Never trust theme support text supplied by a browser.
+- Reusable questions expire after 30 days when unreferenced; cached themes expire after 7 days. Historical `quiz_results` and `essay_results` are snapshots and must not be deleted by catalog maintenance.
 - Schema and data changes must go through Supabase MCP migrations. Do not use migration repair, rewrite remote history, or reset the production database.
 - Account deletion must remove quiz attempts and other app-owned user content before deleting the Supabase Auth user because some historical foreign keys use `ON DELETE SET NULL`.

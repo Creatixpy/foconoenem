@@ -35,7 +35,7 @@ The repository and remote Supabase project no longer contain active Edge Functio
 | Route | Files | Purpose |
 | --- | --- | --- |
 | `/` | `app/page.tsx`, `app/HomePageClient.tsx` | Landing page |
-| `/redacao` | `app/redacao/page.tsx`, `app/redacao/RedacaoPageClient.tsx`, `app/redacao/PhotoUpload.tsx` | Essay workflow, OCR upload support, correction UI |
+| `/redacao` | `app/redacao/page.tsx`, `app/redacao/RedacaoPageClient.tsx`, `app/redacao/useEssayWorkflow.ts`, `app/redacao/PhotoUpload.tsx` | Essay workflow, OCR upload support, idempotent correction UI |
 | `/questoes` | `app/questoes/page.tsx`, `app/questoes/QuestoesPageClient.tsx` | Quiz generation, answering and result flow |
 | `/planos` | `app/planos/page.tsx`, `app/planos/PlanosPageClient.tsx` | Free/Max comparison, subscription status, checkout and portal entry points |
 | `/noticias` | `app/noticias/page.tsx`, `app/noticias/NoticiasPageClient.tsx` | Public news feed |
@@ -90,13 +90,13 @@ The repository and remote Supabase project no longer contain active Edge Functio
 | `/api/conta/dados` | `GET` | Account dashboard payload |
 | `/api/conta/excluir` | `POST` | Delete the authenticated account after password confirmation and purge user-owned quiz attempts, essays, quizzes and analytics |
 | `/api/conta/recalcular` | `POST` | Recalculate aggregated user statistics |
-| `/api/corrigir` | `POST` | Submit essay for correction |
+| `/api/corrigir` | `POST` | Accept `{ submissionId, redacao, theme }`, resolve canonical theme data and persist one validated correction |
 | `/api/assinatura/checkout` | `POST` | Start Stripe Subscription Checkout for the Max plan, with a 7-day trial when eligible |
 | `/api/assinatura/portal` | `POST` | Open Stripe Billing Portal for the authenticated user |
 | `/api/assinatura/status` | `GET` | Return authentication state and the current Free/Max subscription summary |
 | `/api/doacao/checkout` | `POST` | Create Stripe Checkout session and persist `donation_checkouts` |
 | `/api/doacao/webhook` | `POST` | Process donation and subscription Stripe webhooks with idempotent persistence |
-| `/api/gerar-tema` | `GET` | Serve cached essay theme or generate a new one |
+| `/api/gerar-tema` | `POST` | Atomically claim/generate a canonical theme and return its `themeId` plus support texts |
 | `/api/perfil` | `GET`, `POST`, `PATCH` | Server-side profile reads and writes for the authenticated user |
 | `/api/noticias` | `GET` | List approved news and refresh stale highlights on demand when requested |
 | `/api/noticias/[slug]` | `GET` | Fetch a single approved article |
@@ -107,8 +107,7 @@ The repository and remote Supabase project no longer contain active Edge Functio
 | `/api/noticias/gpt-busca` | `POST` | AI summary based only on approved news stored in DB |
 | `/api/noticias/importar` | `POST` | Admin import from NewsAPI |
 | `/api/ocr` | `POST` | OCR via Gemini Vision |
-| `/api/questoes` | `GET`, `POST` | Create a 24-hour canonical quiz attempt / submit only its ID and answer map for server-side correction and idempotent persistence |
-| `/api/resultados/[id]` | `GET` | Fetch essay result by route param |
+| `/api/questoes` | `POST`, `PATCH` | Create by `{ requestId, disciplines }` without exposing answers / finalize by `{ attemptId, selectedAnswers }` with canonical review |
 | `/auth/callback` | `GET` | OAuth code exchange route |
 
 ---
@@ -131,7 +130,6 @@ The repository and remote Supabase project no longer contain active Edge Functio
 | --- | --- |
 | `app/components/features/quiz/QuestionCard.tsx` | Quiz question card |
 | `app/components/features/quiz/QuizResults.tsx` | Quiz result summary |
-| `app/components/features/quiz/index.ts` | Barrel for quiz components |
 
 ### News feature files
 
@@ -162,10 +160,18 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 
 | File | Purpose |
 | --- | --- |
-| `lib/ai/gemini.ts` | OCR extraction through Gemini |
-| `lib/ai/groq.ts` | Groq provider factory and rate-limit helpers |
-| `lib/ai/parse-json.ts` | Safe JSON extraction from model output |
-| `lib/ai/retry.ts` | Retry/fallback orchestration for Groq-backed tasks |
+| `lib/ai/gemini.ts` | OCR extraction through the official `@google/genai` SDK with cancellation and 30-second timeout |
+| `lib/ai/groq.ts` | Groq provider factory, current fallback model and retryable-error classification |
+| `lib/ai/retry.ts` | Global two-attempt retry/fallback budget; SDK retries remain disabled |
+
+### `lib/contracts/`
+
+| File | Purpose |
+| --- | --- |
+| `lib/contracts/essay.ts` | Strict Zod contracts for themes, submissions, ENEM competences and API responses |
+| `lib/contracts/quiz.ts` | Strict question, attempt and review contracts plus public answer-safe serialization |
+| `lib/contracts/quiz-result.ts` | Neutral validation/mapping of persisted quiz snapshots |
+| `lib/contracts/operating-hours.ts` | Neutral operating-hours interface shared by server and clients |
 
 ### `lib/auth/`
 
@@ -197,8 +203,8 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | --- | --- |
 | `lib/db/server.ts` | Server and admin Supabase client wrappers |
 | `lib/db/query.ts` | Neutral query timeout and database-error helpers |
-| `lib/db/repositories/essays.ts` | Essay result and cached theme helpers |
-| `lib/db/repositories/quizzes.ts` | Generated-question catalog and canonical quiz-attempt helpers |
+| `lib/db/repositories/essays.ts` | Essay result, canonical theme and idempotent submission RPC adapters |
+| `lib/db/repositories/quizzes.ts` | Atomic question catalog, request-id attempt and canonical submission RPC adapters |
 
 ### `lib/hooks/`
 
@@ -234,6 +240,17 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | File | Purpose |
 | --- | --- |
 | `lib/server/ai/provider.ts` | Plan-aware Groq runtime that preserves Free/Max behavior and provider retry metadata |
+| `lib/server/ai/structured.ts` | Strict JSON parsing and schema validation with one bounded regeneration |
+
+### `lib/server/essay/` and `lib/server/quiz/`
+
+| File | Purpose |
+| --- | --- |
+| `lib/server/essay/ai.ts` | Injection-delimited prompts for theme, support and one-pass alignment/correction |
+| `lib/server/essay/service.ts` | Canonical theme resolution, idempotent correction and persistence orchestration |
+| `lib/server/essay/fingerprint.ts` | Stable SHA-256 input fingerprint |
+| `lib/server/quiz/generator.ts` | Strict per-discipline generation and concurrency-limited worker helper |
+| `lib/server/quiz/service.ts` | Free/Max catalog policy, atomic deduplication and attempt creation |
 
 ### `lib/supabase/`
 
@@ -250,7 +267,6 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | `lib/admin-auth.ts` | Admin authorization and audit-log helper |
 | `lib/errors.ts` | Generic error helpers |
 | `lib/news-import.ts` | NewsAPI fetch/normalize/dedupe/import pipeline |
-| `lib/schedule.ts` | Client-side operating-hours helper using local São Paulo time |
 | `lib/security.ts` | Generic API input and error helpers |
 
 ---
@@ -289,7 +305,6 @@ The codebase does **not** currently read `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`.
 
 | File | Purpose |
 | --- | --- |
-| `types/index.ts` | Shared app types |
 | `types/postgrest-augment.d.ts` | PostgREST type augmentations |
 | `types/supabase.ts` | Generated Supabase database types |
 
@@ -302,7 +317,7 @@ The codebase does **not** currently read `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`.
 | `supabase/migrations/` | Reconciled local and remote migration history |
 
 The stale remote schema snapshot and sensitive export helper were removed; use Supabase migrations plus MCP/CLI inspection as the source of truth.
-Latest DB hardening in this repo: `20260717155939_harden_database_integration.sql` and `20260717161413_complete_quiz_security_indexes.sql`.
+Latest system migrations: `20260717180319_reform_essay_quiz_systems.sql` and the validation follow-up `20260717181851_complete_system_idempotency.sql`.
 
 ---
 
@@ -341,11 +356,12 @@ Latest DB hardening in this repo: `20260717155939_harden_database_integration.sq
 
 - `npm run build` performs both the production build and sitemap regeneration.
 - `npm run lint` is the active static validation command in the repo.
-- There is no automated test suite checked into the project today.
+- `npm run test:systems` runs the focused Vitest suite for essay/quiz contracts and persistence mapping.
 - `app/components/shared/index.ts` exports the shared brand components.
 - The current runtime path is Next.js route handlers under `app/api`; the three inactive remote Supabase Edge Functions were removed.
 - There is no external cron scheduler in the repo anymore. Atomic maintenance and highlights run on demand, with timestamps persisted in `configuracoes`.
-- Quiz GET responses include `attemptId` and `expiresAt`; POST accepts only `{ attemptId, selectedAnswers }`. The UI exposes save/retry state while the database guarantees a single canonical result.
+- Quiz POST responses include `attemptId`, `expiresAt` and only public question fields; PATCH accepts `{ attemptId, selectedAnswers }`. The UI preserves answers on failure while the database guarantees one canonical result.
+- Essay theme POST returns `{ themeId, tema, textoApoio1, textoApoio2 }`; correction POST accepts a stable `submissionId` and either a generated theme ID or a manual title. Result pages load directly on the server.
 - Essay and quiz statistics are synchronized by database triggers, and unanswered quiz items are excluded from answered totals and accuracy.
 - The Max plan is monthly-only at R$ 10,00, includes a one-time 7-day trial for eligible users, and is enforced server-side through `subscriptions` plus webhook-driven Stripe synchronization.
 - The repository does not contain an active community/forum subsystem anymore.
