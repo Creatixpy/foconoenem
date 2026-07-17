@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { motion } from 'motion/react';
 import {
@@ -13,31 +12,12 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from 'recharts';
-import { useAuth } from '@/lib/auth/context';
+import type { EssayResult } from '@/lib/contracts/essay';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
-interface EssayCompetence {
-  nota: number;
-  comentario: string;
-}
-
-interface EssayResult {
-  id: string;
-  nota: number;
-  tema?: string;
-  competencia1: EssayCompetence;
-  competencia2: EssayCompetence;
-  competencia3: EssayCompetence;
-  competencia4: EssayCompetence;
-  competencia5: EssayCompetence;
-  feedbackGeral: string;
-  pontoFortes: string[];
-  pontosAMelhorar: string[];
-  redacaoOriginal: string;
-  createdAt: string;
-}
+type EssayCompetence = EssayResult['competencia1'];
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -220,78 +200,14 @@ function CompetencyCard({
 }
 
 // ---------------------------------------------------------------------------
-// Skeleton
-// ---------------------------------------------------------------------------
-function Skeleton() {
-  return (
-    <div className="max-w-4xl mx-auto px-4 py-12 animate-pulse space-y-10">
-      {/* score hero */}
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-[180px] h-[180px] rounded-full bg-[var(--surface)]" />
-        <div className="h-5 w-48 rounded bg-[var(--surface)]" />
-        <div className="h-4 w-64 rounded bg-[var(--surface)]" />
-      </div>
-      {/* competency cards */}
-      <div className="space-y-4">
-        <div className="h-6 w-56 rounded bg-[var(--surface)]" />
-        {[1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="h-28 rounded-xl bg-[var(--surface)]" />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
-export default function ResultadosPageClient() {
-  const params = useParams();
-  const router = useRouter();
-  const { user, loading: authLoading, initialized } = useAuth();
-
-  const [result, setResult] = useState<EssayResult | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export default function ResultadosPageClient({ result }: { result: EssayResult }) {
   const [essayExpanded, setEssayExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const id = typeof params.id === 'string' ? params.id : Array.isArray(params.id) ? params.id[0] : '';
-
-  // Auth guard
-  useEffect(() => {
-    if (initialized && !authLoading && !user) {
-      router.replace('/login');
-    }
-  }, [initialized, authLoading, user, router]);
-
-  // Fetch result
-  const fetchResult = useCallback(async () => {
-    if (!id) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/resultados/${id}`);
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || 'Resultado não encontrado');
-      }
-      const data = await res.json();
-      setResult(data.result);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao carregar resultado');
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
-
-  useEffect(() => {
-    if (user && id) fetchResult();
-  }, [user, id, fetchResult]);
-
   // Radar chart data
   const radarData = useMemo(() => {
-    if (!result) return [];
     return [
       { subject: 'Norma culta', value: result.competencia1.nota, fullMark: 200 },
       { subject: 'Tema', value: result.competencia2.nota, fullMark: 200 },
@@ -312,43 +228,6 @@ export default function ResultadosPageClient() {
       // fallback
     }
   };
-
-  // -------------------------------------------------------------------------
-  // Render states
-  // -------------------------------------------------------------------------
-  if (authLoading || !initialized) return <Skeleton />;
-  if (!user) return null;
-  if (loading) return <Skeleton />;
-
-  if (error) {
-    return (
-      <div className="max-w-md mx-auto px-4 py-24 text-center">
-        <div className="w-16 h-16 rounded-full bg-[var(--danger-soft)] flex items-center justify-center mx-auto mb-6">
-          <svg className="w-8 h-8 text-[var(--danger)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-          </svg>
-        </div>
-        <h2 className="text-xl font-bold text-[var(--text)] mb-2">Resultado não encontrado</h2>
-        <p className="text-[var(--text-3)] mb-6">{error}</p>
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <button
-            onClick={fetchResult}
-            className="px-5 py-2.5 rounded-lg bg-[var(--brand)] text-white font-medium hover:bg-[var(--brand-hover)] transition-colors cursor-pointer"
-          >
-            Tentar novamente
-          </button>
-          <Link
-            href="/redacao"
-            className="px-5 py-2.5 rounded-lg border border-[var(--border)] text-[var(--text-2)] font-medium hover:bg-[var(--surface)] transition-colors text-center"
-          >
-            Voltar para redação
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  if (!result) return null;
 
   const competencies = [
     { key: 'competencia1', data: result.competencia1 },

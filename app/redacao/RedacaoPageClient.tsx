@@ -1,30 +1,25 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/auth/context';
-import { getOperatingHoursInfo, type OperatingHoursInfo } from '@/lib/schedule';
+import { useEffect, useState } from 'react';
+import type { OperatingHoursInfo } from '@/lib/contracts/operating-hours';
 import PhotoUpload from './PhotoUpload';
+import {
+  MAX_WORDS,
+  MIN_WORDS,
+  useEssayWorkflow,
+  type MobileTab,
+  type ThemeData,
+  type ThemeMode,
+} from './useEssayWorkflow';
 
 /* ================================================================== */
 /*  Types                                                              */
 /* ================================================================== */
 
-interface ThemeData {
-  tema: string;
-  textoApoio1: string;
-  textoApoio2: string;
-}
-
-type ThemeMode = 'generated' | 'manual';
-type MobileTab = 'theme' | 'write' | 'submit';
-
 /* ================================================================== */
 /*  Constants                                                          */
 /* ================================================================== */
 
-const MIN_WORDS = 100;
-const MAX_WORDS = 500;
 const CORRECTION_MESSAGES = [
   'Analisando sua redação...',
   'Verificando competências...',
@@ -135,14 +130,6 @@ function BookIcon() {
 
 /* ================================================================== */
 /*  Helpers                                                            */
-/* ================================================================== */
-
-function countWords(text: string): number {
-  return text.trim().split(/\s+/).filter(Boolean).length;
-}
-
-/* ================================================================== */
-/*  Operating Hours Pill                                               */
 /* ================================================================== */
 
 function OperatingHoursPill({ info }: { info: OperatingHoursInfo | null }) {
@@ -421,127 +408,34 @@ function RequirementsChecklist({
 /*  Main Component                                                     */
 /* ================================================================== */
 
-export default function RedacaoPageClient() {
-  const router = useRouter();
-  const { user, initialized } = useAuth();
-
-  // Theme
-  const [themeMode, setThemeMode] = useState<ThemeMode>('generated');
-  const [theme, setTheme] = useState<ThemeData | null>(null);
-  const [themeLoading, setThemeLoading] = useState(false);
-  const [themeError, setThemeError] = useState('');
-  const [manualTheme, setManualTheme] = useState('');
-
-  // Essay
-  const [essay, setEssay] = useState('');
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  // Correction
-  const [correcting, setCorrecting] = useState(false);
-  const [correctionError, setCorrectionError] = useState('');
-
-  // Operating hours
-  const [opHours, setOpHours] = useState<OperatingHoursInfo | null>(null);
-
-  // Mobile tabs
-  const [mobileTab, setMobileTab] = useState<MobileTab>('theme');
-
-  // Derived
-  const wordCount = countWords(essay);
-  const charCount = essay.length;
-  const selectedThemeTitle = themeMode === 'manual' ? manualTheme.trim() : theme?.tema ?? '';
-  const hasSelectedTheme = selectedThemeTitle.length >= 5;
-  const canSubmit = hasSelectedTheme && wordCount >= MIN_WORDS && wordCount <= MAX_WORDS && !correcting;
-
-  // Auth guard
-  useEffect(() => {
-    if (initialized && !user) {
-      router.replace('/login');
-    }
-  }, [initialized, user, router]);
-
-  // Fetch operating hours
-  useEffect(() => {
-    getOperatingHoursInfo().then(setOpHours).catch(() => {});
-  }, []);
-
-  // Generate theme
-  const handleGenerateTheme = useCallback(async () => {
-    setThemeLoading(true);
-    setThemeError('');
-    try {
-      const res = await fetch('/api/gerar-tema');
-      if (!res.ok) {
-        const json = await res.json().catch(() => ({}));
-        throw new Error(json.message ?? 'Erro ao gerar tema');
-      }
-      const data = await res.json();
-      setTheme({
-        tema: data.tema,
-        textoApoio1: data.textoApoio1,
-        textoApoio2: data.textoApoio2,
-      });
-      setThemeMode('generated');
-      // Auto-switch to write tab on mobile
-      setMobileTab('write');
-    } catch (err) {
-      setThemeError(err instanceof Error ? err.message : 'Erro ao gerar tema. Tente novamente.');
-    } finally {
-      setThemeLoading(false);
-    }
-  }, []);
-
-  // Submit essay
-  const handleSubmit = useCallback(async () => {
-    if (!canSubmit) return;
-
-    setCorrecting(true);
-    setCorrectionError('');
-
-    try {
-      const payload = themeMode === 'manual'
-        ? {
-            redacao: essay,
-            tema: manualTheme.trim(),
-            themeMode: 'manual' as const,
-          }
-        : {
-            redacao: essay,
-            tema: theme?.tema,
-            textoApoio1: theme?.textoApoio1,
-            textoApoio2: theme?.textoApoio2,
-            themeMode: 'generated' as const,
-          };
-
-      const res = await fetch('/api/corrigir', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        const json = await res.json().catch(() => ({}));
-        throw new Error(json.message ?? json.error ?? 'Erro ao corrigir redação');
-      }
-
-      const { id } = await res.json();
-      router.push(`/resultados/${id}`);
-    } catch (err) {
-      setCorrectionError(err instanceof Error ? err.message : 'Erro ao corrigir. Tente novamente.');
-      setCorrecting(false);
-    }
-  }, [canSubmit, themeMode, theme, manualTheme, essay, router]);
-
-  // Loading
-  if (!initialized) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <SpinnerIcon size={24} />
-      </div>
-    );
-  }
-
-  if (!user) return null;
+export default function RedacaoPageClient({
+  operatingHours,
+}: {
+  operatingHours: OperatingHoursInfo;
+}) {
+  const {
+    themeMode,
+    setThemeMode,
+    theme,
+    themeLoading,
+    themeError,
+    setThemeError,
+    manualTheme,
+    setManualTheme,
+    essay,
+    setEssay,
+    correcting,
+    correctionError,
+    mobileTab,
+    setMobileTab,
+    wordCount,
+    charCount,
+    selectedThemeTitle,
+    hasSelectedTheme,
+    canSubmit,
+    generateTheme: handleGenerateTheme,
+    submitEssay: handleSubmit,
+  } = useEssayWorkflow();
 
   /* ---- Mobile Tab Navigation ---- */
   const MOBILE_TABS: { key: MobileTab; label: string; icon: React.ReactNode }[] = [
@@ -562,7 +456,7 @@ export default function RedacaoPageClient() {
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--brand)]/10 text-[var(--brand)] border border-[var(--brand)]/20">
               <SparkleIcon /> Redação com IA
             </span>
-            <OperatingHoursPill info={opHours} />
+            <OperatingHoursPill info={operatingHours} />
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text)] tracking-tight">
             Escreva sua redação
@@ -578,6 +472,7 @@ export default function RedacaoPageClient() {
             {MOBILE_TABS.map((tab) => (
               <button
                 key={tab.key}
+                type="button"
                 onClick={() => setMobileTab(tab.key)}
                 className={`
                   flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-xs font-medium
@@ -639,7 +534,6 @@ export default function RedacaoPageClient() {
 
               {/* Textarea */}
               <textarea
-                ref={textareaRef}
                 value={essay}
                 onChange={(e) => setEssay(e.target.value)}
                 placeholder="Comece sua redação aqui..."
@@ -728,7 +622,7 @@ export default function RedacaoPageClient() {
                 <button
                   type="button"
                   onClick={handleSubmit}
-                  disabled={!canSubmit}
+                  disabled={!canSubmit || !operatingHours.isOpen}
                   className="
                     w-full flex items-center justify-center gap-2
                     px-5 py-3.5 rounded-xl text-sm font-semibold
@@ -744,7 +638,7 @@ export default function RedacaoPageClient() {
                 </button>
 
                 {/* Operating hours warning */}
-                {opHours && !opHours.isOpen && (
+                {!operatingHours.isOpen && (
                   <p className="text-xs text-[var(--warning)] text-center leading-relaxed">
                     O sistema está fora do horário de funcionamento. A correção pode não estar disponível no momento.
                   </p>

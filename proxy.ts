@@ -27,6 +27,5 @@ export const config = {
     '/api/ocr',
     '/api/perfil',
     '/api/questoes',
-    '/api/resultados/:path*',
   ],
 }
