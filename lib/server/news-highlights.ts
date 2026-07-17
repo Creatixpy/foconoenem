@@ -61,20 +61,6 @@ async function getHighlightsCount(client: SupabaseClient<Database>) {
   return count ?? 0;
 }
 
-async function updateLastRun(client: SupabaseClient<Database>) {
-  const { error } = await client.from('configuracoes').upsert(
-    {
-      chave: LAST_HIGHLIGHTS_UPDATE_KEY,
-      valor: new Date().toISOString(),
-    },
-    { onConflict: 'chave' }
-  );
-
-  if (error) {
-    throw error;
-  }
-}
-
 async function selectHighlightsWithGroq(noticias: NoticiaResumo[]) {
   const providers = await buildGroqProviders();
   const attemptsLog: string[] = [];
@@ -258,25 +244,14 @@ export async function refreshHighlights(options: {
     }))
   );
 
-  const { error: clearError } = await resolvedClient
-    .from('noticias')
-    .update({ destaque: false })
-    .eq('destaque', true);
-
-  if (clearError) {
-    throw new Error(`Erro ao limpar destaques anteriores: ${clearError.message}`);
-  }
-
-  const { error: updateError } = await resolvedClient
-    .from('noticias')
-    .update({ destaque: true })
-    .in('id', destaques);
+  const { error: updateError } = await resolvedClient.rpc('replace_news_highlights', {
+    p_ids: destaques,
+  });
 
   if (updateError) {
-    throw new Error(`Erro ao aplicar novos destaques: ${updateError.message}`);
+    throw new Error(`Erro ao substituir destaques: ${updateError.message}`);
   }
 
-  await updateLastRun(resolvedClient);
   await logAdminAction(resolvedClient, {
     adminEmail,
     action: 'highlights_update',

@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import { createAdminClient } from '@/lib/db/server';
 import {
   buildDonationEventInsert,
+  claimDonationEvent,
   isDonationStripeEvent,
   processDonationWebhookEvent,
   updateDonationEvent,
@@ -10,14 +11,17 @@ import {
 import { getStripe } from '@/lib/server/stripe';
 import {
   buildSubscriptionEventInsert,
-  insertSubscriptionEvent,
+  claimSubscriptionEvent,
   isSubscriptionWebhookEvent,
   processSubscriptionWebhookEvent,
   updateSubscriptionEvent,
 } from '@/lib/server/subscriptions';
 
-function isUniqueViolation(error: { code?: string } | null) {
-  return error?.code === '23505';
+function inProgressResponse() {
+  return NextResponse.json(
+    { error: 'Evento já está sendo processado.' },
+    { status: 409, headers: { 'Retry-After': '10' } }
+  );
 }
 
 export async function POST(request: NextRequest) {
@@ -62,9 +66,12 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      const inserted = await insertSubscriptionEvent(adminClient, insertPayload);
-      if (inserted.duplicate) {
+      const claim = await claimSubscriptionEvent(adminClient, insertPayload);
+      if (claim === 'duplicate') {
         return NextResponse.json({ received: true, duplicate: true });
+      }
+      if (claim === 'in_progress') {
+        return inProgressResponse();
       }
 
       const result = await processSubscriptionWebhookEvent(adminClient, event);
@@ -104,19 +111,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true, status: 'ignored' });
     }
 
-    const { error: insertError } = await adminClient.from('stripe_webhook_events').insert(insertPayload);
-    if (isUniqueViolation(insertError)) {
-      return NextResponse.json({ received: true, duplicate: true });
-    }
-
-    if (insertError) {
-      return NextResponse.json(
-        { error: 'Falha ao persistir evento de doação.' },
-        { status: 500 }
-      );
-    }
-
     try {
+      const claim = await claimDonationEvent(adminClient, insertPayload);
+      if (claim === 'duplicate') {
+        return NextResponse.json({ received: true, duplicate: true });
+      }
+      if (claim === 'in_progress') {
+        return inProgressResponse();
+      }
+
       const result = await processDonationWebhookEvent(adminClient, event);
       await updateDonationEvent(adminClient, event.id, {
         status: result.status,

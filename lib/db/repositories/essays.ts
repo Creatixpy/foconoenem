@@ -5,10 +5,15 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, Json } from '@/types/supabase';
-import { withTimeout, DatabaseError, isNotFoundError } from '../client';
-import type { EssayResultRow, CachedThemeRow, EssayCompetence } from '../types';
+import { withTimeout, DatabaseError, isNotFoundError } from '../query';
 
 type EssayRow = Database['public']['Tables']['essay_results']['Row'];
+type EssayResultRow = EssayRow;
+type CachedThemeRow = Database['public']['Tables']['cached_themes']['Row'];
+type EssayCompetence = {
+  nota: number;
+  comentario: string;
+};
 const THEME_LOOKBACK_DAYS = 90;
 
 function normalizeThemeKey(value: string): string {
@@ -90,30 +95,6 @@ export async function getEssayById(
   return data ? normalizeEssayRow(data as EssayResultRow) : null;
 }
 
-export async function getUserEssays(
-  client: SupabaseClient<Database>,
-  userId: string,
-  options?: { limit?: number; offset?: number }
-): Promise<NormalizedEssayResult[]> {
-  const limit = options?.limit ?? 20;
-  const offset = options?.offset ?? 0;
-
-  const data = await withTimeout(async (signal) => {
-    const { data, error } = await client
-      .from('essay_results')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1)
-      .abortSignal(signal);
-
-    if (error) throw DatabaseError.fromPostgrestError(error);
-    return data ?? [];
-  });
-
-  return data.map((row) => normalizeEssayRow(row as EssayResultRow));
-}
-
 export async function createEssayResult(
   client: SupabaseClient<Database>,
   result: NormalizedEssayResult,
@@ -149,104 +130,9 @@ export async function createEssayResult(
   });
 }
 
-export async function getEssayStats(
-  client: SupabaseClient<Database>,
-  userId: string
-): Promise<{
-  total: number;
-  averageScore: number | null;
-  bestScore: number | null;
-  worstScore: number | null;
-}> {
-  // I17: Use Postgres aggregation instead of fetching all rows
-  const data = await withTimeout(async (signal) => {
-    const { data, error, count } = await client
-      .from('essay_results')
-      .select('nota', { count: 'exact', head: false })
-      .eq('user_id', userId)
-      .abortSignal(signal);
-
-    if (error) throw DatabaseError.fromPostgrestError(error);
-
-    if (!data || data.length === 0) {
-      return { total: 0, scores: [] as number[] };
-    }
-
-    return { total: count ?? data.length, scores: data.map((r) => r.nota) };
-  });
-
-  if (data.total === 0 || data.scores.length === 0) {
-    return { total: 0, averageScore: null, bestScore: null, worstScore: null };
-  }
-
-  const scores = data.scores;
-  const total = data.total;
-  const averageScore = scores.reduce((a, b) => a + b, 0) / scores.length;
-  const bestScore = Math.max(...scores);
-  const worstScore = Math.min(...scores);
-
-  return { total, averageScore, bestScore, worstScore };
-}
-
 // ============================================================================
 // Cached Themes Operations
 // ============================================================================
-
-export async function getLeastUsedCachedTheme(
-  client: SupabaseClient<Database>
-): Promise<CachedThemeRow | null> {
-  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-
-  const data = await withTimeout(async (signal) => {
-    const { data, error } = await client
-      .from('cached_themes')
-      .select('*')
-      .gte('created_at', oneDayAgo)
-      .order('usado_count', { ascending: true })
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .abortSignal(signal)
-      .maybeSingle();
-
-    if (error) throw DatabaseError.fromPostgrestError(error);
-    return data;
-  }, 'fast');
-
-  if (!data) return null;
-
-  // C09: Increment usage count — best-effort fire-and-forget.
-  // Note: Without a server-side RPC, this still uses client-side increment.
-  // The risk of a race is low (theme selection is per-user) and
-  // the count is only used for LRU selection, not critical data.
-  withTimeout(async (signal) => {
-    await client
-      .from('cached_themes')
-      .update({ usado_count: (data.usado_count ?? 0) + 1 } as never)
-      .eq('id', data.id)
-      .abortSignal(signal);
-  }, 'fast').catch(() => {});
-
-  return data;
-}
-
-export async function createCachedTheme(
-  client: SupabaseClient<Database>,
-  theme: { tema: string; textoApoio1: string; textoApoio2: string }
-): Promise<void> {
-  await withTimeout(async (signal) => {
-    const { error } = await client
-      .from('cached_themes')
-      .insert({
-        tema: theme.tema,
-        texto_apoio1: theme.textoApoio1,
-        texto_apoio2: theme.textoApoio2,
-        usado_count: 0,
-      })
-      .abortSignal(signal);
-
-    if (error) throw DatabaseError.fromPostgrestError(error);
-  }, 'fast');
-}
 
 export async function getCachedThemePool(
   client: SupabaseClient<Database>,
@@ -309,18 +195,15 @@ export async function findCachedThemeByTema(
 
 export async function markCachedThemeAsUsed(
   client: SupabaseClient<Database>,
-  themeId: string,
-  currentUsageCount = 0
+  themeId: string
 ): Promise<void> {
-  await withTimeout(async (signal) => {
-    const { error } = await client
-      .from('cached_themes')
-      .update({ usado_count: currentUsageCount + 1 } as never)
-      .eq('id', themeId)
-      .abortSignal(signal);
+  const { error } = await client.rpc('increment_cached_theme_usage', {
+    p_theme_id: themeId,
+  });
 
-    if (error) throw DatabaseError.fromPostgrestError(error);
-  }, 'fast');
+  if (error) {
+    throw DatabaseError.fromPostgrestError(error);
+  }
 }
 
 export async function createCachedThemes(

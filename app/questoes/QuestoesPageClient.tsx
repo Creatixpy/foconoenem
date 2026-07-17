@@ -32,6 +32,7 @@ const LOADING_MESSAGES = [
 ];
 
 type Phase = 'setup' | 'loading' | 'quiz' | 'results';
+type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
 // ---------------------------------------------------------------------------
 // Component
@@ -55,6 +56,9 @@ export default function QuestoesPageClient() {
 
   // results
   const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
+  const [attemptId, setAttemptId] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // error
   const [error, setError] = useState<string | null>(null);
@@ -110,12 +114,17 @@ export default function QuestoesPageClient() {
         throw new Error(data.message || data.error || 'Erro ao gerar questões');
       }
       const data = await res.json();
-      if (!data.questions?.length) throw new Error('Nenhuma questão gerada');
+      if (!data.questions?.length || typeof data.attemptId !== 'string') {
+        throw new Error('Não foi possível iniciar o simulado');
+      }
 
       setQuestions(data.questions);
+      setAttemptId(data.attemptId);
       setCurrentIndex(0);
       setSelectedAnswers({});
       setAnswerState('unanswered');
+      setSaveStatus('idle');
+      setSaveError(null);
       setPhase('quiz');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao gerar questões');
@@ -135,6 +144,39 @@ export default function QuestoesPageClient() {
   const handleConfirm = () => {
     setAnswerState('revealed');
   };
+
+  const saveQuizResult = useCallback(async () => {
+    if (!attemptId) {
+      setSaveStatus('error');
+      setSaveError('A tentativa não foi encontrada. Inicie um novo simulado.');
+      return;
+    }
+
+    setSaveStatus('saving');
+    setSaveError(null);
+
+    try {
+      const response = await fetch('/api/questoes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ attemptId, selectedAnswers }),
+      });
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(payload.error || 'Não foi possível salvar o resultado.');
+      }
+
+      setSaveStatus('saved');
+    } catch (saveFailure) {
+      setSaveStatus('error');
+      setSaveError(
+        saveFailure instanceof Error
+          ? saveFailure.message
+          : 'Não foi possível salvar o resultado.'
+      );
+    }
+  }, [attemptId, selectedAnswers]);
 
   // Next question / finish
   const handleNext = useCallback(async () => {
@@ -184,27 +226,9 @@ export default function QuestoesPageClient() {
 
       setQuizResult(result);
       setPhase('results');
-
-      // Save result (fire and forget — cookies sent automatically)
-      try {
-        const { data: { user: authUser } } = await (await import('@/lib/supabase/client')).createClient().auth.getUser();
-        if (authUser) {
-          await fetch('/api/questoes', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              result,
-              selectedAnswers,
-              questions,
-              disciplines: Array.from(selectedDisciplines),
-            }),
-          });
-        }
-      } catch {
-        // non-critical
-      }
+      void saveQuizResult();
     }
-  }, [currentIndex, questions, selectedAnswers, selectedDisciplines]);
+  }, [currentIndex, questions, selectedAnswers, saveQuizResult]);
 
   // Reset
   const handleNewQuiz = () => {
@@ -214,6 +238,9 @@ export default function QuestoesPageClient() {
     setSelectedAnswers({});
     setAnswerState('unanswered');
     setQuizResult(null);
+    setAttemptId(null);
+    setSaveStatus('idle');
+    setSaveError(null);
     setError(null);
   };
 
@@ -452,6 +479,29 @@ export default function QuestoesPageClient() {
     return (
       <div className="min-h-[80vh] pb-20">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+          <div
+            aria-live="polite"
+            className={`mb-5 rounded-lg border px-4 py-3 text-sm ${
+              saveStatus === 'error'
+                ? 'border-[var(--danger)]/30 bg-[var(--danger)]/10 text-[var(--danger)]'
+                : 'border-[var(--border)] bg-[var(--surface)] text-[var(--text-3)]'
+            }`}
+          >
+            {saveStatus === 'saving' && 'Salvando seu resultado...'}
+            {saveStatus === 'saved' && 'Resultado salvo no seu histórico.'}
+            {saveStatus === 'error' && (
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <span>{saveError}</span>
+                <button
+                  type="button"
+                  onClick={() => void saveQuizResult()}
+                  className="rounded-md border border-current px-3 py-1.5 font-medium transition-opacity hover:opacity-80"
+                >
+                  Tentar salvar novamente
+                </button>
+              </div>
+            )}
+          </div>
           <QuizResults
             result={quizResult}
             questions={questions}

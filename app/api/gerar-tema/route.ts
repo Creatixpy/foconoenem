@@ -313,7 +313,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    await markCachedThemeAsUsed(adminClient, candidate.id, candidate.usado_count);
+    await markCachedThemeAsUsed(adminClient, candidate.id);
   } catch (error) {
     console.error('Erro ao atualizar uso do tema:', error);
   }

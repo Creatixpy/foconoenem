@@ -410,7 +410,7 @@ export async function savePendingSubscriptionCheckout(
     metadata?: Record<string, Json>;
   }
 ) {
-  const existing = await getUserSubscription(adminClient, input.userId).catch(() => null);
+  const existing = await getUserSubscription(adminClient, input.userId);
   const payload: SubscriptionInsert = {
     user_id: input.userId,
     plan_code: MAX_PLAN_CODE,
@@ -435,20 +435,23 @@ export async function savePendingSubscriptionCheckout(
   }
 }
 
-export async function insertSubscriptionEvent(
+export async function claimSubscriptionEvent(
   adminClient: AdminClient,
   payload: SubscriptionEventInsert
 ) {
-  const { error } = await adminClient.from('subscription_events').insert(payload);
-  if (error?.code === '23505') {
-    return { duplicate: true as const };
-  }
+  const { data, error } = await adminClient.rpc('claim_subscription_event', {
+    p_event: payload as unknown as Json,
+  });
 
   if (error) {
-    throw new Error(`Falha ao persistir evento de assinatura: ${error.message}`);
+    throw new Error(`Falha ao reivindicar evento de assinatura: ${error.message}`);
   }
 
-  return { duplicate: false as const };
+  if (data !== 'claimed' && data !== 'duplicate' && data !== 'in_progress') {
+    throw new Error('Estado inválido ao reivindicar evento de assinatura.');
+  }
+
+  return data;
 }
 
 export async function updateSubscriptionEvent(

@@ -23,18 +23,6 @@ import type { UserProfile, OAuthSignupContext } from './types';
 
 const supabase = createClient();
 
-async function refreshSession(): Promise<{ success: boolean }> {
-  try {
-    const { error } = await supabase.auth.refreshSession();
-    if (error) throw error;
-    updateLastActivity();
-    return { success: true };
-  } catch (error) {
-    console.error('Erro ao renovar sessão:', error);
-    return { success: false };
-  }
-}
-
 async function signOut(): Promise<{ success: boolean }> {
   try {
     const { error } = await supabase.auth.signOut();
@@ -54,8 +42,7 @@ interface AuthContextType {
   loading: boolean;
   initialized: boolean;
   signOut: () => Promise<void>;
-  refreshProfile: () => Promise<void>;
-  refreshAuth: () => Promise<void>;
+  updateProfile: (updates: Partial<UserProfile>) => Promise<UserProfile | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -117,12 +104,13 @@ export function AuthProvider({
       null;
 
     try {
-      let existingProfile = await getUserProfile(sessionUser.id);
+      let existingProfile = await getUserProfile();
 
       if (!existingProfile) {
-        // Create new profile
-        await createUserProfile(sessionUser.id, storedNome ?? undefined, storedObjetivo ?? undefined);
-        existingProfile = await getUserProfile(sessionUser.id);
+        existingProfile = await createUserProfile(
+          storedNome ?? undefined,
+          storedObjetivo ?? undefined
+        );
       } else {
         // Update missing fields if we have stored values
         let needsUpdate = false;
@@ -139,8 +127,7 @@ export function AuthProvider({
         }
 
         if (needsUpdate) {
-          await updateUserProfile(sessionUser.id, updates);
-          existingProfile = await getUserProfile(sessionUser.id);
+          existingProfile = await updateUserProfile(updates);
         }
       }
 
@@ -154,37 +141,12 @@ export function AuthProvider({
     }
   }, []);
 
-  // Refresh profile
-  const refreshProfile = useCallback(async () => {
-    if (user) {
-      const userProfile = await getUserProfile(user.id);
-      if (isMountedRef.current) {
-        setProfile(userProfile);
-      }
+  const handleUpdateProfile = useCallback(async (updates: Partial<UserProfile>) => {
+    const updatedProfile = await updateUserProfile(updates);
+    if (isMountedRef.current) {
+      setProfile(updatedProfile);
     }
-  }, [user]);
-
-  // Refresh auth state
-  const refreshAuth = useCallback(async () => {
-    const result = await refreshSession();
-    if (result.success) {
-      // I07/I08: Use getUser() instead of getSession() for server validation
-      const { data } = await supabase.auth.getUser();
-      if (isMountedRef.current && data.user) {
-        setUser(data.user);
-        // Refresh session data too
-        const { data: sessionData } = await supabase.auth.getSession();
-        setSession(sessionData.session);
-      }
-    } else {
-      // Refresh failed — validate server-side
-      const { data } = await supabase.auth.getUser();
-      if (isMountedRef.current && !data.user) {
-        setUser(null);
-        setSession(null);
-        setProfile(null);
-      }
-    }
+    return updatedProfile;
   }, []);
 
   // Sign out handler
@@ -243,8 +205,7 @@ export function AuthProvider({
     };
 
     // Only check idle timeout — token refresh is handled by Supabase's
-    // built-in autoRefreshToken. The manual refresh in refreshAuth() is
-    // only called on-demand (e.g. before saving quiz results).
+    // built-in autoRefreshToken.
     const checkIdleTimeout = async () => {
       if (isSessionIdle()) {
         await handleSignOut();
@@ -359,8 +320,7 @@ export function AuthProvider({
     loading,
     initialized,
     signOut: handleSignOut,
-    refreshProfile,
-    refreshAuth,
+    updateProfile: handleUpdateProfile,
   };
 
   return (

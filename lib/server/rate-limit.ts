@@ -34,18 +34,17 @@ export async function checkRateLimit(
     };
   }
 
-  const windowStart = new Date(Date.now() - windowMinutes * 60 * 1000).toISOString();
-
   const { data, error } = await supabase
-    .from('rate_limits')
-    .select('id, window_start')
-    .eq('identifier', identifier)
-    .eq('endpoint', endpoint)
-    .gte('window_start', windowStart)
-    .order('window_start', { ascending: true });
+    .rpc('consume_rate_limit', {
+      p_identifier: identifier,
+      p_endpoint: endpoint,
+      p_max_requests: maxRequests,
+      p_window_minutes: windowMinutes,
+    })
+    .maybeSingle();
 
-  if (error) {
-    console.error('Rate limiter: DB query failed — failing closed:', error);
+  if (error || !data) {
+    console.error('Rate limiter: atomic DB operation failed — failing closed:', error);
     return {
       allowed: false,
       remaining: 0,
@@ -53,32 +52,11 @@ export async function checkRateLimit(
     };
   }
 
-  const totalRequests = data?.length ?? 0;
-  if (totalRequests >= maxRequests) {
-    const oldest = data![0];
-    const oldestTime = new Date(oldest.window_start ?? Date.now());
-    const retryAt = new Date(oldestTime.getTime() + windowMinutes * 60 * 1000);
-    return {
-      allowed: false,
-      remaining: 0,
-      resetAt: retryAt,
-    };
-  }
-
-  const { error: insertError } = await supabase.from('rate_limits').insert({
-    identifier,
-    endpoint,
-    request_count: 1,
-    window_start: new Date().toISOString(),
-  });
-
-  if (insertError) {
-    console.error('Erro ao registrar rate limit:', insertError);
-  }
+  const parsedResetAt = new Date(data.reset_at);
 
   return {
-    allowed: true,
-    remaining: maxRequests - totalRequests - 1,
-    resetAt,
+    allowed: data.allowed,
+    remaining: data.remaining,
+    resetAt: Number.isNaN(parsedResetAt.getTime()) ? resetAt : parsedResetAt,
   };
 }

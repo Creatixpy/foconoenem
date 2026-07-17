@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
-import type { Question, QuizResult } from '@/types';
+import type { Question } from '@/types';
 import { extractJson } from '@/lib/ai/parse-json';
 import { getUserAiRuntime, type UserAiRuntime } from '@/lib/server/ai/provider';
 import { getOperatingHoursInfo } from '@/lib/server/operating-hours';
@@ -8,12 +8,14 @@ import { checkRateLimit } from '@/lib/server/rate-limit';
 import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
 import { createAdminClient } from '@/lib/db/server';
 import { ensureTrustedOrigin } from '@/lib/server/request-origin';
+import { cleanupQuizAttemptsIfDue } from '@/lib/server/local-maintenance';
 import {
-  createQuizResult,
+  createQuizAttempt,
   getQuestionSignature,
   getRecentUserQuestionExposure,
   getStoredQuestionsForDisciplines,
   saveGeneratedQuestions,
+  submitQuizAttempt,
 } from '@/lib/db/repositories/quizzes';
 
 const DISCIPLINES: Question['discipline'][] = ['Matemática', 'Português', 'Química', 'Física', 'Geografia'];
@@ -21,11 +23,9 @@ const QUESTIONS_PER_DISCIPLINE = 3;
 const REUSED_QUESTIONS_PER_DISCIPLINE = 2;
 const MAX_ATTEMPTS_PER_DISCIPLINE = 2;
 
-type QuizRequestPayload = {
-  result: QuizResult;
+type QuizSubmissionPayload = {
+  attemptId: string;
   selectedAnswers: Record<string, string>;
-  questions: Question[];
-  disciplines: Question['discipline'][];
 };
 
 type RawAlternative = {
@@ -133,75 +133,44 @@ function fillQuestionsFromPool(
   return added;
 }
 
-function assertQuizPayload(payload: unknown): QuizRequestPayload {
+function assertQuizSubmission(payload: unknown): QuizSubmissionPayload {
   if (!payload || typeof payload !== 'object') {
     throw new Error('Payload ausente ou inválido');
   }
 
-  const { result, selectedAnswers, questions, disciplines } = payload as Record<string, unknown>;
-
-  if (!result || typeof result !== 'object') {
-    throw new Error('Dados do resultado inválidos');
+  const { attemptId, selectedAnswers } = payload as Record<string, unknown>;
+  if (
+    typeof attemptId !== 'string' ||
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(attemptId)
+  ) {
+    throw new Error('Tentativa de quiz inválida');
   }
 
-  const castResult = result as QuizResult;
-  const requiredNumbers: Array<keyof QuizResult> = [
-    'totalQuestions',
-    'correctAnswers',
-    'wrongAnswers',
-    'unansweredQuestions',
-    'score',
-  ];
-  for (const key of requiredNumbers) {
-    if (typeof castResult[key] !== 'number') {
-      throw new Error('Dados do resultado inválidos');
-    }
-  }
-
-  if (!Array.isArray(questions) || questions.length === 0) {
-    throw new Error('Lista de questões inválida');
-  }
-
-  if (!selectedAnswers || typeof selectedAnswers !== 'object') {
+  if (
+    !selectedAnswers ||
+    typeof selectedAnswers !== 'object' ||
+    Array.isArray(selectedAnswers)
+  ) {
     throw new Error('Mapa de respostas inválido');
   }
 
-  const normalizedDisciplines = Array.isArray(disciplines)
-    ? disciplines.filter((item): item is Question['discipline'] =>
-        typeof item === 'string' ? DISCIPLINES.includes(item as Question['discipline']) : false)
-    : [];
+  const entries = Object.entries(selectedAnswers);
+  if (
+    entries.length > DISCIPLINES.length * QUESTIONS_PER_DISCIPLINE ||
+    entries.some(([questionId, alternativeId]) =>
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(questionId) ||
+      typeof alternativeId !== 'string' ||
+      !alternativeId.trim() ||
+      alternativeId.length > 64
+    )
+  ) {
+    throw new Error('Mapa de respostas inválido');
+  }
 
   return {
-    result: castResult,
+    attemptId,
     selectedAnswers: selectedAnswers as Record<string, string>,
-    questions: questions as Question[],
-    disciplines: normalizedDisciplines,
   };
-}
-
-function isValidSubmittedQuestion(question: Question) {
-  if (
-    !question ||
-    typeof question.id !== 'string' ||
-    !question.id ||
-    typeof question.text !== 'string' ||
-    !question.text.trim() ||
-    !DISCIPLINES.includes(question.discipline)
-  ) {
-    return false;
-  }
-
-  if (!Array.isArray(question.alternatives) || question.alternatives.length < 2) {
-    return false;
-  }
-
-  const correctCount = question.alternatives.filter((alternative) => alternative.isCorrect).length;
-  return correctCount === 1 && question.alternatives.every((alternative) =>
-    typeof alternative.id === 'string' &&
-    Boolean(alternative.id) &&
-    typeof alternative.text === 'string' &&
-    Boolean(alternative.text.trim())
-  );
 }
 
 function normalizeGeneratedQuestion(
@@ -442,6 +411,7 @@ export async function GET(request: NextRequest) {
     }
 
     const aiRuntime = await getUserAiRuntime(auth.userId);
+    await cleanupQuizAttemptsIfDue();
     const [storedByDiscipline, recentExposure] = await Promise.all([
       getStoredQuestionsForDisciplines(adminClient, disciplines, { limit: 400 }),
       getRecentUserQuestionExposure(adminClient, auth.userId, 10),
@@ -502,9 +472,10 @@ export async function GET(request: NextRequest) {
         }
 
         if (generated.questions.length > 0) {
-          const canonicalGenerated = aiRuntime.subscription.hasMaxAccess
-            ? generated.questions
-            : await saveGeneratedQuestions(adminClient, generated.questions);
+          const canonicalGenerated = await saveGeneratedQuestions(
+            adminClient,
+            generated.questions
+          );
 
           for (const question of canonicalGenerated) {
             if (disciplineQuestions.length >= QUESTIONS_PER_DISCIPLINE) break;
@@ -581,9 +552,12 @@ export async function GET(request: NextRequest) {
     }
 
     const shuffled = shuffleArray(selectedQuestions);
+    const attempt = await createQuizAttempt(adminClient, auth.userId, shuffled);
 
     return NextResponse.json({
       questions: shuffled,
+      attemptId: attempt.id,
+      expiresAt: attempt.expires_at,
       totalQuestions: shuffled.length,
       disciplineCounts: disciplines.map((discipline) => ({
         discipline,
@@ -611,10 +585,10 @@ export async function POST(request: NextRequest) {
     return originError;
   }
 
-  let parsedPayload: QuizRequestPayload;
+  let parsedPayload: QuizSubmissionPayload;
   try {
     const raw = await request.json();
-    parsedPayload = assertQuizPayload(raw);
+    parsedPayload = assertQuizSubmission(raw);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'JSON inválido';
     return NextResponse.json({ error: message }, { status: 400 });
@@ -622,9 +596,6 @@ export async function POST(request: NextRequest) {
 
   const auth = await resolveRequestUserFromCookies();
   if ('error' in auth) {
-    if (auth.error.status === 401) {
-      return NextResponse.json({ success: true, saved: false, reason: 'not_authenticated' });
-    }
     return auth.error;
   }
 
@@ -638,69 +609,40 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    if (!parsedPayload.questions.every(isValidSubmittedQuestion)) {
-      return NextResponse.json(
-        { error: 'Lista de questões inválida' },
-        { status: 400 }
-      );
-    }
-
-    let correctAnswers = 0;
-    let unansweredQuestions = 0;
-
-    const answersData = parsedPayload.questions.map((question) => {
-      const selectedId = parsedPayload.selectedAnswers[question.id];
-      const isAnswered = typeof selectedId === 'string' && selectedId.length > 0;
-      const selectedAlternative = isAnswered
-        ? question.alternatives.find((alternative) => alternative.id === selectedId)
-        : undefined;
-      const isCorrect = Boolean(selectedAlternative?.isCorrect);
-
-      if (!isAnswered) {
-        unansweredQuestions += 1;
-      } else if (isCorrect) {
-        correctAnswers += 1;
-      }
-
-      return {
-        question_id: question.id,
-        selected_alternative_id: isAnswered ? selectedId : null,
-        is_correct: isCorrect,
-      };
-    });
-    const totalQuestions = parsedPayload.questions.length;
-    const wrongAnswers = totalQuestions - correctAnswers - unansweredQuestions;
-    const score = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0;
-    const disciplines = Array.from(
-      new Set(
-        parsedPayload.questions
-          .map((question) => question.discipline)
-          .filter((discipline): discipline is Question['discipline'] => DISCIPLINES.includes(discipline))
-      )
-    );
-
-    await createQuizResult(adminClient, userId, {
-      totalQuestions,
-      correctAnswers,
-      wrongAnswers,
-      unansweredQuestions,
-      score,
-      disciplines,
-      questionsData: parsedPayload.questions,
-      answersData,
+    const result = await submitQuizAttempt(adminClient, {
+      attemptId: parsedPayload.attemptId,
+      userId,
+      selectedAnswers: parsedPayload.selectedAnswers,
     });
 
-    const { error: statsError } = await adminClient.rpc('recalculate_user_statistics', {
-      target_user_id: userId,
+    return NextResponse.json({
+      success: true,
+      saved: true,
+      result: {
+        id: result.id,
+        totalQuestions: result.total_questions,
+        correctAnswers: result.correct_answers,
+        wrongAnswers: result.wrong_answers,
+        unansweredQuestions: result.unanswered_questions,
+        score: result.score,
+      },
     });
-
-    if (statsError) {
-      console.error('Erro ao recalcular estatísticas:', statsError);
-    }
-
-    return NextResponse.json({ success: true, saved: true });
   } catch (error) {
     console.error('Erro ao salvar resultado do simulado:', error);
+    const message = error instanceof Error ? error.message : '';
+    if (message.includes('quiz_attempt_expired')) {
+      return NextResponse.json({ error: 'Tentativa expirada' }, { status: 410 });
+    }
+    if (message.includes('quiz_attempt_not_found')) {
+      return NextResponse.json({ error: 'Tentativa não encontrada' }, { status: 404 });
+    }
+    if (
+      message.includes('invalid_') ||
+      message.includes('unknown_question') ||
+      message.includes('answer_for_unknown_question')
+    ) {
+      return NextResponse.json({ error: 'Respostas inválidas' }, { status: 400 });
+    }
     return NextResponse.json(
       { error: 'Erro ao salvar resultado do simulado' },
       { status: 500 }
