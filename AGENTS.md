@@ -3,7 +3,7 @@
 ## Project Structure & Module Organization
 - `app/`: App Router routes, layouts, public pages, authenticated areas, and Route Handlers under `app/api`.
 - `lib/auth/`: authentication flows, profile client wrapper, session security, and validation helpers.
-- `lib/ai/`: Groq and Gemini integrations for textual AI and OCR.
+- `lib/ai/`: Groq integration plus the typed Gemini OCR adapter and model router.
 - `lib/contracts/`: strict neutral Zod contracts shared across server and browser boundaries.
 - `lib/server/ai/`, `lib/server/essay/`, `lib/server/quiz/`: bounded AI runtime and server-only orchestration for the canonical systems.
 - `lib/db/`: server-side Supabase client, repositories, and neutral query helpers.
@@ -16,7 +16,7 @@
 ## Build, Test, and Development Commands
 - `npm run dev`: starts the Next.js app with Turbopack.
 - `npm run lint`: runs ESLint across the repository.
-- `npm run test:systems`: runs the focused Vitest suite for essay and quiz contracts.
+- `npm run test:systems`: runs the focused Vitest suite for essay, quiz and OCR contracts.
 - `npm run build`: runs `next build` and then regenerates `public/sitemap.xml`.
 - `npm run start`: serves the production build locally.
 
@@ -36,11 +36,11 @@
 
 ## Testing Guidelines
 - Keep `tests/systems/` small and specific to schemas, safe serialization, ENEM scores, idempotency and persistence mapping; do not add generic component tests without a demonstrated need.
-- For non-trivial essay/quiz changes, the minimum expected validation is `npm run test:systems`, `npm run lint` and `npm run build`.
+- For non-trivial essay/quiz/OCR changes, the minimum expected validation is `npm run test:systems`, `npm run lint` and `npm run build`.
 - Manual QA should follow the area changed, especially:
   - auth: `/login`, `/register`, `/forgot-password`, `/reset-password`
   - account: `/conta`, `/conta/editar`, account deletion
-  - essay flow: `/redacao` and `/resultados/[id]`, including theme ownership, stable `submissionId`, off-topic retries and account-deletion cleanup
+  - essay flow: `/redacao` and `/resultados/[id]`, including OCR upload/compression, theme ownership, stable `submissionId`, off-topic retries and account-deletion cleanup
   - quiz flow: `/questoes`, including POST attempt creation, no pre-submit answer leakage, PATCH canonical correction and answer-preserving retry
   - news admin: `/noticias/admin` when relevant
   - donations: `/doacao` and the webhook if Stripe is configured
@@ -68,7 +68,7 @@
 - Stripe depends on `STRIPE_SECRET_KEY`; the webhook also requires `STRIPE_WEBHOOK_SECRET`.
 - The Max subscription checkout requires `STRIPE_MAX_PRICE_ID`.
 - Textual AI depends on `GROQ_API_KEY`; `GROQ_FALLBACK_API_KEY`, `GROQ_FALLBACK_MODEL`, and `GROQ_MAX_ATTEMPTS` control a maximum global budget of two attempts. Do not re-enable Groq SDK retries.
-- OCR depends on `GEMINI_API_KEY` and the official `@google/genai` SDK.
+- OCR depends on `GEMINI_API_KEY` and the official `@google/genai` SDK. It routes once each through `gemini-3.5-flash`, `gemini-2.5-flash` and `gemini-3.1-flash-lite`; do not re-enable SDK retries or add preview models.
 - News import uses `NEWSAPI_API_KEY` or `NEWSAPI_KEY`.
 - The project uses RLS in Supabase, but application table access is routed through server handlers with `SUPABASE_SERVICE_ROLE_KEY`; direct public DB grants should stay minimal.
 - Canonical quiz attempts and their questions are service-role-only; do not expose catalog correction or attempt mutation directly to browser clients.
