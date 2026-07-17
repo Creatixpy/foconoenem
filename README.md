@@ -25,7 +25,7 @@ O feedback produzido por IA é uma orientação de estudo. Ele não substitui pr
 - Supabase fornece autenticação e PostgreSQL. Os clientes SSR/browser estão em `lib/supabase/`, o acesso orientado a repositórios em `lib/db/` e os fluxos server-only em `lib/server/`.
 - Páginas autenticadas usam `requireServerUser()` no servidor e entregam o usuário validado a `AuthProviders`, evitando um segundo bootstrap de autenticação no cliente.
 - Operações privilegiadas passam pelo servidor com `SUPABASE_SERVICE_ROLE_KEY`; os grants públicos do banco devem permanecer mínimos.
-- Groq atende o fluxo padrão de IA. Usuários Max tentam primeiro a NVIDIA com `minimaxai/minimax-m2.7` e recebem fallback server-side para Groq quando a tentativa primária falha.
+- Groq atende os fluxos textuais de IA nos planos Free e Max, com retry e fallback server-side entre as configurações disponíveis.
 - Gemini é usado para OCR, NewsAPI para importação de notícias e Stripe para assinaturas e doações.
 - Limpezas e destaques são atualizados sob demanda pelo próprio app, sem cron externo.
 - A interface é exclusivamente dark e usa tokens semânticos em `app/styles/` e o componente `AprovIALogo` para a marca.
@@ -39,7 +39,7 @@ O feedback produzido por IA é uma orientação de estudo. Ele não substitui pr
 - TypeScript 6
 - Tailwind CSS 4
 - Supabase SSR e PostgreSQL
-- Groq, NVIDIA e Gemini
+- Groq e Gemini
 - Stripe
 - NewsAPI
 - Vercel Analytics e Speed Insights
@@ -69,13 +69,11 @@ Use `.env.example` como referência e nunca versione `.env.local` ou chaves reai
 | `SUPABASE_SERVICE_ROLE_KEY` | obrigatória para operações privilegiadas | gravações server-side, administração, manutenção, pagamentos e leituras protegidas |
 | `NEXT_PUBLIC_SITE_URL` | recomendada | metadata, redirects e URLs públicas |
 | `SITE_URL` | recomendada | geração do sitemap |
-| `GROQ_API_KEY` | obrigatória para a IA padrão | redações, temas, questões e notícias |
+| `GROQ_API_KEY` | obrigatória para a IA textual | redações, temas, questões e notícias nos planos Free e Max |
 | `GROQ_MODEL` | opcional | modelo primário da Groq |
 | `GROQ_FALLBACK_API_KEY` | opcional | chave do fallback Groq |
 | `GROQ_FALLBACK_MODEL` | opcional | modelo do fallback |
 | `GROQ_MAX_ATTEMPTS` | opcional | quantidade de tentativas por provedor |
-| `NVIDIA_API_KEY` | necessária para a tentativa primária do Max | execução de `minimaxai/minimax-m2.7` |
-| `NVIDIA_MAX_TIMEOUT_MS` | opcional | timeout antes do fallback server-side |
 | `GEMINI_API_KEY` | necessária para OCR | extração de texto em `/api/ocr` |
 | `STRIPE_SECRET_KEY` | necessária para pagamentos | checkout, portal e sincronização Stripe |
 | `STRIPE_WEBHOOK_SECRET` | necessária para o webhook | validação da assinatura dos eventos |
@@ -109,7 +107,7 @@ app/styles/             tokens e estilos do sistema visual dark
 lib/auth/               autenticação, contexto, perfil, segurança e validação
 lib/ai/                 integrações padrão com Groq e Gemini
 lib/db/                 clientes, repositórios e transformadores de banco
-lib/server/             regras server-only, pagamentos, conta, notícias e IA Max
+lib/server/             regras server-only, pagamentos, conta, notícias e IA por plano
 lib/supabase/           clientes SSR/browser e atualização de sessão
 public/                 assets, verificações, robots, manifest e sitemap
 scripts/                verificações e geração da árvore de release

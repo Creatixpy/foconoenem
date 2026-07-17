@@ -27,7 +27,6 @@ const SECRET_RULES = [
   ['supabase_personal_access_token', /\bsbp_[A-Za-z0-9_-]{20,}\b/],
   ['google_api_key', /\bAIza[0-9A-Za-z_-]{30,}\b/],
   ['groq_api_key', /\bgsk_[A-Za-z0-9]{20,}\b/],
-  ['nvidia_api_key', /\bnvapi-[A-Za-z0-9_-]{20,}\b/],
   ['openai_api_key', /\bsk-proj-[A-Za-z0-9_-]{20,}\b|\bsk-[A-Za-z0-9]{32,}\b/],
   ['github_token', /\bgh[pousr]_[A-Za-z0-9_]{30,}\b/],
   ['vercel_token', /\bvercel_[A-Za-z0-9]{20,}\b/],

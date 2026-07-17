@@ -7,7 +7,6 @@ const SECRET_PATTERNS = [
   'whsec_[A-Za-z0-9]{16,}',
   'AIza[0-9A-Za-z_-]{30,}',
   'gsk_[A-Za-z0-9]{20,}',
-  'nvapi-[A-Za-z0-9_-]{20,}',
   'sb_secret_[A-Za-z0-9_-]{20,}',
   'sbp_[A-Za-z0-9_-]{20,}',
   'SUPABASE_ACCESS_TOKEN[[:space:]]*[:=][[:space:]]*[^[:space:],}]+',

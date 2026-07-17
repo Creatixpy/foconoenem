@@ -367,7 +367,7 @@ export default function PlanosPageClient() {
               Free para começar. Max para acelerar.
             </h2>
             <p className="mt-4 text-base text-[var(--text-2)]">
-              O gratuito continua útil. O Max adiciona uma camada premium para quem quer uma rotina de estudo mais personalizada.
+              O gratuito continua útil. O Max adiciona conteúdo sob demanda e prioriza questões novas para uma rotina mais personalizada.
             </p>
           </div>
 
@@ -436,7 +436,7 @@ export default function PlanosPageClient() {
                 Comparação direta
               </h2>
               <p className="mt-3 max-w-2xl text-sm text-[var(--text-2)]">
-                Sem prometer uso ilimitado: o Max melhora a qualidade e a personalização da IA, mantendo os limites de segurança da plataforma.
+                Sem prometer uso ilimitado: o Max prioriza conteúdo novo e reduz a dependência do acervo compartilhado, mantendo os limites de segurança da plataforma.
               </p>
             </div>
             <span className="inline-flex w-fit items-center gap-2 rounded-full border border-[var(--border)] px-3 py-1.5 text-xs font-semibold text-[var(--text-2)]">

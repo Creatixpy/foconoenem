@@ -423,7 +423,7 @@ function SubscriptionCard({
           <div>
             <h2 className="text-xl font-semibold text-[var(--text)]">{MAX_PLAN_NAME}</h2>
             <p className="mt-1 text-sm text-[var(--text-3)]">
-              IA Max para correções, temas sob demanda e simulados com mais questões inéditas.
+              Temas e textos de apoio sob demanda, além de simulados com mais questões inéditas.
             </p>
           </div>
           <div className="grid gap-2 text-sm text-[var(--text-2)] sm:grid-cols-2">

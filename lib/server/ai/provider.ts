@@ -1,12 +1,14 @@
 import 'server-only';
 
 import { withGroqRetry } from '@/lib/ai/retry';
-import { MAX_PLAN_CODE, type UserSubscriptionSummary } from '@/lib/constants/subscriptions';
+import type { UserSubscriptionSummary } from '@/lib/constants/subscriptions';
 import { createAdminClient } from '@/lib/db/server';
-import { generateWithNvidia, getNvidiaModel, type NvidiaMessage } from '@/lib/server/ai/nvidia';
-import { getUserSubscription, hasMaxPlanAccess, toSubscriptionSummary } from '@/lib/server/subscriptions';
+import { getUserSubscription, toSubscriptionSummary } from '@/lib/server/subscriptions';
 
-export type AiExecutorMessage = NvidiaMessage;
+export type AiExecutorMessage = {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+};
 
 export type AiCompletionRequest = {
   label: string;
@@ -52,7 +54,10 @@ type CompletionClient = {
   };
 };
 
-function createStandardRuntime(subscription: UserSubscriptionSummary): UserAiRuntime {
+function createGroqRuntime(
+  subscription: UserSubscriptionSummary,
+  tier: AiCompletionResult['tier']
+): UserAiRuntime {
   return {
     subscription,
     async complete(request) {
@@ -85,45 +90,8 @@ function createStandardRuntime(subscription: UserSubscriptionSummary): UserAiRun
         content: result.content,
         provider,
         model: result.model,
-        tier: 'standard',
+        tier,
       };
-    },
-  };
-}
-
-function createMaxRuntime(subscription: UserSubscriptionSummary): UserAiRuntime {
-  const standardFallback = createStandardRuntime(subscription);
-
-  return {
-    subscription,
-    async complete(request) {
-      try {
-        const result = await generateWithNvidia(request.messages, {
-          temperature: request.temperature,
-          topP: request.topP ?? 1,
-          maxTokens: request.maxTokens,
-        });
-
-        return {
-          content: result.content,
-          provider: 'nvidia',
-          model: result.model,
-          tier: 'max',
-        };
-      } catch (error) {
-        const detail = error instanceof Error ? error.message : 'Falha desconhecida';
-        console.warn('[Max AI] NVIDIA primary model failed; using standard fallback.', {
-          model: getNvidiaModel(),
-          detail,
-        });
-
-        const fallback = await standardFallback.complete(request);
-        return {
-          ...fallback,
-          provider: `nvidia-fallback:${fallback.provider}`,
-          tier: 'max',
-        };
-      }
     },
   };
 }
@@ -134,16 +102,6 @@ export async function getUserAiRuntime(userId: string): Promise<UserAiRuntime> {
     throw new Error('Supabase service role não configurado.');
   }
 
-  const subscriptionRow = await getUserSubscription(adminClient, userId);
-  const subscription = toSubscriptionSummary(subscriptionRow);
-
-  if (
-    subscription.planCode === MAX_PLAN_CODE &&
-    subscriptionRow &&
-    hasMaxPlanAccess(subscriptionRow)
-  ) {
-    return createMaxRuntime(subscription);
-  }
-
-  return createStandardRuntime(subscription);
+  const subscription = toSubscriptionSummary(await getUserSubscription(adminClient, userId));
+  return createGroqRuntime(subscription, subscription.hasMaxAccess ? 'max' : 'standard');
 }
