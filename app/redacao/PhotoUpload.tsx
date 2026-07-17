@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 
 /* ================================================================== */
 /*  Constants                                                          */
@@ -77,12 +77,15 @@ export default function PhotoUpload({ onTextExtracted, disabled }: PhotoUploadPr
   const [errorMessage, setErrorMessage] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
   const reset = useCallback(() => {
     setState('idle');
-    setPreviewUrl((prev) => {
-      if (prev) URL.revokeObjectURL(prev);
-      return null;
-    });
+    setPreviewUrl(null);
     setSelectedFile(null);
     setExtractedText('');
     setErrorMessage('');
@@ -205,6 +208,7 @@ export default function PhotoUpload({ onTextExtracted, disabled }: PhotoUploadPr
           <button
             type="button"
             onClick={reset}
+            aria-label="Fechar envio de foto"
             className="p-1 rounded-md text-[var(--text-3)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
           >
             <XIcon />
