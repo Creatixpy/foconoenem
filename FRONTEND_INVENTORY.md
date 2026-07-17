@@ -24,7 +24,7 @@ The active runtime lives in:
 - `lib/` for business logic and integrations
 - `supabase/migrations/` for local schema history
 
-The repository does **not** currently ship local Supabase Edge Function code. `supabase/functions/` contains only legacy documentation.
+The repository and remote Supabase project no longer contain active Edge Functions. Runtime APIs are Next.js Route Handlers.
 
 ---
 
@@ -65,13 +65,6 @@ The repository does **not** currently ship local Supabase Edge Function code. `s
 | `/auth/login` | `app/auth/login/page.tsx` | Redirect alias to `/login` |
 | `/auth/register` | `app/auth/register/page.tsx` | Redirect alias to `/register` |
 
-### Deprecated auth client files
-
-| File | Status |
-| --- | --- |
-| `app/auth/login/LoginPageClient.tsx` | Deprecated placeholder, intentionally unused |
-| `app/auth/register/RegisterPageClient.tsx` | Deprecated placeholder, intentionally unused |
-
 ### Root app shell
 
 | File | Purpose |
@@ -95,20 +88,18 @@ The repository does **not** currently ship local Supabase Edge Function code. `s
 | Route | Methods | Purpose |
 | --- | --- | --- |
 | `/api/conta/dados` | `GET` | Account dashboard payload |
-| `/api/conta/excluir` | `POST` | Delete the authenticated account after password confirmation and purge user-owned essays, quizzes and analytics |
+| `/api/conta/excluir` | `POST` | Delete the authenticated account after password confirmation and purge user-owned quiz attempts, essays, quizzes and analytics |
 | `/api/conta/recalcular` | `POST` | Recalculate aggregated user statistics |
 | `/api/corrigir` | `POST` | Submit essay for correction |
 | `/api/assinatura/checkout` | `POST` | Start Stripe Subscription Checkout for the Max plan, with a 7-day trial when eligible |
 | `/api/assinatura/portal` | `POST` | Open Stripe Billing Portal for the authenticated user |
 | `/api/assinatura/status` | `GET` | Return authentication state and the current Free/Max subscription summary |
-| `/api/destaques/remover` | `POST` | Remove highlight status from selected news |
 | `/api/doacao/checkout` | `POST` | Create Stripe Checkout session and persist `donation_checkouts` |
 | `/api/doacao/webhook` | `POST` | Process donation and subscription Stripe webhooks with idempotent persistence |
 | `/api/gerar-tema` | `GET` | Serve cached essay theme or generate a new one |
 | `/api/perfil` | `GET`, `POST`, `PATCH` | Server-side profile reads and writes for the authenticated user |
 | `/api/noticias` | `GET` | List approved news and refresh stale highlights on demand when requested |
 | `/api/noticias/[slug]` | `GET` | Fetch a single approved article |
-| `/api/noticias/admin` | `GET`, `POST` | Redirect helper to admin page / reject direct POST usage |
 | `/api/noticias/admin/moderar` | `POST` | Moderate news records |
 | `/api/noticias/admin/status` | `GET` | Admin authorization status |
 | `/api/noticias/busca` | `GET` | Bounded text search over approved news |
@@ -116,7 +107,7 @@ The repository does **not** currently ship local Supabase Edge Function code. `s
 | `/api/noticias/gpt-busca` | `POST` | AI summary based only on approved news stored in DB |
 | `/api/noticias/importar` | `POST` | Admin import from NewsAPI |
 | `/api/ocr` | `POST` | OCR via Gemini Vision |
-| `/api/questoes` | `GET`, `POST` | Generate quiz questions / persist quiz result with backend-recomputed aggregates |
+| `/api/questoes` | `GET`, `POST` | Create a 24-hour canonical quiz attempt / submit only its ID and answer map for server-side correction and idempotent persistence |
 | `/api/resultados/[id]` | `GET` | Fetch essay result by route param |
 | `/auth/callback` | `GET` | OAuth code exchange route |
 
@@ -149,12 +140,7 @@ The repository does **not** currently ship local Supabase Edge Function code. `s
 | `app/noticias/hooks.ts` | Client hooks for public feed, highlights, article lookup and text search |
 | `app/noticias/[slug]/ShareButton.tsx` | Native-share/copy-link control for an approved article |
 
-### Placeholder barrels
-
-| File | Current state |
-| --- | --- |
-| `app/components/shared/index.ts` | Shared AprovIA component exports |
-| `app/components/ui/index.ts` | Empty barrel |
+`app/components/shared/index.ts` exports the shared AprovIA components.
 
 ---
 
@@ -209,13 +195,10 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 
 | File | Purpose |
 | --- | --- |
-| `lib/db/client.ts` | Browser DB helpers and timeout/error helpers |
-| `lib/db/index.ts` | Barrel |
 | `lib/db/server.ts` | Server and admin Supabase client wrappers |
-| `lib/db/transformers.ts` | Row/model transformation helpers |
-| `lib/db/types.ts` | DB-layer application types |
+| `lib/db/query.ts` | Neutral query timeout and database-error helpers |
 | `lib/db/repositories/essays.ts` | Essay result and cached theme helpers |
-| `lib/db/repositories/quizzes.ts` | Quiz result helpers |
+| `lib/db/repositories/quizzes.ts` | Generated-question catalog and canonical quiz-attempt helpers |
 
 ### `lib/hooks/`
 
@@ -230,20 +213,20 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | File | Purpose |
 | --- | --- |
 | `lib/server/analytics.ts` | Server-side analytics event logging |
-| `lib/server/auth-request.ts` | Resolve authenticated user from cookies/token |
+| `lib/server/auth-request.ts` | Resolve the verified authenticated user from SSR cookies |
 | `lib/server/brazil-time.ts` | Brazil timezone helpers based on local server time |
 | `lib/server/conta.ts` | Account dashboard data assembly and stat recalculation |
 | `lib/server/donations.ts` | Donation webhook persistence and checkout-status synchronization |
-| `lib/server/local-maintenance.ts` | Throttled local cleanup of `rate_limits`, `analytics_events` and `cached_themes` |
+| `lib/server/local-maintenance.ts` | Throttled atomic cleanup of `rate_limits`, `analytics_events`, `cached_themes` and quiz attempts |
 | `lib/server/news-content.ts` | Server-only sanitization of approved news HTML and external URLs |
 | `lib/server/news-highlights.ts` | On-demand highlight refresh/status logic backed by `configuracoes` |
 | `lib/server/noticias.ts` | Server-side approved news access for public routes |
 | `lib/server/operating-hours.ts` | Business-hours evaluation |
 | `lib/server/page-auth.ts` | Cached server-side page guards for authenticated routes |
-| `lib/server/rate-limit.ts` | Server-side rate limiting |
+| `lib/server/rate-limit.ts` | Atomic, fail-closed server-side rate limiting |
 | `lib/server/request-origin.ts` | Trusted-origin enforcement for stateful and authenticated APIs |
 | `lib/server/subscription-return.ts` | Allowlisted return-path normalization for Stripe subscription flows |
-| `lib/server/subscriptions.ts` | Max subscription summary, Stripe sync, customer provisioning and webhook helpers |
+| `lib/server/subscriptions.ts` | Max subscription summary, Stripe sync, customer provisioning and recoverable webhook claims |
 | `lib/server/stripe.ts` | Shared Stripe server client helpers |
 
 ### `lib/server/ai/`
@@ -316,13 +299,10 @@ The codebase does **not** currently read `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`.
 
 | Path | Purpose |
 | --- | --- |
-| `supabase/migrations/` | Local migration history |
-| `supabase/scripts/20250210_export_user_data.sql` | Data export helper script |
-| `supabase/functions/README.md` | Legacy Edge Function audit and operational note |
+| `supabase/migrations/` | Reconciled local and remote migration history |
 
-As of the latest audit documented in `supabase/functions/README.md`, remote Edge Functions may still exist in the Supabase project, but the repository no longer depends on them at runtime.
-The stale remote schema snapshot was removed; use Supabase migrations plus MCP/CLI inspection as the source of truth.
-Latest DB hardening in this repo: `20260513231721_harden_max_subscription_periods.sql`.
+The stale remote schema snapshot and sensitive export helper were removed; use Supabase migrations plus MCP/CLI inspection as the source of truth.
+Latest DB hardening in this repo: `20260717155939_harden_database_integration.sql` and `20260717161413_complete_quiz_security_indexes.sql`.
 
 ---
 
@@ -362,9 +342,10 @@ Latest DB hardening in this repo: `20260513231721_harden_max_subscription_period
 - `npm run build` performs both the production build and sitemap regeneration.
 - `npm run lint` is the active static validation command in the repo.
 - There is no automated test suite checked into the project today.
-- `app/components/shared/index.ts` exports the shared brand components; `app/components/ui/index.ts` remains an empty placeholder barrel.
-- `app/auth/login/LoginPageClient.tsx` and `app/auth/register/RegisterPageClient.tsx` are deprecated placeholders.
-- The current runtime path is Next.js route handlers under `app/api`; Supabase Edge Functions are legacy only.
-- There is no external cron scheduler in the repo anymore. Maintenance and highlights now run locally, on demand, with timestamps persisted in `configuracoes`.
+- `app/components/shared/index.ts` exports the shared brand components.
+- The current runtime path is Next.js route handlers under `app/api`; the three inactive remote Supabase Edge Functions were removed.
+- There is no external cron scheduler in the repo anymore. Atomic maintenance and highlights run on demand, with timestamps persisted in `configuracoes`.
+- Quiz GET responses include `attemptId` and `expiresAt`; POST accepts only `{ attemptId, selectedAnswers }`. The UI exposes save/retry state while the database guarantees a single canonical result.
+- Essay and quiz statistics are synchronized by database triggers, and unanswered quiz items are excluded from answered totals and accuracy.
 - The Max plan is monthly-only at R$ 10,00, includes a one-time 7-day trial for eligible users, and is enforced server-side through `subscriptions` plus webhook-driven Stripe synchronization.
 - The repository does not contain an active community/forum subsystem anymore.
