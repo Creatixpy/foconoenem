@@ -248,7 +248,7 @@ export async function GET(request: NextRequest) {
         plan: aiRuntime.subscription.planCode,
       });
     } catch (error) {
-      console.error('Erro ao gerar tema Max com NVIDIA:', error);
+      console.error('Erro ao gerar tema Max com IA:', error);
       return NextResponse.json(
         {
           error: 'Erro ao gerar tema',

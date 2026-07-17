@@ -29,13 +29,13 @@ const sections = [
     id: 'ia',
     title: '5. Uso de inteligência artificial',
     content:
-      'A plataforma utiliza provedores de IA para correção de redações, geração de temas, textos de apoio, questões e resumos do acervo de notícias. No fluxo padrão, a integração principal segue usando Groq. Para usuários com assinatura Max ativa, os fluxos premium de redação, temas e questões podem ser processados pela API compatível com OpenAI da NVIDIA usando o modelo minimaxai/minimax-m2.7; se essa tentativa falhar, o backend pode usar fallback Groq para preservar a disponibilidade do serviço. Redações, prompts e respostas podem ser enviados ao provedor aplicável para executar a solicitação. Os resultados retornados pela IA são armazenados no banco da AprovIA quando necessários ao funcionamento do produto.',
+      'A plataforma utiliza Groq para correção de redações, geração de temas, textos de apoio, questões e resumos do acervo de notícias. O OCR de imagens usa Google Gemini. Redações, prompts, imagens e respostas podem ser enviados ao serviço aplicável para executar a solicitação. Os resultados retornados pela IA são armazenados no banco da AprovIA quando necessários ao funcionamento do produto.',
   },
   {
     id: 'compartilhamento',
     title: '6. Compartilhamento e transferências internacionais',
     content:
-      'A AprovIA compartilha dados com prestadores essenciais de infraestrutura e operação, incluindo Supabase, Vercel, Stripe, Groq e NVIDIA. Esses serviços podem processar dados fora do Brasil, conforme sua arquitetura e região de infraestrutura. Quando isso ocorre, o tratamento continua vinculado às finalidades desta política e às salvaguardas contratuais e técnicas aplicáveis.',
+      'A AprovIA compartilha dados com prestadores essenciais de infraestrutura e operação, incluindo Supabase, Vercel, Stripe, Groq e Google Gemini. Esses serviços podem processar dados fora do Brasil, conforme sua arquitetura e região de infraestrutura. Quando isso ocorre, o tratamento continua vinculado às finalidades desta política e às salvaguardas contratuais e técnicas aplicáveis.',
   },
   {
     id: 'retencao',

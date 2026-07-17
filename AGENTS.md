@@ -3,8 +3,8 @@
 ## Project Structure & Module Organization
 - `app/`: App Router routes, layouts, public pages, authenticated areas, and Route Handlers under `app/api`.
 - `lib/auth/`: authentication flows, profile client wrapper, session security, and validation helpers.
-- `lib/ai/`: Groq and Gemini integrations for the standard runtime.
-- `lib/server/ai/`: server-side provider selection and NVIDIA integration for the Max plan.
+- `lib/ai/`: Groq and Gemini integrations for textual AI and OCR.
+- `lib/server/ai/`: plan-aware Groq runtime shared by Free and Max flows.
 - `lib/db/`: Supabase clients, repositories, and data transformers.
 - `lib/server/`: server-only helpers for account data, cookie/token auth, analytics, news, operating hours, and rate limiting.
 - `lib/supabase/`: SSR/browser Supabase clients plus session refresh logic used by `proxy.ts`.
@@ -66,7 +66,7 @@
 - Admin flows use `ADMIN_ALLOWED_EMAILS`. Maintenance and news highlights now run locally in the app and no longer depend on cron secrets.
 - Stripe depends on `STRIPE_SECRET_KEY`; the webhook also requires `STRIPE_WEBHOOK_SECRET`.
 - The Max subscription checkout requires `STRIPE_MAX_PRICE_ID`.
-- The Max AI provider requires `NVIDIA_API_KEY`, attempts `minimaxai/minimax-m2.7` first, and uses server-side Groq fallback after NVIDIA failures. `NVIDIA_MAX_TIMEOUT_MS` optionally controls the primary NVIDIA attempt timeout.
+- Textual AI depends on `GROQ_API_KEY`; `GROQ_FALLBACK_API_KEY`, `GROQ_FALLBACK_MODEL`, and `GROQ_MAX_ATTEMPTS` optionally control retry and fallback behavior for both Free and Max.
 - OCR depends on `GEMINI_API_KEY`.
 - News import uses `NEWSAPI_API_KEY` or `NEWSAPI_KEY`.
 - The project uses RLS in Supabase, but application table access is routed through server handlers with `SUPABASE_SERVICE_ROLE_KEY`; direct public DB grants should stay minimal.

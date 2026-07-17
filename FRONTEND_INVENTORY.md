@@ -250,8 +250,7 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 
 | File | Purpose |
 | --- | --- |
-| `lib/server/ai/nvidia.ts` | NVIDIA OpenAI-compatible client for the Max plan primary model `minimaxai/minimax-m2.7` |
-| `lib/server/ai/provider.ts` | Server-side AI provider resolver by authenticated user's subscription state, with Groq fallback for Max NVIDIA failures |
+| `lib/server/ai/provider.ts` | Plan-aware Groq runtime that preserves Free/Max behavior and provider retry metadata |
 
 ### `lib/supabase/`
 
@@ -282,13 +281,11 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | `NEXT_PUBLIC_SITE_URL` | root metadata, redirect safety | Recommended |
 | `SITE_URL` | sitemap generation | Build-time |
 | `SUPABASE_SERVICE_ROLE_KEY` | server DB access, admin writes, analytics, imports, maintenance, highlights, public news reads and payment persistence | Required for privileged server flows |
-| `GROQ_API_KEY` | essay, themes, quiz generation, AI news summary | Standard IA key |
+| `GROQ_API_KEY` | essay, themes, quiz generation, AI news summary | Required textual AI key for Free and Max |
 | `GROQ_MODEL` | Groq integration | Optional override |
 | `GROQ_FALLBACK_API_KEY` | Groq integration | Optional fallback provider |
 | `GROQ_FALLBACK_MODEL` | Groq integration | Optional fallback model |
 | `GROQ_MAX_ATTEMPTS` | Groq retry logic | Optional |
-| `NVIDIA_API_KEY` | Max essay/theme/quiz generation | Required for the primary Max plan NVIDIA attempt with `minimaxai/minimax-m2.7` |
-| `NVIDIA_MAX_TIMEOUT_MS` | Max essay/theme/quiz generation | Optional timeout for the primary NVIDIA attempt before server-side fallback |
 | `GEMINI_API_KEY` | `/api/ocr` | Optional OCR feature |
 | `NEWSAPI_API_KEY` | news import | Preferred NewsAPI variable |
 | `NEWSAPI_KEY` | news import | Accepted alias |
