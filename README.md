@@ -26,7 +26,7 @@ O feedback produzido por IA é uma orientação de estudo. Ele não substitui pr
 - Páginas autenticadas usam `requireServerUser()` no servidor e entregam o usuário validado a `AuthProviders`, evitando um segundo bootstrap de autenticação no cliente.
 - Operações privilegiadas passam pelo servidor com `SUPABASE_SERVICE_ROLE_KEY`; os grants públicos do banco devem permanecer mínimos.
 - Groq atende os fluxos textuais de IA nos planos Free e Max. O SDK não faz retries internos; o orquestrador aplica timeout de 30 segundos e no máximo duas tentativas globais, usando fallback apenas para falhas transitórias ou uma segunda saída estruturada inválida.
-- Gemini é usado para OCR pelo SDK oficial `@google/genai`, NewsAPI para importação de notícias e Stripe para assinaturas e doações.
+- Gemini é usado para OCR pelo SDK oficial `@google/genai`. O servidor tenta, no máximo uma vez por modelo, `gemini-3.5-flash`, `gemini-2.5-flash` e `gemini-3.1-flash-lite`; só avança em falhas transitórias ou leitura evidentemente inválida. As fotos grandes são comprimidas no navegador e permanecem apenas em memória. NewsAPI atende a importação de notícias e Stripe atende assinaturas e doações.
 - Limpezas, rate limiting e destaques usam RPCs transacionais acionadas sob demanda pelo próprio app, sem cron externo.
 - A interface é exclusivamente dark e usa tokens semânticos em `app/styles/` e o componente `AprovIALogo` para a marca.
 - Vercel Analytics e Speed Insights só são montados depois do consentimento para métricas opcionais.
@@ -89,14 +89,14 @@ Use `.env.example` como referência e nunca versione `.env.local` ou chaves reai
 | --- | --- |
 | `npm run dev` | iniciar o desenvolvimento com Turbopack |
 | `npm run lint` | executar ESLint no repositório |
-| `npm run test:systems` | executar os testes focados dos contratos de redação e quiz |
+| `npm run test:systems` | executar os testes focados de redação, quiz e roteamento OCR |
 | `npm run build` | gerar o build de produção e atualizar `public/sitemap.xml` |
 | `npm run start` | servir o build de produção |
 | `npm run verify:open-source` | verificar arquivos obrigatórios, artefatos privados e padrões comuns de segredo |
 | `npm run verify:history-clean` | verificar o histórico Git local contra arquivos e segredos de alto risco |
 | `npm run release:public-tree` | criar uma árvore publicável limpa em `../aprovia-public-release` |
 
-A suíte Vitest é deliberadamente pequena e cobre schemas, serialização segura do quiz, notas ENEM, fingerprint idempotente e mapeamento do resultado persistido. Mudanças não triviais nesses sistemas devem passar por `npm run test:systems`, `npm run lint`, build e QA do fluxo afetado.
+A suíte Vitest é deliberadamente pequena e cobre schemas, serialização segura do quiz, notas ENEM, fingerprint idempotente, mapeamento persistido e fallback controlado do OCR. Mudanças não triviais nesses sistemas devem passar por `npm run test:systems`, `npm run lint`, build e QA do fluxo afetado.
 
 ## Estrutura do repositório
 

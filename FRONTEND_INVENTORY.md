@@ -35,7 +35,7 @@ The repository and remote Supabase project no longer contain active Edge Functio
 | Route | Files | Purpose |
 | --- | --- | --- |
 | `/` | `app/page.tsx`, `app/HomePageClient.tsx` | Landing page |
-| `/redacao` | `app/redacao/page.tsx`, `app/redacao/RedacaoPageClient.tsx`, `app/redacao/useEssayWorkflow.ts`, `app/redacao/PhotoUpload.tsx` | Essay workflow, OCR upload support, idempotent correction UI |
+| `/redacao` | `app/redacao/page.tsx`, `app/redacao/RedacaoPageClient.tsx`, `app/redacao/useEssayWorkflow.ts`, `app/redacao/PhotoUpload.tsx`, `app/redacao/prepareOcrImage.ts` | Essay workflow, locally optimized OCR uploads, idempotent correction UI |
 | `/questoes` | `app/questoes/page.tsx`, `app/questoes/QuestoesPageClient.tsx` | Quiz generation, answering and result flow |
 | `/planos` | `app/planos/page.tsx`, `app/planos/PlanosPageClient.tsx` | Free/Max comparison, subscription status, checkout and portal entry points |
 | `/noticias` | `app/noticias/page.tsx`, `app/noticias/NoticiasPageClient.tsx` | Public news feed |
@@ -106,7 +106,7 @@ The repository and remote Supabase project no longer contain active Edge Functio
 | `/api/noticias/destaques/status` | `GET` | Status of the last highlights refresh |
 | `/api/noticias/gpt-busca` | `POST` | AI summary based only on approved news stored in DB |
 | `/api/noticias/importar` | `POST` | Admin import from NewsAPI |
-| `/api/ocr` | `POST` | OCR via Gemini Vision |
+| `/api/ocr` | `POST` | Authenticated in-memory OCR with typed errors and stable Gemini model fallback |
 | `/api/questoes` | `POST`, `PATCH` | Create by `{ requestId, disciplines }` without exposing answers / finalize by `{ attemptId, selectedAnswers }` with canonical review |
 | `/auth/callback` | `GET` | OAuth code exchange route |
 
@@ -160,7 +160,8 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 
 | File | Purpose |
 | --- | --- |
-| `lib/ai/gemini.ts` | OCR extraction through the official `@google/genai` SDK with cancellation and 30-second timeout |
+| `lib/ai/gemini.ts` | Gemini OCR adapter with 25-second per-model cancellation and SDK retries disabled |
+| `lib/ai/ocr-routing.ts` | Quality-first stable model order, readable-output validation and typed fallback errors |
 | `lib/ai/groq.ts` | Groq provider factory, current fallback model and retryable-error classification |
 | `lib/ai/retry.ts` | Global two-attempt retry/fallback budget; SDK retries remain disabled |
 
@@ -169,6 +170,7 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | File | Purpose |
 | --- | --- |
 | `lib/contracts/essay.ts` | Strict Zod contracts for themes, submissions, ENEM competences and API responses |
+| `lib/contracts/ocr.ts` | Shared OCR MIME, payload, error-code and success-response contracts |
 | `lib/contracts/quiz.ts` | Strict question, attempt and review contracts plus public answer-safe serialization |
 | `lib/contracts/quiz-result.ts` | Neutral validation/mapping of persisted quiz snapshots |
 | `lib/contracts/operating-hours.ts` | Neutral operating-hours interface shared by server and clients |
@@ -227,6 +229,7 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | `lib/server/news-content.ts` | Server-only sanitization of approved news HTML and external URLs |
 | `lib/server/news-highlights.ts` | On-demand highlight refresh/status logic backed by `configuracoes` |
 | `lib/server/noticias.ts` | Server-side approved news access for public routes |
+| `lib/server/ocr-image.ts` | Server-only OCR upload size, MIME and magic-byte validation |
 | `lib/server/operating-hours.ts` | Business-hours evaluation |
 | `lib/server/page-auth.ts` | Cached server-side page guards for authenticated routes |
 | `lib/server/rate-limit.ts` | Atomic, fail-closed server-side rate limiting |
@@ -356,12 +359,13 @@ Latest system migrations: `20260717180319_reform_essay_quiz_systems.sql` and the
 
 - `npm run build` performs both the production build and sitemap regeneration.
 - `npm run lint` is the active static validation command in the repo.
-- `npm run test:systems` runs the focused Vitest suite for essay/quiz contracts and persistence mapping.
+- `npm run test:systems` runs the focused Vitest suite for essay/quiz contracts, persistence mapping and OCR routing.
 - `app/components/shared/index.ts` exports the shared brand components.
 - The current runtime path is Next.js route handlers under `app/api`; the three inactive remote Supabase Edge Functions were removed.
 - There is no external cron scheduler in the repo anymore. Atomic maintenance and highlights run on demand, with timestamps persisted in `configuracoes`.
 - Quiz POST responses include `attemptId`, `expiresAt` and only public question fields; PATCH accepts `{ attemptId, selectedAnswers }`. The UI preserves answers on failure while the database guarantees one canonical result.
 - Essay theme POST returns `{ themeId, tema, textoApoio1, textoApoio2 }`; correction POST accepts a stable `submissionId` and either a generated theme ID or a manual title. Result pages load directly on the server.
+- OCR photos up to 20 MB are compressed locally below the Vercel Function payload limit; the server validates their signature and routes once through `gemini-3.5-flash`, `gemini-2.5-flash` and `gemini-3.1-flash-lite` without persisting image bytes.
 - Essay and quiz statistics are synchronized by database triggers, and unanswered quiz items are excluded from answered totals and accuracy.
 - The Max plan is monthly-only at R$ 10,00, includes a one-time 7-day trial for eligible users, and is enforced server-side through `subscriptions` plus webhook-driven Stripe synchronization.
 - The repository does not contain an active community/forum subsystem anymore.

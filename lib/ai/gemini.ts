@@ -1,8 +1,16 @@
 import 'server-only';
-import { GoogleGenAI } from '@google/genai';
 
-const GEMINI_MODEL = 'gemini-2.5-flash';
-const TIMEOUT_MS = 30_000;
+import { ApiError, GoogleGenAI } from '@google/genai';
+import {
+  OcrError,
+  OcrProviderError,
+  routeOcrModels,
+  type OcrModel,
+} from '@/lib/ai/ocr-routing';
+import type { OcrImageMimeType } from '@/lib/contracts/ocr';
+
+const MODEL_TIMEOUT_MS = 25_000;
+const RETRYABLE_STATUSES = new Set([404, 408, 409, 429]);
 
 const OCR_PROMPT = `You are a specialized OCR system for Brazilian Portuguese handwritten text.
 
@@ -18,70 +26,141 @@ RULES:
 - If you cannot read a word, use [ilegível] as placeholder
 - If the image contains no readable handwritten text, respond with exactly: [EMPTY]`;
 
+let geminiClient: GoogleGenAI | undefined;
+
 function getGeminiClient(): GoogleGenAI {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    throw new Error('GEMINI_API_KEY não configurada.');
+    throw new OcrError('configuration', [], new Error('GEMINI_API_KEY missing'));
   }
-  return new GoogleGenAI({ apiKey });
+
+  geminiClient ??= new GoogleGenAI({
+    apiKey,
+    httpOptions: {
+      retryOptions: { attempts: 1 },
+    },
+  });
+  return geminiClient;
+}
+
+function getStatus(error: unknown): number | undefined {
+  if (error instanceof ApiError) return error.status;
+  if (error && typeof error === 'object' && 'status' in error) {
+    const status = Number((error as { status?: unknown }).status);
+    return Number.isInteger(status) ? status : undefined;
+  }
+  return undefined;
+}
+
+function isConnectionError(error: unknown): boolean {
+  if (error instanceof TypeError) return true;
+  if (!(error instanceof Error)) return false;
+  return [
+    'AbortError',
+    'TimeoutError',
+    'FetchError',
+    'APIConnectionError',
+    'APIConnectionTimeoutError',
+  ].includes(error.name);
+}
+
+function classifyProviderError(
+  model: OcrModel,
+  error: unknown,
+  requestSignal?: AbortSignal,
+): OcrProviderError {
+  const status = getStatus(error);
+
+  if (requestSignal?.aborted) {
+    return new OcrProviderError(model, 'cancelled', status, error);
+  }
+  if (status === 401 || status === 403) {
+    return new OcrProviderError(model, 'configuration', status, error);
+  }
+  if (
+    (status !== undefined && (RETRYABLE_STATUSES.has(status) || status >= 500))
+    || isConnectionError(error)
+  ) {
+    return new OcrProviderError(model, 'retryable', status, error);
+  }
+  return new OcrProviderError(model, 'fatal', status, error);
+}
+
+async function extractWithModel(
+  client: GoogleGenAI,
+  model: OcrModel,
+  base64Data: string,
+  mimeType: OcrImageMimeType,
+  requestSignal?: AbortSignal,
+): Promise<string> {
+  const controller = new AbortController();
+  const abortFromRequest = () => controller.abort(requestSignal?.reason);
+  requestSignal?.addEventListener('abort', abortFromRequest, { once: true });
+  const timeout = setTimeout(() => controller.abort('model-timeout'), MODEL_TIMEOUT_MS);
+  const startedAt = Date.now();
+
+  try {
+    const response = await client.models.generateContent({
+      model,
+      contents: [{
+        role: 'user',
+        parts: [
+          { text: OCR_PROMPT },
+          { inlineData: { mimeType, data: base64Data } },
+        ],
+      }],
+      config: {
+        abortSignal: controller.signal,
+        candidateCount: 1,
+        maxOutputTokens: 4_096,
+        temperature: 0,
+      },
+    });
+
+    return response.text ?? '';
+  } catch (error) {
+    const providerError = classifyProviderError(model, error, requestSignal);
+    console.warn('[Gemini OCR] Model attempt failed', {
+      model,
+      status: providerError.status,
+      kind: providerError.kind,
+      durationMs: Date.now() - startedAt,
+    });
+    throw providerError;
+  } finally {
+    clearTimeout(timeout);
+    requestSignal?.removeEventListener('abort', abortFromRequest);
+  }
 }
 
 /**
- * Extract handwritten text from an image using Gemini Vision.
- * Images are processed in-memory and never stored.
+ * Extract handwritten text without persisting image bytes or provider output.
+ * Each model is called at most once; SDK-level retries are disabled.
  */
 export async function extractTextFromImage(
   base64Data: string,
-  mimeType: string,
+  mimeType: OcrImageMimeType,
+  requestSignal?: AbortSignal,
 ): Promise<string> {
   const client = getGeminiClient();
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
   try {
-    const result = await client.models.generateContent({
-      model: GEMINI_MODEL,
-      contents: [
-        {
-          role: 'user',
-          parts: [
-            { text: OCR_PROMPT },
-            { inlineData: { mimeType, data: base64Data } },
-          ],
-        },
-      ],
-      config: { abortSignal: controller.signal },
+    const result = await routeOcrModels((model) => (
+      extractWithModel(client, model, base64Data, mimeType, requestSignal)
+    ));
+
+    console.info('[Gemini OCR] Extraction completed', {
+      model: result.model,
+      attemptedModels: result.attemptedModels,
     });
-
-    const text = result.text?.trim() ?? '';
-
-    if (!text || text === '[EMPTY]') {
-      throw new Error('Não foi possível identificar texto na imagem.');
-    }
-
-    return text;
+    return result.text;
   } catch (error) {
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error('Tempo limite excedido ao processar a imagem.');
+    if (error instanceof OcrError) {
+      console.error('[Gemini OCR] Extraction failed', {
+        kind: error.kind,
+        attemptedModels: error.attemptedModels,
+      });
     }
-    if (error instanceof Error && error.message.includes('identificar texto')) {
-      throw error;
-    }
-
-    // Differentiate Gemini quota/rate errors from generic failures
-    const status = (error as { status?: number }).status;
-    const message = error instanceof Error ? error.message : String(error);
-    console.error('[Gemini OCR] Erro:', { status, message, error });
-
-    if (status === 429 || message.includes('quota') || message.includes('rate limit')) {
-      throw new Error('Serviço de OCR temporariamente indisponível. Tente novamente em alguns minutos.');
-    }
-    if (status === 403 || message.includes('API key')) {
-      throw new Error('Serviço de OCR não configurado corretamente.');
-    }
-
-    throw new Error('Falha ao extrair texto da imagem.');
-  } finally {
-    clearTimeout(timeout);
+    throw error;
   }
 }
