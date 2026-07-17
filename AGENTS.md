@@ -5,11 +5,10 @@
 - `lib/auth/`: authentication flows, profile client wrapper, session security, and validation helpers.
 - `lib/ai/`: Groq and Gemini integrations for textual AI and OCR.
 - `lib/server/ai/`: plan-aware Groq runtime shared by Free and Max flows.
-- `lib/db/`: Supabase clients, repositories, and data transformers.
-- `lib/server/`: server-only helpers for account data, cookie/token auth, analytics, news, operating hours, and rate limiting.
+- `lib/db/`: server-side Supabase client, repositories, and neutral query helpers.
+- `lib/server/`: server-only helpers for account data, cookie auth, analytics, news, operating hours, payments, and rate limiting.
 - `lib/supabase/`: SSR/browser Supabase clients plus session refresh logic used by `proxy.ts`.
 - `supabase/migrations/`: local schema history.
-- `supabase/functions/`: legacy Edge Function documentation only; the current runtime does not publish local functions from this repo.
 - `types/`: shared app types and generated Supabase types.
 - `public/`: static assets, verification files, `robots.txt`, and the generated sitemap.
 
@@ -40,7 +39,7 @@
   - auth: `/login`, `/register`, `/forgot-password`, `/reset-password`
   - account: `/conta`, `/conta/editar`, account deletion
   - essay flow: `/redacao` and `/resultados/[id]`, including account-deletion cleanup of essay rows
-  - quiz flow: `/questoes`, including backend-recomputed persisted aggregates
+  - quiz flow: `/questoes`, including attempt creation, canonical server-side correction, save status/retry, and backend-recomputed persisted aggregates
   - news admin: `/noticias/admin` when relevant
   - donations: `/doacao` and the webhook if Stripe is configured
   - subscriptions: `/conta`, `/api/assinatura/checkout`, `/api/assinatura/portal`, `/api/doacao/webhook`, including first-time 7-day trial eligibility
@@ -70,4 +69,6 @@
 - OCR depends on `GEMINI_API_KEY`.
 - News import uses `NEWSAPI_API_KEY` or `NEWSAPI_KEY`.
 - The project uses RLS in Supabase, but application table access is routed through server handlers with `SUPABASE_SERVICE_ROLE_KEY`; direct public DB grants should stay minimal.
-- Account deletion must remove app-owned user content before deleting the Supabase Auth user because some historical foreign keys use `ON DELETE SET NULL`.
+- Canonical quiz attempts and their questions are service-role-only; do not expose catalog correction or attempt mutation directly to browser clients.
+- Schema and data changes must go through Supabase MCP migrations. Do not use migration repair, rewrite remote history, or reset the production database.
+- Account deletion must remove quiz attempts and other app-owned user content before deleting the Supabase Auth user because some historical foreign keys use `ON DELETE SET NULL`.

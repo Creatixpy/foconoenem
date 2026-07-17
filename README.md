@@ -27,10 +27,10 @@ O feedback produzido por IA é uma orientação de estudo. Ele não substitui pr
 - Operações privilegiadas passam pelo servidor com `SUPABASE_SERVICE_ROLE_KEY`; os grants públicos do banco devem permanecer mínimos.
 - Groq atende os fluxos textuais de IA nos planos Free e Max, com retry e fallback server-side entre as configurações disponíveis.
 - Gemini é usado para OCR, NewsAPI para importação de notícias e Stripe para assinaturas e doações.
-- Limpezas e destaques são atualizados sob demanda pelo próprio app, sem cron externo.
+- Limpezas, rate limiting e destaques usam RPCs transacionais acionadas sob demanda pelo próprio app, sem cron externo.
 - A interface é exclusivamente dark e usa tokens semânticos em `app/styles/` e o componente `AprovIALogo` para a marca.
 - Vercel Analytics e Speed Insights só são montados depois do consentimento para métricas opcionais.
-- `supabase/functions/` contém apenas a nota operacional das Edge Functions remotas legadas; o runtime atual não depende delas.
+- O runtime é inteiramente atendido pelos Route Handlers do Next.js; as Edge Functions remotas legadas foram removidas.
 
 ## Stack principal
 
@@ -106,13 +106,12 @@ app/components/         componentes de layout, privacidade e funcionalidades
 app/styles/             tokens e estilos do sistema visual dark
 lib/auth/               autenticação, contexto, perfil, segurança e validação
 lib/ai/                 integrações padrão com Groq e Gemini
-lib/db/                 clientes, repositórios e transformadores de banco
+lib/db/                 cliente server-side, repositórios e utilitários de consulta
 lib/server/             regras server-only, pagamentos, conta, notícias e IA por plano
 lib/supabase/           clientes SSR/browser e atualização de sessão
 public/                 assets, verificações, robots, manifest e sitemap
 scripts/                verificações e geração da árvore de release
 supabase/migrations/    histórico local do schema
-supabase/functions/     documentação do legado remoto de Edge Functions
 types/                  tipos compartilhados e tipos gerados do Supabase
 ```
 
@@ -122,7 +121,7 @@ types/                  tipos compartilhados e tipos gerados do Supabase
 | --- | --- | --- |
 | Autenticação | `/login`, `/register`, `/forgot-password`, `/reset-password` | `/auth/callback` e Supabase Auth |
 | Redação | `/redacao`, `/resultados/[id]` | `/api/gerar-tema`, `/api/corrigir`, `/api/resultados/[id]`, `/api/ocr` |
-| Questões | `/questoes` | `GET` para gerar e `POST` para persistir em `/api/questoes` |
+| Questões | `/questoes` | `GET` cria uma tentativa canônica e `POST` corrige/persiste a tentativa em `/api/questoes` |
 | Notícias | `/noticias`, `/noticias/[slug]`, `/noticias/pesquisa`, `/noticias/admin` | rotas sob `/api/noticias`, além de moderação, importação e destaques |
 | Conta | `/conta`, `/conta/editar` | `/api/conta/dados`, `/api/conta/recalcular`, `/api/conta/excluir`, `/api/perfil` |
 | Plano Max | `/planos`, gerenciamento também em `/conta` | `/api/assinatura/status`, `/api/assinatura/checkout`, `/api/assinatura/portal` |
@@ -130,22 +129,25 @@ types/                  tipos compartilhados e tipos gerados do Supabase
 
 O Max custa R$ 10,00 por mês e oferece um teste único de 7 dias para usuários elegíveis. A elegibilidade e o acesso são validados no backend; o webhook compartilhado em `/api/doacao/webhook` sincroniza tanto doações quanto assinaturas.
 
-Na exclusão de uma conta, o app remove primeiro redações, simulados e analytics pertencentes ao usuário e só então exclui o usuário no Supabase Auth. Essa ordem preserva a limpeza de dados mesmo com foreign keys históricas que usam `ON DELETE SET NULL`.
+Na exclusão de uma conta, o app remove primeiro tentativas de quiz, redações, simulados e analytics pertencentes ao usuário e só então exclui o usuário no Supabase Auth. Essa ordem preserva a limpeza de dados mesmo com foreign keys históricas que usam `ON DELETE SET NULL`.
 
 ## Supabase e operação
 
 - Migrations em `supabase/migrations/` são a fonte local de verdade do schema.
-- Os tipos gerados do banco ficam em `types/supabase.ts`.
+- O histórico local está reconciliado com o remoto; não use `migration repair`, reescrita do histórico ou `db reset` em produção.
+- Os tipos gerados pelo Supabase ficam em `types/supabase.ts`.
 - O snapshot remoto antigo foi removido; não recrie snapshots paralelos às migrations.
-- Limpeza de `rate_limits`, `analytics_events` e `cached_themes` ocorre em janelas controladas pelo app.
+- `quiz_attempts` e `quiz_attempt_questions` guardam por 24 horas a seleção canônica entregue ao usuário. O servidor calcula a correção a partir do catálogo, e retries retornam o mesmo `quiz_result`.
+- Estatísticas de redação e quiz são recalculadas por triggers transacionais; questões sem resposta não entram no denominador da taxa de acerto.
+- Limpeza de `rate_limits`, `analytics_events`, `cached_themes` e tentativas de quiz ocorre em janelas controladas por uma RPC de manutenção.
+- Rate limit, incremento de temas, destaques e claims de webhooks Stripe usam operações atômicas restritas a `service_role`.
 - Destaques de notícias são recalculados após moderação ou quando estão vazios ou vencidos.
-- A situação das Edge Functions legadas e sua remoção remota estão documentadas em [supabase/functions/README.md](./supabase/functions/README.md).
 
 ## Segurança e publicação open source
 
 - Nunca exponha tokens, service-role keys, chaves Stripe/IA, arquivos `.env`, pulls da Vercel ou configurações locais de agentes e editores.
 - Vulnerabilidades não devem ser abertas em issues públicas; siga [SECURITY.md](./SECURITY.md).
-- Antes de publicar, rotacione qualquer segredo que possa ter aparecido em arquivos locais ou no histórico e habilite a proteção contra senhas vazadas no Supabase Auth.
+- Antes de publicar, rotacione qualquer segredo que possa ter aparecido em arquivos locais ou no histórico. A proteção contra senhas vazadas do Supabase Auth deve ser ativada quando o projeto sair do plano Free.
 - `npm run verify:open-source` valida a árvore publicável atual.
 - `npm run verify:history-clean` ainda bloqueia o histórico existente porque encontra `.vscode/mcp.json` em revisões antigas. Isso é uma pendência conhecida, não uma autorização para publicar esse histórico como limpo.
 - Para uma publicação segura, use uma árvore com histórico novo/orphan após a rotação dos segredos, ou faça uma reescrita de histórico revisada por todos os colaboradores. `npm run release:public-tree` prepara a árvore atual para esse fluxo.
@@ -156,7 +158,6 @@ Na exclusão de uma conta, o app remove primeiro redações, simulados e analyti
 - [SECURITY.md](./SECURITY.md): reporte de vulnerabilidades e tratamento de segredos
 - [FRONTEND_INVENTORY.md](./FRONTEND_INVENTORY.md): inventário técnico das rotas, APIs e módulos atuais
 - [AGENTS.md](./AGENTS.md): diretrizes operacionais para agentes e colaboradores
-- [supabase/functions/README.md](./supabase/functions/README.md): estado das Edge Functions remotas legadas
 
 ## Licença
 
