@@ -22,6 +22,7 @@ Before opening a pull request, run:
 ```bash
 npm run lint
 npm run build
+npm run test:security
 npm run verify:open-source
 npm run verify:history-clean
 ```
@@ -46,16 +47,25 @@ services. The current routes, APIs, and modules are mapped in
 
 ## Publication
 
-Use [README.md](README.md) for release commands, destination, and known history
-limitations. `npm run verify:open-source` checks the current publishable tree;
-it does not establish clean Git history. A `npm run verify:history-clean` failure
-blocks publication of that history. Do not suppress the check or automatically
-rewrite history to pass it.
+Use [README.md](README.md) for release commands. `npm run verify:open-source`
+checks the working tree and the exact staged blobs, including files absent from
+the working tree. It does not establish clean Git history. A
+`npm run verify:history-clean` failure blocks publication of that history.
+Do not suppress the check. Rewriting public history is exceptional remediation
+for an explicitly authorized incident, with private backups, scoped refs and
+explicit remote SHA leases; never use it as a routine way to pass checks.
 
-`npm run release:public-tree` prepares a separate directory and can replace a
-previously marked release directory. Inspect the destination before running it.
-Preparing the tree does not publish the project or resolve exposed credentials;
-follow [SECURITY.md](SECURITY.md) for secret handling.
+Local agent instructions, editor/MCP settings, environment files and private
+diagnostics are excluded from publication and deploys. Keep incident evidence
+outside the repository, restrict access, and never print credential values in
+checks, issues or pull requests. Public documentation describes the protection,
+not private incident details.
+
+`npm run release:public-tree` exports only approved tracked blobs from the Git
+index to a new destination outside the repository. It excludes untracked files
+and unstaged changes and refuses to overwrite an existing directory. Preparing
+the tree does not publish it, remove remote caches or invalidate credentials;
+follow [SECURITY.md](SECURITY.md) for remediation.
 
 ## Security
 

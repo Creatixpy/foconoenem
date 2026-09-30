@@ -23,6 +23,11 @@
 # misc
 .DS_Store
 *.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_ed25519
 
 # debug
 npm-debug.log*
@@ -40,8 +45,15 @@ yarn-error.log*
 
 # local/editor/agent state
 .local/
-.vscode/mcp.json
+.vscode/
+.cursor/
+.idea/
+.claude/
+.codex/
 .agents/
+AGENTS.md
+AGENTS.override.md
+AGENTS.local.md
 skills-lock.json
 IMPLEMENTACAO_PLANO_MAX.md
 *_AUDIT_*.md
@@ -55,3 +67,21 @@ next-env.d.ts
 .mcp.json
 supabase/.temp/
 supabase/.branches/
+
+# Additional private credential stores and generated diagnostics
+*.jks
+*.keystore
+id_dsa
+id_ecdsa
+.ssh/
+.aws/
+.azure/
+.docker/
+.config/gcloud/
+.netrc
+.pypirc
+mcp.json
+mcp_config.json
+*.local.md
+testsprite_tests/
+erro.png

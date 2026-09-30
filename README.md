@@ -91,11 +91,12 @@ Use `.env.example` como referência e nunca versione `.env.local` ou chaves reai
 | `npm run dev` | iniciar o desenvolvimento com Turbopack |
 | `npm run lint` | executar ESLint no repositório |
 | `npm run test:systems` | executar os testes focados de redação, quiz e roteamento OCR |
+| `npm run test:security` | testar verificadores de privacidade, índice, histórico e exportação com fixtures em memória/disco temporário |
 | `npm run build` | gerar o build de produção e atualizar `public/sitemap.xml` |
 | `npm run start` | servir o build de produção |
-| `npm run verify:open-source` | verificar arquivos obrigatórios, artefatos privados e padrões comuns de segredo |
-| `npm run verify:history-clean` | verificar o histórico Git local contra arquivos e segredos de alto risco |
-| `npm run release:public-tree` | criar uma árvore publicável limpa em `../aprovia-public-release` |
+| `npm run verify:open-source` | verificar arquivos obrigatórios e segredos/artefatos privados no índice e na árvore atual |
+| `npm run verify:history-clean` | verificar arquivos privados, blobs, mensagens e referências de todo o histórico alcançável |
+| `npm run release:public-tree` | exportar somente os arquivos rastreados e aprovados do índice para um diretório novo |
 
 A suíte Vitest é deliberadamente pequena e cobre schemas, serialização segura do quiz, notas ENEM, fingerprint idempotente, mapeamento persistido e fallback controlado do OCR. Mudanças não triviais nesses sistemas devem passar por `npm run test:systems`, `npm run lint`, build e QA do fluxo afetado.
 
@@ -163,16 +164,18 @@ Na exclusão de uma conta, o app remove primeiro tentativas de quiz, redações,
 - Nunca exponha tokens, service-role keys, chaves Stripe/IA, arquivos `.env`, pulls da Vercel ou configurações locais de agentes e editores.
 - Vulnerabilidades não devem ser abertas em issues públicas; siga [SECURITY.md](./SECURITY.md).
 - Antes de publicar, rotacione qualquer segredo que possa ter aparecido em arquivos locais ou no histórico. A proteção contra senhas vazadas do Supabase Auth deve ser ativada quando o projeto sair do plano Free.
-- `npm run verify:open-source` valida a árvore publicável atual.
-- `npm run verify:history-clean` ainda bloqueia o histórico existente porque encontra `.vscode/mcp.json` em revisões antigas. Isso é uma pendência conhecida, não uma autorização para publicar esse histórico como limpo.
-- Para uma publicação segura, use uma árvore com histórico novo/orphan após a rotação dos segredos, ou faça uma reescrita de histórico revisada por todos os colaboradores. `npm run release:public-tree` prepara a árvore atual para esse fluxo.
+- `npm run verify:open-source` valida a árvore atual e os blobs staged; corrigir um arquivo sem atualizar o índice não torna o commit seguro.
+- `npm run verify:history-clean` verifica todo o histórico alcançável, incluindo conteúdo e metadados. Qualquer falha impede publicar aquele histórico.
+- `npm run test:security` exercita essas proteções sem acessar provedores ou credenciais reais. A CI executa os testes e ambos os verificadores.
+- Instruções locais de agentes (`AGENTS.md` e variantes), configurações de editores/MCP, arquivos de ambiente e relatórios privados ficam fora do Git, do deploy e da exportação pública. `.env.example` contém somente placeholders.
+- `npm run release:public-tree` exporta o snapshot rastreado do índice: faça stage apenas dos arquivos aprovados. Arquivos não rastreados e mudanças unstaged não são copiados; o destino precisa ser novo e não pode estar dentro do projeto.
+- Caso uma credencial seja exposta, siga [SECURITY.md](./SECURITY.md): a remoção de arquivos não substitui sua invalidação no provedor. Qualquer limpeza excepcional de histórico precisa preservar trabalho local, limitar as referências alteradas e verificar novamente o remoto.
 
 ## Documentação mantida
 
 - [CONTRIBUTING.md](./CONTRIBUTING.md): setup, validação e regras para contribuições
 - [SECURITY.md](./SECURITY.md): reporte de vulnerabilidades e tratamento de segredos
 - [FRONTEND_INVENTORY.md](./FRONTEND_INVENTORY.md): inventário técnico das rotas, APIs e módulos atuais
-- [AGENTS.md](./AGENTS.md): diretrizes operacionais para agentes e colaboradores
 
 ## Licença
 

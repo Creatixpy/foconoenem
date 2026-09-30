@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "test:systems": "vitest run tests/systems",
+    "test:security": "node --test tests/scripts/*.test.mjs",
     "verify:open-source": "node scripts/verify-open-source.mjs",
     "verify:history-clean": "node scripts/verify-history-clean.mjs",
     "release:public-tree": "node scripts/create-public-release.mjs"

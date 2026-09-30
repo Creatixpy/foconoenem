@@ -339,6 +339,12 @@ Latest system migrations: `20260717180319_reform_essay_quiz_systems.sql` and the
 | `tailwind.config.js` | Tailwind configuration |
 | `tsconfig.json` | TypeScript config; incremental cache is stored under `.next/cache/typescript/` |
 | `package.json` | Scripts and dependencies |
+| `.gitignore`, `.vercelignore` | Exclude private credentials, agent/editor state and diagnostics from Git/deploys |
+| `.github/workflows/public-security.yml` | Offline security regression tests and tree/history checks with complete checkout history |
+| `scripts/public-security.mjs` | Shared redacted secret/private-path scanning for index, working tree and history |
+| `scripts/verify-open-source.mjs`, `scripts/verify-history-clean.mjs` | Publication guards for current/staged content and reachable history |
+| `scripts/create-public-release.mjs` | Export approved tracked index blobs to a new external directory |
+| `tests/scripts/public-security.test.mjs` | Offline staged-only, private-path, metadata, credential and release-export regressions |
 
 ---
 
@@ -346,6 +352,8 @@ Latest system migrations: `20260717180319_reform_essay_quiz_systems.sql` and the
 
 - `npm run build` performs both the production build and sitemap regeneration.
 - `npm run lint` is the active static validation command in the repo.
+- `npm run test:security` verifies public-tree/history guards and release export without live secrets or services. CI executes these tests and both publication checks.
+- Agent instructions and editor/MCP configuration remain local and are excluded from Git, deploys and public release export; runtime credentials remain in private environment stores.
 - `npm run test:systems` runs the focused Vitest suite for essay/quiz contracts, persistence mapping and OCR routing.
 - Shared components and library helpers use direct file imports; unused barrels and starter assets are omitted.
 - The current runtime path is Next.js route handlers under `app/api`.
