@@ -1,0 +1,26 @@
+name: Public repository security
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  public-security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out complete branch and tag history
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Test security guards offline
+        run: node --test tests/scripts/*.test.mjs
+      - name: Validate index and current tree
+        run: node scripts/verify-open-source.mjs
+      - name: Validate reachable Git history
+        run: node scripts/verify-history-clean.mjs

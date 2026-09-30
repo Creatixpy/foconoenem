@@ -115,6 +115,7 @@ ADMIN_ALLOWED_EMAILS=admin@exemplo.com
 npm install
 npm run dev
 npm run lint
+npm run test:security
 npm run build
 npm run start
 npm run deepsproxy:tunnel
@@ -127,9 +128,9 @@ Observações:
 
 - `npm run build` executa `next build` e depois `next-sitemap`, atualizando `public/sitemap.xml`.
 - `npm run deepsproxy:tunnel` abre um Cloudflare Quick Tunnel gratuito para o DeepsProxy local, publica a URL em `configuracoes.deepsproxy_public_url` e mantém o site da Vercel apontando para sua máquina enquanto o processo estiver aberto.
-- `npm run verify:open-source` valida a árvore publicável contra formatos comuns de segredo e arquivos obrigatórios de release.
-- `npm run verify:history-clean` verifica o histórico Git local contra padrões de segredos; para publicar com histórico novo, use também `npm run release:public-tree`.
-- Hoje não há suíte automatizada de testes no repositório; a validação prática do projeto passa por `npm run lint`, `npm run build` e QA manual.
+- `npm run verify:open-source` valida arquivos privados e segredos na árvore atual e nos blobs exatos do índice.
+- `npm run verify:history-clean` valida arquivos, conteúdos e metadados de todo o histórico alcançável; qualquer falha bloqueia a publicação.
+- `npm run test:security` cobre os guards e a exportação com fixtures offline; a validação funcional passa por lint, build e QA manual.
 - Contribuições devem seguir `CONTRIBUTING.md`; vulnerabilidades e segredos expostos devem seguir `SECURITY.md`.
 - Antes de tornar o repositório público, siga `OPEN_SOURCE_RELEASE.md`, adicione uma licença e publique a partir de histórico limpo.
 
@@ -225,9 +226,20 @@ types/                  tipos compartilhados e tipos gerados do Supabase
 - O arquivo [supabase/functions/README.md](./supabase/functions/README.md) documenta o legado de Edge Functions remotas ainda implantadas.
 - Não há mais `vercel.json` com cron. Limpeza de `rate_limits`, `analytics_events` e `cached_themes` roda localmente no app em janelas controladas via `configuracoes`, e os destaques de notícias são atualizados sob demanda.
 
-## Documentação interna
+## Segurança e publicação open source
+
+- Nunca exponha tokens, service-role keys, chaves Stripe/IA, arquivos `.env`, pulls da Vercel ou configurações locais de agentes e editores.
+- Vulnerabilidades não devem ser abertas em issues públicas; siga [SECURITY.md](./SECURITY.md).
+- Antes de publicar, rotacione qualquer segredo que possa ter aparecido em arquivos locais ou no histórico. A proteção contra senhas vazadas do Supabase Auth deve ser ativada quando o projeto sair do plano Free.
+- `npm run verify:open-source` valida a árvore atual e os blobs staged; corrigir um arquivo sem atualizar o índice não torna o commit seguro.
+- `npm run verify:history-clean` verifica todo o histórico alcançável, incluindo conteúdo e metadados. Qualquer falha impede publicar aquele histórico.
+- `npm run test:security` exercita essas proteções sem acessar provedores ou credenciais reais. A CI executa os testes e ambos os verificadores.
+- Instruções locais de agentes (`AGENTS.md` e variantes), configurações de editores/MCP, arquivos de ambiente e relatórios privados ficam fora do Git, do deploy e da exportação pública. `.env.example` contém somente placeholders.
+- `npm run release:public-tree` exporta o snapshot rastreado do índice: faça stage apenas dos arquivos aprovados. Arquivos não rastreados e mudanças unstaged não são copiados; o destino precisa ser novo e não pode estar dentro do projeto.
+- Caso uma credencial seja exposta, siga [SECURITY.md](./SECURITY.md): a remoção de arquivos não substitui sua invalidação no provedor. Qualquer limpeza excepcional de histórico precisa preservar trabalho local, limitar as referências alteradas e verificar novamente o remoto.
+
+## Documentação mantida
 
 - [README.md](./README.md): visão geral, setup e operação
 - [FRONTEND_INVENTORY.md](./FRONTEND_INVENTORY.md): inventário fiel da estrutura atual do repositório
-- [AGENTS.md](./AGENTS.md): diretrizes de colaboração no código
 - [supabase/functions/README.md](./supabase/functions/README.md): estado do legado de Edge Functions

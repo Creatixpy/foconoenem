@@ -10,7 +10,8 @@
     "deepsproxy:tunnel": "node scripts/deepsproxy-tunnel.mjs",
     "verify:open-source": "node scripts/verify-open-source.mjs",
     "verify:history-clean": "node scripts/verify-history-clean.mjs",
-    "release:public-tree": "node scripts/create-public-release.mjs"
+    "release:public-tree": "node scripts/create-public-release.mjs",
+    "test:security": "node --test tests/scripts/*.test.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

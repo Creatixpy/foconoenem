@@ -350,6 +350,12 @@ Latest DB hardening in this repo: `20260513224619_harden_auth_profile_and_quiz_i
 | `tailwind.config.js` | Tailwind configuration |
 | `tsconfig.json` | TypeScript config |
 | `package.json` | Scripts and dependencies |
+| `.gitignore`, `.vercelignore` | Exclude private credentials, agent/editor state and diagnostics from Git/deploys |
+| `.github/workflows/public-security.yml` | Offline security regression tests and tree/history checks with complete checkout history |
+| `scripts/public-security.mjs` | Shared redacted secret/private-path scanning for index, working tree and history |
+| `scripts/verify-open-source.mjs`, `scripts/verify-history-clean.mjs` | Publication guards for current/staged content and reachable history |
+| `scripts/create-public-release.mjs` | Export approved tracked index blobs to a new external directory |
+| `tests/scripts/public-security.test.mjs` | Offline staged-only, private-path, metadata, credential and release-export regressions |
 
 ---
 
@@ -357,7 +363,8 @@ Latest DB hardening in this repo: `20260513224619_harden_auth_profile_and_quiz_i
 
 - `npm run build` performs both the production build and sitemap regeneration.
 - `npm run lint` is the active static validation command in the repo.
-- There is no automated test suite checked into the project today.
+- `npm run test:security` covers publication guards and export offline; CI runs these tests and both tree/history checks.
+- Agent/editor/MCP state and credentials remain local and are excluded from Git, deploys and public release export.
 - `app/components/shared/index.ts` and `app/components/ui/index.ts` are present but currently empty.
 - `app/auth/login/LoginPageClient.tsx` and `app/auth/register/RegisterPageClient.tsx` are deprecated placeholders.
 - The current runtime path is Next.js route handlers under `app/api`; Supabase Edge Functions are legacy only.
