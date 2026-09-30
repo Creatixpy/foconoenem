@@ -1,0 +1,21 @@
+.content {
+  color: var(--text-2);
+  font-size: 1rem;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+
+.content p { margin-block: 1.25em; color: var(--text-2); }
+.content :is(h2, h3, h4, h5, h6) { margin-block: 1.75em 0.75em; color: var(--text); line-height: 1.35; }
+.content h2 { font-size: 1.5em; }
+.content h3 { font-size: 1.25em; }
+.content :is(ul, ol) { padding-inline-start: 1.5em; margin-block: 1.25em; }
+.content ul { list-style: disc; }
+.content ol { list-style: decimal; }
+.content li { margin-block: 0.5em; }
+.content blockquote { margin-block: 1.5em; border-inline-start: 3px solid var(--brand-hover); padding-inline-start: 1em; color: var(--text-2); }
+.content a { color: var(--brand-hover); text-decoration: underline; text-underline-offset: 0.2em; }
+.content a:hover { color: var(--text); }
+.content :is(strong, b) { color: var(--text); font-weight: 700; }
+.content hr { margin-block: 2em; border-color: var(--border); }
+.content img { max-width: 100%; height: auto; }

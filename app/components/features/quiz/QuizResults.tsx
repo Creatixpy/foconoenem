@@ -1,8 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { motion } from 'motion/react';
 import type { QuizResult } from '@/lib/contracts/quiz';
 
 type QuizResultsProps = { result: QuizResult; onNewQuiz: () => void };
@@ -16,6 +15,8 @@ function scoreLabel(score: number) {
 
 export default function QuizResults({ result, onNewQuiz }: QuizResultsProps) {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => { headingRef.current?.focus(); }, []);
   const performance = useMemo(() => {
     const grouped = new Map<string, { total: number; correct: number }>();
     for (const question of result.questions) {
@@ -29,16 +30,16 @@ export default function QuizResults({ result, onNewQuiz }: QuizResultsProps) {
 
   return (
     <div className="mx-auto max-w-3xl space-y-10">
-      <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-        <p className="text-sm text-[var(--text-3)]">Resultado canônico salvo</p>
-        <p className="mt-3 text-5xl font-bold text-[var(--brand)]">{result.score}%</p>
+      <section className="text-center">
+        <h1 ref={headingRef} tabIndex={-1} className="text-lg font-semibold text-[var(--text)]">Seu resultado foi salvo</h1>
+        <p className="mt-3 text-5xl font-bold text-[var(--brand-hover)]">{result.score}%</p>
         <p className="mt-2 text-lg font-semibold text-[var(--text)]">
           {result.correctAnswers} de {result.totalQuestions} questões corretas
         </p>
         <p className="mt-1 text-sm text-[var(--text-3)]">
           {scoreLabel(result.score)} · {result.unansweredQuestions} não respondida(s)
         </p>
-      </motion.section>
+      </section>
 
       {performance.length > 1 && (
         <section className="grid gap-3 sm:grid-cols-2">
@@ -71,7 +72,7 @@ export default function QuizResults({ result, onNewQuiz }: QuizResultsProps) {
                   className="flex w-full items-center gap-3 p-4 text-left"
                   aria-expanded={isExpanded}
                 >
-                  <span className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white ${question.isCorrect ? 'bg-[var(--ai)]' : 'bg-[var(--danger)]'}`}>
+                  <span aria-label={question.selectedAlternativeId === null ? 'Não respondida' : question.isCorrect ? 'Correta' : 'Incorreta'} className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-[var(--bg)] ${question.isCorrect ? 'bg-[var(--ai)]' : 'bg-[var(--danger)]'}`}>
                     {question.isCorrect ? '✓' : '✗'}
                   </span>
                   <span className="flex-1 text-sm font-medium text-[var(--text)]">Questão {index + 1} · {question.discipline}</span>
@@ -92,7 +93,7 @@ export default function QuizResults({ result, onNewQuiz }: QuizResultsProps) {
                       </p>
                     )}
                     <p className="rounded-lg bg-[var(--surface)] p-3 leading-relaxed text-[var(--text-2)]">
-                      <span className="mb-1 block text-xs font-semibold text-[var(--brand)]">Explicação</span>
+                      <span className="mb-1 block text-xs font-semibold text-[var(--text)]">Explicação</span>
                       {question.explanation}
                     </p>
                   </div>

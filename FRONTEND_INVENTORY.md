@@ -35,12 +35,12 @@ The repository contains no active Supabase Edge Functions. Runtime APIs are Next
 | Route | Files | Purpose |
 | --- | --- | --- |
 | `/` | `app/page.tsx`, `app/_components/home/*.tsx` | Landing page composed from four Server Components |
-| `/redacao` | `app/redacao/page.tsx`, `app/redacao/RedacaoPageClient.tsx`, `app/redacao/useEssayWorkflow.ts`, `app/redacao/PhotoUpload.tsx`, `app/redacao/prepareOcrImage.ts` | Essay workflow, locally optimized OCR uploads, idempotent correction UI |
-| `/questoes` | `app/questoes/page.tsx`, `app/questoes/QuestoesPageClient.tsx` | Quiz generation, answering and result flow |
+| `/redacao` | `app/redacao/page.tsx`, `app/redacao/RedacaoPageClient.tsx`, `app/redacao/useEssayWorkflow.ts`, `app/redacao/PhotoUpload.tsx`, `app/redacao/prepareOcrImage.ts` | Per-user local drafts, confirmed OCR replacement, bounded input validation and idempotent correction UI |
+| `/questoes` | `app/questoes/page.tsx`, `app/questoes/QuestoesPageClient.tsx` | Same-tab recovery, native radios, previous/review navigation and frozen manual submission retries |
 | `/planos` | `app/planos/page.tsx`, `app/planos/PlanosPageClient.tsx` | Free/Max comparison, subscription status, checkout and portal entry points |
-| `/noticias` | `app/noticias/page.tsx`, `app/noticias/NoticiasPageClient.tsx` | Public news feed |
-| `/noticias/[slug]` | `app/noticias/[slug]/page.tsx` | Approved news detail |
-| `/noticias/pesquisa` | `app/noticias/pesquisa/page.tsx` | News search page |
+| `/noticias` | `app/noticias/page.tsx`, `app/noticias/NoticiasPageClient.tsx`, `app/noticias/error.tsx` | Public feed with background highlights refresh, recoverable pagination and segment errors |
+| `/noticias/[slug]` | `app/noticias/[slug]/page.tsx`, `app/noticias/[slug]/article.module.css` | Sanitized article with local typography and optional related content; missing articles preserve 404 |
+| `/noticias/pesquisa` | `app/noticias/pesquisa/page.tsx` | URL-driven archive/AI search (`q`, optional `modo=ia`) with history synchronization |
 | `/noticias/admin` | `app/noticias/admin/page.tsx` | News admin panel |
 | `/conta` | `app/conta/page.tsx`, `app/conta/ContaPageClient.tsx` | Account dashboard and Max subscription management |
 | `/conta/editar` | `app/conta/editar/page.tsx`, `app/conta/editar/ContaEditarPageClient.tsx` | Profile editing |
@@ -132,6 +132,7 @@ These Server Components are private to the homepage; `app/page.tsx` handles thei
 | `app/components/layout/Header.tsx` | Header, auth menu and compact navigation below the desktop breakpoint |
 | `app/components/layout/Footer.tsx` | Footer links and branding |
 | `app/components/shared/AprovIALogo.tsx` | Reusable responsive AprovIA symbol and wordmark |
+| `app/components/shared/FlowStatus.tsx` | Shared accessible status/error presentation |
 | `app/components/shared/RebrandingBanner.tsx` | Dismissible transition notice backed by local storage |
 
 ### Quiz feature components
@@ -145,8 +146,11 @@ These Server Components are private to the homepage; `app/page.tsx` handles thei
 
 | File | Purpose |
 | --- | --- |
-| `app/noticias/hooks.ts` | Client hooks for public feed, highlights, article lookup and text search |
-| `app/noticias/[slug]/ShareButton.tsx` | Native-share/copy-link control for an approved article |
+| `app/noticias/hooks.ts` | Cancelable public feed, background highlights, article lookup and archive/AI queries; stale completions are ignored |
+| `app/noticias/useNewsSearch.ts` | URL/history synchronization and shared search orchestration |
+| `app/noticias/SearchForm.tsx` | Labeled archive/AI search form |
+| `app/noticias/error.tsx` | Retry/recovery for unavailable news segments |
+| `app/noticias/[slug]/ShareButton.tsx` | Copy-link control with selected manual-copy fallback |
 
 ---
 
@@ -156,7 +160,8 @@ These Server Components are private to the homepage; `app/page.tsx` handles thei
 | --- | --- |
 | `app/styles/index.css` | Imports design tokens and base styles |
 | `app/styles/tokens.css` | Dark-only AprovIA design tokens |
-| `app/styles/base.css` | Base element styles and utilities used by the app shell |
+| `app/styles/base.css` | Base/app-shell styles and scoped student touch targets, focus and reduced motion |
+| `app/noticias/[slug]/article.module.css` | Local article paragraphs, headings, lists, quotes and links |
 
 There are currently no separate `components.css`, `forms.css` or `utilities.css` files in the repository.
 
@@ -178,17 +183,30 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | File | Purpose |
 | --- | --- |
 | `lib/contracts/essay.ts` | Strict Zod contracts for themes, submissions, ENEM competences and API responses |
+| `lib/contracts/essay-input.ts` | Shared client word/character and manual-theme validation |
+| `lib/contracts/student-drafts.ts` | Validated essay/quiz draft shapes and frozen quiz submission snapshot |
 | `lib/contracts/ocr.ts` | Shared OCR MIME, payload, error-code and success-response contracts |
 | `lib/contracts/quiz.ts` | Strict question, attempt and review contracts plus public answer-safe serialization |
 | `lib/contracts/quiz-result.ts` | Neutral validation/mapping of persisted quiz snapshots |
-| `lib/contracts/operating-hours.ts` | Neutral operating-hours interface shared by server and clients |
+| `lib/contracts/operating-hours.ts` | Shared timezone-aware operating-hours interface and calculation |
+
+### `lib/client/`
+
+| File | Purpose |
+| --- | --- |
+| `lib/client/drafts.ts` | Versioned, user-isolated stores; explicit logout invalidation across tabs; unavailable/corrupt storage handling |
+| `lib/client/use-user-draft.ts` | Restore before saving and persist changes/IDs before network work |
+| `lib/client/api-errors.ts` | Student-facing API errors and `resetAt`/`Retry-After` interpretation |
+| `lib/client/latest-request.ts` | Cancel/invalidate stale completions and deduplicate articles by ID |
+| `lib/client/use-operating-hours.ts` | Refresh availability each minute and on tab return |
+| `lib/client/use-retry-delay.ts` | Visible manual-retry cooldown |
 
 ### `lib/auth/`
 
 | File | Purpose |
 | --- | --- |
 | `lib/auth/constants.ts` | Auth constants and route references |
-| `lib/auth/context.tsx` | `AuthProvider` and auth state management, including optional server-validated initial user bootstrap |
+| `lib/auth/context.tsx` | `AuthProvider`, verified initial bootstrap and explicit-only draft cleanup; automatic expiry keeps work |
 | `lib/auth/profile-service.ts` | Client wrapper around `/api/perfil` |
 | `lib/auth/security.ts` | Auth-side security helpers |
 | `lib/auth/service.ts` | Sign-in, sign-up, reset and session refresh flows |
@@ -225,9 +243,9 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | `lib/server/news-content.ts` | Server-only sanitization of approved news HTML and external URLs |
 | `lib/server/news-highlights.ts` | On-demand highlight refresh/status logic backed by `configuracoes` |
 | `lib/server/news-import.ts` | Server-only NewsAPI fetch/normalize/dedupe/import pipeline |
-| `lib/server/noticias.ts` | Server-side approved news access for public routes |
+| `lib/server/noticias.ts` | Server-side approved news access ordered by publication date and ID |
 | `lib/server/ocr-image.ts` | Server-only OCR upload size, MIME and magic-byte validation |
-| `lib/server/operating-hours.ts` | Business-hours evaluation |
+| `lib/server/operating-hours.ts` | Server clock wrapper around the shared availability calculation |
 | `lib/server/page-auth.ts` | Cached server-side page guards for authenticated routes |
 | `lib/server/rate-limit.ts` | Atomic, fail-closed server-side rate limiting |
 | `lib/server/request-origin.ts` | Trusted-origin enforcement for stateful and authenticated APIs |
@@ -324,6 +342,9 @@ Latest system migrations: `20260717180319_reform_essay_quiz_systems.sql` and the
 | `public/.well-known/discord` | External verification/integration artifact |
 | `public/favicon.svg` | Primary vector app icon |
 | `public/manifest.json` | Web app manifest using the vector icon |
+| `tests/systems/student-workflows.test.ts` | Draft isolation/logout, frozen IDs/answers, API errors, input limits, availability and stale requests |
+| `tests/systems/news-detail.test.tsx` | Article preservation when related content fails, sanitization, genuine 404 and unavailable service |
+| `docs/student-workflows-qa.md` | Workflow verification scenarios, results and limits of controlled browser QA |
 
 ---
 
@@ -338,6 +359,7 @@ Latest system migrations: `20260717180319_reform_essay_quiz_systems.sql` and the
 | `postcss.config.mjs` | PostCSS config |
 | `tailwind.config.js` | Tailwind configuration |
 | `tsconfig.json` | TypeScript config; incremental cache is stored under `.next/cache/typescript/` |
+| `vitest.config.ts` | Node system tests with project aliases and isolated CSS-module handling |
 | `package.json` | Scripts and dependencies |
 | `.gitignore`, `.vercelignore` | Exclude private credentials, agent/editor state and diagnostics from Git/deploys |
 | `.github/workflows/public-security.yml` | Offline security regression tests and tree/history checks with complete checkout history |
@@ -354,7 +376,7 @@ Latest system migrations: `20260717180319_reform_essay_quiz_systems.sql` and the
 - `npm run lint` is the active static validation command in the repo.
 - `npm run test:security` verifies public-tree/history guards and release export without live secrets or services. CI executes these tests and both publication checks.
 - Agent instructions and editor/MCP configuration remain local and are excluded from Git, deploys and public release export; runtime credentials remain in private environment stores.
-- `npm run test:systems` runs the focused Vitest suite for essay/quiz contracts, persistence mapping and OCR routing.
+- `npm run test:systems` runs the focused Vitest suite for contracts, persistence mapping, OCR routing, drafts, student errors and news recovery, using in-memory data and mocked providers.
 - Shared components and library helpers use direct file imports; unused barrels and starter assets are omitted.
 - The current runtime path is Next.js route handlers under `app/api`.
 - Development screenshots live in `.local/screenshots/`, excluded from Git and deploys; generated dependencies/build artifacts and `supabase/.branches/` remain local.

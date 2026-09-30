@@ -152,3 +152,21 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* Shared behavior for student workflows; layout remains owned by each page. */
+.student-flow { overflow-wrap: anywhere; }
+.student-flow :is(button, summary) { min-height: 3rem; }
+.student-flow button { min-width: 3rem; }
+.student-flow a.inline-flex { min-height: 3rem; align-items: center; }
+.student-flow :is(input, textarea, select) { font-size: 1rem; }
+.student-flow :is(input, textarea, select):focus-visible { outline: 2px solid var(--brand-hover); outline-offset: 2px; }
+.student-flow :is(h1, h2)[tabindex="-1"] { scroll-margin-top: 5rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .student-flow *, .student-flow *::before, .student-flow *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

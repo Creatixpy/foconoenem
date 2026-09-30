@@ -1,37 +1,42 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export default function ShareButton() {
   const [copied, setCopied] = useState(false);
+  const [manualUrl, setManualUrl] = useState('');
+  const [busy, setBusy] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
+  useEffect(() => { if (manualUrl) { inputRef.current?.focus(); inputRef.current?.select(); } }, [manualUrl]);
 
   const handleShare = async () => {
-    await navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 2000);
+    setBusy(true);
+    setCopied(false);
+    setManualUrl('');
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => setCopied(false), 2_000);
+    } catch {
+      setManualUrl(window.location.href);
+    } finally {
+      setBusy(false);
+    }
   };
-
   return (
-    <button
-      type="button"
-      onClick={handleShare}
-      className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs text-[var(--text-3)] transition-colors hover:border-[var(--border-hover)] hover:text-[var(--text-2)]"
-    >
-      {copied ? (
-        <>
-          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
-          Copiado
-        </>
-      ) : (
-        <>
-          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C7.311 12.587 6.5 11.7 6.5 10.75 6.5 8.679 9.186 7 12.5 7S18.5 8.679 18.5 10.75c0 2.071-2.686 3.75-6 3.75-.377 0-.746-.022-1.103-.066L8.5 17.5l.184-4.158z" />
-          </svg>
-          Copiar link
-        </>
-      )}
-    </button>
+    <div className="min-w-0 space-y-2">
+      <button type="button" disabled={busy} onClick={() => void handleShare()} className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-3 text-xs text-[var(--text-2)] hover:border-[var(--border-hover)] disabled:opacity-50">
+        {copied ? 'Link copiado' : busy ? 'Copiando…' : 'Copiar link'}
+      </button>
+      {copied && <span className="sr-only" role="status">Link copiado.</span>}
+      {manualUrl && <div className="space-y-2">
+        <p role="status" className="text-sm text-[var(--text-2)]">Não foi possível copiar automaticamente. Selecione e copie o link abaixo.</p>
+        <label htmlFor="manual-news-link" className="sr-only">Link para copiar</label>
+        <input ref={inputRef} id="manual-news-link" readOnly value={manualUrl} onFocus={(event) => event.target.select()} className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-3 text-base text-[var(--text)]" />
+      </div>}
+    </div>
   );
 }

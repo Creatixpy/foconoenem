@@ -4,8 +4,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   OCR_ALLOWED_MIME_TYPES,
   ocrResponseSchema,
-  type OcrErrorCode,
 } from '@/lib/contracts/ocr';
+import { ApiError, apiError, failureMessage } from '@/lib/client/api-errors';
+import { useRetryDelay } from '@/lib/client/use-retry-delay';
+import FlowStatus from '@/app/components/shared/FlowStatus';
 import {
   OcrImagePreparationError,
   prepareOcrImage,
@@ -18,13 +20,6 @@ const PHOTO_GUIDANCE = [
   'Mantenha a câmera paralela e enquadre todo o texto.',
   'Confira se a foto está nítida e a escrita está legível.',
 ] as const;
-
-class OcrRequestError extends Error {
-  constructor(message: string, public readonly code?: OcrErrorCode) {
-    super(message);
-    this.name = 'OcrRequestError';
-  }
-}
 
 function CameraIcon() {
   return (
@@ -79,7 +74,7 @@ function PhotoGuidance() {
         {PHOTO_GUIDANCE.map((item) => (
           <li key={item} className="flex gap-2">
             <span className="text-[var(--brand)]" aria-hidden="true">•</span>
-            <span>{item}</span>
+            <span className="min-w-0">{item}</span>
           </li>
         ))}
       </ul>
@@ -89,17 +84,23 @@ function PhotoGuidance() {
 
 interface PhotoUploadProps {
   onTextExtracted: (text: string) => void;
+  currentText: string;
   disabled?: boolean;
 }
 
-export default function PhotoUpload({ onTextExtracted, disabled }: PhotoUploadProps) {
+export default function PhotoUpload({ onTextExtracted, currentText, disabled }: PhotoUploadProps) {
   const [state, setState] = useState<UploadState>('idle');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [optimized, setOptimized] = useState(false);
   const [extractedText, setExtractedText] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-  const [errorCode, setErrorCode] = useState<OcrErrorCode | null>(null);
+  const [retryAllowed, setRetryAllowed] = useState(false);
+  const [retryAt, setRetryAt] = useState<number | null>(null);
+  const [confirmReplace, setConfirmReplace] = useState(false);
+  const secondsToRetry = useRetryDelay(retryAt);
+  const reviewRef = useRef<HTMLTextAreaElement>(null);
+  const confirmRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const requestControllerRef = useRef<AbortController | null>(null);
   const selectionVersionRef = useRef(0);
@@ -127,7 +128,8 @@ export default function PhotoUpload({ onTextExtracted, disabled }: PhotoUploadPr
     setOptimized(false);
     setExtractedText('');
     setErrorMessage('');
-    setErrorCode(null);
+    setRetryAllowed(false);
+    setConfirmReplace(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   }, []);
 
@@ -137,7 +139,7 @@ export default function PhotoUpload({ onTextExtracted, disabled }: PhotoUploadPr
 
   const handleFileSelect = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const sourceFile = event.target.files?.[0];
-    if (!sourceFile) return;
+    if (!sourceFile || disabled) return;
 
     const selectionVersion = selectionVersionRef.current + 1;
     selectionVersionRef.current = selectionVersion;
@@ -148,7 +150,8 @@ export default function PhotoUpload({ onTextExtracted, disabled }: PhotoUploadPr
     setPreviewUrl(null);
     setOptimized(false);
     setErrorMessage('');
-    setErrorCode(null);
+    setRetryAllowed(false);
+    setConfirmReplace(false);
 
     try {
       const prepared = await prepareOcrImage(sourceFile);
@@ -167,17 +170,17 @@ export default function PhotoUpload({ onTextExtracted, disabled }: PhotoUploadPr
           : 'Não foi possível preparar a foto. Escolha outra imagem.',
       );
     }
-  }, []);
+  }, [disabled]);
 
   const handleExtract = useCallback(async () => {
-    if (!selectedFile) return;
+    if (!selectedFile || disabled || secondsToRetry || requestControllerRef.current) return;
 
-    requestControllerRef.current?.abort();
     const controller = new AbortController();
     requestControllerRef.current = controller;
     setState('extracting');
     setErrorMessage('');
-    setErrorCode(null);
+    setRetryAllowed(false);
+    setConfirmReplace(false);
 
     try {
       const formData = new FormData();
@@ -191,48 +194,47 @@ export default function PhotoUpload({ onTextExtracted, disabled }: PhotoUploadPr
       const payload: unknown = await response.json().catch(() => null);
 
       if (!response.ok) {
-        const code = payload && typeof payload === 'object' && 'code' in payload
-          ? String(payload.code) as OcrErrorCode
-          : undefined;
-        const serverMessage = payload && typeof payload === 'object' && 'message' in payload
-          ? String(payload.message)
-          : undefined;
-
-        if (response.status === 401) {
-          throw new OcrRequestError('Sessão expirada. Faça login novamente.', code);
-        }
-        if (response.status === 429) {
-          throw new OcrRequestError('Muitas tentativas. Aguarde antes de tentar novamente.', code);
-        }
-        throw new OcrRequestError(
-          serverMessage ?? 'Não foi possível extrair o texto. Tente com outra foto.',
-          code,
-        );
+        const code = payload && typeof payload === 'object' && 'code' in payload ? String(payload.code) : '';
+        const problem = apiError(response, payload, 'Não foi possível extrair o texto agora. Sua foto foi mantida para tentar novamente.');
+        setRetryAllowed(response.status >= 500 || [401, 408, 429].includes(response.status));
+        setRetryAt(problem.retryAt);
+        if (code === 'OCR_UNREADABLE') throw new ApiError('Não foi possível ler a redação. Tire outra foto com foco, boa iluminação e texto legível.', 'invalid');
+        if (response.status === 400) throw new ApiError('A foto não pôde ser lida. Escolha uma imagem JPG, PNG ou WebP nítida.', 'invalid');
+        throw problem;
       }
-
       const parsed = ocrResponseSchema.safeParse(payload);
       if (!parsed.success) {
-        throw new OcrRequestError('O serviço retornou um texto inválido. Tente novamente.');
+        setRetryAllowed(true);
+        throw new ApiError('Não conseguimos abrir o texto extraído. Tente extrair novamente com a mesma foto.', 'unavailable');
       }
+      if (controller.signal.aborted) return;
 
       setExtractedText(parsed.data.text);
       setState('review');
     } catch (error) {
       if (controller.signal.aborted) return;
       setState('error');
-      setErrorMessage(error instanceof Error ? error.message : 'Erro de conexão. Tente novamente.');
-      setErrorCode(error instanceof OcrRequestError ? error.code ?? null : null);
+      setErrorMessage(failureMessage(error, 'Não foi possível conectar. Sua foto foi mantida para tentar novamente.'));
+      if (!(error instanceof ApiError)) setRetryAllowed(true);
     } finally {
       if (requestControllerRef.current === controller) {
         requestControllerRef.current = null;
       }
     }
-  }, [selectedFile]);
+  }, [selectedFile, disabled, secondsToRetry]);
 
-  const handleUseText = useCallback(() => {
+  const applyText = useCallback(() => {
+    if (disabled) return;
     onTextExtracted(extractedText);
     reset();
-  }, [extractedText, onTextExtracted, reset]);
+  }, [disabled, extractedText, onTextExtracted, reset]);
+
+  const handleUseText = () => {
+    if (currentText.trim() && currentText !== extractedText) setConfirmReplace(true);
+    else applyText();
+  };
+  useEffect(() => { if (state === 'review') reviewRef.current?.focus(); }, [state]);
+  useEffect(() => { if (confirmReplace) confirmRef.current?.focus(); }, [confirmReplace]);
 
   const fileInput = (
     <input
@@ -241,7 +243,7 @@ export default function PhotoUpload({ onTextExtracted, disabled }: PhotoUploadPr
       accept={OCR_ALLOWED_MIME_TYPES.join(',')}
       onClick={(event) => { event.currentTarget.value = ''; }}
       onChange={handleFileSelect}
-      aria-describedby="photo-upload-guidance"
+      aria-label="Selecionar foto da redação"
       className="hidden"
     />
   );
@@ -268,7 +270,7 @@ export default function PhotoUpload({ onTextExtracted, disabled }: PhotoUploadPr
     );
   }
 
-  const canRetrySamePhoto = errorCode === 'OCR_UNAVAILABLE' && selectedFile !== null;
+  const canRetrySamePhoto = retryAllowed && selectedFile !== null;
 
   return (
     <div className="border-b border-[var(--border)]">
@@ -282,6 +284,7 @@ export default function PhotoUpload({ onTextExtracted, disabled }: PhotoUploadPr
           <button
             type="button"
             onClick={reset}
+            disabled={disabled}
             aria-label="Fechar envio de foto"
             className="p-1 rounded-md text-[var(--text-3)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
           >
@@ -296,12 +299,12 @@ export default function PhotoUpload({ onTextExtracted, disabled }: PhotoUploadPr
           </div>
         )}
 
-        {(state === 'preview' || state === 'extracting') && previewUrl && (
+        {previewUrl && (
           <div className="space-y-3">
             <div className="relative rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--surface-2)]">
               {/* Blob URLs are local previews and cannot use the Next.js image optimizer. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={previewUrl} alt="Prévia da redação" className="w-full max-h-48 object-contain" />
+              <img src={previewUrl} alt="Foto da redação para comparação com o texto extraído" className="w-full max-h-96 object-contain" />
               {state === 'extracting' && (
                 <div className="absolute inset-0 bg-[var(--bg)]/80 flex flex-col items-center justify-center gap-3" role="status">
                   <SpinnerIcon size={24} />
@@ -310,16 +313,18 @@ export default function PhotoUpload({ onTextExtracted, disabled }: PhotoUploadPr
               )}
             </div>
 
+            <a href={previewUrl} target="_blank" rel="noopener noreferrer" className="inline-flex py-3 text-sm text-[var(--brand-hover)] underline">Abrir foto em tamanho completo</a>
             {optimized && (
               <p className="text-xs text-[var(--success)]">A foto foi otimizada no seu navegador antes do envio.</p>
             )}
             <PhotoGuidance />
 
             {state === 'preview' && (
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={handleExtract}
+                  disabled={disabled || secondsToRetry > 0}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-[var(--brand)] text-white hover:bg-[var(--brand-hover)] active:bg-[var(--brand-active)] transition-all duration-[var(--duration-fast)] shadow-sm"
                 >
                   Extrair texto
@@ -327,6 +332,7 @@ export default function PhotoUpload({ onTextExtracted, disabled }: PhotoUploadPr
                 <button
                   type="button"
                   onClick={openFilePicker}
+                  disabled={disabled}
                   className="px-4 py-2.5 rounded-xl text-sm font-medium border border-[var(--border)] text-[var(--text-2)] hover:bg-[var(--surface-2)] transition-all duration-[var(--duration-fast)]"
                 >
                   Trocar foto
@@ -342,17 +348,26 @@ export default function PhotoUpload({ onTextExtracted, disabled }: PhotoUploadPr
               Compare com a foto e revise o texto extraído. Você pode editá-lo antes de usar.
             </p>
             <textarea
+              ref={reviewRef}
+              disabled={disabled}
               value={extractedText}
               onChange={(event) => setExtractedText(event.target.value)}
               aria-label="Texto extraído da foto"
-              className="w-full min-h-[160px] p-4 rounded-xl text-sm leading-relaxed bg-[var(--surface-2)] text-[var(--text)] border border-[var(--border)] resize-none outline-none focus:border-[var(--brand)]/50 focus:ring-1 focus:ring-[var(--brand)]/20 transition-all"
+              className="w-full min-h-[160px] p-4 rounded-xl text-sm leading-relaxed bg-[var(--surface-2)] text-[var(--text)] border border-[var(--border)] resize-y transition-all"
             />
-            <div className="flex gap-2">
+            {confirmReplace && <div ref={confirmRef} tabIndex={-1} role="group" aria-label="Confirmar substituição da redação" className="rounded-xl border border-[var(--warning)]/40 p-4">
+              <p className="text-sm text-[var(--text-2)]">Há um texto diferente no editor. Deseja substituí-lo pelo texto revisado da foto?</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button type="button" disabled={disabled} onClick={applyText} className="rounded-lg bg-[var(--brand)] px-4 py-3 text-sm text-white">Substituir redação</button>
+                <button type="button" onClick={() => { setConfirmReplace(false); reviewRef.current?.focus(); }} className="rounded-lg border border-[var(--border)] px-4 py-3 text-sm text-[var(--text)]">Cancelar</button>
+              </div>
+            </div>}
+            <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={handleUseText}
-                disabled={!extractedText.trim()}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-[var(--success)] text-white hover:brightness-110 active:brightness-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-[var(--duration-fast)] shadow-sm"
+                disabled={disabled || !extractedText.trim()}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-[var(--success)] text-[var(--bg)] hover:brightness-110 active:brightness-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-[var(--duration-fast)] shadow-sm"
               >
                 <CheckIcon />
                 Usar este texto
@@ -360,6 +375,7 @@ export default function PhotoUpload({ onTextExtracted, disabled }: PhotoUploadPr
               <button
                 type="button"
                 onClick={reset}
+                disabled={disabled}
                 className="px-4 py-2.5 rounded-xl text-sm font-medium border border-[var(--border)] text-[var(--text-2)] hover:bg-[var(--surface-2)] transition-all duration-[var(--duration-fast)]"
               >
                 Cancelar
@@ -370,23 +386,25 @@ export default function PhotoUpload({ onTextExtracted, disabled }: PhotoUploadPr
 
         {state === 'error' && (
           <div className="space-y-3" aria-live="polite">
-            <div className="flex items-start gap-2.5 px-4 py-3 rounded-xl text-sm bg-[var(--danger-soft)] text-[var(--danger)] border border-[var(--danger)]/20">
+            <FlowStatus error>
               <span className="shrink-0 mt-0.5"><AlertTriangleIcon /></span>
               <span>{errorMessage}</span>
-            </div>
+            </FlowStatus>
             <PhotoGuidance />
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={canRetrySamePhoto ? handleExtract : openFilePicker}
+                disabled={disabled || (canRetrySamePhoto && secondsToRetry > 0)}
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border border-[var(--border)] text-[var(--text-2)] hover:bg-[var(--surface-2)] transition-all duration-[var(--duration-fast)]"
               >
                 <CameraIcon />
-                {canRetrySamePhoto ? 'Tentar novamente' : 'Escolher outra foto'}
+                {canRetrySamePhoto ? (secondsToRetry > 0 ? `Aguarde ${secondsToRetry}s` : 'Tentar novamente') : 'Escolher outra foto'}
               </button>
               <button
                 type="button"
                 onClick={reset}
+                disabled={disabled}
                 className="px-4 py-2.5 rounded-xl text-sm font-medium text-[var(--text-3)] hover:text-[var(--text-2)] transition-colors"
               >
                 Cancelar

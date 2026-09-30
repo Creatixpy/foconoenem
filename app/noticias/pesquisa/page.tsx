@@ -1,11 +1,12 @@
 'use client';
 
-import { Suspense, useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion } from 'motion/react';
-import { useBuscaNoticias, useBuscaIA, type NoticiaAPI } from '../hooks';
+import type { NoticiaAPI } from '../hooks';
+import { useNewsSearch } from '../useNewsSearch';
+import SearchForm from '../SearchForm';
+import FlowStatus from '@/app/components/shared/FlowStatus';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -57,7 +58,7 @@ function ResultCard({ noticia }: { noticia: NoticiaAPI }) {
         </div>
         <div className="flex-1 min-w-0 space-y-1">
           {noticia.tags.length > 0 && (
-            <span className="inline-block text-[10px] font-semibold uppercase tracking-wider text-[var(--brand)] bg-[var(--brand)]/10 px-2 py-0.5 rounded-full">
+            <span className="inline-block text-[10px] font-semibold uppercase tracking-wider text-[var(--brand-hover)] bg-[var(--brand)]/10 px-2 py-0.5 rounded-full">
               {noticia.tags[0]}
             </span>
           )}
@@ -65,7 +66,7 @@ function ResultCard({ noticia }: { noticia: NoticiaAPI }) {
             {noticia.titulo}
           </h3>
           <p className="text-xs text-[var(--text-3)] line-clamp-2">{stripHtml(noticia.resumo)}</p>
-          <div className="flex items-center gap-2 text-[10px] text-[var(--text-3)]">
+          <div className="flex flex-wrap items-center gap-2 text-[10px] text-[var(--text-3)]">
             <span>{formatDate(noticia.data_publicacao)}</span>
             <span>·</span>
             <span>{readTime(noticia.conteudo)}</span>
@@ -80,41 +81,15 @@ function ResultCard({ noticia }: { noticia: NoticiaAPI }) {
 // Main
 // ---------------------------------------------------------------------------
 function PesquisaPageInner() {
-  const searchParams = useSearchParams();
-  const initialQuery = searchParams.get('q') || '';
-  const [query, setQuery] = useState(initialQuery);
-  const [isAI, setIsAI] = useState(false);
-  const { results, loading: searchLoading, searched, search, clear: clearSearch } = useBuscaNoticias();
-  const { content: aiContent, loading: aiLoading, error: aiError, search: aiSearch, clear: clearAI } = useBuscaIA();
-
-  // Auto-search on mount if query param present
-  useEffect(() => {
-    if (initialQuery) search(initialQuery);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!query.trim()) return;
-    if (isAI) {
-      clearSearch();
-      aiSearch(query.trim());
-    } else {
-      clearAI();
-      search(query.trim());
-    }
-  };
-
-  const loading = searchLoading || aiLoading;
+  const searchState = useNewsSearch();
+  const { results, aiContent, loading, error, searched, showingAI, showingSearch, submit, clearResults, secondsToRetry } = searchState;
 
   return (
-    <div className="min-h-[80vh] pb-20">
+    <div className="student-flow min-h-[80vh] pb-20">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
         {/* header */}
-        <motion.div
+        <div
           className="mb-6 space-y-2"
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
         >
           <Link
             href="/noticias"
@@ -126,57 +101,14 @@ function PesquisaPageInner() {
             Voltar para notícias
           </Link>
           <h1 className="text-2xl font-bold text-[var(--text)]">Pesquisar notícias</h1>
-        </motion.div>
+        </div>
 
-        {/* search form */}
-        <motion.form
-          onSubmit={handleSubmit}
-          className="mb-8 space-y-3"
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
-        >
-          <div className="relative">
-            <svg
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-[var(--text-3)]"
-              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-            </svg>
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={isAI ? 'Peça um resumo das notícias recentes sobre um tema...' : 'Buscar por título ou conteúdo...'}
-              className="w-full pl-10 pr-28 py-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] placeholder:text-[var(--text-3)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] text-sm"
-            />
-            <button
-              type="submit"
-              disabled={loading || !query.trim()}
-              className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 rounded-lg bg-[var(--brand)] text-white text-sm font-medium hover:bg-[var(--brand-hover)] transition-colors disabled:opacity-50 cursor-pointer"
-            >
-              {loading ? '...' : 'Buscar'}
-            </button>
-          </div>
-          <button
-            type="button"
-            onClick={() => setIsAI(!isAI)}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors cursor-pointer border ${
-              isAI
-                ? 'bg-[var(--brand)]/10 text-[var(--brand)] border-[var(--brand)]/30'
-                : 'bg-[var(--surface)] text-[var(--text-3)] border-[var(--border)]'
-            }`}
-          >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-            </svg>
-            Resumo com IA
-          </button>
-        </motion.form>
+        <div className="mb-8"><SearchForm {...searchState} /></div>
+        {(showingSearch || showingAI) && <button type="button" onClick={clearResults} className="mb-4 rounded-lg border border-[var(--border)] px-4 py-3 text-xs text-[var(--text-2)]">Limpar busca</button>}
 
         {/* loading */}
         {loading && (
-          <div className="space-y-3">
+          <div role="status" aria-label="Buscando notícias" className="space-y-3">
             {[1, 2, 3].map((i) => (
               <div key={i} className="h-28 rounded-xl bg-[var(--surface)] animate-pulse" />
             ))}
@@ -184,36 +116,29 @@ function PesquisaPageInner() {
         )}
 
         {/* AI results */}
-        {!loading && aiContent && (
-          <motion.div
+        {!loading && showingAI && !error && aiContent && (
+          <div
             className="rounded-xl border border-[var(--brand)]/20 bg-[var(--surface)] p-5 sm:p-6 mb-6"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
           >
             <div className="flex items-center gap-2 mb-3">
               <svg className="w-4 h-4 text-[var(--brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
               </svg>
-              <span className="text-xs font-medium text-[var(--brand)]">Resumo da IA</span>
+              <span className="text-xs font-medium text-[var(--brand-hover)]">Resumo da IA</span>
             </div>
             <div className="text-sm text-[var(--text-2)] leading-relaxed whitespace-pre-line">
               {aiContent}
             </div>
-          </motion.div>
-        )}
-
-        {aiError && (
-          <div className="rounded-xl border border-[var(--danger)]/20 bg-[var(--danger)]/5 p-4 text-sm text-[var(--danger)] mb-6">
-            {aiError}
           </div>
         )}
 
+        {error && <div className="mb-6 space-y-3"><FlowStatus error>{error}{secondsToRetry > 0 && ` Aguarde ${secondsToRetry}s.`}</FlowStatus><button type="button" disabled={secondsToRetry > 0} onClick={() => submit()} className="rounded-lg border border-[var(--border)] px-4 py-3 text-sm text-[var(--text)] disabled:opacity-50">Tentar novamente</button></div>}
+        {!loading && showingAI && searched && !error && !aiContent && <FlowStatus>Nenhuma notícia encontrada para resumir. Tente outro termo.</FlowStatus>}
+
         {/* search results */}
-        {!loading && searched && results.length > 0 && (
-          <motion.div
+        {!loading && showingSearch && searched && !error && results.length > 0 && (
+          <div
             className="space-y-3"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
           >
             <p className="text-xs text-[var(--text-3)] mb-3">
               {results.length} resultado{results.length !== 1 ? 's' : ''} encontrado{results.length !== 1 ? 's' : ''}
@@ -221,11 +146,11 @@ function PesquisaPageInner() {
             {results.map((n) => (
               <ResultCard key={n.id} noticia={n} />
             ))}
-          </motion.div>
+          </div>
         )}
 
         {/* empty state */}
-        {!loading && searched && results.length === 0 && !aiContent && (
+        {!loading && showingSearch && searched && !error && results.length === 0 && (
           <div className="text-center py-16">
             <div className="w-14 h-14 rounded-full bg-[var(--surface)] flex items-center justify-center mx-auto mb-4">
               <svg className="w-7 h-7 text-[var(--text-3)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -238,15 +163,9 @@ function PesquisaPageInner() {
             <p className="text-[var(--text-3)] text-xs mb-4">
               Tente termos diferentes ou peça um resumo com IA baseado nas notícias já publicadas.
             </p>
-            {!isAI && (
+            {showingSearch && (
               <button
-                onClick={() => {
-                  setIsAI(true);
-                  if (query.trim()) {
-                    clearSearch();
-                    aiSearch(query.trim());
-                  }
-                }}
+                onClick={() => submit(searchState.query, true)}
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[var(--brand)] text-white text-sm font-medium hover:bg-[var(--brand-hover)] transition-colors cursor-pointer"
               >
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

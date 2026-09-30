@@ -39,9 +39,9 @@ services. The current routes, APIs, and modules are mapped in
 | --- | --- |
 | Auth | `/login`, `/register`, `/forgot-password`, `/reset-password`; callback and session refresh when affected |
 | Account | `/conta`, `/conta/editar`; account deletion, including removing app-owned content before the Auth user |
-| Essay | `/redacao`, `/resultados/[id]`; OCR upload/compression, theme ownership, stable `submissionId`, off-topic retries |
-| Quiz | `/questoes`; POST attempt creation without answer leakage, PATCH canonical correction, selected answers preserved on retries |
-| News | Public feed/detail/search; `/noticias/admin` for moderation, import, sanitization, and highlights when affected |
+| Essay | `/redacao`, `/resultados/[id]`; Draft restore/discard/user isolation/explicit logout vs session expiry; OCR compression/retry/confirmed replacement; theme ownership, input limits, stable `submissionId`, off-topic justification |
+| Quiz | `/questoes`; Same-tab restore without automatic POST; native radio keyboard/previous/review navigation; POST without answer leakage, frozen PATCH retries, 404/410 recovery |
+| News | Feed/detail/search errors vs empty; stale query cancellation, URL history, pagination retry/deduplication, optional related content and denied clipboard; `/noticias/admin` when moderation/import/highlights are affected |
 | Donations | `/doacao`, `/doacao/sucesso`, checkout, and `/api/doacao/webhook` when Stripe is configured |
 | Subscriptions | `/planos`, `/conta`, `/api/assinatura/status`, `/api/assinatura/checkout`, `/api/assinatura/portal`, shared `/api/doacao/webhook`; first-time 7-day trial eligibility |
 

@@ -20,6 +20,7 @@ import { SESSION_CONFIG } from './constants';
 import { updateLastActivity, isSessionIdle, clearAuthStorage } from './security';
 import { getUserProfile, createUserProfile, updateUserProfile } from './profile-service';
 import type { UserProfile, OAuthSignupContext } from './types';
+import { clearUserDrafts } from '@/lib/client/drafts';
 
 const supabase = createClient();
 
@@ -151,13 +152,14 @@ export function AuthProvider({
 
   // Sign out handler
   const handleSignOut = useCallback(async () => {
+    if (user) clearUserDrafts(user.id);
     await signOut();
     if (isMountedRef.current) {
       setUser(null);
       setSession(null);
       setProfile(null);
     }
-  }, []);
+  }, [user]);
 
   // Re-validate session when tab becomes visible again.
   // Supabase's built-in autoRefreshToken pauses while the tab is hidden.
@@ -208,7 +210,7 @@ export function AuthProvider({
     // built-in autoRefreshToken.
     const checkIdleTimeout = async () => {
       if (isSessionIdle()) {
-        await handleSignOut();
+        await signOut();
       }
     };
 
@@ -229,7 +231,7 @@ export function AuthProvider({
         clearInterval(activityIntervalRef.current);
       }
     };
-  }, [session, handleSignOut]);
+  }, [session]);
 
   // Bootstrap auth on mount
   useEffect(() => {
