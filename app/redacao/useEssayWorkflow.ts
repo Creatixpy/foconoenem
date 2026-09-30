@@ -12,18 +12,16 @@ import { useRetryDelay } from '@/lib/client/use-retry-delay';
 export { MIN_WORDS, MAX_WORDS, MAX_ESSAY_CHARACTERS } from '@/lib/contracts/essay-input';
 export type ThemeData = { themeId: string; tema: string; textoApoio1: string; textoApoio2: string };
 export type ThemeMode = 'generated' | 'manual';
-export type MobileTab = 'theme' | 'write' | 'submit';
 
 export function useEssayWorkflow(userId: string) {
   const router = useRouter();
-  const { draft, updateDraft, clearDraft, ready, status } = useUserDraft('essay', userId, essayDraftSchema, EMPTY_ESSAY_DRAFT);
+  const { draft, updateDraft, clearDraft, ready, status, savedAt } = useUserDraft('essay', userId, essayDraftSchema, EMPTY_ESSAY_DRAFT);
   const generationRef = useRef<AbortController | null>(null);
   const correctionRef = useRef<AbortController | null>(null);
   const [themeLoading, setThemeLoading] = useState(false);
   const [themeError, setThemeError] = useState('');
   const [correcting, setCorrecting] = useState(false);
   const [correctionError, setCorrectionError] = useState('');
-  const [mobileTab, setMobileTab] = useState<MobileTab>('theme');
   const [retryAt, setRetryAt] = useState<number | null>(null);
   const [themeRetryAt, setThemeRetryAt] = useState<number | null>(null);
   const secondsToRetry = useRetryDelay(retryAt);
@@ -53,7 +51,6 @@ export function useEssayWorkflow(userId: string) {
     setThemeError('');
     setCorrectionError('');
     clearDraft();
-    setMobileTab('theme');
   }, [clearDraft]);
 
   const wordCount = countWords(draft.essay);
@@ -64,7 +61,7 @@ export function useEssayWorkflow(userId: string) {
   const canSubmit = ready && hasSelectedTheme && !inputValidation && !correcting && !themeLoading && secondsToRetry === 0;
 
   const generateTheme = useCallback(async () => {
-    if (!ready || generationRef.current || correctionRef.current || themeSecondsToRetry) return;
+    if (!ready || generationRef.current || correctionRef.current || themeSecondsToRetry) return false;
     const controller = new AbortController();
     generationRef.current = controller;
     setThemeLoading(true);
@@ -75,13 +72,14 @@ export function useEssayWorkflow(userId: string) {
       if (!response.ok) throw apiError(response, payload, 'Não foi possível gerar o tema agora. Tente novamente em instantes.');
       const validated = generatedThemeResponseSchema.safeParse(payload);
       if (!validated.success) throw new ApiError('Não conseguimos abrir o tema. Tente gerar novamente.', 'unavailable');
-      if (controller.signal.aborted || generationRef.current !== controller) return;
+      if (controller.signal.aborted || generationRef.current !== controller) return false;
       updateDraft((current) => ({ ...current, theme: validated.data, themeMode: 'generated' }));
-      setMobileTab('write');
+      return true;
     } catch (failure) {
-      if (controller.signal.aborted || generationRef.current !== controller) return;
+      if (controller.signal.aborted || generationRef.current !== controller) return false;
       setThemeError(failureMessage(failure));
       setThemeRetryAt(failure instanceof ApiError ? failure.retryAt : null);
+      return false;
     } finally {
       if (generationRef.current === controller) {
         generationRef.current = null;
@@ -101,7 +99,6 @@ export function useEssayWorkflow(userId: string) {
     const controller = new AbortController();
     correctionRef.current = controller;
     setCorrecting(true);
-    setMobileTab('submit');
     setCorrectionError('');
     try {
       const response = await fetch('/api/corrigir', {
@@ -117,7 +114,8 @@ export function useEssayWorkflow(userId: string) {
       router.push(`/resultados/${validated.data.id}`);
     } catch (failure) {
       if (controller.signal.aborted) return;
-      setCorrectionError(failureMessage(failure));
+      const message = failureMessage(failure);
+      setCorrectionError(failure instanceof ApiError ? message : `${message} Sua redação foi mantida.`);
       setRetryAt(failure instanceof ApiError ? failure.retryAt : null);
       setCorrecting(false);
     } finally {
@@ -126,9 +124,9 @@ export function useEssayWorkflow(userId: string) {
   }, [canSubmit, draft, updateDraft, clearDraft, router]);
 
   return {
-    ...draft, ready, draftStatus: status, discardDraft,
+    ...draft, ready, draftStatus: status, savedAt, discardDraft,
     setThemeMode, themeLoading, themeError, setThemeError, setManualTheme, setEssay,
-    correcting, correctionError, mobileTab, setMobileTab, wordCount, charCount: draft.essay.length,
+    correcting, correctionError, wordCount, charCount: draft.essay.length,
     selectedThemeTitle, hasSelectedTheme, canSubmit, themeValidation, inputValidation,
     secondsToRetry, themeSecondsToRetry, generateTheme, submitEssay,
   };

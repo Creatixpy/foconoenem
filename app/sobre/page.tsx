@@ -1,4 +1,11 @@
 import Link from 'next/link';
+import { createPageMetadata } from '@/lib/contracts/page-metadata';
+
+export const metadata = createPageMetadata({
+  title: 'Sobre',
+  description: 'Conheça a plataforma de prática, correção e acompanhamento para o ENEM.',
+  pathname: '/sobre',
+});
 
 const pilares = [
   {

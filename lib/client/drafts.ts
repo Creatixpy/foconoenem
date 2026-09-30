@@ -54,17 +54,20 @@ export function clearUserDrafts(userId: string, storage: StorageProvider = brows
 
 export function createDraftStore<T>(kind: DraftKind, userId: string, schema: DraftSchema<T>, storage: StorageProvider = browserStorage) {
   let stopped = false;
+  let savedAt: number | null = null;
   const versionAtOpen = logoutVersion(userId, storage);
   const registration = { userId, stop: () => { stopped = true; } };
   activeStores.add(registration);
   listenForExplicitLogout();
   const key = draftKey(kind, userId);
   return {
-    read(): { value: T | null; status: DraftStatus } {
-      if (stopped) return { value: null, status: 'stopped' };
+    get savedAt() { return savedAt; },
+    read(): { value: T | null; status: DraftStatus; savedAt: number | null } {
+      savedAt = null;
+      if (stopped) return { value: null, status: 'stopped', savedAt };
       try {
         const raw = storage(kind).getItem(key);
-        if (!raw) return { value: null, status: 'empty' };
+        if (!raw) return { value: null, status: 'empty', savedAt };
         try {
           const envelope: unknown = JSON.parse(raw);
           if (envelope && typeof envelope === 'object' && 'version' in envelope && envelope.version === 1 &&
@@ -72,22 +75,33 @@ export function createDraftStore<T>(kind: DraftKind, userId: string, schema: Dra
             // Also handles a logout missed while this tab was suspended or unloaded.
             if (envelope.logoutVersion !== logoutVersion(userId, storage)) {
               storage(kind).removeItem(key);
-              return { value: null, status: 'empty' };
+              return { value: null, status: 'empty', savedAt };
+            }
+            // v1 drafts written before timestamps remain readable.
+            if ('savedAt' in envelope && (typeof envelope.savedAt !== 'number' ||
+              !Number.isSafeInteger(envelope.savedAt) || envelope.savedAt <= 0 ||
+              envelope.savedAt > 8_640_000_000_000_000)) {
+              return { value: null, status: 'invalid', savedAt };
             }
             const parsed = schema.safeParse(envelope.value);
-            if (parsed.success) return { value: parsed.data, status: 'restored' };
+            if (parsed.success) {
+              savedAt = 'savedAt' in envelope ? envelope.savedAt as number : null;
+              return { value: parsed.data, status: 'restored', savedAt };
+            }
           }
         } catch { /* Invalid JSON is never restored. */ }
-        return { value: null, status: 'invalid' };
+        return { value: null, status: 'invalid', savedAt };
       } catch {
-        return { value: null, status: 'unavailable' };
+        return { value: null, status: 'unavailable', savedAt };
       }
     },
     write(value: T): DraftStatus {
       if (stopped || versionAtOpen !== logoutVersion(userId, storage)) return 'stopped';
       if (!schema.safeParse(value).success) return 'unavailable';
       try {
-        storage(kind).setItem(key, JSON.stringify({ version: 1, userId, logoutVersion: versionAtOpen, value }));
+        const timestamp = Date.now();
+        storage(kind).setItem(key, JSON.stringify({ version: 1, userId, logoutVersion: versionAtOpen, value, savedAt: timestamp }));
+        savedAt = timestamp;
         return 'saved';
       } catch {
         return 'unavailable';
@@ -95,7 +109,7 @@ export function createDraftStore<T>(kind: DraftKind, userId: string, schema: Dra
     },
     clear(): DraftStatus {
       if (stopped) return 'stopped';
-      try { storage(kind).removeItem(key); return 'empty'; } catch { return 'unavailable'; }
+      try { storage(kind).removeItem(key); savedAt = null; return 'empty'; } catch { return 'unavailable'; }
     },
     dispose() {
       stopped = true;

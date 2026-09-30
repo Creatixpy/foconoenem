@@ -13,6 +13,7 @@ export function useUserDraft<T>(
   const [draft, setDraft] = useState(initial);
   const [ready, setReady] = useState(false);
   const [status, setStatus] = useState<DraftStatus>('empty');
+  const [savedAt, setSavedAt] = useState<number | null>(null);
   const currentRef = useRef(initial);
   const storeRef = useRef<ReturnType<typeof createDraftStore<T>> | null>(null);
 
@@ -23,6 +24,7 @@ export function useUserDraft<T>(
     currentRef.current = restored.value ?? initial;
     setDraft(currentRef.current);
     setStatus(restored.status);
+    setSavedAt(restored.savedAt);
     setReady(true);
     return () => { store.dispose(); storeRef.current = null; };
   }, [kind, userId, schema, initial]);
@@ -34,13 +36,15 @@ export function useUserDraft<T>(
     setDraft(next);
     // Save before starting network work, including the IDs and frozen submission.
     setStatus(storeRef.current.write(next));
+    setSavedAt(storeRef.current.savedAt);
   }, []);
 
   const clearDraft = useCallback(() => {
     currentRef.current = initial;
     setDraft(initial);
     setStatus(storeRef.current?.clear() ?? 'unavailable');
+    setSavedAt(storeRef.current?.savedAt ?? null);
   }, [initial]);
 
-  return { draft, updateDraft, clearDraft, ready, status };
+  return { draft, updateDraft, clearDraft, ready, status, savedAt };
 }

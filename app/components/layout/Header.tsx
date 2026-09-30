@@ -1,12 +1,13 @@
 'use client';
 
-import { startTransition, useEffect, useMemo, useState } from 'react';
+import { startTransition, useEffect, useId, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
 import AprovIALogo from '@/app/components/shared/AprovIALogo';
 import { clearUserDrafts } from '@/lib/client/drafts';
+import { CreditCard, History, LogOut, UserRound } from 'lucide-react';
 
 const NAV_LINKS = [
   { href: '/', label: 'Início' },
@@ -18,6 +19,11 @@ const NAV_LINKS = [
 ] as const;
 
 const supabase = createClient();
+const ACCOUNT_LINKS = [
+  { href: '/conta/editar', label: 'Perfil', Icon: UserRound },
+  { href: '/conta?aba=redacoes', label: 'Histórico de redações', Icon: History },
+  { href: '/conta#plano', label: 'Plano', Icon: CreditCard },
+] as const;
 
 function isActivePath(pathname: string, href: string): boolean {
   if (href === '/') {
@@ -46,6 +52,10 @@ function AuthActions({
 }) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
+  const [open, setOpen] = useState(false);
+  const menuId = useId();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   const displayName = useMemo(() => {
     if (!user) {
@@ -62,8 +72,33 @@ function AuthActions({
     return metadataName || user.email?.split('@')[0] || 'Minha conta';
   }, [user]);
 
-  const handleSignOut = async () => {
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (!containerRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [open]);
+
+  const closeMenu = () => {
+    setOpen(false);
     onAction?.();
+  };
+
+  const handleSignOut = async () => {
+    closeMenu();
     setSubmitting(true);
     try {
       if (user) clearUserDrafts(user.id);
@@ -82,14 +117,14 @@ function AuthActions({
         <Link
           href="/login"
           onClick={onAction}
-          className="rounded-lg px-4 py-2 text-sm font-medium text-[var(--text-2)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
+          className="inline-flex min-h-12 items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-[var(--text-2)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
         >
           Entrar
         </Link>
         <Link
           href="/register"
           onClick={onAction}
-          className="rounded-lg bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-hover)]"
+          className="inline-flex min-h-12 items-center justify-center rounded-lg bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-hover)]"
         >
           Começar grátis
         </Link>
@@ -98,22 +133,49 @@ function AuthActions({
   }
 
   return (
-    <div className={`flex items-center ${compact ? 'flex-col items-stretch gap-2' : 'gap-2'}`}>
-      <Link
-        href="/conta"
-        onClick={onAction}
-        className="rounded-lg px-4 py-2 text-sm font-medium text-[var(--text)] transition-colors hover:bg-[var(--surface-2)]"
-      >
-        {compact ? 'Minha conta' : displayName}
-      </Link>
+    <div
+      ref={containerRef}
+      className="relative"
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+      }}
+    >
       <button
+        ref={triggerRef}
         type="button"
-        onClick={handleSignOut}
+        onClick={() => {
+          if (!open) onAction?.();
+          setOpen((current) => !current);
+        }}
         disabled={submitting}
-        className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--text-2)] transition-colors hover:border-[var(--border-hover)] hover:text-[var(--text)] disabled:cursor-not-allowed disabled:opacity-60"
+        aria-expanded={open}
+        aria-controls={menuId}
+        aria-label={`Menu da conta de ${displayName}`}
+        className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-[var(--brand)]/40 bg-[var(--brand-soft)] text-sm font-semibold text-[var(--text)] transition-colors hover:border-[var(--brand-hover)] hover:bg-[var(--surface-2)] disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {submitting ? 'Saindo...' : 'Sair'}
+        <span aria-hidden="true">{displayName?.trim().split(/\s+/).slice(0, 2).map((word) => word[0]).join('').toUpperCase()}</span>
       </button>
+      {open && (
+        <nav id={menuId} aria-label="Menu da conta" className="absolute right-0 top-full z-10 mt-2 w-64 max-w-[calc(100vw-2rem)] rounded-xl border border-[var(--border)] bg-[var(--surface)] p-2 shadow-xl">
+          <p className="break-words border-b border-[var(--border)] px-3 py-3 text-sm font-semibold text-[var(--text)]">{displayName}</p>
+          <ul className="mt-1">
+            {ACCOUNT_LINKS.map(({ href, label, Icon }) => (
+              <li key={href}>
+                <Link href={href} onClick={closeMenu} className="flex min-h-12 items-center gap-3 rounded-lg px-3 py-2 text-sm text-[var(--text-2)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--text)]">
+                  <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
+                  {label}
+                </Link>
+              </li>
+            ))}
+            <li className="mt-1 border-t border-[var(--border)] pt-1">
+              <button type="button" onClick={handleSignOut} disabled={submitting} className="flex min-h-12 w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-[var(--text-2)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--text)] disabled:opacity-60">
+                <LogOut className="h-5 w-5 shrink-0" aria-hidden="true" />
+                {submitting ? 'Saindo…' : 'Sair'}
+              </button>
+            </li>
+          </ul>
+        </nav>
+      )}
     </div>
   );
 }
@@ -207,7 +269,8 @@ export default function Header() {
             <li key={href}>
               <Link
                 href={href}
-                className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                aria-current={isActivePath(pathname, href) ? 'page' : undefined}
+                className={`inline-flex min-h-12 items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                   isActivePath(pathname, href)
                     ? 'text-[var(--brand-hover)]'
                     : 'text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]'
@@ -220,28 +283,29 @@ export default function Header() {
         </ul>
 
         <div className="hidden items-center gap-2 lg:flex">
-          <AuthActions user={user} />
+          <AuthActions key={user?.id ?? 'guest'} user={user} />
         </div>
 
         <div className="flex items-center gap-2 lg:hidden">
+          {user && <AuthActions key={user.id} user={user} onAction={closeMobileMenu} />}
           <button
             id="mobile-navigation-toggle"
             type="button"
             onClick={() => {
               setMobileOpen((current) => !current);
             }}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[var(--text-2)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
+            className="inline-flex h-12 w-12 items-center justify-center rounded-lg text-[var(--text-2)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
             aria-label={mobileOpen ? 'Fechar menu' : 'Abrir menu'}
             aria-expanded={mobileOpen}
             aria-controls="mobile-navigation"
           >
             {mobileOpen ? (
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18" />
                 <line x1="6" y1="6" x2="18" y2="18" />
               </svg>
             ) : (
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="3" y1="6" x2="21" y2="6" />
                 <line x1="3" y1="12" x2="21" y2="12" />
                 <line x1="3" y1="18" x2="21" y2="18" />
@@ -260,7 +324,8 @@ export default function Header() {
                   key={href}
                   href={href}
                   onClick={closeMobileMenu}
-                  className={`rounded-lg px-3 py-3 text-base font-medium transition-colors ${
+                  aria-current={isActivePath(pathname, href) ? 'page' : undefined}
+                  className={`flex min-h-12 items-center rounded-lg px-3 py-3 text-base font-medium transition-colors ${
                     isActivePath(pathname, href)
                       ? 'bg-[var(--brand-soft)] text-[var(--text)]'
                       : 'text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]'
@@ -271,7 +336,7 @@ export default function Header() {
               ))}
             </div>
             <div className="my-2 border-t border-[var(--border)]" />
-            <AuthActions user={user} compact onAction={closeMobileMenu} />
+            {!user && <AuthActions user={null} compact onAction={closeMobileMenu} />}
           </div>
         </div>
       )}

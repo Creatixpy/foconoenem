@@ -69,8 +69,8 @@ function CheckIcon() {
 function PhotoGuidance() {
   return (
     <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3">
-      <p className="text-xs font-semibold text-[var(--text-2)]">Para uma leitura mais precisa:</p>
-      <ul className="mt-2 space-y-1.5 text-xs text-[var(--text-3)]">
+      <p className="text-sm font-semibold text-[var(--text-2)]">Para uma leitura mais precisa:</p>
+      <ul className="mt-2 space-y-1.5 text-sm text-[var(--text-3)]">
         {PHOTO_GUIDANCE.map((item) => (
           <li key={item} className="flex gap-2">
             <span className="text-[var(--brand)]" aria-hidden="true">•</span>
@@ -102,6 +102,7 @@ export default function PhotoUpload({ onTextExtracted, currentText, disabled }: 
   const reviewRef = useRef<HTMLTextAreaElement>(null);
   const confirmRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const requestControllerRef = useRef<AbortController | null>(null);
   const selectionVersionRef = useRef(0);
 
@@ -131,6 +132,7 @@ export default function PhotoUpload({ onTextExtracted, currentText, disabled }: 
     setRetryAllowed(false);
     setConfirmReplace(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
+    if (cameraInputRef.current) cameraInputRef.current.value = '';
   }, []);
 
   const openFilePicker = useCallback(() => {
@@ -236,33 +238,34 @@ export default function PhotoUpload({ onTextExtracted, currentText, disabled }: 
   useEffect(() => { if (state === 'review') reviewRef.current?.focus(); }, [state]);
   useEffect(() => { if (confirmReplace) confirmRef.current?.focus(); }, [confirmReplace]);
 
-  const fileInput = (
-    <input
-      ref={fileInputRef}
-      type="file"
-      accept={OCR_ALLOWED_MIME_TYPES.join(',')}
-      onClick={(event) => { event.currentTarget.value = ''; }}
-      onChange={handleFileSelect}
-      aria-label="Selecionar foto da redação"
-      className="hidden"
-    />
-  );
+  const fileInput = <>
+    <input ref={fileInputRef} type="file" accept={OCR_ALLOWED_MIME_TYPES.join(',')}
+      onClick={(event) => { event.currentTarget.value = ''; }} onChange={handleFileSelect}
+      aria-label="Selecionar foto da redação" className="hidden" />
+    <input ref={cameraInputRef} type="file" accept={OCR_ALLOWED_MIME_TYPES.join(',')} capture="environment"
+      onClick={(event) => { event.currentTarget.value = ''; }} onChange={handleFileSelect}
+      aria-label="Fotografar redação" className="hidden" />
+  </>;
 
   if (state === 'idle') {
     return (
       <div className="px-5 py-3 border-b border-[var(--border)]">
         <div className="flex flex-col items-start gap-2">
+          <p className="text-sm font-medium text-[var(--text)]">Escreveu à mão? Transcreva sua foto.</p>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={() => cameraInputRef.current?.click()} disabled={disabled} aria-describedby="photo-upload-guidance" className="inline-flex min-h-12 items-center gap-2 rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--text-2)] hover:bg-[var(--surface-2)]"><CameraIcon />Fotografar</button>
           <button
             type="button"
             onClick={openFilePicker}
             disabled={disabled}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium border border-[var(--border)] text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text)] disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-[var(--duration-fast)]"
+            className="inline-flex min-h-12 items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-[var(--border)] text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text)] disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-[var(--duration-fast)]"
           >
             <CameraIcon />
-            Enviar foto da redação
+            Escolher foto
           </button>
-          <p id="photo-upload-guidance" className="text-xs text-[var(--text-3)] leading-relaxed">
-            Fotografe com boa iluminação, foco nítido e todo o texto legível. Fotos de até 20 MB são otimizadas antes do envio.
+          </div>
+          <p id="photo-upload-guidance" className="text-sm text-[var(--text-3)] leading-relaxed">
+            A foto será transcrita para você revisar e aplicar ao editor antes da correção. Use boa iluminação e texto legível. JPEG, PNG ou WebP de até 20 MB; converta HEIC para JPEG antes de enviar.
           </p>
         </div>
         {fileInput}
@@ -277,7 +280,7 @@ export default function PhotoUpload({ onTextExtracted, currentText, disabled }: 
       {fileInput}
       <div className="px-5 py-4 space-y-4">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-[var(--text-2)] uppercase tracking-wider flex items-center gap-2">
+          <span className="text-sm font-semibold text-[var(--text-2)] uppercase tracking-wider flex items-center gap-2">
             <CameraIcon />
             Foto da redação
           </span>
@@ -286,7 +289,7 @@ export default function PhotoUpload({ onTextExtracted, currentText, disabled }: 
             onClick={reset}
             disabled={disabled}
             aria-label="Fechar envio de foto"
-            className="p-1 rounded-md text-[var(--text-3)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+            className="h-12 w-12 inline-flex items-center justify-center rounded-md text-[var(--text-3)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
           >
             <XIcon />
           </button>
@@ -313,9 +316,9 @@ export default function PhotoUpload({ onTextExtracted, currentText, disabled }: 
               )}
             </div>
 
-            <a href={previewUrl} target="_blank" rel="noopener noreferrer" className="inline-flex py-3 text-sm text-[var(--brand-hover)] underline">Abrir foto em tamanho completo</a>
+            <a href={previewUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center py-3 text-sm text-[var(--brand-hover)] underline">Abrir foto em tamanho completo</a>
             {optimized && (
-              <p className="text-xs text-[var(--success)]">A foto foi otimizada no seu navegador antes do envio.</p>
+              <p className="text-sm text-[var(--success)]">A foto foi otimizada no seu navegador antes do envio.</p>
             )}
             <PhotoGuidance />
 
@@ -344,7 +347,7 @@ export default function PhotoUpload({ onTextExtracted, currentText, disabled }: 
 
         {state === 'review' && (
           <div className="space-y-3">
-            <p className="text-xs text-[var(--text-3)]">
+            <p className="text-sm text-[var(--text-3)]">
               Compare com a foto e revise o texto extraído. Você pode editá-lo antes de usar.
             </p>
             <textarea

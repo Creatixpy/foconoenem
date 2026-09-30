@@ -7,12 +7,13 @@ import { useOperatingHours } from '@/lib/client/use-operating-hours';
 import FlowStatus from '@/app/components/shared/FlowStatus';
 import type { OperatingHoursInfo } from '@/lib/contracts/operating-hours';
 import PhotoUpload from './PhotoUpload';
+import styles from './redacao.module.css';
+import { essaySubmitReason, hasMeaningfulEssayDraft, themeRequirementState, wordCountState, wordRequirementState, type RequirementState } from './essay-presentation';
 import {
   MAX_WORDS,
   MIN_WORDS,
   MAX_ESSAY_CHARACTERS,
   useEssayWorkflow,
-  type MobileTab,
   type ThemeData,
   type ThemeMode,
 } from './useEssayWorkflow';
@@ -82,24 +83,6 @@ function SpinnerIcon({ size = 18 }: { size?: number }) {
   );
 }
 
-function PenToolIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 20h9" />
-      <path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838.838-2.872a2 2 0 0 1 .506-.855z" />
-    </svg>
-  );
-}
-
-function BookIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-    </svg>
-  );
-}
-
 /* ================================================================== */
 /*  Helpers                                                            */
 /* ================================================================== */
@@ -110,7 +93,7 @@ function OperatingHoursPill({ info }: { info: OperatingHoursInfo | null }) {
   return (
     <span
       className={`
-        inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium
+        inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium
         ${info.isOpen
           ? 'bg-[var(--success)]/10 text-[var(--success)] border border-[var(--success)]/20'
           : 'bg-[var(--warning)]/10 text-[var(--warning)] border border-[var(--warning)]/20'
@@ -118,7 +101,7 @@ function OperatingHoursPill({ info }: { info: OperatingHoursInfo | null }) {
       `}
     >
       <ClockIcon />
-      {info.isOpen ? `Aberto até ${info.closesAt}` : `Abre ${info.nextOpenTime}`}
+      {info.isOpen ? `Correção disponível até ${info.closesAt} · Brasília` : `Correção abre ${info.nextOpenTime} · Brasília`}
     </span>
   );
 }
@@ -170,35 +153,29 @@ function ThemeSection({
   return (
     <fieldset disabled={disabled} aria-labelledby="essay-theme-title" className="min-w-0 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
       <h2 id="essay-theme-title" tabIndex={-1} className="text-sm font-semibold text-[var(--text)] uppercase tracking-wider mb-4">
-        Tema da sua redação
+        1. Tema da sua redação
       </h2>
 
-      <div className="mb-4 grid grid-cols-2 gap-2 rounded-xl bg-[var(--surface)] p-1 border border-[var(--border)]">
-        <button
-          type="button"
-          onClick={() => onModeChange('generated')}
-          aria-pressed={mode === 'generated'}
-          className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-            mode === 'generated'
-              ? 'bg-[var(--surface-2)] text-[var(--text)] shadow-sm'
-              : 'text-[var(--text-3)]'
-          }`}
-        >
-          Tema com IA
-        </button>
-        <button
-          type="button"
-          onClick={() => onModeChange('manual')}
-          aria-pressed={mode === 'manual'}
-          className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-            mode === 'manual'
-              ? 'bg-[var(--surface-2)] text-[var(--text)] shadow-sm'
-              : 'text-[var(--text-3)]'
-          }`}
-        >
-          Tema manual
-        </button>
+      <div role="tablist" aria-label="Escolher tipo de tema" className="mb-4 grid grid-cols-2 gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-1">
+        {(['generated', 'manual'] as const).map((tab) => (
+          <button key={tab} id={`theme-tab-${tab}`} type="button" role="tab"
+            aria-selected={mode === tab} aria-controls={`theme-panel-${tab}`} tabIndex={mode === tab ? 0 : -1}
+            onClick={() => onModeChange(tab)}
+            onKeyDown={(event) => {
+              if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+              event.preventDefault();
+              const next = event.key === 'Home' ? 'generated' : event.key === 'End' ? 'manual' : mode === 'manual' ? 'generated' : 'manual';
+              onModeChange(next);
+              document.getElementById(`theme-tab-${next}`)?.focus();
+            }}
+            className={`min-h-12 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${mode === tab
+              ? 'border-[var(--brand-hover)] bg-[var(--brand-soft)] text-[var(--text)]'
+              : 'border-transparent text-[var(--text-2)] hover:bg-[var(--surface-2)]'}`}>
+            {tab === 'generated' ? 'Tema com IA' : 'Tema manual'}
+          </button>
+        ))}
       </div>
+      <div role="tabpanel" id={`theme-panel-${mode}`} aria-labelledby={`theme-tab-${mode}`}>
 
       {themeError && (
         <FlowStatus error>{themeError}{secondsToRetry > 0 && ` Aguarde ${secondsToRetry}s.`}</FlowStatus>
@@ -208,7 +185,7 @@ function ThemeSection({
       {mode === 'manual' ? (
         <div className="space-y-4">
           <p className="text-sm text-[var(--text-3)]">
-            Escolha um tema de 5 a 300 caracteres. Os textos de apoio serão gerados durante a correção.
+            Escolha uma questão social, cultural ou ambiental para discutir, como nos temas do ENEM. Use de 5 a 300 caracteres; os textos de apoio serão gerados durante a correção.
           </p>
           <label htmlFor="manual-theme" className="block text-sm font-medium text-[var(--text)]">Seu tema</label>
           <textarea
@@ -224,7 +201,7 @@ function ThemeSection({
               placeholder:text-[var(--text-3)] resize-y
             "
           />
-          <p id="manual-theme-validation" className={`text-sm ${manualTheme && validation ? 'text-[var(--warning)]' : 'text-[var(--text-3)]'}`}>{validation || `${manualTheme.trim().length}/300 caracteres`}</p>
+          <p id="manual-theme-validation" className={`text-sm ${manualTheme && validation ? 'text-[var(--warning)]' : 'text-[var(--text-3)]'}`}>{manualTheme.trim() ? validation || 'Tema pronto para usar.' : 'Escreva o tema com pelo menos 5 caracteres.'}</p>
         </div>
       ) : !theme ? (
         <div className="text-center py-6">
@@ -276,17 +253,18 @@ function ThemeSection({
             onClick={onGenerate}
             disabled={themeLoading || !canGenerate}
             className="
-              inline-flex items-center gap-1.5 text-xs font-medium
+              inline-flex min-h-12 items-center gap-1.5 text-sm font-medium
               text-[var(--text-3)] hover:text-[var(--text-2)]
               disabled:opacity-50 disabled:cursor-not-allowed
               transition-colors
             "
           >
             {themeLoading ? <SpinnerIcon size={14} /> : <RefreshIcon />}
-            Novo tema
+            Gerar outro tema
           </button>
         </div>
       )}
+      </div>
     </fieldset>
   );
 }
@@ -295,316 +273,177 @@ function ThemeSection({
 /*  Requirements Checklist                                             */
 /* ================================================================== */
 
-function RequirementsChecklist({
-  hasTheme,
-  wordCount,
-  charCount,
-}: {
-  hasTheme: boolean;
-  wordCount: number;
-  charCount: number;
+function RequirementsChecklist({ hasTheme, wordCount, manualTheme, themeValidation }: {
+  hasTheme: boolean; wordCount: number; manualTheme: string; themeValidation: string;
 }) {
-  const items = [
-    { label: 'Tema válido selecionado', met: hasTheme },
-    { label: 'Máximo 5.000 caracteres', met: charCount <= MAX_ESSAY_CHARACTERS },
-    { label: `Mínimo ${MIN_WORDS} palavras`, met: wordCount >= MIN_WORDS },
-    { label: `Máximo ${MAX_WORDS} palavras`, met: wordCount <= MAX_WORDS && wordCount > 0 },
+  const items: { label: string; state: RequirementState }[] = [
+    { label: 'Tema válido selecionado', state: themeRequirementState(hasTheme, manualTheme, themeValidation) },
+    { label: `Mínimo ${MIN_WORDS} palavras`, state: wordRequirementState(wordCount) === 'pending' ? 'pending' : 'met' },
+    { label: `Máximo ${MAX_WORDS} palavras`, state: wordCount <= MAX_WORDS ? 'met' : 'violated' },
   ];
-
-  return (
-    <div className="space-y-2.5">
-      {items.map((item) => (
-        <div key={item.label} className="flex items-center gap-2.5">
-          <span className={`shrink-0 ${item.met ? 'text-[var(--success)]' : 'text-[var(--text-3)]'}`}>
-            {item.met ? <CheckIcon color="var(--success)" /> : <XIcon color="var(--text-3)" />}
-          </span>
-          <span className={`text-sm ${item.met ? 'text-[var(--text-2)]' : 'text-[var(--text-3)]'}`}>
-            {item.label}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
+  return <ul className="space-y-2.5" aria-label="Requisitos para correção">
+    {items.map(({ label, state }) => <li key={label} className="flex items-center gap-2.5 text-sm text-[var(--text-2)]">
+      <span aria-hidden="true" className={`shrink-0 ${state === 'met' ? 'text-[var(--success)]' : state === 'violated' ? 'text-[var(--danger)]' : 'text-[var(--text-3)]'}`}>
+        {state === 'met' ? <CheckIcon /> : state === 'violated' ? <XIcon /> : <span className="block h-3.5 w-3.5 rounded-full border border-current" />}
+      </span>
+      <span>{label}<span className="sr-only">: {state === 'met' ? 'cumprido' : state === 'violated' ? 'violado' : 'pendente'}</span></span>
+    </li>)}
+  </ul>;
 }
-
-/* ================================================================== */
-/*  Main Component                                                     */
-/* ================================================================== */
 
 function EssayWorkflow({ userId, initialHours }: { userId: string; initialHours: OperatingHoursInfo }) {
   const operatingHours = useOperatingHours(initialHours);
   const editorRef = useRef<HTMLTextAreaElement>(null);
   const discardButtonRef = useRef<HTMLButtonElement>(null);
   const discardConfirmationRef = useRef<HTMLDivElement>(null);
+  const actionsRef = useRef<HTMLDivElement>(null);
   const [discardRequested, setDiscardRequested] = useState(false);
   const [photoVersion, setPhotoVersion] = useState(0);
-  const {
-    themeMode,
-    setThemeMode,
-    theme,
-    themeLoading,
-    themeError,
-    setThemeError,
-    manualTheme,
-    setManualTheme,
-    essay,
-    setEssay,
-    correcting,
-    correctionError,
-    mobileTab,
-    setMobileTab,
-    wordCount,
-    charCount,
-    selectedThemeTitle,
-    hasSelectedTheme,
-    canSubmit,
-    generateTheme: handleGenerateTheme,
-    submitEssay: handleSubmit,
-    ready, draftStatus, discardDraft, themeValidation, inputValidation, secondsToRetry, themeSecondsToRetry,
-  } = useEssayWorkflow(userId);
-
+  const [editing, setEditing] = useState(false);
+  const workflow = useEssayWorkflow(userId);
+  const { themeMode, setThemeMode, theme, themeLoading, themeError, manualTheme, setManualTheme,
+    essay, setEssay, correcting, correctionError, wordCount, charCount, hasSelectedTheme,
+    canSubmit, generateTheme, submitEssay, ready, draftStatus, savedAt, discardDraft,
+    themeValidation, inputValidation, secondsToRetry, themeSecondsToRetry } = workflow;
+  const meaningful = hasMeaningfulEssayDraft(workflow);
+  const reason = essaySubmitReason({ correcting, themeLoading, secondsToRetry, isOpen: operatingHours.isOpen,
+    hasTheme: hasSelectedTheme, themeValidation, words: wordCount, characters: charCount });
+  const submitUnavailable = !canSubmit || !operatingHours.isOpen;
+  const submitLabel = correcting ? 'Corrigindo…'
+    : themeLoading ? 'Preparando tema…'
+    : secondsToRetry > 0 ? `Aguarde ${secondsToRetry}s`
+    : !operatingHours.isOpen ? 'Correção abre às 7h'
+    : !hasSelectedTheme ? themeMode === 'manual' && manualTheme.trim() ? 'Revise o tema' : 'Escolha um tema'
+    : charCount > MAX_ESSAY_CHARACTERS ? 'Reduza o texto'
+    : wordCount > MAX_WORDS ? `Reduza ${wordCount - MAX_WORDS} ${wordCount - MAX_WORDS === 1 ? 'palavra' : 'palavras'}`
+    : wordCount < MIN_WORDS ? `${MIN_WORDS - wordCount === 1 ? 'Falta' : 'Faltam'} ${MIN_WORDS - wordCount} ${MIN_WORDS - wordCount === 1 ? 'palavra' : 'palavras'}`
+    : 'Corrigir com IA';
+  const wordsState = wordCountState(wordCount);
+  const countColor = wordsState === 'violated' ? 'var(--danger)' : wordsState === 'near-limit' ? 'var(--warning)' : wordsState === 'met' ? 'var(--success)' : 'var(--text-3)';
+  const countMessage = `${wordCount} ${wordCount === 1 ? 'palavra' : 'palavras'}. ${wordCount < MIN_WORDS ? `Mínimo de ${MIN_WORDS} palavras.` : wordCount > MAX_WORDS ? 'Limite de palavras excedido.' : wordsState === 'near-limit' ? 'Perto do máximo de 500 palavras.' : 'Quantidade adequada para enviar.'}`;
+  let draftMessage = '';
+  if (draftStatus === 'invalid') draftMessage = 'Não foi possível recuperar o rascunho salvo neste navegador.';
+  else if (meaningful && draftStatus === 'unavailable') draftMessage = 'O rascunho não pôde ser salvo. Mantenha esta página aberta ou copie seu texto.';
+  else if (meaningful && draftStatus === 'stopped') draftMessage = 'O salvamento foi interrompido ao sair da conta. Copie seu texto antes de continuar.';
+  else if (meaningful && (draftStatus === 'saved' || draftStatus === 'restored')) {
+    const prefix = essay.trim() ? '' : 'Tema ';
+    draftMessage = savedAt ? `${prefix}${prefix ? 'salvo' : 'Salvo'} às ${new Date(savedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} neste navegador.` : `${prefix}${prefix ? 'recuperado' : 'Rascunho recuperado'} neste navegador.`;
+  }
+  const [announcements, setAnnouncements] = useState({ count: '', draft: '' });
+  useEffect(() => {
+    const timer = window.setTimeout(() => setAnnouncements({ count: countMessage, draft: draftMessage }), 600);
+    return () => window.clearTimeout(timer);
+  }, [countMessage, draftMessage]);
   useEffect(() => { if (discardRequested) discardConfirmationRef.current?.focus(); }, [discardRequested]);
   useEffect(() => {
-    if (window.matchMedia('(max-width: 1023px)').matches) {
-      document.getElementById(`essay-${mobileTab}-title`)?.focus();
-    }
-  }, [mobileTab]);
-
-  /* ---- Mobile Tab Navigation ---- */
-  const MOBILE_TABS: { key: MobileTab; label: string; icon: React.ReactNode }[] = [
-    { key: 'theme', label: 'Tema', icon: <BookIcon /> },
-    { key: 'write', label: 'Escrever', icon: <PenToolIcon /> },
-    { key: 'submit', label: 'Enviar', icon: <SendIcon /> },
-  ];
+    if (!meaningful || (draftStatus !== 'unavailable' && draftStatus !== 'stopped')) return;
+    const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ''; };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [meaningful, draftStatus]);
 
   if (!ready) return <div className="mx-auto max-w-6xl px-4 py-10"><FlowStatus>Recuperando seu rascunho…</FlowStatus></div>;
 
-  return (
-    <>
-      <div className="student-flow max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
-        {/* ---- Page Header ---- */}
-        <div className="mb-8">
-          <div className="flex flex-wrap items-center gap-3 mb-3">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--brand)]/10 text-[var(--text-2)] border border-[var(--brand)]/20">
-              <SparkleIcon /> Redação com IA
-            </span>
-            <OperatingHoursPill info={operatingHours} />
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text)] tracking-tight">
-            Escreva sua redação
-          </h1>
-          <p className="mt-2 text-sm text-[var(--text-3)] max-w-xl">
-            Gere um tema com IA ou escreva o seu próprio tema, produza sua redação dissertativa-argumentativa e receba feedback detalhado com nota por competência.
-          </p>
-        </div>
-
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <p role="status" className="text-xs text-[var(--text-3)]">
-            {draftStatus === 'unavailable' ? 'O rascunho não pôde ser salvo. Mantenha esta página aberta ou copie seu texto.' : draftStatus === 'stopped' ? 'O salvamento foi interrompido ao sair da conta. Copie seu texto antes de continuar.' : draftStatus === 'invalid' ? 'Não foi possível recuperar o rascunho salvo neste navegador.' : draftStatus === 'restored' ? 'Rascunho recuperado neste navegador.' : draftStatus === 'saved' ? 'Rascunho salvo neste navegador.' : 'Seu rascunho será salvo neste navegador.'}
-          </p>
-          <button ref={discardButtonRef} type="button" disabled={correcting || (!essay && !manualTheme && !theme)} onClick={() => setDiscardRequested(true)} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs text-[var(--text-2)] disabled:opacity-50">Descartar rascunho</button>
-        </div>
-        {discardRequested && <div ref={discardConfirmationRef} tabIndex={-1} className="mb-5 rounded-xl border border-[var(--warning)]/40 p-4" role="group" aria-label="Confirmar descarte do rascunho">
-          <p className="text-sm text-[var(--text-2)]">Descartar o texto e o tema salvos neste navegador?</p>
-          <div className="mt-3 flex flex-wrap gap-3">
-            <button type="button" disabled={correcting} onClick={() => { discardDraft(); setDiscardRequested(false); setPhotoVersion((value) => value + 1); window.requestAnimationFrame(() => document.getElementById('essay-theme-title')?.focus()); }} className="rounded-lg bg-[var(--brand)] px-4 py-3 text-sm text-white">Descartar rascunho</button>
-            <button type="button" onClick={() => { setDiscardRequested(false); discardButtonRef.current?.focus(); }} className="rounded-lg border border-[var(--border)] px-4 py-3 text-sm text-[var(--text)]">Cancelar</button>
-          </div>
-        </div>}
-
-        {/* ---- Mobile Tabs (lg:hidden) ---- */}
-        <div className="lg:hidden mb-6">
-          <div className="flex gap-1 p-1 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
-            {MOBILE_TABS.map((tab) => (
-              <button
-                key={tab.key}
-                type="button"
-                onClick={() => setMobileTab(tab.key)}
-                aria-pressed={mobileTab === tab.key}
-                aria-controls={`essay-${tab.key}-panel`}
-                className={`
-                  min-w-0 flex-1 flex items-center justify-center gap-1 px-2 py-2.5 rounded-lg text-xs font-medium whitespace-nowrap
-                  transition-all duration-200
-                  ${mobileTab === tab.key
-                    ? 'bg-[var(--surface-2)] text-[var(--text)] shadow-sm'
-                    : 'text-[var(--text-3)]'
-                  }
-                `}
-              >
-                {tab.icon}
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* ---- Desktop: Two-column layout ---- */}
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* ---- Left: Editor ---- */}
-          <div id="essay-write-panel" className={`min-w-0 flex-1 space-y-4 ${mobileTab !== 'write' ? 'hidden lg:block' : ''}`}>
-            {/* Theme pill (mobile compact — shown only in write tab) */}
-            {hasSelectedTheme && (
-              <div className="lg:hidden">
-                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
-                  <span className="text-xs font-medium text-[var(--text-3)]">Tema:</span>
-                  <span className="text-xs text-[var(--text-2)] truncate flex-1">{selectedThemeTitle}</span>
-                  <button
-                    type="button"
-                    onClick={() => setMobileTab('theme')}
-                    className="rounded-lg px-2 text-xs text-[var(--brand-hover)] font-medium shrink-0"
-                  >
-                    Ver
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Editor card */}
-            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
-              {/* Editor toolbar */}
-              <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-3 border-b border-[var(--border)]">
-                <h2 id="essay-write-title" tabIndex={-1} className="text-sm font-semibold text-[var(--text)]"><label htmlFor="essay-text">Sua redação</label></h2>
-                <span className="text-xs text-[var(--text-3)] tabular-nums">
-                  {wordCount} {wordCount === 1 ? 'palavra' : 'palavras'} · {charCount} caracteres
-                </span>
-              </div>
-
-              {/* Photo upload */}
-              <PhotoUpload
-                key={photoVersion}
-                currentText={essay}
-                onTextExtracted={(text) => {
-                  setEssay(text);
-                  setMobileTab('write');
-                  window.requestAnimationFrame(() => editorRef.current?.focus());
-                }}
-                disabled={correcting}
-              />
-
-              {/* Textarea */}
-              <textarea
-                ref={editorRef}
-                id="essay-text"
-                aria-describedby="essay-validation"
-                aria-invalid={!!essay && !!inputValidation}
-                value={essay}
-                onChange={(e) => setEssay(e.target.value)}
-                placeholder="Comece sua redação aqui..."
-                disabled={correcting}
-                className="
-                  w-full min-h-[400px] sm:min-h-[500px] p-5 sm:p-6
-                  text-base leading-[1.8] font-[var(--font-inter)]
-                  bg-transparent text-[var(--text)]
-                  placeholder:text-[var(--text-3)]/50
-                  resize-y
-                  disabled:opacity-50 disabled:cursor-not-allowed
-                "
-              />
-
-              <p id="essay-validation" className={`px-5 pb-3 text-sm ${essay && inputValidation ? 'text-[var(--warning)]' : 'text-[var(--text-3)]'}`}>{inputValidation || 'Entre 100 e 500 palavras e até 5.000 caracteres.'}</p>
-
-              {/* Word count bar */}
-              <div className="px-5 py-3 border-t border-[var(--border)] flex flex-wrap gap-2 items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-32 h-1.5 rounded-full bg-[var(--surface-2)] overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-300"
-                      style={{
-                        width: `${Math.min((wordCount / MAX_WORDS) * 100, 100)}%`,
-                        backgroundColor:
-                          wordCount > MAX_WORDS
-                            ? 'var(--danger)'
-                            : wordCount >= MIN_WORDS
-                            ? 'var(--success)'
-                            : 'var(--brand)',
-                      }}
-                    />
-                  </div>
-                  <span className="text-xs text-[var(--text-3)]">
-                    {wordCount}/{MAX_WORDS}
-                  </span>
-                </div>
-                {wordCount > MAX_WORDS && (
-                  <span className="text-xs text-[var(--danger)] font-medium">
-                    Excedeu o limite de palavras
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* ---- Right: Sidebar ---- */}
-          <div className={`lg:w-[360px] xl:w-[400px] shrink-0 space-y-5 ${mobileTab === 'write' ? 'hidden lg:block' : ''}`}>
-            {/* Theme section (shown in theme tab on mobile, always on desktop) */}
-            <div id="essay-theme-panel" className={`${mobileTab !== 'theme' ? 'hidden lg:block' : ''}`}>
-              <ThemeSection
-                disabled={correcting}
-                canGenerate={operatingHours.isOpen && themeSecondsToRetry === 0}
-                secondsToRetry={themeSecondsToRetry}
-                validation={themeValidation}
-                mode={themeMode}
-                theme={theme}
-                themeLoading={themeLoading}
-                themeError={themeError}
-                manualTheme={manualTheme}
-                onModeChange={(mode) => {
-                  setThemeMode(mode);
-                  setThemeError('');
-                }}
-                onManualThemeChange={(value) => {
-                  setManualTheme(value);
-                  setThemeError('');
-                }}
-                onGenerate={handleGenerateTheme}
-              />
-            </div>
-
-            {/* Submit section (shown in submit tab on mobile, always on desktop) */}
-            <div id="essay-submit-panel" className={`${mobileTab !== 'submit' ? 'hidden lg:block' : ''}`}>
-              <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 space-y-5">
-                <h2 id="essay-submit-title" tabIndex={-1} className="text-sm font-semibold text-[var(--text)] uppercase tracking-wider">
-                  Enviar para correção
-                </h2>
-
-                {/* Requirements */}
-                <RequirementsChecklist hasTheme={hasSelectedTheme} wordCount={wordCount} charCount={charCount} />
-
-                {/* Error */}
-                {correctionError && <FlowStatus error>{correctionError}{secondsToRetry > 0 && ` Aguarde ${secondsToRetry}s.`}</FlowStatus>}
-                {correcting && <FlowStatus>Analisando sua redação e salvando a correção… Aguarde nesta página para ver o resultado.</FlowStatus>}
-
-                {/* Submit button */}
-                <button
-                  type="button"
-                  onClick={handleSubmit}
-                  disabled={!canSubmit || !operatingHours.isOpen}
-                  className="
-                    w-full flex items-center justify-center gap-2
-                    px-5 py-3.5 rounded-xl text-sm font-semibold
-                    bg-[var(--brand)] text-white
-                    hover:bg-[var(--brand-hover)] active:bg-[var(--brand-active)]
-                    disabled:opacity-40 disabled:cursor-not-allowed
-                    transition-all duration-[var(--duration-fast)]
-                    shadow-sm
-                  "
-                >
-                  <SendIcon />
-                  {correcting ? 'Corrigindo…' : 'Corrigir com IA'}
-                </button>
-
-                {/* Operating hours warning */}
-                {!operatingHours.isOpen && (
-                  <p className="text-xs text-[var(--warning)] text-center leading-relaxed">
-                    As correções ficam disponíveis das 7h às 23h30, no horário de Brasília. Seu rascunho pode ser editado e salvo agora.
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+  return <div className={`student-flow mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10 ${styles.workflow} ${editing ? styles.editing : ''}`}
+    onFocusCapture={(event) => {
+      if ((event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLInputElement) && event.target.type !== 'file') setEditing(true);
+      // Do not move the bar between pointer-down and click on editing actions.
+      else if (!(event.target instanceof HTMLButtonElement) && !actionsRef.current?.contains(event.target as Node)) setEditing(false);
+    }}
+    onBlurCapture={(event) => {
+      // Keep the actions in place when focus moves from a field to its button.
+      if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget as Node)) setEditing(false);
+      else if (!event.relatedTarget) {
+        const container = event.currentTarget;
+        window.requestAnimationFrame(() => {
+          const active = document.activeElement;
+          if (active === document.body || !container.contains(active)) setEditing(false);
+        });
+      }
+    }}>
+    <header className="mb-7">
+      <OperatingHoursPill info={operatingHours} />
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold tracking-tight text-[var(--text)] sm:text-3xl">Escreva sua redação</h1>
+        <Link href="/conta?aba=redacoes" className="inline-flex min-h-12 items-center rounded-lg px-3 text-sm font-medium text-[var(--brand-hover)] underline underline-offset-4">Minhas redações</Link>
       </div>
-    </>
-  );
+      <p className="mt-2 max-w-2xl text-sm text-[var(--text-2)]">Escolha um tema, escreva ou transcreva sua redação e receba uma correção por competência.</p>
+    </header>
+
+    {(draftMessage || meaningful) && <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+      <p className="text-sm text-[var(--text-2)]">{draftMessage}</p>
+      {meaningful && <button ref={discardButtonRef} type="button" disabled={correcting} onClick={() => setDiscardRequested(true)} className="min-h-12 rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--text-2)] disabled:cursor-not-allowed">{essay.trim() ? 'Descartar rascunho' : 'Descartar tema'}</button>}
+    </div>}
+    <p className="sr-only" role="status" aria-live="polite">{announcements.draft}</p>
+    {discardRequested && <div ref={discardConfirmationRef} tabIndex={-1} className="mb-5 rounded-xl border border-[var(--warning)]/40 p-4" role="group" aria-label="Confirmar descarte do rascunho">
+      <p className="text-sm text-[var(--text-2)]">Descartar o texto e o tema salvos neste navegador?</p>
+      <div className="mt-3 flex flex-wrap gap-3">
+        <button type="button" disabled={correcting} onClick={() => { discardDraft(); setDiscardRequested(false); setPhotoVersion((value) => value + 1); window.requestAnimationFrame(() => document.getElementById('essay-theme-title')?.focus()); }} className="min-h-12 rounded-lg bg-[var(--brand)] px-4 py-3 text-sm text-white">Descartar rascunho</button>
+        <button type="button" onClick={() => { setDiscardRequested(false); discardButtonRef.current?.focus(); }} className="min-h-12 rounded-lg border border-[var(--border)] px-4 py-3 text-sm text-[var(--text)]">Cancelar</button>
+      </div>
+    </div>}
+
+    <div className={styles.steps}>
+      <section className={styles.theme}>
+        <ThemeSection disabled={correcting} canGenerate={operatingHours.isOpen && themeSecondsToRetry === 0}
+          secondsToRetry={themeSecondsToRetry} validation={themeValidation} mode={themeMode} theme={theme}
+          themeLoading={themeLoading} themeError={themeError} manualTheme={manualTheme}
+          onModeChange={setThemeMode} onManualThemeChange={setManualTheme}
+          onGenerate={() => { void generateTheme().then((generated) => { if (generated) window.requestAnimationFrame(() => editorRef.current?.focus()); }); }} />
+      </section>
+
+      <section className={styles.editor} aria-labelledby="essay-write-title">
+        <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
+          <h2 id="essay-write-title" className="border-b border-[var(--border)] px-5 py-4 text-base font-semibold text-[var(--text)]"><label htmlFor="essay-text">2. Sua redação</label></h2>
+          {!hasSelectedTheme && <p id="essay-theme-hint" className="px-5 pt-4 text-sm text-[var(--text-2)]">Você pode escrever agora. Escolha um tema antes de enviar para correção.</p>}
+          <PhotoUpload key={photoVersion} currentText={essay} onTextExtracted={(text) => { setEssay(text); window.requestAnimationFrame(() => editorRef.current?.focus()); }} disabled={correcting} />
+          <textarea ref={editorRef} id="essay-text" aria-label="Sua redação"
+            aria-describedby={`essay-counter essay-validation${!hasSelectedTheme ? ' essay-theme-hint' : ''}`}
+            aria-invalid={wordCount > MAX_WORDS || charCount > MAX_ESSAY_CHARACTERS}
+            value={essay} onChange={(event) => setEssay(event.target.value)} placeholder="Comece sua redação aqui…" disabled={correcting}
+            className="min-h-[400px] w-full resize-y bg-transparent p-5 font-[var(--font-inter)] text-base leading-[1.8] text-[var(--text)] placeholder:text-[var(--text-3)] disabled:cursor-not-allowed sm:min-h-[500px] sm:p-6" />
+          <p id="essay-validation" className={`px-5 pb-3 text-sm ${charCount > MAX_ESSAY_CHARACTERS || wordCount > MAX_WORDS ? 'text-[var(--danger)]' : 'text-[var(--text-2)]'}`}>
+            {charCount > MAX_ESSAY_CHARACTERS || wordCount > MAX_WORDS ? inputValidation : 'Escreva de 100 a 500 palavras.'}
+          </p>
+          <div className="space-y-3 border-t border-[var(--border)] px-5 py-4">
+            <p id="essay-counter" className="text-sm tabular-nums" style={{ color: countColor }}>{countMessage}</p>
+            <div aria-hidden="true" className="relative h-2 rounded-full bg-[var(--surface-2)]">
+              <div className="h-full rounded-full transition-[width] duration-200" style={{ width: `${Math.min(wordCount / MAX_WORDS * 100, 100)}%`, backgroundColor: countColor }} />
+              <span className="absolute top-[-3px] h-3.5 border-l-2 border-[var(--text-2)]" style={{ left: `${MIN_WORDS / MAX_WORDS * 100}%` }} />
+              <span className="absolute right-0 top-[-3px] h-3.5 border-l-2 border-[var(--text-2)]" />
+            </div>
+            <div aria-hidden="true" className="relative h-5 text-sm text-[var(--text-2)]"><span className="absolute -translate-x-1/2" style={{ left: '20%' }}>100 mín.</span><span className="absolute right-0">500 máx.</span></div>
+            <p className="sr-only" aria-live="polite" role="status">{announcements.count}</p>
+          </div>
+        </div>
+        <p className="mt-3 text-sm text-[var(--text-2)]">O rascunho fica neste navegador e endereço. Para usar outro aparelho ou endereço, copie seu texto.</p>
+      </section>
+
+      <section className={styles.submit} aria-labelledby="essay-submit-title">
+        <div className="space-y-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
+          <h2 id="essay-submit-title" className="text-base font-semibold text-[var(--text)]">3. Correção</h2>
+          <RequirementsChecklist hasTheme={hasSelectedTheme} wordCount={wordCount} manualTheme={themeMode === 'manual' ? manualTheme : ''} themeValidation={themeValidation} />
+          <p className="text-sm leading-relaxed text-[var(--text-2)]">Nota de 0 a 200 em cada uma das 5 competências, com total de 0 a 1000. O tempo de análise pode variar.</p>
+          {correctionError && <FlowStatus error>{correctionError}{secondsToRetry > 0 && ` Aguarde ${secondsToRetry}s.`}</FlowStatus>}
+          {correcting && <FlowStatus>Analisando sua redação e salvando a correção… Aguarde nesta página para ver o resultado.</FlowStatus>}
+          {!operatingHours.isOpen && <p className="text-sm text-[var(--warning)]">As correções ficam disponíveis das 7h às 23h30, no horário de Brasília. Seu rascunho pode ser editado e salvo agora.</p>}
+          <div ref={actionsRef} className={`${styles.actions} ${editing ? styles.actionsInFlow : ''}`}>
+            <div className={styles.actionInner}>
+              <p id="essay-submit-reason" className="mb-2 text-sm text-[var(--text-2)]">{reason || 'Pronto para enviar sua redação.'}</p>
+              <button type="button" aria-disabled={submitUnavailable} aria-describedby="essay-submit-reason"
+                onClick={() => { if (!submitUnavailable) void submitEssay(); }}
+                className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition-colors ${submitUnavailable
+                  ? 'cursor-not-allowed border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-2)]'
+                  : 'border-transparent bg-[var(--brand)] text-white hover:bg-[var(--brand-hover)]'}`}>
+                {correcting ? <SpinnerIcon /> : <SendIcon />}
+                {submitLabel}
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>;
 }
 
 export default function RedacaoPageClient({ operatingHours }: { operatingHours: OperatingHoursInfo }) {

@@ -1,0 +1,54 @@
+.steps {
+  display: grid;
+  min-width: 0;
+  gap: 1.5rem;
+  grid-template-areas: 'theme' 'editor' 'submit';
+}
+
+.theme { grid-area: theme; min-width: 0; }
+.editor { grid-area: editor; min-width: 0; }
+.submit { grid-area: submit; min-width: 0; }
+
+.workflow {
+  padding-bottom: calc(10rem + env(safe-area-inset-bottom));
+  scroll-padding-bottom: 10rem;
+}
+
+.editing { padding-bottom: 2rem; }
+
+.actions {
+  position: fixed;
+  z-index: 40;
+  inset-inline: 0;
+  bottom: 0;
+  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: 0 -4px 20px rgb(0 0 0 / 20%);
+}
+
+.actionsInFlow {
+  position: static;
+  padding: 1rem 0 0;
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+.actionInner { max-width: 42rem; margin-inline: auto; }
+
+@media (min-width: 1024px) {
+  .workflow { padding-bottom: 2.5rem; }
+  .steps {
+    align-items: start;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 360px);
+    grid-template-rows: auto 1fr;
+    grid-template-areas: 'editor theme' 'editor submit';
+  }
+  .submit { position: sticky; top: 5rem; }
+  .actions { position: static; padding: 1rem 0 0; border: 0; box-shadow: none; background: transparent; }
+}
+
+@media (min-width: 1280px) {
+  .steps { grid-template-columns: minmax(0, 1fr) minmax(0, 400px); }
+}

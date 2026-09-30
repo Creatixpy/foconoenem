@@ -1,4 +1,11 @@
 import Link from 'next/link';
+import { createPageMetadata } from '@/lib/contracts/page-metadata';
+
+export const metadata = createPageMetadata({
+  title: 'Política de privacidade',
+  description: 'Saiba como seus dados são tratados na AprovIA.',
+  pathname: '/privacidade',
+});
 
 const sections = [
   {

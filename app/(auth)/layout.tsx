@@ -1,13 +1,13 @@
 import type { ReactNode } from 'react';
-import type { Metadata } from 'next';
+import { createPageMetadata } from '@/lib/contracts/page-metadata';
 import Link from 'next/link';
 import AprovIALogo from '@/app/components/shared/AprovIALogo';
 
-export const metadata: Metadata = {
-  title: 'Autenticação | AprovIA',
+export const metadata = createPageMetadata({
+  title: 'Autenticação',
   description: 'Acesse sua conta ou crie uma nova para começar a estudar',
-  robots: 'noindex, nofollow',
-};
+  noIndex: true,
+});
 
 /* Brand feature bullets for the left panel */
 const FEATURES = [

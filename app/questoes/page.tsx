@@ -2,6 +2,14 @@ import AuthProviders from '@/app/auth-providers';
 import { requireServerUser } from '@/lib/server/page-auth';
 import { getOperatingHoursInfo } from '@/lib/server/operating-hours';
 import QuestoesPageClient from './QuestoesPageClient';
+import { createPageMetadata } from '@/lib/contracts/page-metadata';
+
+export const metadata = createPageMetadata({
+  title: 'Questões',
+  description: 'Pratique com simulados e acompanhe suas respostas e resultados.',
+  pathname: '/questoes',
+  noIndex: true,
+});
 
 export const dynamic = 'force-dynamic';
 

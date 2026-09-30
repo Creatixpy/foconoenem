@@ -1,14 +1,15 @@
-import type { Metadata } from 'next';
+import { createPageMetadata } from '@/lib/contracts/page-metadata';
 import { Suspense } from 'react';
 import PlanosPageClient from './PlanosPageClient';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
+export const metadata = createPageMetadata({
   title: 'Planos Free e Max',
   description:
     'Compare os planos gratuito e Max da AprovIA, com temas sob demanda, questões inéditas e assinatura gerenciada pelo Stripe.',
-};
+  pathname: '/planos',
+});
 
 export default function PlanosPage() {
   return (

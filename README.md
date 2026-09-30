@@ -29,18 +29,26 @@ O feedback produzido por IA é uma orientação de estudo. Ele não substitui pr
 - Groq atende os fluxos textuais de IA nos planos Free e Max. O SDK não faz retries internos; o orquestrador aplica timeout de 30 segundos e no máximo duas tentativas globais, usando fallback apenas para falhas transitórias ou uma segunda saída estruturada inválida.
 - Gemini é usado para OCR pelo SDK oficial `@google/genai`. O servidor tenta, no máximo uma vez por modelo, `gemini-3.5-flash`, `gemini-2.5-flash` e `gemini-3.1-flash-lite`; só avança em falhas transitórias ou leitura evidentemente inválida. As fotos grandes são comprimidas no navegador e permanecem apenas em memória. NewsAPI atende a importação de notícias e Stripe atende assinaturas e doações.
 - Limpezas, rate limiting e destaques usam RPCs transacionais acionadas sob demanda pelo próprio app, sem cron externo.
-- A interface é exclusivamente dark e usa tokens semânticos em `app/styles/` e o componente `AprovIALogo` para a marca.
+- A interface é exclusivamente dark e usa tokens semânticos em `app/styles/` e o componente `AprovIALogo` para a marca. Roxo (`--brand`) identifica a marca e ações primárias; verde (`--ai`) identifica recursos de IA e sucesso.
 - Vercel Analytics e Speed Insights só são montados depois do consentimento para métricas opcionais.
 - O runtime é inteiramente atendido pelos Route Handlers do Next.js; as Edge Functions remotas legadas foram removidas.
 
 ## Recuperação do trabalho e navegação
 
-- Redações salvam texto, tema e `submissionId` no `localStorage`, por usuário. O rascunho é restaurado antes da edição e removido após correção salva, descarte confirmado ou logout explícito. Expiração de sessão e falhas de conexão preservam o rascunho. Fotos do OCR continuam apenas em memória; substituir texto diferente exige confirmação.
+- Redações salvam texto, tema, `submissionId` e horário da gravação no `localStorage`, por usuário e origem. Rascunhos anteriores sem horário continuam recuperáveis. A interface só informa salvamento após a gravação; um tema sem redação tem status e descarte próprios. O rascunho é restaurado antes da edição e removido após correção salva, descarte confirmado ou logout explícito. Expiração de sessão e falhas de conexão preservam o rascunho. Fotos do OCR continuam apenas em memória; substituir texto diferente exige confirmação.
 - Simulados usam `sessionStorage`, por usuário e por aba, preservando `requestId`, `attemptId`, `expiresAt`, posição e respostas. Retomar não cria outra tentativa automaticamente. O primeiro envio congela as respostas; retries manuais enviam o mesmo snapshot. Respostas 404/410 permitem começar um novo simulado.
+- A tela de redação segue Tema → Redação → Correção, sem ocultar etapas no mobile. Um contador mostra 100–500 palavras; o botão explica impedimentos de envio. O limite técnico de caracteres só aparece quando excedido. A foto é transcrita para revisão antes de aplicar o texto; câmera e galeria aceitam JPEG, PNG e WebP, com orientação para converter HEIC.
+- “Minhas redações” abre `/conta?aba=redacoes`, sincronizado com voltar/avançar. O menu da conta reúne perfil, histórico, plano e logout; áreas de trabalho têm rodapé compacto.
 - A redação aceita tema manual de 5–300 caracteres, 100–500 palavras e até 5.000 caracteres. Texto colado ou extraído acima dos limites permanece no editor para revisão.
 - A disponibilidade exibida usa a mesma regra do servidor, das 7h às 23h30 em `America/Sao_Paulo`, e atualiza a cada minuto e ao voltar à aba. O servidor continua autorizando cada operação.
 - Notícias sincronizam termo e modo com a URL: `q` pesquisa o acervo e `modo=ia` pede um resumo. Voltar/avançar restaura a pesquisa. Consultas antigas são invalidadas, paginação com erro mantém os artigos e o mesmo offset para retry, e destaques são revalidados em segundo plano pelo GET existente.
 - Falhas de armazenamento são informadas na página. O salvamento depende do navegador; logout explícito também invalida gravações e rascunhos antigos de outras abas.
+
+O domínio canônico é `aproviaedu.vercel.app`, registrado como domínio de produção do projeto. `foconoenem.vercel.app` redireciona por 301 somente GET/HEAD de páginas públicas de conteúdo, preservando caminho e query. Login, estudo, conta, resultados, administração, planos, doações e APIs permanecem acessíveis no endereço antigo. Sessões e rascunhos não atravessam origens: recupere e copie o trabalho antes de trocar de endereço. Autenticação e pagamentos mantêm retornos na origem da sessão.
+
+O banner de rebrand respeita o fechamento salvo e expira em 30/10/2026. O aviso de transição nos espaços de trabalho antigos é independente, dispensável por sessão e sem expiração automática.
+
+A verificação das melhorias de Redação está em [docs/redacao-qa.md](docs/redacao-qa.md).
 
 A verificação deste lote, incluindo os limites do QA com respostas controladas, está em [docs/student-workflows-qa.md](docs/student-workflows-qa.md).
 
@@ -79,8 +87,8 @@ Use `.env.example` como referência e nunca versione `.env.local` ou chaves reai
 | `NEXT_PUBLIC_SUPABASE_URL` | obrigatória | URL dos clientes Supabase |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | obrigatória | autenticação e sessão com RLS |
 | `SUPABASE_SERVICE_ROLE_KEY` | obrigatória para operações privilegiadas | gravações server-side, administração, manutenção, pagamentos e leituras protegidas |
-| `NEXT_PUBLIC_SITE_URL` | recomendada | metadata, redirects e URLs públicas |
-| `SITE_URL` | recomendada | geração do sitemap |
+| `NEXT_PUBLIC_SITE_URL` | recomendada | URL pública de integrações; canonical definido em `lib/constants/site.ts` |
+| `SITE_URL` | opcional | origens confiáveis de requisição; sitemap usa o domínio canônico explícito |
 | `GROQ_API_KEY` | obrigatória para a IA textual | redações, temas, questões e notícias nos planos Free e Max |
 | `GROQ_MODEL` | opcional | modelo primário da Groq |
 | `GROQ_FALLBACK_API_KEY` | opcional | chave do fallback Groq |
