@@ -24,6 +24,10 @@ If any secret is exposed, rotate it in the provider dashboard before making the 
   deploy artifacts. Use placeholders in `.env.example`, including admin lists.
 - Store runtime credentials only in private environment files or the deployment
   platform's secret store. Restrict local credential files to their owner.
+- Local commit/push hooks run before objects leave the machine. `npm install`
+  prepares them; `npm run setup:security` installs them explicitly. The installer
+  preserves existing hooks and custom hook directories; integrate checks there
+  manually when installation reports a conflict.
 - Run `npm run test:security`, `npm run verify:open-source` and
   `npm run verify:history-clean`. The tree check inspects staged blobs as well as
   files on disk; history checks cover reachable content and metadata. Reports

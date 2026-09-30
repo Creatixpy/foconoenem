@@ -27,7 +27,7 @@ export const PRIVATE_PATH_RULES = [
   ['local_editor_config', /(?:^|\/)(?:\.vscode|\.idea|\.cursor)\//i],
   ['local_mcp_config', /(?:^|\/)(?:\.mcp\.json|mcp\.json|mcp_config\.json)$/i],
   ['local_agent_instructions', /(?:^|\/)AGENTS(?:\.local|\.override)?\.md$/i],
-  ['local_agent_state', /(?:^|\/)(?:\.agents|\.codex|\.claude|\.local|\.vercel|\.bin)\//i],
+  ['local_agent_state', /(?:^|\/)(?:\.agents|\.codex|\.claude|\.local|\.vercel|\.bin|\.testsprite)\//i],
   ['local_cloud_credentials', /(?:^|\/)(?:\.ssh|\.aws|\.azure|\.docker)\/|(?:^|\/)\.config\/gcloud\/|(?:^|\/)(?:\.netrc|\.pypirc)$/i],
   ['local_skill_lock', /(?:^|\/)skills-lock\.json$/i],
   ['local_supabase_state', /(?:^|\/)supabase\/(?:\.temp|\.branches)\//i],
@@ -36,7 +36,7 @@ export const PRIVATE_PATH_RULES = [
   ['private_ssh_key', /(?:^|\/)id_(?:rsa|dsa|ecdsa|ed25519)(?!\.pub$)(?:\.[^/]+)?$/i],
   ['local_log', /(?:^|\/)(?:[^/]+\.log|\.DS_Store)$/i],
   ['diagnostic_screenshot', /(?:^|\/)(?:erro|Screenshot_.*)\.(?:png|jpe?g|webp)$/i],
-  ['private_audit_report', /(?:^|\/)(?:IMPLEMENTACAO_PLANO_MAX|FINAL_AUDIT_VERIFICATION_.*|RELATORIO_COMPLETO_SISTEMA_.*|.*_AUDIT_.*)\.md$/i],
+  ['private_audit_report', /(?:^|\/)(?:IMPLEMENTACAO_PLANO_MAX|OPEN_SOURCE_RELEASE|FINAL_AUDIT_VERIFICATION_.*|RELATORIO_COMPLETO_SISTEMA_.*|.*_AUDIT_.*)\.md$/i],
   ['local_testsprite_artifact', /(?:^|\/)testsprite_tests\//i],
 ];
 
@@ -161,10 +161,25 @@ export function verifyCurrentTree(root) {
   return { failures, entries };
 }
 
-export function verifyHistory(root) {
+export function parsePushUpdates(input) {
+  const revisions = new Set();
   const failures = [];
-  const revisions = git(root, ['rev-list', '--all']).toString('utf8').trim().split('\n').filter(Boolean);
-  const objects = git(root, ['rev-list', '--objects', '--all', '--no-object-names']).toString('utf8').split('\n').filter(Boolean);
+  for (const line of input.split('\n').filter(Boolean)) {
+    const fields = line.trim().split(/\s+/);
+    if (fields.length !== 4 || !fields[1].match(/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/) || !fields[3].match(/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/)) throw new Error('invalid_push_input');
+    const [localRef, localOid, remoteRef] = fields;
+    if (!/^0+$/.test(localOid)) revisions.add(localOid);
+    for (const file of [localRef, remoteRef]) failures.push(...scanSecrets(file).map((finding) => ({ ...finding, file, scope: 'push_ref' })));
+  }
+  return { revisions: [...revisions], failures };
+}
+
+export function verifyHistory(root, { additionalRevisions = [] } = {}) {
+  if (additionalRevisions.some((revision) => !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(revision))) throw new Error('invalid_revision');
+  const selected = [...new Set(additionalRevisions)];
+  const failures = [];
+  const revisions = git(root, ['rev-list', '--all', ...selected]).toString('utf8').trim().split('\n').filter(Boolean);
+  const objects = git(root, ['rev-list', '--objects', '--all', '--no-object-names', ...selected]).toString('utf8').split('\n').filter(Boolean);
   const objectIds = [...new Set(objects)];
   const types = objectIds.length ? git(root, ['cat-file', '--batch-check=%(objectname) %(objecttype)'], { input: `${objectIds.join('\n')}\n` }).toString('utf8').trim().split('\n') : [];
   const blobPaths = new Map();
