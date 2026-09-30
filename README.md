@@ -132,7 +132,7 @@ Observações:
 - `npm run verify:history-clean` valida arquivos, conteúdos e metadados de todo o histórico alcançável; qualquer falha bloqueia a publicação.
 - `npm run test:security` cobre os guards e a exportação com fixtures offline; a validação funcional passa por lint, build e QA manual.
 - Contribuições devem seguir `CONTRIBUTING.md`; vulnerabilidades e segredos expostos devem seguir `SECURITY.md`.
-- Antes de tornar o repositório público, siga `OPEN_SOURCE_RELEASE.md`, adicione uma licença e publique a partir de histórico limpo.
+- Antes de publicar, siga `CONTRIBUTING.md` e `SECURITY.md` e valide a árvore e o histórico.
 
 ### DeepsProxy local na Vercel
 
