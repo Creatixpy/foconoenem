@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
 import AprovIALogo from '@/app/components/shared/AprovIALogo';
+import { clearUserDrafts } from '@/lib/client/drafts';
 
 const NAV_LINKS = [
   { href: '/', label: 'Início' },
@@ -65,6 +66,7 @@ function AuthActions({
     onAction?.();
     setSubmitting(true);
     try {
+      if (user) clearUserDrafts(user.id);
       await supabase.auth.signOut();
       startTransition(() => {
         router.refresh();

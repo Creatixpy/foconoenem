@@ -1,31 +1,21 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
+import { useAuth } from '@/lib/auth/context';
+import { useOperatingHours } from '@/lib/client/use-operating-hours';
+import FlowStatus from '@/app/components/shared/FlowStatus';
 import type { OperatingHoursInfo } from '@/lib/contracts/operating-hours';
 import PhotoUpload from './PhotoUpload';
 import {
   MAX_WORDS,
   MIN_WORDS,
+  MAX_ESSAY_CHARACTERS,
   useEssayWorkflow,
   type MobileTab,
   type ThemeData,
   type ThemeMode,
 } from './useEssayWorkflow';
-
-/* ================================================================== */
-/*  Types                                                              */
-/* ================================================================== */
-
-/* ================================================================== */
-/*  Constants                                                          */
-/* ================================================================== */
-
-const CORRECTION_MESSAGES = [
-  'Analisando sua redação...',
-  'Verificando competências...',
-  'Avaliando argumentação...',
-  'Gerando feedback detalhado...',
-];
 
 /* ================================================================== */
 /*  Icons                                                              */
@@ -44,14 +34,6 @@ function RefreshIcon() {
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
       <path d="M21 3v5h-5" />
-    </svg>
-  );
-}
-
-function ChevronDownIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="6 9 12 15 18 9" />
     </svg>
   );
 }
@@ -87,16 +69,6 @@ function ClockIcon() {
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="10" />
       <polyline points="12 6 12 12 16 14" />
-    </svg>
-  );
-}
-
-function AlertTriangleIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-      <line x1="12" y1="9" x2="12" y2="13" />
-      <line x1="12" y1="17" x2="12.01" y2="17" />
     </svg>
   );
 }
@@ -156,77 +128,11 @@ function OperatingHoursPill({ info }: { info: OperatingHoursInfo | null }) {
 /* ================================================================== */
 
 function AccordionPanel({ title, children }: { title: string; children: React.ReactNode }) {
-  const [open, setOpen] = useState(false);
-
   return (
-    <div className="border border-[var(--border)] rounded-xl overflow-hidden">
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-[var(--text-2)] hover:bg-[var(--surface-2)] transition-colors"
-      >
-        {title}
-        <span className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`}>
-          <ChevronDownIcon />
-        </span>
-      </button>
-      <div
-        className={`overflow-hidden transition-all duration-300 ${open ? 'max-h-96' : 'max-h-0'}`}
-      >
-        <div className="px-4 pb-4 text-sm text-[var(--text-3)] leading-relaxed">
-          {children}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ================================================================== */
-/*  Correction Overlay                                                 */
-/* ================================================================== */
-
-function CorrectionOverlay() {
-  const [msgIndex, setMsgIndex] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setMsgIndex((prev) => (prev + 1) % CORRECTION_MESSAGES.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg)]/80 backdrop-blur-sm">
-      <div className="text-center space-y-6 px-4">
-        {/* Animated spinner */}
-        <div className="relative mx-auto w-16 h-16">
-          <div className="absolute inset-0 rounded-full border-2 border-[var(--border)]" />
-          <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[var(--brand)] animate-spin" />
-        </div>
-
-        {/* Progress message */}
-        <div className="space-y-2">
-          <p className="text-lg font-semibold text-[var(--text)]">
-            {CORRECTION_MESSAGES[msgIndex]}
-          </p>
-          <p className="text-sm text-[var(--text-3)]">
-            Isso pode levar até 30 segundos
-          </p>
-        </div>
-
-        {/* Progress dots */}
-        <div className="flex items-center justify-center gap-2">
-          {CORRECTION_MESSAGES.map((_, i) => (
-            <div
-              key={i}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                i <= msgIndex ? 'bg-[var(--brand)]' : 'bg-[var(--border)]'
-              }`}
-            />
-          ))}
-        </div>
-      </div>
-    </div>
+    <details className="rounded-xl border border-[var(--border)]">
+      <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-[var(--text-2)] hover:bg-[var(--surface-2)]">{title}</summary>
+      <div className="whitespace-pre-line break-words px-4 pb-4 text-sm leading-relaxed text-[var(--text-2)]">{children}</div>
+    </details>
   );
 }
 
@@ -243,6 +149,10 @@ function ThemeSection({
   onModeChange,
   onManualThemeChange,
   onGenerate,
+  disabled,
+  canGenerate,
+  validation,
+  secondsToRetry,
 }: {
   mode: ThemeMode;
   theme: ThemeData | null;
@@ -252,17 +162,22 @@ function ThemeSection({
   onModeChange: (mode: ThemeMode) => void;
   onManualThemeChange: (value: string) => void;
   onGenerate: () => void;
+  disabled: boolean;
+  canGenerate: boolean;
+  validation: string;
+  secondsToRetry: number;
 }) {
   return (
-    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
-      <h3 className="text-sm font-semibold text-[var(--text)] uppercase tracking-wider mb-4">
+    <fieldset disabled={disabled} aria-labelledby="essay-theme-title" className="min-w-0 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
+      <h2 id="essay-theme-title" tabIndex={-1} className="text-sm font-semibold text-[var(--text)] uppercase tracking-wider mb-4">
         Tema da sua redação
-      </h3>
+      </h2>
 
       <div className="mb-4 grid grid-cols-2 gap-2 rounded-xl bg-[var(--surface)] p-1 border border-[var(--border)]">
         <button
           type="button"
           onClick={() => onModeChange('generated')}
+          aria-pressed={mode === 'generated'}
           className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
             mode === 'generated'
               ? 'bg-[var(--surface-2)] text-[var(--text)] shadow-sm'
@@ -274,6 +189,7 @@ function ThemeSection({
         <button
           type="button"
           onClick={() => onModeChange('manual')}
+          aria-pressed={mode === 'manual'}
           className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
             mode === 'manual'
               ? 'bg-[var(--surface-2)] text-[var(--text)] shadow-sm'
@@ -285,26 +201,30 @@ function ThemeSection({
       </div>
 
       {themeError && (
-        <div className="mb-4 px-4 py-3 rounded-xl text-sm bg-[var(--danger-soft)] text-[var(--danger)] border border-[var(--danger)]/20">
-          {themeError}
-        </div>
+        <FlowStatus error>{themeError}{secondsToRetry > 0 && ` Aguarde ${secondsToRetry}s.`}</FlowStatus>
       )}
+      {themeLoading && <FlowStatus>Preparando um tema e os textos de apoio…</FlowStatus>}
 
       {mode === 'manual' ? (
         <div className="space-y-4">
           <p className="text-sm text-[var(--text-3)]">
-            Digite seu próprio tema. Se você não enviar textos de apoio, a IA vai gerá-los automaticamente durante a correção.
+            Escolha um tema de 5 a 300 caracteres. Os textos de apoio serão gerados durante a correção.
           </p>
+          <label htmlFor="manual-theme" className="block text-sm font-medium text-[var(--text)]">Seu tema</label>
           <textarea
+            id="manual-theme"
+            aria-describedby="manual-theme-validation"
+            aria-invalid={!!manualTheme && !!validation}
             value={manualTheme}
             onChange={(e) => onManualThemeChange(e.target.value)}
             placeholder="Ex.: Caminhos para combater a evasão escolar no Brasil"
             className="
               w-full min-h-[120px] rounded-xl border border-[var(--border)]
               bg-[var(--bg)] px-4 py-3 text-sm text-[var(--text)]
-              placeholder:text-[var(--text-3)] outline-none resize-none
+              placeholder:text-[var(--text-3)] resize-y
             "
           />
+          <p id="manual-theme-validation" className={`text-sm ${manualTheme && validation ? 'text-[var(--warning)]' : 'text-[var(--text-3)]'}`}>{validation || `${manualTheme.trim().length}/300 caracteres`}</p>
         </div>
       ) : !theme ? (
         <div className="text-center py-6">
@@ -314,7 +234,7 @@ function ThemeSection({
           <button
             type="button"
             onClick={onGenerate}
-            disabled={themeLoading}
+            disabled={themeLoading || !canGenerate}
             className="
               inline-flex items-center justify-center gap-2
               px-6 py-3 rounded-xl text-sm font-semibold
@@ -354,7 +274,7 @@ function ThemeSection({
           <button
             type="button"
             onClick={onGenerate}
-            disabled={themeLoading}
+            disabled={themeLoading || !canGenerate}
             className="
               inline-flex items-center gap-1.5 text-xs font-medium
               text-[var(--text-3)] hover:text-[var(--text-2)]
@@ -367,7 +287,7 @@ function ThemeSection({
           </button>
         </div>
       )}
-    </div>
+    </fieldset>
   );
 }
 
@@ -378,12 +298,15 @@ function ThemeSection({
 function RequirementsChecklist({
   hasTheme,
   wordCount,
+  charCount,
 }: {
   hasTheme: boolean;
   wordCount: number;
+  charCount: number;
 }) {
   const items = [
-    { label: 'Tema selecionado', met: hasTheme },
+    { label: 'Tema válido selecionado', met: hasTheme },
+    { label: 'Máximo 5.000 caracteres', met: charCount <= MAX_ESSAY_CHARACTERS },
     { label: `Mínimo ${MIN_WORDS} palavras`, met: wordCount >= MIN_WORDS },
     { label: `Máximo ${MAX_WORDS} palavras`, met: wordCount <= MAX_WORDS && wordCount > 0 },
   ];
@@ -408,11 +331,13 @@ function RequirementsChecklist({
 /*  Main Component                                                     */
 /* ================================================================== */
 
-export default function RedacaoPageClient({
-  operatingHours,
-}: {
-  operatingHours: OperatingHoursInfo;
-}) {
+function EssayWorkflow({ userId, initialHours }: { userId: string; initialHours: OperatingHoursInfo }) {
+  const operatingHours = useOperatingHours(initialHours);
+  const editorRef = useRef<HTMLTextAreaElement>(null);
+  const discardButtonRef = useRef<HTMLButtonElement>(null);
+  const discardConfirmationRef = useRef<HTMLDivElement>(null);
+  const [discardRequested, setDiscardRequested] = useState(false);
+  const [photoVersion, setPhotoVersion] = useState(0);
   const {
     themeMode,
     setThemeMode,
@@ -435,7 +360,15 @@ export default function RedacaoPageClient({
     canSubmit,
     generateTheme: handleGenerateTheme,
     submitEssay: handleSubmit,
-  } = useEssayWorkflow();
+    ready, draftStatus, discardDraft, themeValidation, inputValidation, secondsToRetry, themeSecondsToRetry,
+  } = useEssayWorkflow(userId);
+
+  useEffect(() => { if (discardRequested) discardConfirmationRef.current?.focus(); }, [discardRequested]);
+  useEffect(() => {
+    if (window.matchMedia('(max-width: 1023px)').matches) {
+      document.getElementById(`essay-${mobileTab}-title`)?.focus();
+    }
+  }, [mobileTab]);
 
   /* ---- Mobile Tab Navigation ---- */
   const MOBILE_TABS: { key: MobileTab; label: string; icon: React.ReactNode }[] = [
@@ -444,16 +377,15 @@ export default function RedacaoPageClient({
     { key: 'submit', label: 'Enviar', icon: <SendIcon /> },
   ];
 
+  if (!ready) return <div className="mx-auto max-w-6xl px-4 py-10"><FlowStatus>Recuperando seu rascunho…</FlowStatus></div>;
+
   return (
     <>
-      {/* Correction overlay */}
-      {correcting && <CorrectionOverlay />}
-
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+      <div className="student-flow max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
         {/* ---- Page Header ---- */}
         <div className="mb-8">
           <div className="flex flex-wrap items-center gap-3 mb-3">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--brand)]/10 text-[var(--brand)] border border-[var(--brand)]/20">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--brand)]/10 text-[var(--text-2)] border border-[var(--brand)]/20">
               <SparkleIcon /> Redação com IA
             </span>
             <OperatingHoursPill info={operatingHours} />
@@ -466,6 +398,20 @@ export default function RedacaoPageClient({
           </p>
         </div>
 
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <p role="status" className="text-xs text-[var(--text-3)]">
+            {draftStatus === 'unavailable' ? 'O rascunho não pôde ser salvo. Mantenha esta página aberta ou copie seu texto.' : draftStatus === 'stopped' ? 'O salvamento foi interrompido ao sair da conta. Copie seu texto antes de continuar.' : draftStatus === 'invalid' ? 'Não foi possível recuperar o rascunho salvo neste navegador.' : draftStatus === 'restored' ? 'Rascunho recuperado neste navegador.' : draftStatus === 'saved' ? 'Rascunho salvo neste navegador.' : 'Seu rascunho será salvo neste navegador.'}
+          </p>
+          <button ref={discardButtonRef} type="button" disabled={correcting || (!essay && !manualTheme && !theme)} onClick={() => setDiscardRequested(true)} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs text-[var(--text-2)] disabled:opacity-50">Descartar rascunho</button>
+        </div>
+        {discardRequested && <div ref={discardConfirmationRef} tabIndex={-1} className="mb-5 rounded-xl border border-[var(--warning)]/40 p-4" role="group" aria-label="Confirmar descarte do rascunho">
+          <p className="text-sm text-[var(--text-2)]">Descartar o texto e o tema salvos neste navegador?</p>
+          <div className="mt-3 flex flex-wrap gap-3">
+            <button type="button" disabled={correcting} onClick={() => { discardDraft(); setDiscardRequested(false); setPhotoVersion((value) => value + 1); window.requestAnimationFrame(() => document.getElementById('essay-theme-title')?.focus()); }} className="rounded-lg bg-[var(--brand)] px-4 py-3 text-sm text-white">Descartar rascunho</button>
+            <button type="button" onClick={() => { setDiscardRequested(false); discardButtonRef.current?.focus(); }} className="rounded-lg border border-[var(--border)] px-4 py-3 text-sm text-[var(--text)]">Cancelar</button>
+          </div>
+        </div>}
+
         {/* ---- Mobile Tabs (lg:hidden) ---- */}
         <div className="lg:hidden mb-6">
           <div className="flex gap-1 p-1 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
@@ -474,8 +420,10 @@ export default function RedacaoPageClient({
                 key={tab.key}
                 type="button"
                 onClick={() => setMobileTab(tab.key)}
+                aria-pressed={mobileTab === tab.key}
+                aria-controls={`essay-${tab.key}-panel`}
                 className={`
-                  flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-xs font-medium
+                  min-w-0 flex-1 flex items-center justify-center gap-1 px-2 py-2.5 rounded-lg text-xs font-medium whitespace-nowrap
                   transition-all duration-200
                   ${mobileTab === tab.key
                     ? 'bg-[var(--surface-2)] text-[var(--text)] shadow-sm'
@@ -493,7 +441,7 @@ export default function RedacaoPageClient({
         {/* ---- Desktop: Two-column layout ---- */}
         <div className="flex flex-col lg:flex-row gap-6">
           {/* ---- Left: Editor ---- */}
-          <div className={`flex-1 space-y-4 ${mobileTab !== 'write' ? 'hidden lg:block' : ''}`}>
+          <div id="essay-write-panel" className={`min-w-0 flex-1 space-y-4 ${mobileTab !== 'write' ? 'hidden lg:block' : ''}`}>
             {/* Theme pill (mobile compact — shown only in write tab) */}
             {hasSelectedTheme && (
               <div className="lg:hidden">
@@ -503,7 +451,7 @@ export default function RedacaoPageClient({
                   <button
                     type="button"
                     onClick={() => setMobileTab('theme')}
-                    className="text-xs text-[var(--brand)] font-medium shrink-0"
+                    className="rounded-lg px-2 text-xs text-[var(--brand-hover)] font-medium shrink-0"
                   >
                     Ver
                   </button>
@@ -514,10 +462,8 @@ export default function RedacaoPageClient({
             {/* Editor card */}
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
               {/* Editor toolbar */}
-              <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--border)]">
-                <span className="text-xs text-[var(--text-3)]">
-                  Redação dissertativa-argumentativa · Máximo 30 linhas
-                </span>
+              <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-3 border-b border-[var(--border)]">
+                <h2 id="essay-write-title" tabIndex={-1} className="text-sm font-semibold text-[var(--text)]"><label htmlFor="essay-text">Sua redação</label></h2>
                 <span className="text-xs text-[var(--text-3)] tabular-nums">
                   {wordCount} {wordCount === 1 ? 'palavra' : 'palavras'} · {charCount} caracteres
                 </span>
@@ -525,31 +471,40 @@ export default function RedacaoPageClient({
 
               {/* Photo upload */}
               <PhotoUpload
+                key={photoVersion}
+                currentText={essay}
                 onTextExtracted={(text) => {
                   setEssay(text);
-                  setMobileTab('submit');
+                  setMobileTab('write');
+                  window.requestAnimationFrame(() => editorRef.current?.focus());
                 }}
                 disabled={correcting}
               />
 
               {/* Textarea */}
               <textarea
+                ref={editorRef}
+                id="essay-text"
+                aria-describedby="essay-validation"
+                aria-invalid={!!essay && !!inputValidation}
                 value={essay}
                 onChange={(e) => setEssay(e.target.value)}
                 placeholder="Comece sua redação aqui..."
                 disabled={correcting}
                 className="
                   w-full min-h-[400px] sm:min-h-[500px] p-5 sm:p-6
-                  text-[15px] leading-[1.8] font-[var(--font-inter)]
+                  text-base leading-[1.8] font-[var(--font-inter)]
                   bg-transparent text-[var(--text)]
                   placeholder:text-[var(--text-3)]/50
-                  resize-none outline-none
+                  resize-y
                   disabled:opacity-50 disabled:cursor-not-allowed
                 "
               />
 
+              <p id="essay-validation" className={`px-5 pb-3 text-sm ${essay && inputValidation ? 'text-[var(--warning)]' : 'text-[var(--text-3)]'}`}>{inputValidation || 'Entre 100 e 500 palavras e até 5.000 caracteres.'}</p>
+
               {/* Word count bar */}
-              <div className="px-5 py-3 border-t border-[var(--border)] flex items-center justify-between">
+              <div className="px-5 py-3 border-t border-[var(--border)] flex flex-wrap gap-2 items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-32 h-1.5 rounded-full bg-[var(--surface-2)] overflow-hidden">
                     <div
@@ -581,8 +536,12 @@ export default function RedacaoPageClient({
           {/* ---- Right: Sidebar ---- */}
           <div className={`lg:w-[360px] xl:w-[400px] shrink-0 space-y-5 ${mobileTab === 'write' ? 'hidden lg:block' : ''}`}>
             {/* Theme section (shown in theme tab on mobile, always on desktop) */}
-            <div className={`${mobileTab !== 'theme' ? 'hidden lg:block' : ''}`}>
+            <div id="essay-theme-panel" className={`${mobileTab !== 'theme' ? 'hidden lg:block' : ''}`}>
               <ThemeSection
+                disabled={correcting}
+                canGenerate={operatingHours.isOpen && themeSecondsToRetry === 0}
+                secondsToRetry={themeSecondsToRetry}
+                validation={themeValidation}
                 mode={themeMode}
                 theme={theme}
                 themeLoading={themeLoading}
@@ -601,22 +560,18 @@ export default function RedacaoPageClient({
             </div>
 
             {/* Submit section (shown in submit tab on mobile, always on desktop) */}
-            <div className={`${mobileTab !== 'submit' ? 'hidden lg:block' : ''}`}>
+            <div id="essay-submit-panel" className={`${mobileTab !== 'submit' ? 'hidden lg:block' : ''}`}>
               <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 space-y-5">
-                <h3 className="text-sm font-semibold text-[var(--text)] uppercase tracking-wider">
+                <h2 id="essay-submit-title" tabIndex={-1} className="text-sm font-semibold text-[var(--text)] uppercase tracking-wider">
                   Enviar para correção
-                </h3>
+                </h2>
 
                 {/* Requirements */}
-                <RequirementsChecklist hasTheme={hasSelectedTheme} wordCount={wordCount} />
+                <RequirementsChecklist hasTheme={hasSelectedTheme} wordCount={wordCount} charCount={charCount} />
 
                 {/* Error */}
-                {correctionError && (
-                  <div className="px-4 py-3 rounded-xl text-sm bg-[var(--danger-soft)] text-[var(--danger)] border border-[var(--danger)]/20 flex items-start gap-2.5">
-                    <span className="shrink-0 mt-0.5"><AlertTriangleIcon /></span>
-                    <span>{correctionError}</span>
-                  </div>
-                )}
+                {correctionError && <FlowStatus error>{correctionError}{secondsToRetry > 0 && ` Aguarde ${secondsToRetry}s.`}</FlowStatus>}
+                {correcting && <FlowStatus>Analisando sua redação e salvando a correção… Aguarde nesta página para ver o resultado.</FlowStatus>}
 
                 {/* Submit button */}
                 <button
@@ -634,13 +589,13 @@ export default function RedacaoPageClient({
                   "
                 >
                   <SendIcon />
-                  Corrigir com IA
+                  {correcting ? 'Corrigindo…' : 'Corrigir com IA'}
                 </button>
 
                 {/* Operating hours warning */}
                 {!operatingHours.isOpen && (
                   <p className="text-xs text-[var(--warning)] text-center leading-relaxed">
-                    O sistema está fora do horário de funcionamento. A correção pode não estar disponível no momento.
+                    As correções ficam disponíveis das 7h às 23h30, no horário de Brasília. Seu rascunho pode ser editado e salvo agora.
                   </p>
                 )}
               </div>
@@ -650,4 +605,10 @@ export default function RedacaoPageClient({
       </div>
     </>
   );
+}
+
+export default function RedacaoPageClient({ operatingHours }: { operatingHours: OperatingHoursInfo }) {
+  const { user } = useAuth();
+  if (!user) return <div className="mx-auto max-w-3xl px-4 py-10"><FlowStatus>Entre novamente para recuperar seu rascunho. <Link href="/login" className="underline">Entrar</Link></FlowStatus></div>;
+  return <EssayWorkflow key={user.id} userId={user.id} initialHours={operatingHours} />;
 }

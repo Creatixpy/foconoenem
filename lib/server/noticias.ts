@@ -40,7 +40,8 @@ async function listNoticiasQuery(options: {
       .from('noticias')
       .select(NOTICIA_FIELDS)
       .eq('status', 'aprovado')
-      .order('data_publicacao', { ascending: false });
+      .order('data_publicacao', { ascending: false })
+      .order('id', { ascending: false });
 
     if (tag) {
       query = query.contains('tags', [tag]);
@@ -135,6 +136,7 @@ async function searchNoticiasQuery(termo: string, limit: number) {
       config: 'portuguese',
     })
     .order('data_publicacao', { ascending: false })
+    .order('id', { ascending: false })
     .limit(limit);
 
   if (error) {
@@ -162,6 +164,7 @@ async function fetchNoticiasPorTagQuery(tag: string, limit: number) {
     .eq('status', 'aprovado')
     .contains('tags', [tag])
     .order('data_publicacao', { ascending: false })
+    .order('id', { ascending: false })
     .limit(limit);
 
   if (error) {

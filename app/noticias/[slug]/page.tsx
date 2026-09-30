@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import ShareButton from './ShareButton';
 import { fetchNoticiaBySlug, fetchNoticiasPorTag, isNewsServerClientConfigured } from '@/lib/server/noticias';
 import { sanitizeExternalUrl, sanitizeNewsHtml } from '@/lib/server/news-content';
+import styles from './article.module.css';
 
 type NoticiaPageProps = {
   params: Promise<{ slug: string }>;
@@ -60,7 +61,7 @@ export async function generateMetadata({ params }: NoticiaPageProps): Promise<Me
 
 export default async function NoticiaPage({ params }: NoticiaPageProps) {
   if (!isNewsServerClientConfigured()) {
-    notFound();
+    throw new Error('Notícias temporariamente indisponíveis.');
   }
 
   const { slug } = await params;
@@ -77,7 +78,7 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
   let related: Awaited<ReturnType<typeof fetchNoticiasPorTag>> = [];
 
   if (noticia.tags.length > 0) {
-    related = (await fetchNoticiasPorTag(noticia.tags[0], 4))
+    related = (await fetchNoticiasPorTag(noticia.tags[0], 4).catch(() => []))
       .filter((item) => item.slug !== slug)
       .slice(0, 3);
   }
@@ -88,7 +89,7 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
   }));
 
   return (
-    <div className="min-h-[80vh] pb-20">
+    <div className="student-flow min-h-[80vh] pb-20">
       <div className="relative overflow-hidden bg-[var(--surface)]">
         {safeImageUrl ? (
           <div className="relative aspect-[21/9] w-full">
@@ -126,7 +127,7 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
             {noticia.tags.map((tag) => (
               <span
                 key={tag}
-                className="rounded-full bg-[var(--brand)]/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--brand)]"
+                className="rounded-full bg-[var(--brand)]/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--brand-hover)]"
               >
                 {tag}
               </span>
@@ -162,7 +163,7 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
         </header>
 
         <div
-          className="prose prose-neutral max-w-none prose-headings:text-[var(--text)] prose-p:text-[var(--text-2)] prose-a:text-[var(--brand)] prose-strong:text-[var(--text)]"
+          className={styles.content}
           dangerouslySetInnerHTML={{ __html: safeContent }}
         />
       </article>

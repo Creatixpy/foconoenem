@@ -1,135 +1,135 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  essayCorrectionResponseSchema,
-  generatedThemeResponseSchema,
-} from '@/lib/contracts/essay';
+import { essayCorrectionResponseSchema, generatedThemeResponseSchema } from '@/lib/contracts/essay';
+import { EMPTY_ESSAY_DRAFT, essayDraftSchema } from '@/lib/contracts/student-drafts';
+import { countWords, essayValidation, manualThemeValidation } from '@/lib/contracts/essay-input';
+import { useUserDraft } from '@/lib/client/use-user-draft';
+import { ApiError, apiError, failureMessage } from '@/lib/client/api-errors';
+import { useRetryDelay } from '@/lib/client/use-retry-delay';
 
-export type ThemeData = {
-  themeId: string;
-  tema: string;
-  textoApoio1: string;
-  textoApoio2: string;
-};
-
+export { MIN_WORDS, MAX_WORDS, MAX_ESSAY_CHARACTERS } from '@/lib/contracts/essay-input';
+export type ThemeData = { themeId: string; tema: string; textoApoio1: string; textoApoio2: string };
 export type ThemeMode = 'generated' | 'manual';
 export type MobileTab = 'theme' | 'write' | 'submit';
 
-export const MIN_WORDS = 100;
-export const MAX_WORDS = 500;
-
-function countWords(text: string): number {
-  return text.trim().split(/\s+/).filter(Boolean).length;
-}
-
-export function useEssayWorkflow() {
+export function useEssayWorkflow(userId: string) {
   const router = useRouter();
-  const submissionRef = useRef<{ id: string; inputKey: string } | null>(null);
-  const [themeMode, setThemeMode] = useState<ThemeMode>('generated');
-  const [theme, setTheme] = useState<ThemeData | null>(null);
+  const { draft, updateDraft, clearDraft, ready, status } = useUserDraft('essay', userId, essayDraftSchema, EMPTY_ESSAY_DRAFT);
+  const generationRef = useRef<AbortController | null>(null);
+  const correctionRef = useRef<AbortController | null>(null);
   const [themeLoading, setThemeLoading] = useState(false);
   const [themeError, setThemeError] = useState('');
-  const [manualTheme, setManualTheme] = useState('');
-  const [essay, setEssay] = useState('');
   const [correcting, setCorrecting] = useState(false);
   const [correctionError, setCorrectionError] = useState('');
   const [mobileTab, setMobileTab] = useState<MobileTab>('theme');
+  const [retryAt, setRetryAt] = useState<number | null>(null);
+  const [themeRetryAt, setThemeRetryAt] = useState<number | null>(null);
+  const secondsToRetry = useRetryDelay(retryAt);
+  const themeSecondsToRetry = useRetryDelay(themeRetryAt);
 
-  const wordCount = countWords(essay);
-  const selectedThemeTitle = themeMode === 'manual' ? manualTheme.trim() : theme?.tema ?? '';
-  const hasSelectedTheme = selectedThemeTitle.length >= 5;
-  const canSubmit =
-    hasSelectedTheme && wordCount >= MIN_WORDS && wordCount <= MAX_WORDS && !correcting;
+  useEffect(() => () => { generationRef.current?.abort(); correctionRef.current?.abort(); }, []);
+
+  const setThemeMode = useCallback((mode: ThemeMode) => {
+    if (correctionRef.current) return;
+    generationRef.current?.abort();
+    generationRef.current = null;
+    setThemeLoading(false);
+    setThemeError('');
+    updateDraft((current) => ({ ...current, themeMode: mode }));
+  }, [updateDraft]);
+  const setManualTheme = useCallback((value: string) => {
+    if (!correctionRef.current) updateDraft((current) => ({ ...current, manualTheme: value }));
+  }, [updateDraft]);
+  const setEssay = useCallback((value: string) => {
+    if (!correctionRef.current) updateDraft((current) => ({ ...current, essay: value }));
+  }, [updateDraft]);
+  const discardDraft = useCallback(() => {
+    if (correctionRef.current) return;
+    generationRef.current?.abort();
+    generationRef.current = null;
+    setThemeLoading(false);
+    setThemeError('');
+    setCorrectionError('');
+    clearDraft();
+    setMobileTab('theme');
+  }, [clearDraft]);
+
+  const wordCount = countWords(draft.essay);
+  const selectedThemeTitle = draft.themeMode === 'manual' ? draft.manualTheme.trim() : draft.theme?.tema ?? '';
+  const themeValidation = draft.themeMode === 'manual' ? manualThemeValidation(draft.manualTheme) : '';
+  const hasSelectedTheme = draft.themeMode === 'manual' ? !themeValidation : !!draft.theme;
+  const inputValidation = essayValidation(draft.essay);
+  const canSubmit = ready && hasSelectedTheme && !inputValidation && !correcting && !themeLoading && secondsToRetry === 0;
 
   const generateTheme = useCallback(async () => {
+    if (!ready || generationRef.current || correctionRef.current || themeSecondsToRetry) return;
+    const controller = new AbortController();
+    generationRef.current = controller;
     setThemeLoading(true);
     setThemeError('');
     try {
-      const response = await fetch('/api/gerar-tema', { method: 'POST' });
-      const payload = await response.json().catch(() => null);
-      if (!response.ok) {
-        const message = payload && typeof payload === 'object' && 'message' in payload
-          ? String(payload.message)
-          : 'Erro ao gerar tema.';
-        throw new Error(message);
-      }
-
+      const response = await fetch('/api/gerar-tema', { method: 'POST', signal: controller.signal });
+      const payload: unknown = await response.json().catch(() => null);
+      if (!response.ok) throw apiError(response, payload, 'Não foi possível gerar o tema agora. Tente novamente em instantes.');
       const validated = generatedThemeResponseSchema.safeParse(payload);
-      if (!validated.success) throw new Error('O servidor retornou um tema inválido.');
-      setTheme(validated.data);
-      setThemeMode('generated');
+      if (!validated.success) throw new ApiError('Não conseguimos abrir o tema. Tente gerar novamente.', 'unavailable');
+      if (controller.signal.aborted || generationRef.current !== controller) return;
+      updateDraft((current) => ({ ...current, theme: validated.data, themeMode: 'generated' }));
       setMobileTab('write');
-    } catch (error) {
-      setThemeError(error instanceof Error ? error.message : 'Erro ao gerar tema. Tente novamente.');
+    } catch (failure) {
+      if (controller.signal.aborted || generationRef.current !== controller) return;
+      setThemeError(failureMessage(failure));
+      setThemeRetryAt(failure instanceof ApiError ? failure.retryAt : null);
     } finally {
-      setThemeLoading(false);
+      if (generationRef.current === controller) {
+        generationRef.current = null;
+        setThemeLoading(false);
+      }
     }
-  }, []);
+  }, [ready, themeSecondsToRetry, updateDraft]);
 
   const submitEssay = useCallback(async () => {
-    if (!canSubmit) return;
+    if (!canSubmit || correctionRef.current) return;
+    const themePayload = draft.themeMode === 'manual'
+      ? { mode: 'manual' as const, tema: draft.manualTheme.trim() }
+      : { mode: 'generated' as const, id: draft.theme?.themeId ?? '' };
+    const inputKey = JSON.stringify({ essay: draft.essay, theme: themePayload });
+    const submission = draft.submission?.inputKey === inputKey ? draft.submission : { id: crypto.randomUUID(), inputKey };
+    updateDraft((current) => ({ ...current, submission }));
+    const controller = new AbortController();
+    correctionRef.current = controller;
     setCorrecting(true);
+    setMobileTab('submit');
     setCorrectionError('');
-
     try {
-      const themePayload = themeMode === 'manual'
-        ? { mode: 'manual' as const, tema: manualTheme.trim() }
-        : { mode: 'generated' as const, id: theme?.themeId ?? '' };
-      const inputKey = JSON.stringify({ essay, theme: themePayload });
-      if (!submissionRef.current || submissionRef.current.inputKey !== inputKey) {
-        submissionRef.current = { id: crypto.randomUUID(), inputKey };
-      }
-
       const response = await fetch('/api/corrigir', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          submissionId: submissionRef.current.id,
-          redacao: essay,
-          theme: themePayload,
-        }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: controller.signal,
+        body: JSON.stringify({ submissionId: submission.id, redacao: draft.essay, theme: themePayload }),
       });
-      const payload = await response.json().catch(() => null);
-      if (!response.ok) {
-        const message = payload && typeof payload === 'object' && 'message' in payload
-          ? String(payload.message)
-          : 'Erro ao corrigir redação.';
-        throw new Error(message);
-      }
-
+      const payload: unknown = await response.json().catch(() => null);
+      if (!response.ok) throw apiError(response, payload, 'Não foi possível concluir a correção. Sua redação foi mantida. Tente novamente em instantes.');
       const validated = essayCorrectionResponseSchema.safeParse(payload);
-      if (!validated.success) throw new Error('O servidor retornou uma correção inválida.');
-      submissionRef.current = null;
+      if (!validated.success) throw new ApiError('Não conseguimos abrir a correção. Envie novamente para recuperar o resultado.', 'unavailable');
+      if (controller.signal.aborted) return;
+      clearDraft();
       router.push(`/resultados/${validated.data.id}`);
-    } catch (error) {
-      setCorrectionError(error instanceof Error ? error.message : 'Erro ao corrigir. Tente novamente.');
+    } catch (failure) {
+      if (controller.signal.aborted) return;
+      setCorrectionError(failureMessage(failure));
+      setRetryAt(failure instanceof ApiError ? failure.retryAt : null);
       setCorrecting(false);
+    } finally {
+      if (correctionRef.current === controller) correctionRef.current = null;
     }
-  }, [canSubmit, essay, manualTheme, router, theme, themeMode]);
+  }, [canSubmit, draft, updateDraft, clearDraft, router]);
 
   return {
-    themeMode,
-    setThemeMode,
-    theme,
-    themeLoading,
-    themeError,
-    setThemeError,
-    manualTheme,
-    setManualTheme,
-    essay,
-    setEssay,
-    correcting,
-    correctionError,
-    mobileTab,
-    setMobileTab,
-    wordCount,
-    charCount: essay.length,
-    selectedThemeTitle,
-    hasSelectedTheme,
-    canSubmit,
-    generateTheme,
-    submitEssay,
+    ...draft, ready, draftStatus: status, discardDraft,
+    setThemeMode, themeLoading, themeError, setThemeError, setManualTheme, setEssay,
+    correcting, correctionError, mobileTab, setMobileTab, wordCount, charCount: draft.essay.length,
+    selectedThemeTitle, hasSelectedTheme, canSubmit, themeValidation, inputValidation,
+    secondsToRetry, themeSecondsToRetry, generateTheme, submitEssay,
   };
 }

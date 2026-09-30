@@ -33,6 +33,17 @@ O feedback produzido por IA é uma orientação de estudo. Ele não substitui pr
 - Vercel Analytics e Speed Insights só são montados depois do consentimento para métricas opcionais.
 - O runtime é inteiramente atendido pelos Route Handlers do Next.js; as Edge Functions remotas legadas foram removidas.
 
+## Recuperação do trabalho e navegação
+
+- Redações salvam texto, tema e `submissionId` no `localStorage`, por usuário. O rascunho é restaurado antes da edição e removido após correção salva, descarte confirmado ou logout explícito. Expiração de sessão e falhas de conexão preservam o rascunho. Fotos do OCR continuam apenas em memória; substituir texto diferente exige confirmação.
+- Simulados usam `sessionStorage`, por usuário e por aba, preservando `requestId`, `attemptId`, `expiresAt`, posição e respostas. Retomar não cria outra tentativa automaticamente. O primeiro envio congela as respostas; retries manuais enviam o mesmo snapshot. Respostas 404/410 permitem começar um novo simulado.
+- A redação aceita tema manual de 5–300 caracteres, 100–500 palavras e até 5.000 caracteres. Texto colado ou extraído acima dos limites permanece no editor para revisão.
+- A disponibilidade exibida usa a mesma regra do servidor, das 7h às 23h30 em `America/Sao_Paulo`, e atualiza a cada minuto e ao voltar à aba. O servidor continua autorizando cada operação.
+- Notícias sincronizam termo e modo com a URL: `q` pesquisa o acervo e `modo=ia` pede um resumo. Voltar/avançar restaura a pesquisa. Consultas antigas são invalidadas, paginação com erro mantém os artigos e o mesmo offset para retry, e destaques são revalidados em segundo plano pelo GET existente.
+- Falhas de armazenamento são informadas na página. O salvamento depende do navegador; logout explícito também invalida gravações e rascunhos antigos de outras abas.
+
+A verificação deste lote, incluindo os limites do QA com respostas controladas, está em [docs/student-workflows-qa.md](docs/student-workflows-qa.md).
+
 ## Stack principal
 
 - Next.js 16.2
@@ -90,7 +101,7 @@ Use `.env.example` como referência e nunca versione `.env.local` ou chaves reai
 | --- | --- |
 | `npm run dev` | iniciar o desenvolvimento com Turbopack |
 | `npm run lint` | executar ESLint no repositório |
-| `npm run test:systems` | executar os testes focados de redação, quiz e roteamento OCR |
+| `npm run test:systems` | executar testes de contratos, rascunhos, idempotência, notícias e roteamento OCR |
 | `npm run setup:security` | instalar verificações locais antes de commit e push, preservando hooks existentes |
 | `npm run test:security` | testar verificadores de privacidade, índice, histórico e exportação com fixtures em memória/disco temporário |
 | `npm run build` | gerar o build de produção e atualizar `public/sitemap.xml` |
@@ -113,6 +124,7 @@ lib/auth/               autenticação, contexto, perfil, segurança e validaç�
 lib/ai/                 integrações padrão com Groq e Gemini
 lib/contracts/          contratos Zod e tipos neutros compartilhados
 lib/db/                 cliente server-side, repositórios e utilitários de consulta
+lib/client/             recuperação de rascunhos, erros, requisições e disponibilidade no navegador
 lib/server/             regras server-only, autorização admin, segurança de APIs e importação de notícias
 lib/server/ai/           runtime textual e validação de saídas estruturadas
 lib/server/essay/        geração e correção canônicas de redação

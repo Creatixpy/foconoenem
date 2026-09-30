@@ -1,9 +1,12 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useNoticias, useDestaques, useBuscaNoticias, useBuscaIA, type NoticiaAPI } from './hooks';
+import { useNoticias, useDestaques, type NoticiaAPI } from './hooks';
+import { useNewsSearch } from './useNewsSearch';
+import SearchForm from './SearchForm';
+import FlowStatus from '@/app/components/shared/FlowStatus';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -96,7 +99,7 @@ function ArticleCardSmall({ noticia }: { noticia: NoticiaAPI }) {
         </div>
         <div className="p-4 space-y-2">
           {noticia.tags.length > 0 && (
-            <span className="inline-block text-[10px] font-semibold uppercase tracking-wider text-[var(--brand)] bg-[var(--brand)]/10 px-2 py-0.5 rounded-full">
+            <span className="inline-block text-[10px] font-semibold uppercase tracking-wider text-[var(--brand-hover)] bg-[var(--brand)]/10 px-2 py-0.5 rounded-full">
               {noticia.tags[0]}
             </span>
           )}
@@ -104,7 +107,7 @@ function ArticleCardSmall({ noticia }: { noticia: NoticiaAPI }) {
             {noticia.titulo}
           </h3>
           <p className="text-xs text-[var(--text-3)] line-clamp-2">{stripHtml(noticia.resumo)}</p>
-          <div className="flex items-center gap-2 text-[10px] text-[var(--text-3)] pt-1">
+          <div className="flex flex-wrap items-center gap-2 text-[10px] text-[var(--text-3)] pt-1">
             <span>{formatDate(noticia.data_publicacao)}</span>
             <span>·</span>
             <span>{readTime(noticia.conteudo)}</span>
@@ -126,7 +129,7 @@ function ArticleCardMedium({ noticia }: { noticia: NoticiaAPI }) {
         </div>
         <div className="p-5 space-y-2">
           {noticia.tags.length > 0 && (
-            <span className="inline-block text-[10px] font-semibold uppercase tracking-wider text-[var(--brand)] bg-[var(--brand)]/10 px-2 py-0.5 rounded-full">
+            <span className="inline-block text-[10px] font-semibold uppercase tracking-wider text-[var(--brand-hover)] bg-[var(--brand)]/10 px-2 py-0.5 rounded-full">
               {noticia.tags[0]}
             </span>
           )}
@@ -134,7 +137,7 @@ function ArticleCardMedium({ noticia }: { noticia: NoticiaAPI }) {
             {noticia.titulo}
           </h3>
           <p className="text-sm text-[var(--text-3)] line-clamp-2">{stripHtml(noticia.resumo)}</p>
-          <div className="flex items-center gap-2 text-xs text-[var(--text-3)] pt-1">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--text-3)] pt-1">
             <span>{formatDate(noticia.data_publicacao)}</span>
             <span>·</span>
             <span>{readTime(noticia.conteudo)}</span>
@@ -146,123 +149,25 @@ function ArticleCardMedium({ noticia }: { noticia: NoticiaAPI }) {
 }
 
 // ---------------------------------------------------------------------------
-// Search bar
-// ---------------------------------------------------------------------------
-function SearchBar({
-  onSearch,
-  onAISearch,
-}: {
-  onSearch: (q: string) => void;
-  onAISearch: (q: string) => void;
-}) {
-  const [query, setQuery] = useState('');
-  const [isAI, setIsAI] = useState(false);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!query.trim()) return;
-    if (isAI) onAISearch(query.trim());
-    else onSearch(query.trim());
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-3">
-      <div className="relative">
-        <svg
-          className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-[var(--text-3)]"
-          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-        </svg>
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={isAI ? 'Peça um resumo das notícias recentes sobre um tema...' : 'Buscar notícias...'}
-          className="w-full pl-10 pr-28 py-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] placeholder:text-[var(--text-3)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] text-sm"
-        />
-        <button
-          type="submit"
-          className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 rounded-lg bg-[var(--brand)] text-white text-sm font-medium hover:bg-[var(--brand-hover)] transition-colors cursor-pointer"
-        >
-          Buscar
-        </button>
-      </div>
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={() => setIsAI(!isAI)}
-          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors cursor-pointer border ${
-            isAI
-              ? 'bg-[var(--brand)]/10 text-[var(--brand)] border-[var(--brand)]/30'
-              : 'bg-[var(--surface)] text-[var(--text-3)] border-[var(--border)] hover:text-[var(--text-2)]'
-          }`}
-        >
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
-          </svg>
-          Resumo com IA
-        </button>
-        {isAI && (
-          <span className="text-[10px] text-[var(--text-3)]">
-            A IA resume notícias aprovadas já publicadas na AprovIA
-          </span>
-        )}
-      </div>
-    </form>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
-export default function NoticiasPageClient({
+function NoticiasContent({
   initialNoticias,
   initialDestaques,
 }: {
   initialNoticias: NoticiaAPI[];
   initialDestaques: NoticiaAPI[];
 }) {
-  const { noticias, loading, loadingMore, error, hasMore, loadMore } = useNoticias(9, initialNoticias);
-  const { destaques, loading: destaquesLoading } = useDestaques(3, initialDestaques);
-  const { results: searchResults, loading: searchLoading, searched, search, clear: clearSearch } = useBuscaNoticias();
-  const { content: aiContent, loading: aiLoading, error: aiError, search: aiSearch, clear: clearAI } = useBuscaIA();
-
-  const [showingSearch, setShowingSearch] = useState(false);
-  const [showingAI, setShowingAI] = useState(false);
-
-  const handleSearch = useCallback(
-    (q: string) => {
-      clearAI();
-      setShowingAI(false);
-      search(q);
-      setShowingSearch(true);
-    },
-    [search, clearAI]
-  );
-
-  const handleAISearch = useCallback(
-    (q: string) => {
-      clearSearch();
-      setShowingSearch(false);
-      aiSearch(q);
-      setShowingAI(true);
-    },
-    [aiSearch, clearSearch]
-  );
-
-  const handleClearResults = useCallback(() => {
-    clearSearch();
-    clearAI();
-    setShowingSearch(false);
-    setShowingAI(false);
-  }, [clearSearch, clearAI]);
+  const { noticias, loading, loadingMore, error, moreError, hasMore, loadMore, refetch } = useNoticias(9, initialNoticias);
+  const { destaques, loading: destaquesLoading, error: highlightsError, refresh: refreshHighlights } = useDestaques(3, initialDestaques);
+  const searchState = useNewsSearch();
+  const { results: searchResults, loading: searchLoading, searched, error: searchError, aiContent, showingSearch, showingAI, submit, clearResults: handleClearResults, secondsToRetry } = searchState;
 
   const heroArticle = destaques[0];
   const secondaryArticles = destaques.slice(1, 3);
 
   return (
-    <div className="min-h-[80vh] pb-20">
+    <div className="student-flow min-h-[80vh] pb-20">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
         {/* page header */}
         <div className="mb-8 space-y-2">
@@ -280,7 +185,7 @@ export default function NoticiasPageClient({
 
         {/* search */}
         <div className="mb-10">
-          <SearchBar onSearch={handleSearch} onAISearch={handleAISearch} />
+          <SearchForm {...searchState} />
         </div>
 
         {/* search results */}
@@ -289,7 +194,7 @@ export default function NoticiasPageClient({
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-[var(--text)] flex items-center gap-2">
                 {showingAI && (
-                  <span className="inline-flex items-center gap-1 text-xs font-medium text-[var(--brand)] bg-[var(--brand)]/10 px-2 py-0.5 rounded-full">
+                  <span className="inline-flex items-center gap-1 text-xs font-medium text-[var(--brand-hover)] bg-[var(--brand)]/10 px-2 py-0.5 rounded-full">
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
                     </svg>
@@ -306,21 +211,21 @@ export default function NoticiasPageClient({
               </button>
             </div>
 
-            {(searchLoading || aiLoading) && (
-              <div className="space-y-4">
+            {searchLoading && (
+              <div className="space-y-4" role="status" aria-label="Buscando notícias">
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="h-24 rounded-xl bg-[var(--surface)] animate-pulse" />
                 ))}
               </div>
             )}
 
-            {showingAI && aiContent && (
+            {showingAI && !searchLoading && !searchError && aiContent && (
               <div className="rounded-xl border border-[var(--brand)]/20 bg-[var(--surface)] p-5 sm:p-6">
                 <div className="flex items-center gap-2 mb-3">
                   <svg className="w-4 h-4 text-[var(--brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
                   </svg>
-                  <span className="text-xs font-medium text-[var(--brand)]">Resumo da IA</span>
+                  <span className="text-xs font-medium text-[var(--brand-hover)]">Resumo da IA</span>
                 </div>
                 <div className="text-sm text-[var(--text-2)] leading-relaxed whitespace-pre-line">
                   {aiContent}
@@ -328,29 +233,29 @@ export default function NoticiasPageClient({
               </div>
             )}
 
-            {showingAI && aiError && (
-              <div className="rounded-xl border border-[var(--danger)]/20 bg-[var(--danger)]/5 p-4 text-sm text-[var(--danger)]">
-                {aiError}
-              </div>
-            )}
+            {searchError && <div className="space-y-3">
+              <FlowStatus error>{searchError}{secondsToRetry > 0 && ` Aguarde ${secondsToRetry}s.`}</FlowStatus>
+              <button type="button" disabled={secondsToRetry > 0} onClick={() => submit()} className="rounded-lg border border-[var(--border)] px-4 py-3 text-sm text-[var(--text)] disabled:opacity-50">Tentar novamente</button>
+            </div>}
+            {showingAI && searched && !searchLoading && !searchError && !aiContent && <FlowStatus>Nenhuma notícia encontrada para resumir. Tente outro termo.</FlowStatus>}
 
-            {showingSearch && searched && !searchLoading && searchResults.length === 0 && (
+            {showingSearch && searched && !searchLoading && !searchError && searchResults.length === 0 && (
               <div className="text-center py-12">
                 <p className="text-[var(--text-3)] text-sm mb-2">Nenhum resultado encontrado.</p>
                 <p className="text-[var(--text-3)] text-xs">
-                  Tente a{' '}
+                  Peça um{' '}
                   <button
-                    onClick={() => setShowingSearch(false)}
-                    className="text-[var(--brand)] hover:underline cursor-pointer"
+                    onClick={() => submit(searchState.query, true)}
+                    className="text-[var(--brand-hover)] hover:underline cursor-pointer"
                   >
                     resumo com IA
                   </button>{' '}
-                  para uma resposta personalizada.
+                  com base nas notícias publicadas.
                 </p>
               </div>
             )}
 
-            {showingSearch && searchResults.length > 0 && (
+            {showingSearch && !searchLoading && !searchError && searchResults.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {searchResults.map((n) => (
                   <ArticleCardSmall key={n.id} noticia={n} />
@@ -363,8 +268,10 @@ export default function NoticiasPageClient({
         {/* featured hero */}
         {!showingSearch && !showingAI && (
           <>
+            {highlightsError && <div className="mb-5 space-y-3"><FlowStatus error>Não foi possível atualizar os destaques.</FlowStatus><button type="button" onClick={() => void refreshHighlights()} className="rounded-lg border border-[var(--border)] px-4 py-3 text-sm text-[var(--text)]">Tentar atualizar destaques</button></div>}
             {destaquesLoading ? (
-              <div className="mb-10 space-y-4">
+              <div className="mb-10 space-y-4" role="status" aria-label="Carregando destaques">
+                <span className="sr-only">Carregando destaques…</span>
                 <div className="h-[400px] rounded-2xl bg-[var(--surface)] animate-pulse" />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="h-[260px] rounded-xl bg-[var(--surface)] animate-pulse" />
@@ -390,7 +297,7 @@ export default function NoticiasPageClient({
                       <p className="text-sm text-white/75 line-clamp-2 max-w-2xl">
                         {stripHtml(heroArticle.resumo)}
                       </p>
-                      <div className="flex items-center gap-3 text-xs text-white/60">
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-white/80">
                         <span>{formatDate(heroArticle.data_publicacao)}</span>
                         <span>·</span>
                         <span>{readTime(heroArticle.conteudo)}</span>
@@ -421,7 +328,8 @@ export default function NoticiasPageClient({
               <h2 className="text-lg font-bold text-[var(--text)] mb-5">Últimas notícias</h2>
 
               {loading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" role="status" aria-label="Carregando notícias">
+                  <span className="sr-only">Carregando notícias…</span>
                   {[1, 2, 3, 4, 5, 6].map((i) => (
                     <div key={i} className="rounded-xl bg-[var(--surface)] animate-pulse">
                       <div className="aspect-[16/9]" />
@@ -433,12 +341,12 @@ export default function NoticiasPageClient({
                     </div>
                   ))}
                 </div>
-              ) : error ? (
+              ) : error && noticias.length === 0 ? (
                 <div className="text-center py-12">
-                  <p className="text-[var(--danger)] text-sm mb-3">{error}</p>
+                  <FlowStatus error>{error}</FlowStatus>
                   <button
-                    onClick={() => window.location.reload()}
-                    className="text-sm text-[var(--brand)] hover:underline cursor-pointer"
+                    onClick={refetch}
+                    className="mt-3 text-sm text-[var(--brand-hover)] hover:underline cursor-pointer"
                   >
                     Tentar novamente
                   </button>
@@ -460,6 +368,8 @@ export default function NoticiasPageClient({
                     ))}
                   </div>
 
+                  {moreError && <div className="mt-5"><FlowStatus error>{moreError} As notícias carregadas foram mantidas.</FlowStatus></div>}
+                  {loadingMore && <p role="status" className="sr-only">Carregando mais notícias…</p>}
                   {hasMore && (
                     <div className="text-center mt-8">
                       <button
@@ -476,7 +386,7 @@ export default function NoticiasPageClient({
                             Carregando...
                           </span>
                         ) : (
-                          'Carregar mais'
+                          moreError ? 'Tentar carregar mais novamente' : 'Carregar mais'
                         )}
                       </button>
                     </div>
@@ -489,4 +399,8 @@ export default function NoticiasPageClient({
       </div>
     </div>
   );
+}
+
+export default function NoticiasPageClient(props: { initialNoticias: NoticiaAPI[]; initialDestaques: NoticiaAPI[] }) {
+  return <Suspense fallback={<div className="mx-auto max-w-6xl px-4 py-10"><FlowStatus>Carregando notícias…</FlowStatus></div>}><NoticiasContent {...props} /></Suspense>;
 }

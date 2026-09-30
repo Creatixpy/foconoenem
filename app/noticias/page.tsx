@@ -8,7 +8,7 @@ export default async function NoticiasPage() {
   if (isNewsServerClientConfigured()) {
     [initialNoticias, initialDestaques] = await Promise.all([
       listNoticias({ limit: 9, offset: 0 }),
-      listNoticias({ limit: 3, offset: 0, destaque: true }),
+      listNoticias({ limit: 3, offset: 0, destaque: true }).catch(() => []),
     ]);
   }
 
