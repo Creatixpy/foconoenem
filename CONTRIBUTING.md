@@ -47,6 +47,11 @@ services. The current routes, APIs, and modules are mapped in
 
 ## Publication
 
+`npm install` prepares local commit/push guards; run `npm run setup:security`
+to install them without reinstalling dependencies. Existing hooks and custom
+`core.hooksPath` are preserved: integrate the publication checks into those
+hooks manually when the installer reports a conflict.
+
 Use [README.md](README.md) for release commands. `npm run verify:open-source`
 checks the working tree and the exact staged blobs, including files absent from
 the working tree. It does not establish clean Git history. A

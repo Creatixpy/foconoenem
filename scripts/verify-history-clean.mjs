@@ -1,9 +1,14 @@
 #!/usr/bin/env node
 
-import { printFailures, verifyHistory } from './public-security.mjs';
+import fs from 'node:fs';
+import { parsePushUpdates, printFailures, verifyHistory } from './public-security.mjs';
 
 try {
-  const { failures, revisions, objects } = verifyHistory(process.cwd());
+  if (process.argv.slice(2).some((argument) => argument !== '--pre-push')) throw new Error('invalid_arguments');
+  const updates = process.argv.includes('--pre-push') ? parsePushUpdates(fs.readFileSync(0, 'utf8')) : { revisions: [], failures: [] };
+  const result = verifyHistory(process.cwd(), { additionalRevisions: updates.revisions });
+  const failures = [...updates.failures, ...result.failures];
+  const { revisions, objects } = result;
   if (failures.length) {
     console.error('Git history verification failed:');
     printFailures(failures);

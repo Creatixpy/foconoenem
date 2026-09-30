@@ -27,3 +27,6 @@
 *.ico binary
 *.woff binary
 *.woff2 binary
+
+# Git hooks execute with POSIX line endings on every checkout.
+.githooks/* text eol=lf

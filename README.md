@@ -102,6 +102,7 @@ Use `.env.example` como referência e nunca versione `.env.local` ou chaves reai
 | `npm run dev` | iniciar o desenvolvimento com Turbopack |
 | `npm run lint` | executar ESLint no repositório |
 | `npm run test:systems` | executar testes de contratos, rascunhos, idempotência, notícias e roteamento OCR |
+| `npm run setup:security` | instalar verificações locais antes de commit e push, preservando hooks existentes |
 | `npm run test:security` | testar verificadores de privacidade, índice, histórico e exportação com fixtures em memória/disco temporário |
 | `npm run build` | gerar o build de produção e atualizar `public/sitemap.xml` |
 | `npm run start` | servir o build de produção |
@@ -179,6 +180,7 @@ Na exclusão de uma conta, o app remove primeiro tentativas de quiz, redações,
 - `npm run verify:open-source` valida a árvore atual e os blobs staged; corrigir um arquivo sem atualizar o índice não torna o commit seguro.
 - `npm run verify:history-clean` verifica todo o histórico alcançável, incluindo conteúdo e metadados. Qualquer falha impede publicar aquele histórico.
 - `npm run test:security` exercita essas proteções sem acessar provedores ou credenciais reais. A CI executa os testes e ambos os verificadores.
+- `npm install` prepara os hooks locais de commit e push quando não há configuração anterior; `npm run setup:security` repete a instalação. Hooks alheios são preservados e precisam integrar os verificadores manualmente. O hook de push verifica também os commits propostos, antes do envio; a CI complementa essa barreira.
 - Instruções locais de agentes (`AGENTS.md` e variantes), configurações de editores/MCP, arquivos de ambiente e relatórios privados ficam fora do Git, do deploy e da exportação pública. `.env.example` contém somente placeholders.
 - `npm run release:public-tree` exporta o snapshot rastreado do índice: faça stage apenas dos arquivos aprovados. Arquivos não rastreados e mudanças unstaged não são copiados; o destino precisa ser novo e não pode estar dentro do projeto.
 - Caso uma credencial seja exposta, siga [SECURITY.md](./SECURITY.md): a remoção de arquivos não substitui sua invalidação no provedor. Qualquer limpeza excepcional de histórico precisa preservar trabalho local, limitar as referências alteradas e verificar novamente o remoto.
