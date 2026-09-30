@@ -167,10 +167,25 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
-    document.body.style.overflow = mobileOpen ? 'hidden' : '';
+    if (!mobileOpen) return;
+
+    const desktopViewport = window.matchMedia('(min-width: 64rem)');
+    const onViewportChange = (event: MediaQueryListEvent) => {
+      if (event.matches) setMobileOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMobileOpen(false);
+        document.getElementById('mobile-navigation-toggle')?.focus();
+      }
+    };
+
+    desktopViewport.addEventListener('change', onViewportChange);
+    window.addEventListener('keydown', onKeyDown);
 
     return () => {
-      document.body.style.overflow = '';
+      desktopViewport.removeEventListener('change', onViewportChange);
+      window.removeEventListener('keydown', onKeyDown);
     };
   }, [mobileOpen]);
 
@@ -185,14 +200,14 @@ export default function Header() {
       <nav className="container flex h-16 items-center justify-between gap-4" aria-label="Navegação principal">
         <Logo />
 
-        <ul className="hidden items-center gap-1 md:flex">
+        <ul className="hidden items-center gap-1 lg:flex">
           {NAV_LINKS.map(({ href, label }) => (
             <li key={href}>
               <Link
                 href={href}
                 className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                   isActivePath(pathname, href)
-                    ? 'text-[var(--brand)]'
+                    ? 'text-[var(--brand-hover)]'
                     : 'text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]'
                 }`}
               >
@@ -202,12 +217,13 @@ export default function Header() {
           ))}
         </ul>
 
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-2 lg:flex">
           <AuthActions user={user} />
         </div>
 
-        <div className="flex items-center gap-2 md:hidden">
+        <div className="flex items-center gap-2 lg:hidden">
           <button
+            id="mobile-navigation-toggle"
             type="button"
             onClick={() => {
               setMobileOpen((current) => !current);
@@ -215,6 +231,7 @@ export default function Header() {
             className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[var(--text-2)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
             aria-label={mobileOpen ? 'Fechar menu' : 'Abrir menu'}
             aria-expanded={mobileOpen}
+            aria-controls="mobile-navigation"
           >
             {mobileOpen ? (
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -233,7 +250,7 @@ export default function Header() {
       </nav>
 
       {mobileOpen && (
-        <div className="border-t border-[var(--border)] bg-[var(--bg)] md:hidden">
+        <div id="mobile-navigation" className="max-h-[calc(100dvh-4rem)] overflow-y-auto border-t border-[var(--border)] bg-[var(--bg)] lg:hidden">
           <div className="container flex flex-col gap-3 py-4">
             <div className="flex flex-col gap-1">
               {NAV_LINKS.map(({ href, label }) => (
@@ -243,7 +260,7 @@ export default function Header() {
                   onClick={closeMobileMenu}
                   className={`rounded-lg px-3 py-3 text-base font-medium transition-colors ${
                     isActivePath(pathname, href)
-                      ? 'bg-[var(--brand-soft)] text-[var(--brand)]'
+                      ? 'bg-[var(--brand-soft)] text-[var(--text)]'
                       : 'text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]'
                   }`}
                 >

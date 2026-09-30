@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
-import HomePageClient from "./HomePageClient";
+import HomeHero from "./_components/home/HomeHero";
+import HomeFeatures from "./_components/home/HomeFeatures";
+import HomeHowItWorks from "./_components/home/HomeHowItWorks";
+import HomeStart from "./_components/home/HomeStart";
 
 export const metadata: Metadata = {
   title: "AprovIA - Simulados personalizados e redações com IA",
@@ -8,5 +11,12 @@ export const metadata: Metadata = {
 };
 
 export default function HomePage() {
-  return <HomePageClient />;
+  return (
+    <>
+      <HomeHero />
+      <HomeFeatures />
+      <HomeHowItWorks />
+      <HomeStart />
+    </>
+  );
 }

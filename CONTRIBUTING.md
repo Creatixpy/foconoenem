@@ -8,6 +8,15 @@
 
 ## Validation
 
+For local documentation-only changes, check Markdown, referenced paths and commands,
+and `git diff --check`. A local build is needed when generation or configuration
+changes; the pre-PR requirements below still apply.
+
+For non-trivial essay, quiz, or OCR changes, also run `npm run test:systems` and
+perform QA of the affected flow. Keep regression coverage focused on the behavior
+changed. Report actual commands, outcomes, and incomplete checks; a passing build
+or mocked test does not establish a working database or provider integration.
+
 Before opening a pull request, run:
 
 ```bash
@@ -18,6 +27,35 @@ npm run verify:history-clean
 ```
 
 Schema changes must be added under `supabase/migrations/` and mentioned in the pull request.
+
+## Manual QA by Area
+
+Use the rows relevant to the change, with controlled test data and configured
+services. The current routes, APIs, and modules are mapped in
+[FRONTEND_INVENTORY.md](FRONTEND_INVENTORY.md).
+
+| Area | Flows and behavior to check |
+| --- | --- |
+| Auth | `/login`, `/register`, `/forgot-password`, `/reset-password`; callback and session refresh when affected |
+| Account | `/conta`, `/conta/editar`; account deletion, including removing app-owned content before the Auth user |
+| Essay | `/redacao`, `/resultados/[id]`; OCR upload/compression, theme ownership, stable `submissionId`, off-topic retries |
+| Quiz | `/questoes`; POST attempt creation without answer leakage, PATCH canonical correction, selected answers preserved on retries |
+| News | Public feed/detail/search; `/noticias/admin` for moderation, import, sanitization, and highlights when affected |
+| Donations | `/doacao`, `/doacao/sucesso`, checkout, and `/api/doacao/webhook` when Stripe is configured |
+| Subscriptions | `/planos`, `/conta`, `/api/assinatura/status`, `/api/assinatura/checkout`, `/api/assinatura/portal`, shared `/api/doacao/webhook`; first-time 7-day trial eligibility |
+
+## Publication
+
+Use [README.md](README.md) for release commands, destination, and known history
+limitations. `npm run verify:open-source` checks the current publishable tree;
+it does not establish clean Git history. A `npm run verify:history-clean` failure
+blocks publication of that history. Do not suppress the check or automatically
+rewrite history to pass it.
+
+`npm run release:public-tree` prepares a separate directory and can replace a
+previously marked release directory. Inspect the destination before running it.
+Preparing the tree does not publish the project or resolve exposed credentials;
+follow [SECURITY.md](SECURITY.md) for secret handling.
 
 ## Security
 

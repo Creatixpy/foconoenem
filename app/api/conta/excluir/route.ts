@@ -5,7 +5,7 @@ import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
 import { createAdminClient } from '@/lib/db/server';
 import { checkRateLimit } from '@/lib/server/rate-limit';
 import { ensureTrustedOrigin } from '@/lib/server/request-origin';
-import { handleApiError, passwordSchema, sanitizeString } from '@/lib/security';
+import { handleApiError, passwordSchema, sanitizeString } from '@/lib/server/security';
 import type { Database } from '@/types/supabase';
 
 export const dynamic = 'force-dynamic';

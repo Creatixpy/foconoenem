@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createAdminClient } from '@/lib/db/server';
-import { handleApiError } from '@/lib/security';
+import { handleApiError } from '@/lib/server/security';
 import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
 import { ensureTrustedOrigin } from '@/lib/server/request-origin';
 import { sanitizeInput } from '@/lib/auth/validation';

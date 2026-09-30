@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchContaData } from '@/lib/server/conta';
-import { handleApiError } from '@/lib/security';
+import { handleApiError } from '@/lib/server/security';
 import { ensureTrustedOrigin } from '@/lib/server/request-origin';
 import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
 

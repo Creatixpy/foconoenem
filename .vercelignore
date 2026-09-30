@@ -1,5 +1,7 @@
 .env*
 .agents/
+.local/
+supabase/.branches/
 .bin/
 node_modules/
 .next/

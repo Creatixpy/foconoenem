@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { logAdminAction } from '@/lib/admin-auth';
+import { logAdminAction } from '@/lib/server/admin-auth';
 import { createAdminClient } from '@/lib/db/server';
 
 type MaintenanceTaskName =

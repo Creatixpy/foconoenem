@@ -1,6 +1,6 @@
 # PROJECT INVENTORY — AprovIA
 
-> Snapshot verified against the repository state on 2026-07-17.
+> Local file-structure review on 2026-09-29; this review does not verify remote services.
 > This document is repo-first: if something is not present in the tree or current import graph, it is intentionally not claimed here.
 > Despite the historical file name, this inventory covers both frontend and active backend code in the Next.js app.
 
@@ -24,7 +24,7 @@ The active runtime lives in:
 - `lib/` for business logic and integrations
 - `supabase/migrations/` for local schema history
 
-The repository and remote Supabase project no longer contain active Edge Functions. Runtime APIs are Next.js Route Handlers.
+The repository contains no active Supabase Edge Functions. Runtime APIs are Next.js Route Handlers.
 
 ---
 
@@ -34,7 +34,7 @@ The repository and remote Supabase project no longer contain active Edge Functio
 
 | Route | Files | Purpose |
 | --- | --- | --- |
-| `/` | `app/page.tsx`, `app/HomePageClient.tsx` | Landing page |
+| `/` | `app/page.tsx`, `app/_components/home/*.tsx` | Landing page composed from four Server Components |
 | `/redacao` | `app/redacao/page.tsx`, `app/redacao/RedacaoPageClient.tsx`, `app/redacao/useEssayWorkflow.ts`, `app/redacao/PhotoUpload.tsx`, `app/redacao/prepareOcrImage.ts` | Essay workflow, locally optimized OCR uploads, idempotent correction UI |
 | `/questoes` | `app/questoes/page.tsx`, `app/questoes/QuestoesPageClient.tsx` | Quiz generation, answering and result flow |
 | `/planos` | `app/planos/page.tsx`, `app/planos/PlanosPageClient.tsx` | Free/Max comparison, subscription status, checkout and portal entry points |
@@ -114,13 +114,23 @@ The repository and remote Supabase project no longer contain active Edge Functio
 
 ## 4. Components and UI Files
 
+### Homepage sections
+
+| File | Purpose |
+| --- | --- |
+| `app/_components/home/HomeHero.tsx` | Main introduction and study entry points |
+| `app/_components/home/HomeFeatures.tsx` | Core study tools |
+| `app/_components/home/HomeHowItWorks.tsx` | Three-step study flow |
+| `app/_components/home/HomeStart.tsx` | Final call to start studying |
+
+These Server Components are private to the homepage; `app/page.tsx` handles their composition and metadata.
+
 ### Layout and shared shell
 
 | File | Purpose |
 | --- | --- |
-| `app/components/layout/Header.tsx` | Header, auth menu and mobile navigation |
+| `app/components/layout/Header.tsx` | Header, auth menu and compact navigation below the desktop breakpoint |
 | `app/components/layout/Footer.tsx` | Footer links and branding |
-| `app/components/layout/index.ts` | Barrel for layout components |
 | `app/components/shared/AprovIALogo.tsx` | Reusable responsive AprovIA symbol and wordmark |
 | `app/components/shared/RebrandingBanner.tsx` | Dismissible transition notice backed by local storage |
 
@@ -137,8 +147,6 @@ The repository and remote Supabase project no longer contain active Edge Functio
 | --- | --- |
 | `app/noticias/hooks.ts` | Client hooks for public feed, highlights, article lookup and text search |
 | `app/noticias/[slug]/ShareButton.tsx` | Native-share/copy-link control for an approved article |
-
-`app/components/shared/index.ts` exports the shared AprovIA components.
 
 ---
 
@@ -181,7 +189,6 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | --- | --- |
 | `lib/auth/constants.ts` | Auth constants and route references |
 | `lib/auth/context.tsx` | `AuthProvider` and auth state management, including optional server-validated initial user bootstrap |
-| `lib/auth/index.ts` | Barrel |
 | `lib/auth/profile-service.ts` | Client wrapper around `/api/perfil` |
 | `lib/auth/security.ts` | Auth-side security helpers |
 | `lib/auth/service.ts` | Sign-in, sign-up, reset and session refresh flows |
@@ -192,11 +199,7 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 
 | File | Purpose |
 | --- | --- |
-| `lib/constants/index.ts` | Barrel |
-| `lib/constants/navigation.ts` | Centralized nav/footer link definitions |
 | `lib/constants/plans.ts` | Free/Max marketing comparison and shared plan presentation data |
-| `lib/constants/routes.ts` | Route constants |
-| `lib/constants/seo.ts` | Reusable SEO constants |
 | `lib/constants/subscriptions.ts` | Max plan code, monthly price, trial length and subscription types |
 
 ### `lib/db/`
@@ -208,18 +211,11 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | `lib/db/repositories/essays.ts` | Essay result, canonical theme and idempotent submission RPC adapters |
 | `lib/db/repositories/quizzes.ts` | Atomic question catalog, request-id attempt and canonical submission RPC adapters |
 
-### `lib/hooks/`
-
-| File | Purpose |
-| --- | --- |
-| `lib/hooks/index.ts` | Barrel |
-| `lib/hooks/useOutsideClick.ts` | Outside-click detection |
-| `lib/hooks/useScrollPosition.ts` | Scroll state hook |
-
 ### `lib/server/`
 
 | File | Purpose |
 | --- | --- |
+| `lib/server/admin-auth.ts` | Admin authorization and audit-log helper |
 | `lib/server/analytics.ts` | Server-side analytics event logging |
 | `lib/server/auth-request.ts` | Resolve the verified authenticated user from SSR cookies |
 | `lib/server/brazil-time.ts` | Brazil timezone helpers based on local server time |
@@ -228,12 +224,14 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | `lib/server/local-maintenance.ts` | Throttled atomic cleanup of `rate_limits`, `analytics_events`, `cached_themes` and quiz attempts |
 | `lib/server/news-content.ts` | Server-only sanitization of approved news HTML and external URLs |
 | `lib/server/news-highlights.ts` | On-demand highlight refresh/status logic backed by `configuracoes` |
+| `lib/server/news-import.ts` | Server-only NewsAPI fetch/normalize/dedupe/import pipeline |
 | `lib/server/noticias.ts` | Server-side approved news access for public routes |
 | `lib/server/ocr-image.ts` | Server-only OCR upload size, MIME and magic-byte validation |
 | `lib/server/operating-hours.ts` | Business-hours evaluation |
 | `lib/server/page-auth.ts` | Cached server-side page guards for authenticated routes |
 | `lib/server/rate-limit.ts` | Atomic, fail-closed server-side rate limiting |
 | `lib/server/request-origin.ts` | Trusted-origin enforcement for stateful and authenticated APIs |
+| `lib/server/security.ts` | Server-only API input and error helpers |
 | `lib/server/subscription-return.ts` | Allowlisted return-path normalization for Stripe subscription flows |
 | `lib/server/subscriptions.ts` | Max subscription summary, Stripe sync, customer provisioning and recoverable webhook claims |
 | `lib/server/stripe.ts` | Shared Stripe server client helpers |
@@ -262,15 +260,6 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | `lib/supabase/client.ts` | Browser Supabase client; throws when required public Supabase env vars are missing |
 | `lib/supabase/middleware.ts` | Session refresh and security headers used by `proxy.ts` |
 | `lib/supabase/server.ts` | SSR Supabase client with cookie bridge |
-
-### Root-level utilities in `lib/`
-
-| File | Purpose |
-| --- | --- |
-| `lib/admin-auth.ts` | Admin authorization and audit-log helper |
-| `lib/errors.ts` | Generic error helpers |
-| `lib/news-import.ts` | NewsAPI fetch/normalize/dedupe/import pipeline |
-| `lib/security.ts` | Generic API input and error helpers |
 
 ---
 
@@ -308,7 +297,6 @@ The codebase does **not** currently read `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`.
 
 | File | Purpose |
 | --- | --- |
-| `types/postgrest-augment.d.ts` | PostgREST type augmentations |
 | `types/supabase.ts` | Generated Supabase database types |
 
 ---
@@ -317,7 +305,7 @@ The codebase does **not** currently read `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`.
 
 | Path | Purpose |
 | --- | --- |
-| `supabase/migrations/` | Reconciled local and remote migration history |
+| `supabase/migrations/` | Local migration history; schema changes are recorded here |
 
 The stale remote schema snapshot and sensitive export helper were removed; use Supabase migrations plus MCP/CLI inspection as the source of truth.
 Latest system migrations: `20260717180319_reform_essay_quiz_systems.sql` and the validation follow-up `20260717181851_complete_system_idempotency.sql`.
@@ -336,7 +324,6 @@ Latest system migrations: `20260717180319_reform_essay_quiz_systems.sql` and the
 | `public/.well-known/discord` | External verification/integration artifact |
 | `public/favicon.svg` | Primary vector app icon |
 | `public/manifest.json` | Web app manifest using the vector icon |
-| `public/file.svg`, `globe.svg`, `next.svg`, `vercel.svg`, `window.svg` | Static SVG assets currently present in the repo |
 
 ---
 
@@ -350,7 +337,7 @@ Latest system migrations: `20260717180319_reform_essay_quiz_systems.sql` and the
 | `eslint.config.mjs` | Flat ESLint config based on Next core-web-vitals |
 | `postcss.config.mjs` | PostCSS config |
 | `tailwind.config.js` | Tailwind configuration |
-| `tsconfig.json` | TypeScript config |
+| `tsconfig.json` | TypeScript config; incremental cache is stored under `.next/cache/typescript/` |
 | `package.json` | Scripts and dependencies |
 
 ---
@@ -360,8 +347,10 @@ Latest system migrations: `20260717180319_reform_essay_quiz_systems.sql` and the
 - `npm run build` performs both the production build and sitemap regeneration.
 - `npm run lint` is the active static validation command in the repo.
 - `npm run test:systems` runs the focused Vitest suite for essay/quiz contracts, persistence mapping and OCR routing.
-- `app/components/shared/index.ts` exports the shared brand components.
-- The current runtime path is Next.js route handlers under `app/api`; the three inactive remote Supabase Edge Functions were removed.
+- Shared components and library helpers use direct file imports; unused barrels and starter assets are omitted.
+- The current runtime path is Next.js route handlers under `app/api`.
+- Development screenshots live in `.local/screenshots/`, excluded from Git and deploys; generated dependencies/build artifacts and `supabase/.branches/` remain local.
+- The TypeScript incremental cache lives at `.next/cache/typescript/tsconfig.tsbuildinfo`.
 - There is no external cron scheduler in the repo anymore. Atomic maintenance and highlights run on demand, with timestamps persisted in `configuracoes`.
 - Quiz POST responses include `attemptId`, `expiresAt` and only public question fields; PATCH accepts `{ attemptId, selectedAnswers }`. The UI preserves answers on failure while the database guarantees one canonical result.
 - Essay theme POST returns `{ themeId, tema, textoApoio1, textoApoio2 }`; correction POST accepts a stable `submissionId` and either a generated theme ID or a manual title. Result pages load directly on the server.

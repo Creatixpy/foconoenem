@@ -19,7 +19,6 @@ export const config = {
     '/noticias/admin',
     '/api/conta/:path*',
     '/api/corrigir',
-    '/api/destaques/:path*',
     '/api/gerar-tema',
     '/api/noticias/admin/:path*',
     '/api/noticias/destaques/status',

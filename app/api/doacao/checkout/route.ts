@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createAdminClient } from '@/lib/db/server';
-import { handleApiError } from '@/lib/security';
+import { handleApiError } from '@/lib/server/security';
 import { ensureTrustedOrigin } from '@/lib/server/request-origin';
 import { checkRateLimit } from '@/lib/server/rate-limit';
 import { getStripe, getStripeStringId } from '@/lib/server/stripe';

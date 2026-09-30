@@ -1,5 +1,7 @@
 'use server';
 
+import 'server-only';
+
 import type { User } from '@supabase/supabase-js';
 import { NextRequest } from 'next/server';
 import { createServerClient, createAdminClient } from '@/lib/db/server';

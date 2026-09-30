@@ -3,7 +3,7 @@ import 'server-only';
 import { revalidateTag } from 'next/cache';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { buildGroqProviders, GROQ_MAX_ATTEMPTS, isRateLimitError } from '@/lib/ai/groq';
-import { logAdminAction } from '@/lib/admin-auth';
+import { logAdminAction } from '@/lib/server/admin-auth';
 import { createAdminClient } from '@/lib/db/server';
 import type { Database } from '@/types/supabase';
 

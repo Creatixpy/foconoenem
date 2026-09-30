@@ -1,3 +1,5 @@
+import 'server-only';
+
 import { createHash } from 'node:crypto';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';

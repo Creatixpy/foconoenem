@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authorizeAdmin } from "@/lib/admin-auth";
+import { authorizeAdmin } from "@/lib/server/admin-auth";
 import { createAdminClient } from '@/lib/db/server';
 import { getHighlightsStatus } from '@/lib/server/news-highlights';
 

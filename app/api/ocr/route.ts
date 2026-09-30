@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { extractTextFromImage } from '@/lib/ai/gemini';
 import { OcrError } from '@/lib/ai/ocr-routing';
 import type { OcrErrorCode } from '@/lib/contracts/ocr';
-import { handleApiError } from '@/lib/security';
+import { handleApiError } from '@/lib/server/security';
 import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
 import { OcrImageError, parseOcrImage } from '@/lib/server/ocr-image';
 import { checkRateLimit } from '@/lib/server/rate-limit';

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from 'next/cache';
-import { authorizeAdmin, logAdminAction } from "@/lib/admin-auth";
+import { authorizeAdmin, logAdminAction } from "@/lib/server/admin-auth";
 import { createAdminClient } from '@/lib/db/server';
 import { buildGroqProviders, GROQ_MAX_ATTEMPTS, GroqProvider, isRateLimitError } from "@/lib/ai/groq";
 import { refreshHighlights } from '@/lib/server/news-highlights';

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidateTag } from 'next/cache';
-import { authorizeAdmin, logAdminAction } from '@/lib/admin-auth';
+import { authorizeAdmin, logAdminAction } from '@/lib/server/admin-auth';
 import { createAdminClient } from '@/lib/db/server';
 import {
   fetchNewsApiArticles,
@@ -9,7 +9,7 @@ import {
   findExistingSlugs,
   insertNewsRecords,
   type NewsApiArticle,
-} from '@/lib/news-import';
+} from '@/lib/server/news-import';
 import { ensureTrustedOrigin } from '@/lib/server/request-origin';
 
 const NEWS_API_ENDPOINT = 'https://newsapi.org/v2/everything';

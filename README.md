@@ -22,6 +22,7 @@ O feedback produzido por IA é uma orientação de estudo. Ele não substitui pr
 
 - Next.js 16 App Router e React 19 compõem a aplicação full-stack.
 - Páginas e layouts ficam em `app/`; Route Handlers ativos ficam em `app/api/`.
+- A página inicial em `app/page.tsx` compõe quatro seções em `app/_components/home/`, renderizadas no servidor: apresentação, recursos, funcionamento e chamada para começar.
 - Supabase fornece autenticação e PostgreSQL. Os clientes SSR/browser estão em `lib/supabase/`, o acesso orientado a repositórios em `lib/db/` e os fluxos server-only em `lib/server/`.
 - Páginas autenticadas usam `requireServerUser()` no servidor e entregam o usuário validado a `AuthProviders`, evitando um segundo bootstrap de autenticação no cliente.
 - Operações privilegiadas passam pelo servidor com `SUPABASE_SERVICE_ROLE_KEY`; os grants públicos do banco devem permanecer mínimos.
@@ -102,6 +103,7 @@ A suíte Vitest é deliberadamente pequena e cobre schemas, serialização segur
 
 ```text
 app/                    páginas, layouts e Route Handlers do App Router
+app/_components/home/   seções exclusivas da página inicial, como Server Components
 app/api/                APIs ativas da aplicação
 app/components/         componentes de layout, privacidade e funcionalidades
 app/styles/             tokens e estilos do sistema visual dark
@@ -109,13 +111,21 @@ lib/auth/               autenticação, contexto, perfil, segurança e validaç�
 lib/ai/                 integrações padrão com Groq e Gemini
 lib/contracts/          contratos Zod e tipos neutros compartilhados
 lib/db/                 cliente server-side, repositórios e utilitários de consulta
-lib/server/             regras server-only, incluindo orquestração de redação, quiz e IA por plano
+lib/server/             regras server-only, autorização admin, segurança de APIs e importação de notícias
+lib/server/ai/           runtime textual e validação de saídas estruturadas
+lib/server/essay/        geração e correção canônicas de redação
+lib/server/quiz/         geração e tentativas canônicas de questões
 lib/supabase/           clientes SSR/browser e atualização de sessão
 public/                 assets, verificações, robots, manifest e sitemap
 scripts/                verificações e geração da árvore de release
 supabase/migrations/    histórico local do schema
 types/                  tipos compartilhados e tipos gerados do Supabase
+tests/systems/          testes focados dos contratos e fluxos canônicos
 ```
+
+Componentes exclusivos de uma página ficam próximos dela; `app/components/` reúne componentes compartilhados. Helpers privilegiados em `lib/server/` usam `server-only` e são importados diretamente pelos módulos que os utilizam.
+
+`node_modules/` e `.next/` são artefatos locais gerados; o cache incremental do TypeScript fica em `.next/cache/typescript/tsconfig.tsbuildinfo`. Capturas de tela de desenvolvimento ficam em `.local/screenshots/`, e metadados locais de branches do Supabase em `supabase/.branches/`; esses caminhos não são versionados. As capturas também são excluídas do deploy.
 
 ## Áreas e rotas principais
 

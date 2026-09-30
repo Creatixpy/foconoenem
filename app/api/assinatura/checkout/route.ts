@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { MAX_PLAN_CODE, MAX_PLAN_TRIAL_DAYS } from '@/lib/constants/subscriptions';
 import { createAdminClient } from '@/lib/db/server';
-import { handleApiError } from '@/lib/security';
+import { handleApiError } from '@/lib/server/security';
 import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
 import { checkRateLimit } from '@/lib/server/rate-limit';
 import { ensureTrustedOrigin } from '@/lib/server/request-origin';

@@ -39,6 +39,7 @@ yarn-error.log*
 .vercel
 
 # local/editor/agent state
+.local/
 .vscode/mcp.json
 .agents/
 skills-lock.json
@@ -53,3 +54,4 @@ Screenshot_*.png
 next-env.d.ts
 .mcp.json
 supabase/.temp/
+supabase/.branches/
