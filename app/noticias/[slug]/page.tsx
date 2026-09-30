@@ -6,6 +6,7 @@ import ShareButton from './ShareButton';
 import { fetchNoticiaBySlug, fetchNoticiasPorTag, isNewsServerClientConfigured } from '@/lib/server/noticias';
 import { sanitizeExternalUrl, sanitizeNewsHtml } from '@/lib/server/news-content';
 import styles from './article.module.css';
+import { createPageMetadata } from '@/lib/contracts/page-metadata';
 
 type NoticiaPageProps = {
   params: Promise<{ slug: string }>;
@@ -30,33 +31,26 @@ function readTime(content: string): string {
 
 export async function generateMetadata({ params }: NoticiaPageProps): Promise<Metadata> {
   if (!isNewsServerClientConfigured()) {
-    return {
-      title: 'Notícia não encontrada | AprovIA',
-    };
+    return createPageMetadata({ title: 'Notícia indisponível', description: 'Tente novamente mais tarde.', noIndex: true });
   }
 
   const { slug } = await params;
   const noticia = await fetchNoticiaBySlug(slug);
 
   if (!noticia) {
-    return {
-      title: 'Notícia não encontrada | AprovIA',
-    };
+    return createPageMetadata({ title: 'Notícia não encontrada', description: 'Esta notícia não está disponível.', noIndex: true });
   }
 
   const description = stripHtml(noticia.resumo || noticia.conteudo).slice(0, 160);
   const imageUrl = sanitizeExternalUrl(noticia.imagem_url);
 
-  return {
+  return createPageMetadata({
     title: noticia.titulo,
     description,
-    openGraph: {
-      title: noticia.titulo,
-      description,
-      type: 'article',
-      images: imageUrl ? [{ url: imageUrl, alt: noticia.titulo }] : undefined,
-    },
-  };
+    pathname: `/noticias/${encodeURIComponent(noticia.slug)}`,
+    article: true,
+    image: imageUrl ? { url: imageUrl, alt: noticia.titulo } : undefined,
+  });
 }
 
 export default async function NoticiaPage({ params }: NoticiaPageProps) {

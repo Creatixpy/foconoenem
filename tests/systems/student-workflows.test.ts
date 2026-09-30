@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { apiError, failureMessage, retryAtFromResponse } from '../../lib/client/api-errors';
 import { createDraftStore, clearUserDrafts, draftKey } from '../../lib/client/drafts';
 import { createLatestRequest, deduplicateById } from '../../lib/client/latest-request';
@@ -35,15 +35,64 @@ const draft = {
 };
 
 describe('rascunhos isolados por usuário', () => {
+  it('restaura envelopes v1 antigos sem inventar horário de salvamento', () => {
+    const { local, storage } = stores();
+    const value = { ...EMPTY_ESSAY_DRAFT, essay: 'Texto recuperável' };
+    local.setItem(draftKey('essay', userA), JSON.stringify({ version: 1, userId: userA, logoutVersion: null, value }));
+    const store = createDraftStore('essay', userA, essayDraftSchema, storage);
+    expect(store.read()).toEqual({ value, status: 'restored', savedAt: null });
+    store.dispose();
+  });
+
+  it('mostra o horário somente após persistir e não o avança quando a quota falha', () => {
+    const { local, session } = stores();
+    let fail = false;
+    const storage = (kind: 'essay' | 'quiz') => kind === 'quiz' ? session : {
+      ...local, setItem: (key: string, value: string) => {
+        if (fail) throw new Error('Quota exceeded');
+        local.setItem(key, value);
+      },
+    };
+    const store = createDraftStore('essay', userA, essayDraftSchema, storage);
+    const clock = vi.spyOn(Date, 'now');
+    try {
+      clock.mockReturnValue(1_790_780_000_000);
+      expect(store.write({ ...EMPTY_ESSAY_DRAFT, essay: 'Texto salvo' })).toBe('saved');
+      expect(store.savedAt).toBe(1_790_780_000_000);
+      fail = true;
+      clock.mockReturnValue(1_790_780_060_000);
+      expect(store.write({ ...EMPTY_ESSAY_DRAFT, essay: 'Texto ainda em memória' })).toBe('unavailable');
+      expect(store.savedAt).toBe(1_790_780_000_000);
+      expect(store.read().value?.essay).toBe('Texto salvo');
+      expect(store.read().savedAt).toBe(1_790_780_000_000);
+      fail = false;
+      expect(store.clear()).toBe('empty');
+      expect(store.savedAt).toBeNull();
+    } finally {
+      clock.mockRestore();
+      store.dispose();
+    }
+  });
+
+  it('rejeita metadados de horário corrompidos sem restaurar um envelope inválido', () => {
+    const { local, storage } = stores();
+    const store = createDraftStore('essay', userA, essayDraftSchema, storage);
+    for (const savedAt of ['ontem', null, -1, 1.5, 8_640_000_000_000_001]) {
+      local.setItem(draftKey('essay', userA), JSON.stringify({ version: 1, userId: userA, logoutVersion: null, value: EMPTY_ESSAY_DRAFT, savedAt }));
+      expect(store.read()).toEqual({ value: null, status: 'invalid', savedAt: null });
+    }
+    store.dispose();
+  });
+
   it('restaura texto, tema e identidade depois de uma resposta perdida', () => {
     const { storage } = stores();
     const saved = { ...EMPTY_ESSAY_DRAFT, essay: 'Trabalho do aluno', themeMode: 'manual' as const, manualTheme: 'Um tema válido', submission: { id: requestId, inputKey: 'entrada idempotente' } };
     const first = createDraftStore('essay', userA, essayDraftSchema, storage);
-    expect(first.read()).toEqual({ value: null, status: 'empty' });
+    expect(first.read()).toEqual({ value: null, status: 'empty', savedAt: null });
     expect(first.write(saved)).toBe('saved');
     first.dispose();
     const resumed = createDraftStore('essay', userA, essayDraftSchema, storage);
-    expect(resumed.read()).toEqual({ value: saved, status: 'restored' });
+    expect(resumed.read()).toEqual({ value: saved, status: 'restored', savedAt: expect.any(Number) });
     resumed.dispose();
   });
 
@@ -101,7 +150,7 @@ describe('rascunhos isolados por usuário', () => {
     beforeLogout.dispose();
     clearUserDrafts(userA, storageA);
     const afterLogout = createDraftStore('quiz', userA, quizDraftSchema, storageB);
-    expect(afterLogout.read()).toEqual({ value: null, status: 'empty' });
+    expect(afterLogout.read()).toEqual({ value: null, status: 'empty', savedAt: null });
     expect(afterLogout.write(draft)).toBe('saved');
     expect(afterLogout.read().value?.requestId).toBe(requestId);
     afterLogout.dispose();
@@ -112,7 +161,7 @@ describe('rascunhos isolados por usuário', () => {
     const store = createDraftStore('essay', userA, essayDraftSchema, storage);
     for (const raw of ['{', '{}', JSON.stringify({ ...EMPTY_ESSAY_DRAFT, photo: 'base64' })]) {
       local.setItem(draftKey('essay', userA), raw);
-      expect(store.read()).toEqual({ value: null, status: 'invalid' });
+      expect(store.read()).toEqual({ value: null, status: 'invalid', savedAt: null });
     }
     store.dispose();
   });

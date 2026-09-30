@@ -1,6 +1,6 @@
 # PROJECT INVENTORY — AprovIA
 
-> Local file-structure review on 2026-09-29; this review does not verify remote services.
+> Local file-structure review on 2026-09-30; this review does not verify remote services.
 > This document is repo-first: if something is not present in the tree or current import graph, it is intentionally not claimed here.
 > Despite the historical file name, this inventory covers both frontend and active backend code in the Next.js app.
 
@@ -35,14 +35,14 @@ The repository contains no active Supabase Edge Functions. Runtime APIs are Next
 | Route | Files | Purpose |
 | --- | --- | --- |
 | `/` | `app/page.tsx`, `app/_components/home/*.tsx` | Landing page composed from four Server Components |
-| `/redacao` | `app/redacao/page.tsx`, `app/redacao/RedacaoPageClient.tsx`, `app/redacao/useEssayWorkflow.ts`, `app/redacao/PhotoUpload.tsx`, `app/redacao/prepareOcrImage.ts` | Per-user local drafts, confirmed OCR replacement, bounded input validation and idempotent correction UI |
+| `/redacao` | `app/redacao/page.tsx`, `app/redacao/RedacaoPageClient.tsx`, `app/redacao/useEssayWorkflow.ts`, `app/redacao/PhotoUpload.tsx`, `app/redacao/prepareOcrImage.ts` | Continuous theme/editor/correction flow; timestamped per-origin/user local drafts, confirmed OCR replacement, single accessible word counter and guarded correction UI |
 | `/questoes` | `app/questoes/page.tsx`, `app/questoes/QuestoesPageClient.tsx` | Same-tab recovery, native radios, previous/review navigation and frozen manual submission retries |
 | `/planos` | `app/planos/page.tsx`, `app/planos/PlanosPageClient.tsx` | Free/Max comparison, subscription status, checkout and portal entry points |
 | `/noticias` | `app/noticias/page.tsx`, `app/noticias/NoticiasPageClient.tsx`, `app/noticias/error.tsx` | Public feed with background highlights refresh, recoverable pagination and segment errors |
 | `/noticias/[slug]` | `app/noticias/[slug]/page.tsx`, `app/noticias/[slug]/article.module.css` | Sanitized article with local typography and optional related content; missing articles preserve 404 |
 | `/noticias/pesquisa` | `app/noticias/pesquisa/page.tsx` | URL-driven archive/AI search (`q`, optional `modo=ia`) with history synchronization |
 | `/noticias/admin` | `app/noticias/admin/page.tsx` | News admin panel |
-| `/conta` | `app/conta/page.tsx`, `app/conta/ContaPageClient.tsx` | Account dashboard and Max subscription management |
+| `/conta` | `app/conta/page.tsx`, `app/conta/ContaPageClient.tsx` | Account dashboard, URL-selected history (`aba=redacoes`) and Max subscription management (`#plano`) |
 | `/conta/editar` | `app/conta/editar/page.tsx`, `app/conta/editar/ContaEditarPageClient.tsx` | Profile editing |
 | `/resultados/[id]` | `app/resultados/[id]/page.tsx`, `app/resultados/[id]/ResultadosPageClient.tsx` | Essay result view |
 | `/doacao` | `app/doacao/page.tsx` | Donation page |
@@ -82,6 +82,14 @@ The repository contains no active Supabase Edge Functions. Runtime APIs are Next
 | `public/cookie-consent-init.js` | Pre-hydration flag that prevents a saved cookie preference from flashing the SSR banner on reload |
 
 ---
+
+### Study shell and canonical navigation
+
+- Canonical metadata and sitemap use `aproviaedu.vercel.app`. Public GET/HEAD content on the former domain receives 301; auth, study, account, payments, admin and APIs retain their original host.
+- `lib/contracts/page-metadata.ts` composes page titles, canonical URLs and private-page robots rules; `lib/contracts/site-routing.ts` defines the public redirect allowlist.
+- Account navigation uses an avatar disclosure, existing mobile hamburger and query-selected history. Workspace footers are compact; public news retains the full footer.
+- Redação keeps the 5,000-character validation contract, displaying it only when violated. Draft timestamp metadata is optional for backwards compatibility; photos remain in memory.
+- Rebrand dismissal tolerates unavailable storage and expires on 2026-10-30; the legacy workspace notice has independent per-session dismissal.
 
 ## 3. API Surface
 
@@ -287,8 +295,8 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | --- | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | app, SSR and server DB access | Required for normal runtime |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | browser auth and SSR session handling | Required for normal runtime |
-| `NEXT_PUBLIC_SITE_URL` | root metadata, redirect safety | Recommended |
-| `SITE_URL` | sitemap generation | Build-time |
+| `NEXT_PUBLIC_SITE_URL` | trusted request origins; canonical metadata uses site constant | Recommended |
+| `SITE_URL` | trusted request origins; sitemap uses explicit canonical configuration | Optional |
 | `SUPABASE_SERVICE_ROLE_KEY` | server DB access, admin writes, analytics, imports, maintenance, highlights, public news reads and payment persistence | Required for privileged server flows |
 | `GROQ_API_KEY` | essay, themes, quiz generation, AI news summary | Required textual AI key for Free and Max |
 | `GROQ_MODEL` | Groq integration | Optional override |
@@ -345,6 +353,7 @@ Latest system migrations: `20260717180319_reform_essay_quiz_systems.sql` and the
 | `tests/systems/student-workflows.test.ts` | Draft isolation/logout, frozen IDs/answers, API errors, input limits, availability and stale requests |
 | `tests/systems/news-detail.test.tsx` | Article preservation when related content fails, sanitization, genuine 404 and unavailable service |
 | `docs/student-workflows-qa.md` | Workflow verification scenarios, results and limits of controlled browser QA |
+| `docs/redacao-qa.md` | Essay presentation, shell, metadata and controlled-browser verification |
 
 ---
 
@@ -354,7 +363,7 @@ Latest system migrations: `20260717180319_reform_essay_quiz_systems.sql` and the
 | --- | --- |
 | `next.config.ts` | Next.js config, remote image hosts and security headers |
 | `next-sitemap.config.js` | Sitemap and robots generation rules |
-| `proxy.ts` | Session-refresh proxy matcher |
+| `proxy.ts` | Public legacy-host 301 allowlist and protected session-refresh matcher |
 | `eslint.config.mjs` | Flat ESLint config based on Next core-web-vitals |
 | `postcss.config.mjs` | PostCSS config |
 | `tailwind.config.js` | Tailwind configuration |

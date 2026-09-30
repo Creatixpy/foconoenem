@@ -6,6 +6,7 @@ import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
 import ConsentAwareTelemetry from "./components/privacy/ConsentAwareTelemetry";
 import RebrandingBanner from "./components/shared/RebrandingBanner";
+import { CANONICAL_SITE_ORIGIN } from "@/lib/constants/site";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -26,9 +27,7 @@ const siteDescription =
   "Redações, questões e evolução para o ENEM com inteligência artificial e feedback personalizado.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://aproviaedu.vercel.app"
-  ),
+  metadataBase: new URL(CANONICAL_SITE_ORIGIN),
   title: {
     default: siteTitle,
     template: "%s | AprovIA",
@@ -43,7 +42,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: siteTitle,
     description: siteDescription,
-    url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://aproviaedu.vercel.app",
+    url: CANONICAL_SITE_ORIGIN,
     siteName: "AprovIA",
     locale: "pt_BR",
     type: "website",
@@ -57,7 +56,7 @@ export const metadata: Metadata = {
     ],
   },
   twitter: {
-    card: "summary_large_image",
+    card: "summary",
     title: siteTitle,
     description: siteDescription,
     images: ["/favicon.svg"],

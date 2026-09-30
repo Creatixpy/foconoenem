@@ -1,5 +1,12 @@
 import { isNewsServerClientConfigured, listNoticias } from '@/lib/server/noticias';
 import NoticiasPageClient from './NoticiasPageClient';
+import { createPageMetadata } from '@/lib/contracts/page-metadata';
+
+export const metadata = createPageMetadata({
+  title: 'Notícias para o ENEM',
+  description: 'Leia notícias e reúna repertório para sua preparação e redação.',
+  pathname: '/noticias',
+});
 
 export default async function NoticiasPage() {
   let initialNoticias: Awaited<ReturnType<typeof listNoticias>> = [];

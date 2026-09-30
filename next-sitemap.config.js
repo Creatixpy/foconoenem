@@ -1,6 +1,6 @@
 /** @type {import('next-sitemap').IConfig} */
 module.exports = {
-  siteUrl: process.env.SITE_URL || 'https://aproviaedu.vercel.app',
+  siteUrl: 'https://aproviaedu.vercel.app',
   generateRobotsTxt: true,
   robotsTxtOptions: {
     policies: [
@@ -11,12 +11,20 @@ module.exports = {
     ],
   },
   exclude: [
+    '/login',
+    '/register',
+    '/forgot-password',
+    '/reset-password',
+    '/redacao',
+    '/questoes',
+    '/conta',
     '/resultados/*', 
     '/api/*', 
     '/auth/*', 
     '/conta/*',
     '/doacao/sucesso',
-    '/noticias/admin'
+    '/noticias/admin',
+    '/noticias/pesquisa',
   ],
   generateIndexSitemap: false,
   outDir: 'public',
@@ -37,14 +45,6 @@ module.exports = {
         loc: path,
         changefreq: 'daily',
         priority: 1.0,
-        lastmod: new Date().toISOString(),
-      };
-    }
-    if (path === '/redacao' || path === '/questoes') {
-      return {
-        loc: path,
-        changefreq: 'daily',
-        priority: 0.9,
         lastmod: new Date().toISOString(),
       };
     }

@@ -3,6 +3,13 @@ import { getEssayById } from '@/lib/db/repositories/essays';
 import { createAdminClient } from '@/lib/db/server';
 import { requireServerUser } from '@/lib/server/page-auth';
 import ResultadosPageClient from './ResultadosPageClient';
+import { createPageMetadata } from '@/lib/contracts/page-metadata';
+
+export const metadata = createPageMetadata({
+  title: 'Resultado da redação',
+  description: 'Consulte a correção e as competências da sua redação.',
+  noIndex: true,
+});
 
 export const dynamic = 'force-dynamic';
 

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth/context';
+import { accountTabFromQuery, accountTabHref } from '@/lib/client/workspace-navigation';
 import {
   MAX_PLAN_NAME,
   MAX_PLAN_PRICE_DISPLAY,
@@ -676,7 +677,7 @@ function OverviewTab({ stats, essays }: { stats: UserStatistics | null; essays: 
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-base font-semibold text-[var(--text)]">Redações recentes</h3>
           {essays.length > 0 && (
-            <Link href="/redacao" className="text-xs font-medium text-[var(--brand)] hover:text-[var(--brand-hover)] transition-colors">
+            <Link href="/conta?aba=redacoes" className="inline-flex min-h-12 items-center text-sm font-medium text-[var(--brand-hover)] hover:underline transition-colors">
               Ver todas →
             </Link>
           )}
@@ -799,7 +800,7 @@ export default function ContaPageClient() {
   const [dataLoading, setDataLoading] = useState(true);
   const [dataError, setDataError] = useState('');
   const [recalculating, setRecalculating] = useState(false);
-  const [activeTab, setActiveTab] = useState<TabKey>('overview');
+  const activeTab = accountTabFromQuery(searchParams.get('aba'));
   const [showDeleteForm, setShowDeleteForm] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
@@ -1061,14 +1062,16 @@ export default function ContaPageClient() {
         </div>
       </div>
 
-      <SubscriptionCard
-        subscription={subscription}
-        loading={subscriptionAction}
-        message={subscriptionMessage}
-        error={subscriptionError}
-        onSubscribe={handleSubscribe}
-        onManage={handleManageSubscription}
-      />
+      <div id="plano" className="scroll-mt-24">
+        <SubscriptionCard
+          subscription={subscription}
+          loading={subscriptionAction}
+          message={subscriptionMessage}
+          error={subscriptionError}
+          onSubscribe={handleSubscribe}
+          onManage={handleManageSubscription}
+        />
+      </div>
 
       {/* ---- Stats Overview ---- */}
       {dataLoading ? (
@@ -1117,7 +1120,8 @@ export default function ContaPageClient() {
           {TABS.map((tab) => (
             <button
               key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
+              aria-pressed={activeTab === tab.key}
+              onClick={() => router.push(accountTabHref(searchParams.toString(), tab.key), { scroll: false })}
               className={`
                 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
                 ${activeTab === tab.key

@@ -1,4 +1,11 @@
 import Link from 'next/link';
+import { createPageMetadata } from '@/lib/contracts/page-metadata';
+
+export const metadata = createPageMetadata({
+  title: 'Termos de uso',
+  description: 'Consulte as condições de uso da plataforma AprovIA.',
+  pathname: '/termos',
+});
 
 const sections = [
   {

@@ -63,6 +63,9 @@ function toJpegFile(blob: Blob, originalName: string): File {
 }
 
 export async function prepareOcrImage(file: File): Promise<{ file: File; optimized: boolean }> {
+  if (/^image\/hei[cf]/i.test(file.type) || /\.hei[cf]$/i.test(file.name)) {
+    throw new OcrImagePreparationError('Fotos HEIC não são suportadas. Converta a foto para JPEG e selecione novamente.');
+  }
   if (!isOcrImageMimeType(file.type)) {
     throw new OcrImagePreparationError('Formato não suportado. Use JPG, PNG ou WebP.');
   }
