@@ -51,3 +51,8 @@ mcp_config.json
 *.local.md
 testsprite_tests/
 erro.png
+
+# Local tooling state
+.bin/
+.testsprite/
+OPEN_SOURCE_RELEASE.md

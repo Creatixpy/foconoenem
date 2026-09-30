@@ -1,0 +1,4 @@
+#!/bin/sh
+set -eu
+node scripts/verify-open-source.mjs
+exec node scripts/verify-history-clean.mjs --pre-push

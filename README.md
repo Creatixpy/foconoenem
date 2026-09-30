@@ -116,6 +116,7 @@ npm install
 npm run dev
 npm run lint
 npm run test:security
+npm run setup:security
 npm run build
 npm run start
 npm run deepsproxy:tunnel
@@ -234,6 +235,7 @@ types/                  tipos compartilhados e tipos gerados do Supabase
 - `npm run verify:open-source` valida a árvore atual e os blobs staged; corrigir um arquivo sem atualizar o índice não torna o commit seguro.
 - `npm run verify:history-clean` verifica todo o histórico alcançável, incluindo conteúdo e metadados. Qualquer falha impede publicar aquele histórico.
 - `npm run test:security` exercita essas proteções sem acessar provedores ou credenciais reais. A CI executa os testes e ambos os verificadores.
+- `npm install` prepara os hooks locais de commit e push quando não há configuração anterior; `npm run setup:security` repete a instalação. Hooks alheios são preservados e precisam integrar os verificadores manualmente. O hook de push verifica também os commits propostos, antes do envio; a CI complementa essa barreira.
 - Instruções locais de agentes (`AGENTS.md` e variantes), configurações de editores/MCP, arquivos de ambiente e relatórios privados ficam fora do Git, do deploy e da exportação pública. `.env.example` contém somente placeholders.
 - `npm run release:public-tree` exporta o snapshot rastreado do índice: faça stage apenas dos arquivos aprovados. Arquivos não rastreados e mudanças unstaged não são copiados; o destino precisa ser novo e não pode estar dentro do projeto.
 - Caso uma credencial seja exposta, siga [SECURITY.md](./SECURITY.md): a remoção de arquivos não substitui sua invalidação no provedor. Qualquer limpeza excepcional de histórico precisa preservar trabalho local, limitar as referências alteradas e verificar novamente o remoto.
