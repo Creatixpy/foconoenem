@@ -9,6 +9,7 @@ import {
 } from '@/lib/db/repositories/essays';
 import type { Database } from '@/types/supabase';
 import type { UserAiRuntime } from '@/lib/server/ai/provider';
+import { StudyAccessError } from '@/lib/server/study-access';
 import { analyzeEssay } from './ai';
 import { EssayServiceError } from './errors';
 import { createEssayInputFingerprint } from './fingerprint';
@@ -74,7 +75,7 @@ export async function correctEssay(
       ...identity,
       errorMessage: error instanceof Error ? error.message : 'unknown_error',
     }).catch((failure) => console.error('Falha ao liberar claim de redação:', failure));
-    throw error instanceof EssayServiceError
+    throw error instanceof EssayServiceError || error instanceof StudyAccessError
       ? error
       : new EssayServiceError(
           'unavailable',

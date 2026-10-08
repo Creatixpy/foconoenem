@@ -9,6 +9,7 @@ export const FREE_PLAN_PRICE_DISPLAY = 'R$ 0' as const;
 
 export const PLAN_FEATURES = {
   free: [
+    'Correções, temas e simulados das 7h às 23h30 (Brasília)',
     'Correções de redação com IA',
     'Temas e textos de apoio reaproveitados quando disponíveis',
     'Simulados com banco de questões da plataforma',
@@ -16,6 +17,7 @@ export const PLAN_FEATURES = {
     'Acesso às notícias e busca no acervo aprovado',
   ],
   max: [
+    'Correções, temas e simulados disponíveis 24 horas',
     'Correções de redação com IA',
     'Temas inéditos com textos de apoio gerados sob demanda',
     'Simulados com mais questões novas e menos repetição',
@@ -26,6 +28,11 @@ export const PLAN_FEATURES = {
 } as const;
 
 export const MAX_PLAN_BENEFITS = [
+  {
+    title: 'Estude a qualquer hora',
+    description:
+      'Correções, temas e simulados disponíveis 24 horas enquanto sua assinatura Max estiver válida.',
+  },
   {
     title: 'Textos de apoio sob demanda',
     description:
@@ -49,6 +56,11 @@ export const MAX_PLAN_BENEFITS = [
 ] as const;
 
 export const PLAN_COMPARISON_ROWS = [
+  {
+    feature: 'Horário de correções, temas e simulados',
+    free: '7h às 23h30 (Brasília)',
+    max: '24 horas',
+  },
   {
     feature: 'Correção de redações',
     free: 'Incluída com IA',

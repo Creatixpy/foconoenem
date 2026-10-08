@@ -37,13 +37,13 @@ function OperatingHoursPill({ info }: { info: OperatingHoursInfo | null }) {
       `}
     >
       <ClockIcon />
-      {info.isOpen ? `Correção disponível até ${info.closesAt} · Brasília` : `Correção abre ${info.nextOpenTime} · Brasília`}
+      {info.unrestrictedAccess ? 'Max disponível 24 horas' : info.isOpen ? `Correção disponível até ${info.closesAt} · Brasília` : `Correção abre ${info.nextOpenTime} · Brasília`}
     </span>
   );
 }
 
 function EssayWorkflow({ userId, initialHours }: { userId: string; initialHours: OperatingHoursInfo }) {
-  const operatingHours = useOperatingHours(initialHours);
+  const operatingHours = useOperatingHours(initialHours, userId);
   const editorRef = useRef<HTMLTextAreaElement>(null);
   const discardButtonRef = useRef<HTMLButtonElement>(null);
   const discardConfirmationRef = useRef<HTMLDivElement>(null);

@@ -16,6 +16,8 @@ import { EssayServiceError } from '../../lib/server/essay/errors';
 import { correctEssay } from '../../lib/server/essay/service';
 import { createEssayInputFingerprint } from '../../lib/server/essay/fingerprint';
 import { createGeneratedTheme } from '../../lib/server/essay/themes';
+import { StudyAccessError } from '../../lib/server/study-access';
+import { calculateOperatingHours } from '../../lib/contracts/operating-hours';
 
 vi.mock('server-only', () => ({}));
 vi.mock('../../lib/db/repositories/essays', () => ({
@@ -161,6 +163,18 @@ describe('orquestração canônica de correções', () => {
     expect(failEssaySubmission).toHaveBeenCalledWith(client, expect.objectContaining({
       submissionId: input.submissionId, errorMessage: 'Plano indisponível',
     }));
+  });
+
+  it('preserva recusa de horário e libera claim sem consumir IA', async () => {
+    const accessError = new StudyAccessError(calculateOperatingHours(new Date('2026-10-09T03:00:00Z')));
+    const loadRuntime = vi.fn(async (): Promise<UserAiRuntime> => { throw accessError; });
+
+    await expect(correctEssay(client, loadRuntime, input)).rejects.toBe(accessError);
+    expect(failEssaySubmission).toHaveBeenCalledWith(client, expect.objectContaining({
+      submissionId: input.submissionId, errorMessage: accessError.message,
+    }));
+    expect(getGeneratedTheme).not.toHaveBeenCalled();
+    expect(completeEssaySubmission).not.toHaveBeenCalled();
   });
 
   it('limita análise inválida a duas tentativas e não grava uma correção parcial', async () => {

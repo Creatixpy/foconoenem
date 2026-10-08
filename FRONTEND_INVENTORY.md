@@ -209,7 +209,7 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | `lib/contracts/ocr.ts` | Shared OCR MIME, payload, error-code and success-response contracts |
 | `lib/contracts/quiz.ts` | Strict question, attempt and review contracts plus public answer-safe serialization |
 | `lib/contracts/quiz-result.ts` | Neutral validation/mapping of persisted quiz snapshots |
-| `lib/contracts/operating-hours.ts` | Shared timezone-aware operating-hours interface and calculation |
+| `lib/contracts/operating-hours.ts` | Shared São Paulo availability calculation; verified-user Max validity permits 24-hour presentation and expires back to the Free schedule |
 
 ### `lib/client/`
 
@@ -219,7 +219,8 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | `lib/client/use-user-draft.ts` | Restore before saving and persist changes/IDs before network work |
 | `lib/client/api-errors.ts` | Student-facing API errors and `resetAt`/`Retry-After` interpretation |
 | `lib/client/latest-request.ts` | Cancel/invalidate stale completions and deduplicate articles by ID |
-| `lib/client/use-operating-hours.ts` | Refresh availability each minute and on tab return |
+| `lib/client/use-operating-hours.ts` | Refresh time and verified-user subscription availability each minute and on tab return; discard late responses for another user and retain bounded hints during transient failures |
+| `lib/client/operating-hours-api.ts` | Cancelable no-store subscription-status requests and strict ownership/validity parsing for availability hints |
 | `lib/client/use-retry-delay.ts` | Visible manual-retry cooldown |
 
 ### `lib/auth/`
@@ -269,7 +270,8 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | `lib/server/news-import.ts` | Server-only NewsAPI fetch/normalize/dedupe/import pipeline |
 | `lib/server/noticias.ts` | Server cache around approved news repositories; cache keys and 5-minute revalidation preserved |
 | `lib/server/ocr-image.ts` | Server-only OCR upload size, MIME and magic-byte validation |
-| `lib/server/operating-hours.ts` | Server clock wrapper around the shared availability calculation |
+| `lib/server/operating-hours.ts` | Server clock wrapper and DB-backed, verified-user SSR availability snapshots |
+| `lib/server/study-access.ts` | New-study runtime authorization: Max active/trialing with current access bypasses the daily schedule; Free keeps 07:00–23:30 and canonical replays precede plan loading |
 | `lib/server/page-auth.ts` | Cached server-side page guards for authenticated routes |
 | `lib/server/rate-limit.ts` | Atomic, fail-closed server-side rate limiting with 4-second operation cancellation |
 | `lib/server/request-origin.ts` | Trusted-origin enforcement for stateful and authenticated APIs |
@@ -377,6 +379,10 @@ System migrations: `20260717180319_reform_essay_quiz_systems.sql`, the validatio
 | `docs/student-workflows-qa.md` | Workflow verification scenarios, results and limits of controlled browser QA |
 | `docs/redacao-qa.md` | Essay presentation, shell, metadata and controlled-browser verification |
 | `docs/database-refactor-qa.md` | Database integration refactor scope, reproducible coverage criterion and validation limits |
+| `docs/max-hours-qa.md` | Max 24-hour access policy, unchanged frequency limits and focused verification |
+| `tests/systems/operating-hours-access.test.ts` | Max expiry, verified-user isolation and subscription-response validation |
+| `tests/systems/study-access.test.ts` | DB-backed entitlement status/expiry, SSR availability and fail-closed runtime authorization |
+| `tests/systems/study-access-routes.test.ts` | Study routes preserve Free 403, frequency 429 and canonical replays with Max 24-hour authorization |
 | `tests/systems/database-clients.test.ts` | Admin client lifecycle, request-isolated SSR cookies and session refresh headers |
 | `tests/systems/database-transport.test.ts` | Caller cancellation, response-body deadlines and bounded SDK retry waits |
 | `tests/systems/database-repositories.test.ts` | Account/profile ownership, missing records, stable news filters and persistence failures |
@@ -418,6 +424,7 @@ System migrations: `20260717180319_reform_essay_quiz_systems.sql`, the validatio
 - Shared components and library helpers use direct file imports; unused barrels and starter assets are omitted.
 - The current runtime path is Next.js route handlers under `app/api`.
 - Study APIs explicitly use Node.js with `maxDuration` of 180 seconds for essay correction, 120 for themes, 300 for quiz POST/PATCH and 120 for OCR. Provider and database calls retain shorter cancellation deadlines.
+- Max subscriptions with valid `active`/`trialing` access can start corrections, themes and quizzes at any hour. Free keeps the São Paulo 07:00–23:30 schedule. Frequency limits remain the same for both. `/api/assinatura/status` includes `userId` (null when anonymous) so availability refreshes can bind results to the verified user. Server handlers remain authoritative; client hints never grant access.
 - Essay-claim and quiz-catalog/attempt cleanup, plus theme-generation and essay-correction analytics, finish through `after()` after the response. Theme cleanup stays before canonical selection and runs in parallel with runtime loading.
 - Development screenshots live in `.local/screenshots/`, excluded from Git and deploys; generated dependencies/build artifacts and `supabase/.branches/` remain local.
 - The TypeScript incremental cache lives at `.next/cache/typescript/tsconfig.tsbuildinfo`.

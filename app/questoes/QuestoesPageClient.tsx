@@ -70,7 +70,7 @@ function QuizWorkflow({ userId, initialHours }: { userId: string; initialHours: 
         <span className="inline-flex rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs text-[var(--text-2)]">✦ Simulado com IA</span>
         <h1 className="text-3xl font-bold text-[var(--text)]">Simulado inteligente</h1>
         <p className="max-w-xl text-[var(--text-3)]">Escolha as disciplinas e pratique no seu ritmo. Ao finalizar, confira seu resultado e a explicação de cada questão.</p>
-        <p className={`text-sm ${operatingHours.isOpen ? 'text-[var(--ai)]' : 'text-[var(--warning)]'}`}>{operatingHours.isOpen ? 'Sistema disponível' : operatingHours.message}</p>
+        <p className={`text-sm ${operatingHours.isOpen ? 'text-[var(--ai)]' : 'text-[var(--warning)]'}`}>{operatingHours.unrestrictedAccess ? 'Max disponível 24 horas' : operatingHours.isOpen ? 'Sistema disponível' : operatingHours.message}</p>
       </header>
       <section>
         <h2 className="mb-3 text-sm font-bold text-[var(--text)]">Escolha as disciplinas</h2>

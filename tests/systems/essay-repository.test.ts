@@ -29,9 +29,13 @@ describe('persistência de redações com duração limitada', () => {
     let releaseSecond!: (response: Response) => void;
     let settled = false;
     const secondResponse = new Promise<Response>((resolve) => { releaseSecond = resolve; });
-    const fetcher = vi.fn<typeof fetch>(async () => fetcher.mock.calls.length === 1
-      ? Response.json({ code: '22023', message: 'invalid_first_theme' }, { status: 400 })
-      : secondResponse);
+    let calls = 0;
+    const fetcher = vi.fn<typeof fetch>(async () => {
+      calls += 1;
+      return calls === 1
+        ? Response.json({ code: '22023', message: 'invalid_first_theme' }, { status: 400 })
+        : secondResponse;
+    });
     const client = createClient<Database>('https://database.test', 'local-test-key', {
       auth: { persistSession: false, autoRefreshToken: false },
       global: { fetch: fetcher },

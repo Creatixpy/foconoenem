@@ -5,13 +5,12 @@ import {
   submitQuizAttempt,
 } from '@/lib/db/repositories/quizzes';
 import { createAdminClient } from '@/lib/db/server';
-import { getUserAiRuntime } from '@/lib/server/ai/provider';
 import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
 import {
   cleanupGeneratedQuestionsIfDue,
   cleanupQuizAttemptsIfDue,
 } from '@/lib/server/local-maintenance';
-import { getOperatingHoursInfo } from '@/lib/server/operating-hours';
+import { getStudyAiRuntime, StudyAccessError } from '@/lib/server/study-access';
 import { prepareQuiz } from '@/lib/server/quiz/service';
 import { checkRateLimit } from '@/lib/server/rate-limit';
 import { ensureTrustedOrigin } from '@/lib/server/request-origin';
@@ -32,23 +31,8 @@ async function parseJson(request: NextRequest): Promise<unknown> {
   }
 }
 
-async function verifyAvailability(userId: string) {
-  const [operatingInfo, rateResult] = await Promise.all([
-    getOperatingHoursInfo(),
-    checkRateLimit(userId, '/api/questoes', 5, 1),
-  ]);
-
-  if (!operatingInfo.isOpen) {
-    return NextResponse.json(
-      {
-        error: 'outside_operating_hours',
-        message: operatingInfo.message,
-        horarioFuncionamento: `${operatingInfo.opensAt} - ${operatingInfo.closesAt}`,
-      },
-      { status: 403 }
-    );
-  }
-
+async function verifyFrequencyLimit(userId: string) {
+  const rateResult = await checkRateLimit(userId, '/api/questoes', 5, 1);
   if (!rateResult.allowed) {
     return NextResponse.json(
       {
@@ -75,7 +59,7 @@ export async function POST(request: NextRequest) {
     return validationError(parsed.error.issues[0]?.message ?? 'Payload inválido.');
   }
 
-  const availabilityError = await verifyAvailability(auth.userId);
+  const availabilityError = await verifyFrequencyLimit(auth.userId);
   if (availabilityError) return availabilityError;
 
   const adminClient = createAdminClient();
@@ -90,7 +74,7 @@ export async function POST(request: NextRequest) {
         cleanupGeneratedQuestionsIfDue(),
       ]);
     });
-    const quiz = await prepareQuiz(adminClient, () => getUserAiRuntime(auth.userId), {
+    const quiz = await prepareQuiz(adminClient, () => getStudyAiRuntime(auth.userId), {
       userId: auth.userId,
       requestId: parsed.data.requestId,
       disciplines: [...new Set(parsed.data.disciplines)],
@@ -98,6 +82,17 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(quiz, { status: 201 });
   } catch (error) {
+    if (error instanceof StudyAccessError) {
+      const { operatingInfo } = error;
+      return NextResponse.json(
+        {
+          error: 'outside_operating_hours',
+          message: operatingInfo.message,
+          horarioFuncionamento: `${operatingInfo.opensAt} - ${operatingInfo.closesAt}`,
+        },
+        { status: 403 }
+      );
+    }
     console.error('Falha ao preparar simulado:', error);
     const status = error instanceof QuizRepositoryError && error.kind === 'conflict' ? 409 : 503;
     return NextResponse.json(

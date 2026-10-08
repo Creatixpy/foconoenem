@@ -1,11 +1,10 @@
 import { after, NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/db/server';
-import { getUserAiRuntime } from '@/lib/server/ai/provider';
 import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
 import { trackEvent } from '@/lib/server/analytics';
 import { createGeneratedTheme } from '@/lib/server/essay/themes';
 import { cleanupCachedThemesIfDue } from '@/lib/server/local-maintenance';
-import { getOperatingHoursInfo } from '@/lib/server/operating-hours';
+import { getStudyAiRuntime, StudyAccessError } from '@/lib/server/study-access';
 import { checkRateLimit } from '@/lib/server/rate-limit';
 import { ensureTrustedOrigin } from '@/lib/server/request-origin';
 
@@ -19,17 +18,7 @@ export async function POST(request: NextRequest) {
   const auth = await resolveRequestUserFromCookies();
   if ('error' in auth) return auth.error;
 
-  const [operatingInfo, rateResult] = await Promise.all([
-    getOperatingHoursInfo(),
-    checkRateLimit(auth.userId, '/api/gerar-tema', 3, 1),
-  ]);
-
-  if (!operatingInfo.isOpen) {
-    return NextResponse.json(
-      { error: 'outside_operating_hours', message: operatingInfo.message },
-      { status: 403 }
-    );
-  }
+  const rateResult = await checkRateLimit(auth.userId, '/api/gerar-tema', 3, 1);
   if (!rateResult.allowed) {
     return NextResponse.json(
       { error: 'rate_limit_exceeded', resetAt: rateResult.resetAt.toISOString() },
@@ -45,7 +34,7 @@ export async function POST(request: NextRequest) {
   try {
     const [, aiRuntime] = await Promise.all([
       cleanupCachedThemesIfDue(),
-      getUserAiRuntime(auth.userId),
+      getStudyAiRuntime(auth.userId),
     ]);
     const generated = await createGeneratedTheme(adminClient, aiRuntime, auth.userId);
 
@@ -67,6 +56,12 @@ export async function POST(request: NextRequest) {
       textoApoio2: generated.theme.textoApoio2,
     });
   } catch (error) {
+    if (error instanceof StudyAccessError) {
+      return NextResponse.json(
+        { error: 'outside_operating_hours', message: error.operatingInfo.message },
+        { status: 403 }
+      );
+    }
     console.error('Falha ao gerar tema:', error);
     return NextResponse.json(
       {

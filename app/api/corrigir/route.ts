@@ -1,13 +1,13 @@
 import { after, NextRequest, NextResponse } from 'next/server';
 import { essaySubmissionSchema } from '@/lib/contracts/essay';
 import { createAdminClient } from '@/lib/db/server';
-import { getUserAiRuntime, type UserAiRuntime } from '@/lib/server/ai/provider';
+import type { UserAiRuntime } from '@/lib/server/ai/provider';
 import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
 import { trackEvent } from '@/lib/server/analytics';
 import { cleanupEssaySubmissionsIfDue } from '@/lib/server/local-maintenance';
 import { correctEssay } from '@/lib/server/essay/service';
 import { EssayServiceError } from '@/lib/server/essay/errors';
-import { getOperatingHoursInfo } from '@/lib/server/operating-hours';
+import { getStudyAiRuntime, StudyAccessError } from '@/lib/server/study-access';
 import { checkRateLimit } from '@/lib/server/rate-limit';
 import { ensureTrustedOrigin } from '@/lib/server/request-origin';
 
@@ -39,16 +39,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const [operatingInfo, rateResult] = await Promise.all([
-    getOperatingHoursInfo(),
-    checkRateLimit(auth.userId, '/api/corrigir', 5, 1),
-  ]);
-  if (!operatingInfo.isOpen) {
-    return NextResponse.json(
-      { error: 'outside_operating_hours', message: operatingInfo.message },
-      { status: 403 }
-    );
-  }
+  const rateResult = await checkRateLimit(auth.userId, '/api/corrigir', 5, 1);
   if (!rateResult.allowed) {
     return NextResponse.json(
       { error: 'rate_limit_exceeded', resetAt: rateResult.resetAt.toISOString() },
@@ -69,7 +60,7 @@ export async function POST(request: NextRequest) {
     const outcome = await correctEssay(
       adminClient,
       async () => {
-        aiRuntime = await getUserAiRuntime(auth.userId);
+        aiRuntime = await getStudyAiRuntime(auth.userId);
         return aiRuntime;
       },
       {
@@ -119,6 +110,12 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ id: outcome.resultId });
   } catch (error) {
+    if (error instanceof StudyAccessError) {
+      return NextResponse.json(
+        { error: 'outside_operating_hours', message: error.operatingInfo.message },
+        { status: 403 }
+      );
+    }
     console.error('Falha ao corrigir redação:', error);
     if (error instanceof EssayServiceError && error.kind === 'theme_not_found') {
       return NextResponse.json({ error: 'theme_not_found' }, { status: 400 });

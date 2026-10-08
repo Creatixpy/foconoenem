@@ -12,7 +12,7 @@ import { requestQuizAttempt, requestQuizResult } from './quiz-api';
 
 export function useQuizWorkflow(userId: string, initialHours: OperatingHoursInfo) {
   const { draft, updateDraft, clearDraft, ready, status } = useUserDraft('quiz', userId, quizDraftSchema, EMPTY_QUIZ_DRAFT);
-  const operatingHours = useOperatingHours(initialHours);
+  const operatingHours = useOperatingHours(initialHours, userId);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<QuizResult | null>(null);
