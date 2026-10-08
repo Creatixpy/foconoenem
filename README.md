@@ -24,11 +24,16 @@ O feedback produzido por IA é uma orientação de estudo. Ele não substitui pr
 - Páginas e layouts ficam em `app/`; Route Handlers ativos ficam em `app/api/`.
 - A página inicial em `app/page.tsx` compõe quatro seções em `app/_components/home/`, renderizadas no servidor: apresentação, recursos, funcionamento e chamada para começar.
 - Supabase fornece autenticação e PostgreSQL. Os clientes SSR/browser estão em `lib/supabase/`, o acesso orientado a repositórios em `lib/db/` e os fluxos server-only em `lib/server/`.
+- O cliente administrativo é reutilizado sem sessão e invalidado quando a configuração muda; clientes SSR e cookies continuam isolados por requisição. O transporte compartilhado limita cada troca HTTP a 8s, incluindo o corpo da resposta, e propaga cancelamentos sem acrescentar retries de escrita.
+- `runQuery` centraliza erros tipados e o prazo da operação completa, incluindo espera entre retries do SDK. Repositórios de redações, questões, conta, perfil e notícias usam 8s por operação; recuperação de tentativas e rate limiting usam 4s. Notícias mantêm cache no servidor e os filtros de aprovação; conta sem estatísticas retorna ausência, enquanto falhas reais continuam sendo erros.
 - Páginas autenticadas usam `requireServerUser()` no servidor e entregam o usuário validado a `AuthProviders`, evitando um segundo bootstrap de autenticação no cliente.
 - Operações privilegiadas passam pelo servidor com `SUPABASE_SERVICE_ROLE_KEY`; os grants públicos do banco devem permanecer mínimos.
 - Groq atende os fluxos textuais de IA nos planos Free e Max. O SDK não faz retries internos; o orquestrador aplica timeout de 30 segundos e no máximo duas tentativas globais, usando fallback apenas para falhas transitórias ou uma segunda saída estruturada inválida.
+- Redações separam geração/resolução de temas, montagem do resultado e orquestração da correção em `lib/server/essay/`. Questões separam geração, concorrência e criação de tentativas em `lib/server/quiz/`. Replays canônicos são resolvidos antes de carregar assinatura e runtime de IA; novas tentativas de quiz carregam plano e catálogo em paralelo.
+- As APIs de estudo declaram runtime Node.js e limites de execução explícitos: correção de redação 180s, geração de tema 120s, questões 300s e OCR 120s. Consultas e RPCs desses repositórios usam cancelamento com prazo padrão de 8s; a recuperação de tentativas usa 4s por consulta. A geração de questões executa até duas disciplinas simultâneas, interrompe novos trabalhos na primeira falha e aguarda os já iniciados.
 - Gemini é usado para OCR pelo SDK oficial `@google/genai`. O servidor tenta, no máximo uma vez por modelo, `gemini-3.5-flash`, `gemini-2.5-flash` e `gemini-3.1-flash-lite`; só avança em falhas transitórias ou leitura evidentemente inválida. As fotos grandes são comprimidas no navegador e permanecem apenas em memória. NewsAPI atende a importação de notícias e Stripe atende assinaturas e doações.
 - Limpezas, rate limiting e destaques usam RPCs transacionais acionadas sob demanda pelo próprio app, sem cron externo.
+- Limpeza de claims de redação e do catálogo/tentativas de quiz, além dos eventos de geração de tema e correção, usa `after()` para terminar após a resposta. Cada RPC de manutenção e sua auditoria compartilham um prazo de 8s; a inserção de analytics tem 4s. A limpeza dos temas permanece antes da seleção canônica, em paralelo ao carregamento do runtime.
 - A interface é exclusivamente dark e usa tokens semânticos em `app/styles/` e o componente `AprovIALogo` para a marca. Roxo (`--brand`) identifica a marca e ações primárias; verde (`--ai`) identifica recursos de IA e sucesso.
 - Vercel Analytics e Speed Insights só são montados depois do consentimento para métricas opcionais.
 - O runtime é inteiramente atendido pelos Route Handlers do Next.js; as Edge Functions remotas legadas foram removidas.
@@ -51,6 +56,8 @@ O banner de rebrand respeita o fechamento salvo e expira em 30/10/2026. O aviso 
 A verificação das melhorias de Redação está em [docs/redacao-qa.md](docs/redacao-qa.md).
 
 A verificação deste lote, incluindo os limites do QA com respostas controladas, está em [docs/student-workflows-qa.md](docs/student-workflows-qa.md).
+
+A organização dos sistemas de redação e questões e sua validação estão em [docs/study-refactor-qa.md](docs/study-refactor-qa.md).
 
 ## Stack principal
 
@@ -109,7 +116,7 @@ Use `.env.example` como referência e nunca versione `.env.local` ou chaves reai
 | --- | --- |
 | `npm run dev` | iniciar o desenvolvimento com Turbopack |
 | `npm run lint` | executar ESLint no repositório |
-| `npm run test:systems` | executar testes de contratos, rascunhos, idempotência, notícias e roteamento OCR |
+| `npm run test:systems` | executar testes de contratos, rascunhos, idempotência, repositórios, concorrência, notícias e roteamento OCR |
 | `npm run setup:security` | instalar verificações locais antes de commit e push, preservando hooks existentes |
 | `npm run test:security` | testar verificadores de privacidade, índice, histórico e exportação com fixtures em memória/disco temporário |
 | `npm run build` | gerar o build de produção e atualizar `public/sitemap.xml` |
@@ -118,7 +125,7 @@ Use `.env.example` como referência e nunca versione `.env.local` ou chaves reai
 | `npm run verify:history-clean` | verificar arquivos privados, blobs, mensagens e referências de todo o histórico alcançável |
 | `npm run release:public-tree` | exportar somente os arquivos rastreados e aprovados do índice para um diretório novo |
 
-A suíte Vitest é deliberadamente pequena e cobre schemas, serialização segura do quiz, notas ENEM, fingerprint idempotente, mapeamento persistido e fallback controlado do OCR. Mudanças não triviais nesses sistemas devem passar por `npm run test:systems`, `npm run lint`, build e QA do fluxo afetado.
+A suíte Vitest usa dados em memória e provedores simulados. Cobre schemas, serialização segura do quiz, notas ENEM, fingerprint idempotente, mapeamento persistido, concorrência, cancelamento de consultas/manutenção e fallback controlado do OCR. Mudanças não triviais nesses sistemas devem passar por `npm run test:systems`, `npm run lint`, build e QA do fluxo afetado.
 
 ## Estrutura do repositório
 
@@ -127,6 +134,8 @@ app/                    páginas, layouts e Route Handlers do App Router
 app/_components/home/   seções exclusivas da página inicial, como Server Components
 app/api/                APIs ativas da aplicação
 app/components/         componentes de layout, privacidade e funcionalidades
+app/redacao/            workflow, apresentação e componentes locais da redação
+app/questoes/           interface, workflow e cliente da API de questões
 app/styles/             tokens e estilos do sistema visual dark
 lib/auth/               autenticação, contexto, perfil, segurança e validação
 lib/ai/                 integrações padrão com Groq e Gemini
@@ -145,9 +154,11 @@ types/                  tipos compartilhados e tipos gerados do Supabase
 tests/systems/          testes focados dos contratos e fluxos canônicos
 ```
 
-Componentes exclusivos de uma página ficam próximos dela; `app/components/` reúne componentes compartilhados. Helpers privilegiados em `lib/server/` usam `server-only` e são importados diretamente pelos módulos que os utilizam.
+Componentes exclusivos de uma página ficam próximos dela; `app/components/` reúne componentes compartilhados. A redação mantém tema, checklist e ícones em `app/redacao/_components/`, helpers de apresentação em `essay-presentation.ts` e carrega o envio de foto separadamente com `next/dynamic`. Questões concentra estado, persistência e envio em `use-quiz-workflow.ts`, e HTTP/validação de respostas em `quiz-api.ts`. Helpers privilegiados em `lib/server/` usam `server-only` e são importados diretamente pelos módulos que os utilizam.
 
-`node_modules/` e `.next/` são artefatos locais gerados; o cache incremental do TypeScript fica em `.next/cache/typescript/tsconfig.tsbuildinfo`. Capturas de tela de desenvolvimento ficam em `.local/screenshots/`, e metadados locais de branches do Supabase em `supabase/.branches/`; esses caminhos não são versionados. As capturas também são excluídas do deploy.
+`node_modules/`, `.next/` e `.vercel/` são artefatos locais gerados; o ESLint ignora os builds locais da CLI da Vercel. O cache incremental do TypeScript fica em `.next/cache/typescript/tsconfig.tsbuildinfo`. Capturas de tela de desenvolvimento ficam em `.local/screenshots/`, e metadados locais de branches do Supabase em `supabase/.branches/`; esses caminhos não são versionados. As capturas também são excluídas do deploy.
+
+`next.config.ts` aplica `outputFileTracingExcludes` a todas as rotas para excluir arquivos privados do tracing. Na publicação prebuilt, essas regras são complementadas pela inspeção dos artefatos e pela remoção de arquivos locais de ambiente, de suas referências e de diagnósticos locais do pacote isolado. O build standalone da CLI da Vercel usa variáveis de produção; os links, os aliases de funções e os aliases de dependências externas em `filePathMap` são preservados e verificados dentro do pacote. Quando necessário, o preparo recompõe aliases usando somente arquivos já incluídos pelo tracing. As credenciais de runtime vêm do ambiente da Vercel. O QA anterior e posterior à promoção inclui páginas de estudo, APIs protegidas, feed de notícias, artigos existentes e artigo inexistente com 404.
 
 ## Áreas e rotas principais
 
@@ -170,6 +181,7 @@ Na exclusão de uma conta, o app remove primeiro tentativas de quiz, redações,
 - Migrations em `supabase/migrations/` são a fonte local de verdade do schema.
 - O histórico local está reconciliado com o remoto; não use `migration repair`, reescrita do histórico ou `db reset` em produção.
 - Os tipos gerados pelo Supabase ficam em `types/supabase.ts`.
+- Perfil e conta mantêm autorização nos Route Handlers e persistência em `lib/db/repositories/`; helpers internos são marcados com `server-only`. Renovação de sessão preserva os headers de cache emitidos pelo Supabase SSR.
 - O snapshot remoto antigo foi removido; não recrie snapshots paralelos às migrations.
 - `quiz_attempts` e `quiz_attempt_questions` guardam por 24 horas a seleção canônica entregue ao usuário. O browser nunca recebe `isCorrect` ou explicações antes da finalização; o servidor calcula a correção a partir do catálogo, e retries retornam o mesmo `quiz_result`.
 - Questões reutilizáveis têm fingerprint normalizado, validação estrutural e retenção de 30 dias quando não estão referenciadas. O Free reaproveita o catálogo controlado; o Max recebe conteúdo novo, persistido com deduplicação atômica.
@@ -177,6 +189,7 @@ Na exclusão de uma conta, o app remove primeiro tentativas de quiz, redações,
 - Correções usam `submissionId` e fingerprint da entrada. Repetições retornam o resultado ou a mesma rejeição por fuga ao tema; colisões de conteúdo são recusadas. Novas notas por competência aceitam somente 0, 40, 80, 120, 160 ou 200 e precisam somar a nota total.
 - Estatísticas de redação e quiz são recalculadas por triggers transacionais; questões sem resposta não entram no denominador da taxa de acerto.
 - Limpeza de `rate_limits`, `analytics_events`, `cached_themes`, tentativas, questões sem referência e claims de redação ocorre em janelas controladas por uma RPC de manutenção.
+- `20261008050718_fix_maintenance_timestamp_throttle.sql` corrige a leitura do horário da manutenção: aceita valores antigos com `T` ou espaço, trata datas inválidas e grava os novos valores em ISO UTC. A RPC preserva o lock transacional, as janelas de execução, as retenções e o acesso exclusivo do servidor; não altera snapshots históricos nem a assinatura tipada.
 - Rate limit, incremento de temas, destaques e claims de webhooks Stripe usam operações atômicas restritas a `service_role`.
 - Destaques de notícias são recalculados após moderação ou quando estão vazios ou vencidos.
 

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { after, NextRequest, NextResponse } from 'next/server';
 import { createQuizSchema, submitQuizSchema } from '@/lib/contracts/quiz';
 import {
   QuizRepositoryError,
@@ -15,6 +15,10 @@ import { getOperatingHoursInfo } from '@/lib/server/operating-hours';
 import { prepareQuiz } from '@/lib/server/quiz/service';
 import { checkRateLimit } from '@/lib/server/rate-limit';
 import { ensureTrustedOrigin } from '@/lib/server/request-origin';
+
+export const runtime = 'nodejs';
+// Five disciplines use at most three waves of two bounded AI calls each.
+export const maxDuration = 300;
 
 function validationError(message: string) {
   return NextResponse.json({ error: 'invalid_request', message }, { status: 400 });
@@ -80,12 +84,13 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    await Promise.all([
-      cleanupQuizAttemptsIfDue(),
-      cleanupGeneratedQuestionsIfDue(),
-    ]);
-    const runtime = await getUserAiRuntime(auth.userId);
-    const quiz = await prepareQuiz(adminClient, runtime, {
+    after(async () => {
+      await Promise.all([
+        cleanupQuizAttemptsIfDue(),
+        cleanupGeneratedQuestionsIfDue(),
+      ]);
+    });
+    const quiz = await prepareQuiz(adminClient, () => getUserAiRuntime(auth.userId), {
       userId: auth.userId,
       requestId: parsed.data.requestId,
       disciplines: [...new Set(parsed.data.disciplines)],

@@ -1,6 +1,7 @@
-'use server';
+import 'server-only';
 
 import { createAdminClient } from '@/lib/db/server';
+import { withTimeout } from '@/lib/db/query';
 import { cleanupAnalyticsIfDue } from '@/lib/server/local-maintenance';
 import type { Database, Json } from '@/types/supabase';
 
@@ -23,13 +24,15 @@ export async function trackEvent({ eventType, metadata, userIp, userAgent, userI
   }
 
   try {
-    const { error } = await supabase.from('analytics_events').insert({
-      event_type: eventType,
-      metadata: metadata as Json,
-      user_ip: userIp ?? null,
-      user_agent: userAgent ?? null,
-      user_id: userId ?? null,
-    });
+    const { error } = await withTimeout(async (signal) => (
+      supabase.from('analytics_events').insert({
+        event_type: eventType,
+        metadata: metadata as Json,
+        user_ip: userIp ?? null,
+        user_agent: userAgent ?? null,
+        user_id: userId ?? null,
+      }).abortSignal(signal)
+    ), 'fast');
 
     if (error) {
       console.error('Erro ao registrar evento de analytics:', error);

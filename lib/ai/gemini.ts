@@ -93,6 +93,10 @@ async function extractWithModel(
   mimeType: OcrImageMimeType,
   requestSignal?: AbortSignal,
 ): Promise<string> {
+  if (requestSignal?.aborted) {
+    throw new OcrProviderError(model, 'cancelled', undefined, requestSignal.reason);
+  }
+
   const controller = new AbortController();
   const abortFromRequest = () => controller.abort(requestSignal?.reason);
   requestSignal?.addEventListener('abort', abortFromRequest, { once: true });
@@ -117,6 +121,9 @@ async function extractWithModel(
       },
     });
 
+    if (requestSignal?.aborted) {
+      throw new OcrProviderError(model, 'cancelled', undefined, requestSignal.reason);
+    }
     return response.text ?? '';
   } catch (error) {
     const providerError = classifyProviderError(model, error, requestSignal);
@@ -142,6 +149,9 @@ export async function extractTextFromImage(
   mimeType: OcrImageMimeType,
   requestSignal?: AbortSignal,
 ): Promise<string> {
+  if (requestSignal?.aborted) {
+    throw new OcrError('cancelled', [], requestSignal.reason);
+  }
   const client = getGeminiClient();
 
   try {

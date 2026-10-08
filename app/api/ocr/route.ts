@@ -8,6 +8,10 @@ import { OcrImageError, parseOcrImage } from '@/lib/server/ocr-image';
 import { checkRateLimit } from '@/lib/server/rate-limit';
 import { ensureTrustedOrigin } from '@/lib/server/request-origin';
 
+export const runtime = 'nodejs';
+// Three model attempts are bounded to 25 seconds each.
+export const maxDuration = 120;
+
 function ocrErrorResponse(
   code: OcrErrorCode,
   message: string,

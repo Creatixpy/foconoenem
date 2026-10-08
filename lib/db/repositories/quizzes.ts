@@ -11,10 +11,9 @@ import {
 } from '@/lib/contracts/quiz';
 import { parseQuizResult, QuizResultMappingError } from '@/lib/contracts/quiz-result';
 import type { Database, Json } from '@/types/supabase';
-import { DatabaseError, withTimeout } from '@/lib/db/query';
+import { DatabaseError, runQuery } from '@/lib/db/query';
 
 type GeneratedQuestionRow = Database['public']['Tables']['generated_questions']['Row'];
-type QuizResultRow = Database['public']['Tables']['quiz_results']['Row'];
 
 export class QuizRepositoryError extends Error {
   constructor(
@@ -39,6 +38,11 @@ function mapRpcError(error: { code?: string; message: string }): QuizRepositoryE
             : 'database';
 
   return new QuizRepositoryError(kind, error.message);
+}
+
+function rethrowRpcError(error: unknown): never {
+  if (error instanceof DatabaseError) throw mapRpcError(error);
+  throw error;
 }
 
 function normalizeQuestionRow(row: GeneratedQuestionRow): CanonicalQuestion {
@@ -82,19 +86,16 @@ export async function getBalancedQuestions(
 
   if (disciplines.length === 0) return grouped;
 
-  const rows = await withTimeout(async (signal) => {
-    const { data, error } = await client
+  const rows = await runQuery((signal) =>
+    client
       .rpc('get_balanced_questions', {
         p_disciplines: disciplines,
         p_limit_per_discipline: limitPerDiscipline,
       })
-      .abortSignal(signal);
+      .abortSignal(signal)
+  );
 
-    if (error) throw DatabaseError.fromPostgrestError(error);
-    return (data ?? []) as GeneratedQuestionRow[];
-  }, 'fast');
-
-  for (const row of rows) {
+  for (const row of rows ?? []) {
     const question = normalizeQuestionRow(row);
     if (question.discipline in grouped) grouped[question.discipline].push(question);
   }
@@ -106,16 +107,22 @@ export async function upsertGeneratedQuestions(
   client: SupabaseClient<Database>,
   questions: CanonicalQuestion[]
 ): Promise<CanonicalQuestion[]> {
-  return Promise.all(
+  const outcomes = await Promise.allSettled(
     questions.map(async ({ id: _id, ...question }) => {
-      const { data, error } = await client.rpc('upsert_generated_question', {
-        p_question: question as unknown as Json,
-      });
-      if (error) throw mapRpcError(error);
+      const data = await runQuery((signal) =>
+        client
+          .rpc('upsert_generated_question', { p_question: question as unknown as Json })
+          .abortSignal(signal)
+      ).catch(rethrowRpcError);
       if (!data) throw new QuizRepositoryError('database', 'A questão não foi persistida.');
-      return normalizeQuestionRow(data as GeneratedQuestionRow);
+      return normalizeQuestionRow(data);
     })
   );
+
+  return outcomes.map((outcome) => {
+    if (outcome.status === 'rejected') throw outcome.reason;
+    return outcome.value;
+  });
 }
 
 export async function getAttemptByRequestId(
@@ -123,30 +130,29 @@ export async function getAttemptByRequestId(
   userId: string,
   requestId: string
 ): Promise<{ id: string; expiresAt: string; questions: CanonicalQuestion[] } | null> {
-  const { data: attempt, error: attemptError } = await client
+  const attempt = await runQuery((signal) => client
     .from('quiz_attempts')
     .select('id, expires_at')
     .eq('user_id', userId)
     .eq('request_id', requestId)
-    .maybeSingle();
+    .abortSignal(signal)
+    .maybeSingle(), 'fast');
 
-  if (attemptError) throw DatabaseError.fromPostgrestError(attemptError);
   if (!attempt) return null;
 
-  const { data: links, error: linksError } = await client
+  const links = await runQuery((signal) => client
     .from('quiz_attempt_questions')
     .select('position, generated_questions(*)')
     .eq('attempt_id', attempt.id)
-    .order('position', { ascending: true });
-
-  if (linksError) throw DatabaseError.fromPostgrestError(linksError);
+    .order('position', { ascending: true })
+    .abortSignal(signal), 'fast');
 
   const questions = (links ?? []).map((link) => {
     const row = link.generated_questions;
     if (!row || Array.isArray(row)) {
       throw new QuizRepositoryError('database', 'A tentativa contém uma referência inválida.');
     }
-    return normalizeQuestionRow(row as GeneratedQuestionRow);
+    return normalizeQuestionRow(row);
   });
 
   return { id: attempt.id, expiresAt: attempt.expires_at, questions };
@@ -156,13 +162,14 @@ export async function createQuizAttempt(
   client: SupabaseClient<Database>,
   input: { userId: string; requestId: string; questions: CanonicalQuestion[] }
 ) {
-  const { data, error } = await client.rpc('create_quiz_attempt', {
-    p_user_id: input.userId,
-    p_request_id: input.requestId,
-    p_question_ids: input.questions.map((question) => question.id),
-  });
-
-  if (error) throw mapRpcError(error);
+  const data = await runQuery((signal) => client
+    .rpc('create_quiz_attempt', {
+      p_user_id: input.userId,
+      p_request_id: input.requestId,
+      p_question_ids: input.questions.map((question) => question.id),
+    })
+    .abortSignal(signal)
+  ).catch(rethrowRpcError);
   if (!data) throw new QuizRepositoryError('database', 'A tentativa não foi criada.');
   return data;
 }
@@ -171,16 +178,17 @@ export async function submitQuizAttempt(
   client: SupabaseClient<Database>,
   input: { attemptId: string; userId: string; selectedAnswers: Record<string, string> }
 ): Promise<QuizResult> {
-  const { data, error } = await client.rpc('submit_quiz_attempt', {
-    p_attempt_id: input.attemptId,
-    p_user_id: input.userId,
-    p_selected_answers: input.selectedAnswers as Json,
-  });
-
-  if (error) throw mapRpcError(error);
+  const data = await runQuery((signal) => client
+    .rpc('submit_quiz_attempt', {
+      p_attempt_id: input.attemptId,
+      p_user_id: input.userId,
+      p_selected_answers: input.selectedAnswers as Json,
+    })
+    .abortSignal(signal)
+  ).catch(rethrowRpcError);
   if (!data) throw new QuizRepositoryError('database', 'O resultado não foi persistido.');
   try {
-    return parseQuizResult(data as QuizResultRow);
+    return parseQuizResult(data);
   } catch (error) {
     if (error instanceof QuizResultMappingError) {
       throw new QuizRepositoryError('database', error.message);

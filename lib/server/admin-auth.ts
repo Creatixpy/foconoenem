@@ -1,5 +1,3 @@
-'use server';
-
 import 'server-only';
 
 import type { User } from '@supabase/supabase-js';
@@ -7,6 +5,7 @@ import { NextRequest } from 'next/server';
 import { createServerClient, createAdminClient } from '@/lib/db/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
+import { DatabaseError, withTimeout } from '@/lib/db/query';
 
 const allowedEmails = (process.env.ADMIN_ALLOWED_EMAILS ?? '')
   .split(',')
@@ -99,17 +98,22 @@ export async function logAdminAction(
     targetId?: string;
     details?: Record<string, unknown>;
     ip?: string | null;
-  }
+  },
+  signal?: AbortSignal,
 ) {
   try {
-    await adminClient.from('admin_audit_log').insert({
-      admin_email: opts.adminEmail ?? 'system',
-      action: opts.action,
-      target_type: opts.targetType ?? null,
-      target_id: opts.targetId ?? null,
-      details: (opts.details as Database['public']['Tables']['admin_audit_log']['Insert']['details']) ?? null,
-      ip_address: opts.ip ?? null,
-    });
+    const insert = async (querySignal: AbortSignal) => {
+      const { error } = await adminClient.from('admin_audit_log').insert({
+        admin_email: opts.adminEmail ?? 'system',
+        action: opts.action,
+        target_type: opts.targetType ?? null,
+        target_id: opts.targetId ?? null,
+        details: (opts.details as Database['public']['Tables']['admin_audit_log']['Insert']['details']) ?? null,
+        ip_address: opts.ip ?? null,
+      }).abortSignal(querySignal);
+      if (error) throw DatabaseError.fromPostgrestError(error);
+    };
+    await (signal ? insert(signal) : withTimeout(insert, 'fast'));
   } catch (err) {
     console.error('Falha ao registrar ação no audit log:', err);
   }

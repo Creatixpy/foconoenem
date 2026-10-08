@@ -4,9 +4,14 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { unstable_cache } from 'next/cache';
 import { createAdminClient } from '@/lib/db/server';
 import type { Database } from '@/types/supabase';
+import {
+  getApprovedNewsBySlug,
+  getApprovedNewsByTag,
+  listApprovedNews,
+  searchApprovedNews,
+  type NewsListOptions,
+} from '@/lib/db/repositories/news';
 
-const NOTICIA_FIELDS =
-  'id,titulo,slug,resumo,conteudo,imagem_url,autor,data_publicacao,tags,destaque,created_at,fonte_url,status';
 const NEWS_CACHE_SECONDS = 300;
 
 export function isNewsServerClientConfigured(): boolean {
@@ -26,50 +31,9 @@ function requireNewsServerClient(): SupabaseClient<Database> {
   return client;
 }
 
-async function listNoticiasQuery(options: {
-  limit: number;
-  offset: number;
-  tag?: string | null;
-  destaque?: boolean;
-}) {
-  const { limit, offset, tag, destaque } = options;
-  const supabase = requireNewsServerClient();
-
-  const runQuery = async (highlightFilter?: boolean) => {
-    let query = supabase
-      .from('noticias')
-      .select(NOTICIA_FIELDS)
-      .eq('status', 'aprovado')
-      .order('data_publicacao', { ascending: false })
-      .order('id', { ascending: false });
-
-    if (tag) {
-      query = query.contains('tags', [tag]);
-    }
-
-    if (typeof highlightFilter === 'boolean') {
-      query = query.eq('destaque', highlightFilter);
-    }
-
-    const { data, error } = await query.range(offset, offset + limit - 1);
-    if (error) {
-      throw error;
-    }
-
-    return data ?? [];
-  };
-
-  const noticias = await runQuery(destaque);
-  if (destaque === true && noticias.length === 0) {
-    return runQuery(undefined);
-  }
-
-  return noticias;
-}
-
 const listNoticiasCached = unstable_cache(
   async (limit: number, offset: number, tag: string | null, destaque: boolean | null) =>
-    listNoticiasQuery({
+    listApprovedNews(requireNewsServerClient(), {
       limit,
       offset,
       tag,
@@ -79,12 +43,7 @@ const listNoticiasCached = unstable_cache(
   { revalidate: NEWS_CACHE_SECONDS, tags: ['public-noticias'] }
 );
 
-export async function listNoticias(options: {
-  limit: number;
-  offset: number;
-  tag?: string | null;
-  destaque?: boolean;
-}) {
+export async function listNoticias(options: NewsListOptions) {
   return listNoticiasCached(
     options.limit,
     options.offset,
@@ -93,24 +52,8 @@ export async function listNoticias(options: {
   );
 }
 
-async function fetchNoticiaBySlugQuery(slug: string) {
-  const supabase = requireNewsServerClient();
-  const { data, error } = await supabase
-    .from('noticias')
-    .select(NOTICIA_FIELDS)
-    .eq('slug', slug)
-    .eq('status', 'aprovado')
-    .maybeSingle();
-
-  if (error) {
-    throw error;
-  }
-
-  return data ?? null;
-}
-
 const fetchNoticiaBySlugCached = unstable_cache(
-  async (slug: string) => fetchNoticiaBySlugQuery(slug),
+  async (slug: string) => getApprovedNewsBySlug(requireNewsServerClient(), slug),
   ['public-noticia-by-slug'],
   { revalidate: NEWS_CACHE_SECONDS, tags: ['public-noticias'] }
 );
@@ -119,35 +62,8 @@ export async function fetchNoticiaBySlug(slug: string) {
   return fetchNoticiaBySlugCached(slug);
 }
 
-async function searchNoticiasQuery(termo: string, limit: number) {
-  const supabase = requireNewsServerClient();
-  const sanitizedTerm = termo.trim();
-
-  if (!sanitizedTerm) {
-    return [];
-  }
-
-  const { data, error } = await supabase
-    .from('noticias')
-    .select(NOTICIA_FIELDS)
-    .eq('status', 'aprovado')
-    .textSearch('search_vector', sanitizedTerm, {
-      type: 'websearch',
-      config: 'portuguese',
-    })
-    .order('data_publicacao', { ascending: false })
-    .order('id', { ascending: false })
-    .limit(limit);
-
-  if (error) {
-    throw error;
-  }
-
-  return data ?? [];
-}
-
 const searchNoticiasCached = unstable_cache(
-  async (termo: string, limit: number) => searchNoticiasQuery(termo, limit),
+  async (termo: string, limit: number) => searchApprovedNews(requireNewsServerClient(), termo, limit),
   ['public-noticias-search'],
   { revalidate: NEWS_CACHE_SECONDS, tags: ['public-noticias'] }
 );
@@ -156,26 +72,8 @@ export async function searchNoticias(termo: string, limit: number) {
   return searchNoticiasCached(termo, limit);
 }
 
-async function fetchNoticiasPorTagQuery(tag: string, limit: number) {
-  const supabase = requireNewsServerClient();
-  const { data, error } = await supabase
-    .from('noticias')
-    .select(NOTICIA_FIELDS)
-    .eq('status', 'aprovado')
-    .contains('tags', [tag])
-    .order('data_publicacao', { ascending: false })
-    .order('id', { ascending: false })
-    .limit(limit);
-
-  if (error) {
-    throw error;
-  }
-
-  return data ?? [];
-}
-
 const fetchNoticiasPorTagCached = unstable_cache(
-  async (tag: string, limit: number) => fetchNoticiasPorTagQuery(tag, limit),
+  async (tag: string, limit: number) => getApprovedNewsByTag(requireNewsServerClient(), tag, limit),
   ['public-noticias-by-tag'],
   { revalidate: NEWS_CACHE_SECONDS, tags: ['public-noticias'] }
 );

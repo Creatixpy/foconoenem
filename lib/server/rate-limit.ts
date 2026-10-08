@@ -1,7 +1,8 @@
-'use server';
+import 'server-only';
 
 import { createAdminClient } from '@/lib/db/server';
 import { cleanupRateLimitsIfDue } from '@/lib/server/local-maintenance';
+import { runQuery } from '@/lib/db/query';
 
 export type RateLimitResult = {
   allowed: boolean;
@@ -34,16 +35,26 @@ export async function checkRateLimit(
     };
   }
 
-  const { data, error } = await supabase
-    .rpc('consume_rate_limit', {
-      p_identifier: identifier,
-      p_endpoint: endpoint,
-      p_max_requests: maxRequests,
-      p_window_minutes: windowMinutes,
-    })
-    .maybeSingle();
+  try {
+    const data = await runQuery((signal) => supabase
+      .rpc('consume_rate_limit', {
+        p_identifier: identifier,
+        p_endpoint: endpoint,
+        p_max_requests: maxRequests,
+        p_window_minutes: windowMinutes,
+      })
+      .abortSignal(signal)
+      .maybeSingle(), 'fast');
 
-  if (error || !data) {
+    if (!data) throw new Error('Empty rate limit result');
+    const parsedResetAt = new Date(data.reset_at);
+
+    return {
+      allowed: data.allowed,
+      remaining: data.remaining,
+      resetAt: Number.isNaN(parsedResetAt.getTime()) ? resetAt : parsedResetAt,
+    };
+  } catch (error) {
     console.error('Rate limiter: atomic DB operation failed — failing closed:', error);
     return {
       allowed: false,
@@ -51,12 +62,4 @@ export async function checkRateLimit(
       resetAt,
     };
   }
-
-  const parsedResetAt = new Date(data.reset_at);
-
-  return {
-    allowed: data.allowed,
-    remaining: data.remaining,
-    resetAt: Number.isNaN(parsedResetAt.getTime()) ? resetAt : parsedResetAt,
-  };
 }

@@ -3,15 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { essayCorrectionResponseSchema, generatedThemeResponseSchema } from '@/lib/contracts/essay';
-import { EMPTY_ESSAY_DRAFT, essayDraftSchema } from '@/lib/contracts/student-drafts';
+import { EMPTY_ESSAY_DRAFT, essayDraftSchema, type EssayDraft } from '@/lib/contracts/student-drafts';
 import { countWords, essayValidation, manualThemeValidation } from '@/lib/contracts/essay-input';
 import { useUserDraft } from '@/lib/client/use-user-draft';
 import { ApiError, apiError, failureMessage } from '@/lib/client/api-errors';
 import { useRetryDelay } from '@/lib/client/use-retry-delay';
 
 export { MIN_WORDS, MAX_WORDS, MAX_ESSAY_CHARACTERS } from '@/lib/contracts/essay-input';
-export type ThemeData = { themeId: string; tema: string; textoApoio1: string; textoApoio2: string };
-export type ThemeMode = 'generated' | 'manual';
 
 export function useEssayWorkflow(userId: string) {
   const router = useRouter();
@@ -29,7 +27,7 @@ export function useEssayWorkflow(userId: string) {
 
   useEffect(() => () => { generationRef.current?.abort(); correctionRef.current?.abort(); }, []);
 
-  const setThemeMode = useCallback((mode: ThemeMode) => {
+  const setThemeMode = useCallback((mode: EssayDraft['themeMode']) => {
     if (correctionRef.current) return;
     generationRef.current?.abort();
     generationRef.current = null;
@@ -125,7 +123,7 @@ export function useEssayWorkflow(userId: string) {
 
   return {
     ...draft, ready, draftStatus: status, savedAt, discardDraft,
-    setThemeMode, themeLoading, themeError, setThemeError, setManualTheme, setEssay,
+    setThemeMode, themeLoading, themeError, setManualTheme, setEssay,
     correcting, correctionError, wordCount, charCount: draft.essay.length,
     selectedThemeTitle, hasSelectedTheme, canSubmit, themeValidation, inputValidation,
     secondsToRetry, themeSecondsToRetry, generateTheme, submitEssay,

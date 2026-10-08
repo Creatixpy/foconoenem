@@ -65,25 +65,3 @@ Formato: {"questions":[{"discipline":"${input.discipline}","topic":"assunto","di
 
   return { questions: questions.slice(0, input.count), provider: response.provider };
 }
-
-export async function mapWithConcurrency<T, TResult>(
-  items: T[],
-  concurrency: number,
-  mapper: (item: T) => Promise<TResult>
-): Promise<TResult[]> {
-  const results = new Array<TResult>(items.length);
-  let nextIndex = 0;
-
-  async function worker() {
-    while (nextIndex < items.length) {
-      const index = nextIndex;
-      nextIndex += 1;
-      results[index] = await mapper(items[index]);
-    }
-  }
-
-  await Promise.all(
-    Array.from({ length: Math.min(Math.max(1, concurrency), items.length) }, () => worker())
-  );
-  return results;
-}

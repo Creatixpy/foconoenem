@@ -1,13 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { after, NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/db/server';
 import { getUserAiRuntime } from '@/lib/server/ai/provider';
 import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
 import { trackEvent } from '@/lib/server/analytics';
-import { createGeneratedTheme } from '@/lib/server/essay/service';
+import { createGeneratedTheme } from '@/lib/server/essay/themes';
 import { cleanupCachedThemesIfDue } from '@/lib/server/local-maintenance';
 import { getOperatingHoursInfo } from '@/lib/server/operating-hours';
 import { checkRateLimit } from '@/lib/server/rate-limit';
 import { ensureTrustedOrigin } from '@/lib/server/request-origin';
+
+export const runtime = 'nodejs';
+export const maxDuration = 120;
 
 export async function POST(request: NextRequest) {
   const originError = ensureTrustedOrigin(request);
@@ -40,20 +43,22 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    await cleanupCachedThemesIfDue();
-    const runtime = await getUserAiRuntime(auth.userId);
-    const generated = await createGeneratedTheme(adminClient, runtime, auth.userId);
+    const [, aiRuntime] = await Promise.all([
+      cleanupCachedThemesIfDue(),
+      getUserAiRuntime(auth.userId),
+    ]);
+    const generated = await createGeneratedTheme(adminClient, aiRuntime, auth.userId);
 
-    await trackEvent({
+    after(() => trackEvent({
       eventType: 'theme_generated',
       metadata: {
         theme_id: generated.theme.id,
-        private: runtime.subscription.hasMaxAccess,
-        subscription_plan: runtime.subscription.planCode,
+        private: aiRuntime.subscription.hasMaxAccess,
+        subscription_plan: aiRuntime.subscription.planCode,
         provider: generated.provider,
       },
       userId: auth.userId,
-    });
+    }));
 
     return NextResponse.json({
       themeId: generated.theme.id,

@@ -15,9 +15,25 @@ import {
 } from '@/lib/db/repositories/quizzes';
 import type { Database } from '@/types/supabase';
 import type { UserAiRuntime } from '@/lib/server/ai/provider';
-import { generateQuestionsForDiscipline, mapWithConcurrency } from './generator';
+import { mapWithConcurrency } from './concurrency';
+import { generateQuestionsForDiscipline } from './generator';
 
 const QUESTIONS_PER_DISCIPLINE = 3;
+const GENERATION_CONCURRENCY = 2;
+
+function selectUniqueQuestions(
+  candidates: CanonicalQuestion[],
+  selected: CanonicalQuestion[],
+  signatures: Set<string>
+) {
+  for (const question of candidates) {
+    if (selected.length === QUESTIONS_PER_DISCIPLINE) break;
+    const signature = getQuestionSignature(question);
+    if (signatures.has(signature)) continue;
+    signatures.add(signature);
+    selected.push(question);
+  }
+}
 
 function shuffle<T>(items: T[]): T[] {
   const copy = [...items];
@@ -30,7 +46,7 @@ function shuffle<T>(items: T[]): T[] {
 
 export async function prepareQuiz(
   client: SupabaseClient<Database>,
-  runtime: UserAiRuntime,
+  loadRuntime: () => Promise<UserAiRuntime>,
   input: { userId: string; requestId: string; disciplines: Discipline[] }
 ) {
   const existing = await getAttemptByRequestId(client, input.userId, input.requestId);
@@ -42,21 +58,18 @@ export async function prepareQuiz(
     };
   }
 
-  const stored = await getBalancedQuestions(client, input.disciplines);
+  const [runtime, stored] = await Promise.all([
+    loadRuntime(),
+    getBalancedQuestions(client, input.disciplines),
+  ]);
   const selectedSignatures = new Set<string>();
 
-  const selections = await mapWithConcurrency(input.disciplines, 2, async (discipline) => {
+  const selections = await mapWithConcurrency(input.disciplines, GENERATION_CONCURRENCY, async (discipline) => {
     const available = shuffle(stored[discipline] ?? []);
     const selected: CanonicalQuestion[] = [];
 
     if (!runtime.subscription.hasMaxAccess) {
-      for (const question of available) {
-        const signature = getQuestionSignature(question);
-        if (selectedSignatures.has(signature)) continue;
-        selectedSignatures.add(signature);
-        selected.push(question);
-        if (selected.length === QUESTIONS_PER_DISCIPLINE) break;
-      }
+      selectUniqueQuestions(available, selected, selectedSignatures);
     }
 
     const missing = QUESTIONS_PER_DISCIPLINE - selected.length;
@@ -68,13 +81,7 @@ export async function prepareQuiz(
       });
       const canonical = await upsertGeneratedQuestions(client, generated.questions);
 
-      for (const question of canonical) {
-        const signature = getQuestionSignature(question);
-        if (selectedSignatures.has(signature)) continue;
-        selectedSignatures.add(signature);
-        selected.push(question);
-        if (selected.length === QUESTIONS_PER_DISCIPLINE) break;
-      }
+      selectUniqueQuestions(canonical, selected, selectedSignatures);
     }
 
     if (selected.length !== QUESTIONS_PER_DISCIPLINE) {
