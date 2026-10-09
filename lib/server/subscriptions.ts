@@ -12,6 +12,7 @@ import {
   type UserSubscriptionSummary,
 } from '@/lib/constants/subscriptions';
 import { createAdminClient } from '@/lib/db/server';
+import { getSubscriptionRecord } from '@/lib/db/repositories/accounts';
 import { getStripe, getStripeStringId } from '@/lib/server/stripe';
 import type { Database, Json } from '@/types/supabase';
 
@@ -255,17 +256,7 @@ export async function getUserSubscription(
   adminClient: AdminClient,
   userId: string
 ): Promise<SubscriptionRow | null> {
-  const { data, error } = await adminClient
-    .from('subscriptions')
-    .select('*')
-    .eq('user_id', userId)
-    .maybeSingle();
-
-  if (error) {
-    throw new Error(`Falha ao carregar assinatura: ${error.message}`);
-  }
-
-  return data;
+  return getSubscriptionRecord(adminClient, userId);
 }
 
 export async function getUserSubscriptionSummary(userId: string) {

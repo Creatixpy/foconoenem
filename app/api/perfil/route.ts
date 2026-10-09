@@ -5,9 +5,7 @@ import { handleApiError } from '@/lib/server/security';
 import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
 import { ensureTrustedOrigin } from '@/lib/server/request-origin';
 import { sanitizeInput } from '@/lib/auth/validation';
-import type { Database } from '@/types/supabase';
-
-type ProfileInsert = Database['public']['Tables']['user_profiles']['Insert'];
+import { getProfile, saveProfile, type ProfileChanges } from '@/lib/db/repositories/profiles';
 
 const profilePayloadSchema = z.object({
   nome_completo: z.string().max(120).nullable().optional(),
@@ -30,9 +28,7 @@ async function ensureProfile(userId: string, payload?: z.infer<typeof profilePay
     throw new Error('Supabase admin nao configurado.');
   }
 
-  const profilePayload: ProfileInsert = {
-    user_id: userId,
-  };
+  const profilePayload: ProfileChanges = {};
 
   const nomeCompleto = sanitizeNullable(payload?.nome_completo);
   const bio = sanitizeNullable(payload?.bio);
@@ -43,25 +39,7 @@ async function ensureProfile(userId: string, payload?: z.infer<typeof profilePay
   if (objetivo !== undefined) profilePayload.objetivo = objetivo;
   if (payload && 'ano_enem' in payload) profilePayload.ano_enem = payload.ano_enem ?? null;
 
-  const { data, error } = await adminClient
-    .from('user_profiles')
-    .upsert(profilePayload, { onConflict: 'user_id', ignoreDuplicates: false })
-    .select('*')
-    .single();
-
-  if (error) {
-    throw new Error(`Falha ao salvar perfil: ${error.message}`);
-  }
-
-  const { error: statisticsError } = await adminClient
-    .from('user_statistics')
-    .upsert({ user_id: userId }, { onConflict: 'user_id', ignoreDuplicates: true });
-
-  if (statisticsError) {
-    throw new Error(`Falha ao garantir estatísticas: ${statisticsError.message}`);
-  }
-
-  return data;
+  return saveProfile(adminClient, userId, profilePayload);
 }
 
 export async function GET(request: NextRequest) {
@@ -81,23 +59,14 @@ export async function GET(request: NextRequest) {
       throw new Error('Supabase admin nao configurado.');
     }
 
-    const { data, error } = await adminClient
-      .from('user_profiles')
-      .select('*')
-      .eq('user_id', auth.userId)
-      .maybeSingle();
-
-    if (error) {
-      throw new Error(`Falha ao carregar perfil: ${error.message}`);
-    }
-
-    return NextResponse.json({ profile: data ?? null }, { headers: { 'Cache-Control': 'no-store' } });
+    const profile = await getProfile(adminClient, auth.userId);
+    return NextResponse.json({ profile }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {
     return handleApiError(error);
   }
 }
 
-export async function POST(request: NextRequest) {
+async function updateProfile(request: NextRequest) {
   try {
     const originError = ensureTrustedOrigin(request);
     if (originError) {
@@ -117,22 +86,4 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function PATCH(request: NextRequest) {
-  try {
-    const originError = ensureTrustedOrigin(request);
-    if (originError) {
-      return originError;
-    }
-
-    const auth = await resolveRequestUserFromCookies();
-    if ('error' in auth) {
-      return auth.error;
-    }
-
-    const payload = profilePayloadSchema.parse(await request.json());
-    const profile = await ensureProfile(auth.userId, payload);
-    return NextResponse.json({ profile });
-  } catch (error) {
-    return handleApiError(error);
-  }
-}
+export { updateProfile as POST, updateProfile as PATCH };

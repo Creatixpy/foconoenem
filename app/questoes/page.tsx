@@ -1,6 +1,6 @@
 import AuthProviders from '@/app/auth-providers';
 import { requireServerUser } from '@/lib/server/page-auth';
-import { getOperatingHoursInfo } from '@/lib/server/operating-hours';
+import { getUserOperatingHoursInfo } from '@/lib/server/operating-hours';
 import QuestoesPageClient from './QuestoesPageClient';
 import { createPageMetadata } from '@/lib/contracts/page-metadata';
 
@@ -14,10 +14,8 @@ export const metadata = createPageMetadata({
 export const dynamic = 'force-dynamic';
 
 export default async function QuestoesPage() {
-  const [user, operatingHours] = await Promise.all([
-    requireServerUser(),
-    getOperatingHoursInfo(),
-  ]);
+  const user = await requireServerUser();
+  const operatingHours = await getUserOperatingHoursInfo(user.id);
 
   return (
     <AuthProviders initialUser={user} initialAuthChecked>

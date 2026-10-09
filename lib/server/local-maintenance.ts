@@ -2,6 +2,7 @@ import 'server-only';
 
 import { logAdminAction } from '@/lib/server/admin-auth';
 import { createAdminClient } from '@/lib/db/server';
+import { withTimeout } from '@/lib/db/query';
 
 type MaintenanceTaskName =
   | 'rate_limits'
@@ -23,24 +24,27 @@ async function runTask(task: MaintenanceTaskName): Promise<MaintenanceTaskResult
   }
 
   try {
-    const { data, error } = await client
-      .rpc('run_maintenance_task', { p_task: task })
-      .maybeSingle();
+    return await withTimeout(async (signal) => {
+      const { data, error } = await client
+        .rpc('run_maintenance_task', { p_task: task })
+        .abortSignal(signal)
+        .maybeSingle();
 
-    if (error) throw error;
-    if (!data?.ran) return { deleted: 0, ran: false };
+      if (error) throw error;
+      if (!data?.ran) return { deleted: 0, ran: false };
 
-    await logAdminAction(client, {
-      adminEmail: 'system',
-      action: 'maintenance_run',
-      details: {
-        task,
-        deleted: data.deleted,
-        ranAt: data.ran_at,
-      },
+      await logAdminAction(client, {
+        adminEmail: 'system',
+        action: 'maintenance_run',
+        details: {
+          task,
+          deleted: data.deleted,
+          ranAt: data.ran_at,
+        },
+      }, signal);
+
+      return { deleted: data.deleted, ran: true };
     });
-
-    return { deleted: data.deleted, ran: true };
   } catch (error) {
     console.error(`Erro ao executar manutenção local de ${task}:`, error);
     return { deleted: 0, ran: false };

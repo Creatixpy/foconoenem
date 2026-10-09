@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isAuthApiError, isAuthSessionMissingError } from '@supabase/supabase-js';
 import { createAdminClient, createServerClient } from '@/lib/db/server';
 import { ensureTrustedOrigin } from '@/lib/server/request-origin';
 import {
@@ -18,12 +19,23 @@ export async function GET(request: NextRequest) {
   const supabase = await createServerClient();
   const {
     data: { user },
+    error,
   } = await supabase.auth.getUser();
+
+  const missingSession = isAuthSessionMissingError(error) ||
+    (isAuthApiError(error) && (error.status === 401 || error.status === 403));
+  if (error && !missingSession) {
+    return NextResponse.json(
+      { error: 'Serviço de assinatura indisponível.' },
+      { status: 503, headers: { 'Cache-Control': 'no-store' } }
+    );
+  }
 
   if (!user) {
     return NextResponse.json(
       {
         authenticated: false,
+        userId: null,
         subscription: buildFreeSubscriptionSummary(),
       },
       { headers: { 'Cache-Control': 'no-store' } }
@@ -43,6 +55,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json(
     {
       authenticated: true,
+      userId: user.id,
       subscription: toSubscriptionSummary(subscription),
     },
     { headers: { 'Cache-Control': 'no-store' } }

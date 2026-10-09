@@ -32,7 +32,8 @@ describe('orientação para envio da redação', () => {
     expect(essaySubmitReason({ ...ready, characters: 5001 })).toContain('5.000');
   });
   it('modo sozinho não é rascunho, mas tema sem redação é trabalho recuperável', () => {
-    expect(hasMeaningfulEssayDraft({ ...EMPTY_ESSAY_DRAFT, themeMode: 'manual', essay: '  ' })).toBe(false);
+    const manualDraft = { ...EMPTY_ESSAY_DRAFT, themeMode: 'manual' as const, essay: '  ' };
+    expect(hasMeaningfulEssayDraft(manualDraft)).toBe(false);
     expect(hasMeaningfulEssayDraft({ ...EMPTY_ESSAY_DRAFT, manualTheme: 'Meu tema' })).toBe(true);
     expect(hasMeaningfulEssayDraft({ ...EMPTY_ESSAY_DRAFT, essay: 'Meu texto' })).toBe(true);
   });

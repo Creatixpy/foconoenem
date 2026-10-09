@@ -1,16 +1,12 @@
-import { createBrowserClient } from '@supabase/ssr'
-import { Database } from '@/types/supabase'
+import { createBrowserClient } from '@supabase/ssr';
+import type { Database } from '@/types/supabase';
+import { getPublicSupabaseConfig } from './config';
+import { supabaseFetch } from './transport';
 
 export function createClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseKey) {
-    throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY environment variables');
-  }
-
-  return createBrowserClient<Database>(
-    supabaseUrl,
-    supabaseKey
-  )
+  const { url, key } = getPublicSupabaseConfig();
+  // @supabase/ssr reuses the browser client and creates fresh server instances.
+  return createBrowserClient<Database>(url, key, {
+    global: { fetch: supabaseFetch },
+  });
 }

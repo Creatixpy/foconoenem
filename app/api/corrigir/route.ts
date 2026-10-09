@@ -1,17 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { after, NextRequest, NextResponse } from 'next/server';
 import { essaySubmissionSchema } from '@/lib/contracts/essay';
 import { createAdminClient } from '@/lib/db/server';
-import { getUserAiRuntime } from '@/lib/server/ai/provider';
+import type { UserAiRuntime } from '@/lib/server/ai/provider';
 import { resolveRequestUserFromCookies } from '@/lib/server/auth-request';
 import { trackEvent } from '@/lib/server/analytics';
 import { cleanupEssaySubmissionsIfDue } from '@/lib/server/local-maintenance';
-import {
-  correctEssay,
-  EssayServiceError,
-} from '@/lib/server/essay/service';
-import { getOperatingHoursInfo } from '@/lib/server/operating-hours';
+import { correctEssay } from '@/lib/server/essay/service';
+import { EssayServiceError } from '@/lib/server/essay/errors';
+import { getStudyAiRuntime, StudyAccessError } from '@/lib/server/study-access';
 import { checkRateLimit } from '@/lib/server/rate-limit';
 import { ensureTrustedOrigin } from '@/lib/server/request-origin';
+
+export const runtime = 'nodejs';
+export const maxDuration = 180;
 
 export async function POST(request: NextRequest) {
   const originError = ensureTrustedOrigin(request);
@@ -38,16 +39,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const [operatingInfo, rateResult] = await Promise.all([
-    getOperatingHoursInfo(),
-    checkRateLimit(auth.userId, '/api/corrigir', 5, 1),
-  ]);
-  if (!operatingInfo.isOpen) {
-    return NextResponse.json(
-      { error: 'outside_operating_hours', message: operatingInfo.message },
-      { status: 403 }
-    );
-  }
+  const rateResult = await checkRateLimit(auth.userId, '/api/corrigir', 5, 1);
   if (!rateResult.allowed) {
     return NextResponse.json(
       { error: 'rate_limit_exceeded', resetAt: rateResult.resetAt.toISOString() },
@@ -61,14 +53,23 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    await cleanupEssaySubmissionsIfDue();
-    const runtime = await getUserAiRuntime(auth.userId);
-    const outcome = await correctEssay(adminClient, runtime, {
-      submissionId: parsed.data.submissionId,
-      userId: auth.userId,
-      essay: parsed.data.redacao.replace(/\0/g, ''),
-      theme: parsed.data.theme,
+    after(async () => {
+      await cleanupEssaySubmissionsIfDue();
     });
+    let aiRuntime: UserAiRuntime | undefined;
+    const outcome = await correctEssay(
+      adminClient,
+      async () => {
+        aiRuntime = await getStudyAiRuntime(auth.userId);
+        return aiRuntime;
+      },
+      {
+        submissionId: parsed.data.submissionId,
+        userId: auth.userId,
+        essay: parsed.data.redacao.replace(/\0/g, ''),
+        theme: parsed.data.theme,
+      }
+    );
 
     if (outcome.state === 'off_topic') {
       return NextResponse.json(
@@ -90,22 +91,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await trackEvent({
-      eventType: 'essay_submitted',
-      metadata: {
-        submission_id: parsed.data.submissionId,
-        theme_mode: parsed.data.theme.mode,
-        theme_id: parsed.data.theme.mode === 'generated' ? parsed.data.theme.id : undefined,
-        subscription_plan: runtime.subscription.planCode,
-        essay_length: parsed.data.redacao.length,
-        score: outcome.score,
-        provider: outcome.provider,
-      },
-      userId: auth.userId,
-    });
+    if (aiRuntime) {
+      const subscriptionPlan = aiRuntime.subscription.planCode;
+      after(() => trackEvent({
+        eventType: 'essay_submitted',
+        metadata: {
+          submission_id: parsed.data.submissionId,
+          theme_mode: parsed.data.theme.mode,
+          theme_id: parsed.data.theme.mode === 'generated' ? parsed.data.theme.id : undefined,
+          subscription_plan: subscriptionPlan,
+          essay_length: parsed.data.redacao.length,
+          score: outcome.score,
+          provider: outcome.provider,
+        },
+        userId: auth.userId,
+      }));
+    }
 
     return NextResponse.json({ id: outcome.resultId });
   } catch (error) {
+    if (error instanceof StudyAccessError) {
+      return NextResponse.json(
+        { error: 'outside_operating_hours', message: error.operatingInfo.message },
+        { status: 403 }
+      );
+    }
     console.error('Falha ao corrigir redação:', error);
     if (error instanceof EssayServiceError && error.kind === 'theme_not_found') {
       return NextResponse.json({ error: 'theme_not_found' }, { status: 400 });

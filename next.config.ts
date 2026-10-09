@@ -4,6 +4,20 @@ const nextConfig: NextConfig = {
   /* config options here */
   reactStrictMode: true,
   poweredByHeader: false,
+  // Runtime credentials come from the deployment environment.
+  outputFileTracingExcludes: {
+    '/*': [
+      './.env*',
+      './.vercel/.env*',
+      './AGENTS*.md',
+      './.git/**/*',
+      './.agents/**/*',
+      './.codex/**/*',
+      './.vscode/**/*',
+      './.cursor/**/*',
+      './.mcp.json',
+    ],
+  },
   images: {
     remotePatterns: [
       {
