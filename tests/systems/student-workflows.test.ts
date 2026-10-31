@@ -28,7 +28,7 @@ const draft = {
     attemptId, expiresAt: '2026-10-01T12:00:00Z',
     questions: [{
       id: questionId, discipline: 'Matemática' as const, text: 'Qual alternativa resolve corretamente a questão apresentada?',
-      alternatives: ['A', 'B', 'C', 'D'].map((id) => ({ id, text: `Alternativa ${id}` })),
+      alternatives: ['A', 'B', 'C', 'D', 'E'].map((id) => ({ id, text: `Alternativa ${id}` })),
     }],
   },
   selectedAnswers: { [questionId]: 'B' },
@@ -197,7 +197,7 @@ describe('tentativa e envio congelado', () => {
   it('rejeita posição, alternativa ou identidade incompatíveis na retomada', () => {
     expect(quizDraftSchema.safeParse(draft).success).toBe(true);
     expect(quizDraftSchema.safeParse({ ...draft, currentIndex: 1 }).success).toBe(false);
-    expect(quizDraftSchema.safeParse({ ...draft, selectedAnswers: { [questionId]: 'E' } }).success).toBe(false);
+    expect(quizDraftSchema.safeParse({ ...draft, selectedAnswers: { [questionId]: 'F' } }).success).toBe(false);
     expect(quizDraftSchema.safeParse({ ...draft, submission: { attemptId: requestId, selectedAnswers: {} } }).success).toBe(false);
   });
 });

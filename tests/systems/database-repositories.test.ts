@@ -25,20 +25,33 @@ describe('repositórios de conta, perfil e notícias', () => {
       return Response.json([]);
     });
 
-    await expect(getAccountRecords(client, userId)).resolves.toEqual({ statistics: null, essays: [], subscription: null });
-    expect(urls).toHaveLength(3);
+    await expect(getAccountRecords(client, userId)).resolves.toEqual({ statistics: null, essays: [], quizzes: [], subscription: null });
+    expect(urls).toHaveLength(4);
     expect(urls.every((url) => url.searchParams.get('user_id') === `eq.${userId}`)).toBe(true);
     const history = urls.find((url) => url.pathname.endsWith('/essay_results'));
     expect(history?.searchParams.get('limit')).toBe('10');
     expect(history?.searchParams.get('order')).toBe('created_at.desc,id.desc');
+    const quizzes = urls.find((url) => url.pathname.endsWith('/quiz_results'));
+    expect(quizzes?.searchParams.get('limit')).toBe('10');
+    expect(quizzes?.searchParams.get('order')).toBe('created_at.desc,id.desc');
+    expect(quizzes?.searchParams.get('select')).toBe('id,score,total_questions,correct_answers,unanswered_questions,disciplines,created_at');
   });
 
-  it('não apresenta falha de consulta de conta como um histórico vazio', async () => {
-    const client = clientWith(async (input) => String(input).includes('/essay_results')
+  it.each(['essay_results', 'quiz_results'])('não apresenta falha de %s como um histórico vazio', async (table) => {
+    const client = clientWith(async (input) => String(input).includes(`/${table}`)
       ? Response.json({ code: '42501', message: 'Permission denied' }, { status: 403 })
       : Response.json([]));
 
     await expect(getAccountRecords(client, userId)).rejects.toMatchObject({ name: 'DatabaseError', code: '42501' });
+  });
+
+  it('carrega o resultado salvo do simulado junto às estatísticas da conta', async () => {
+    const quiz = { id: 'qa-result', score: 67, total_questions: 3, correct_answers: 2, unanswered_questions: 0, disciplines: ['Matemática'], created_at: '2026-10-31T08:00:00Z' };
+    const client = clientWith(async (input) => Response.json(String(input).includes('/quiz_results') ? [quiz] : []));
+    const result = await getAccountRecords(client, userId);
+    expect(result.quizzes).toEqual([quiz]);
+    expect(result.quizzes[0]).not.toHaveProperty('questions_data');
+    expect(result.quizzes[0]).not.toHaveProperty('answers_data');
   });
 
   it('perfil inexistente é null e o erro de leitura continua sendo um erro', async () => {

@@ -1,4 +1,4 @@
-import { generatedQuestionSchema, type QuizResult } from './quiz';
+import { storedQuestionSchema, type QuizResult } from './quiz';
 
 type PersistedQuizResult = {
   id: string;
@@ -43,7 +43,7 @@ export function parseQuizResult(row: PersistedQuizResult): QuizResult {
     }
 
     const candidate = raw as Record<string, unknown>;
-    const parsed = generatedQuestionSchema.safeParse({
+    const parsed = storedQuestionSchema.safeParse({
       discipline: candidate.discipline,
       text: candidate.text,
       alternatives: candidate.alternatives,

@@ -7,6 +7,7 @@ import {
   type Discipline,
 } from '@/lib/contracts/quiz';
 import {
+  QuizRepositoryError,
   createQuizAttempt,
   getAttemptByRequestId,
   getBalancedQuestions,
@@ -51,6 +52,13 @@ export async function prepareQuiz(
 ) {
   const existing = await getAttemptByRequestId(client, input.userId, input.requestId);
   if (existing) {
+    const requestedDisciplines = new Set(input.disciplines);
+    const existingDisciplines = new Set(existing.questions.map((question) => question.discipline));
+    if (requestedDisciplines.size !== existingDisciplines.size ||
+        ![...requestedDisciplines].every((discipline) => existingDisciplines.has(discipline))) {
+      throw new QuizRepositoryError('conflict', 'Este identificador já foi usado com outro simulado.');
+    }
+
     return {
       attemptId: existing.id,
       expiresAt: existing.expiresAt,

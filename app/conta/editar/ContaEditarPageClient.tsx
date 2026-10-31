@@ -66,15 +66,18 @@ function getAnoOptions(): { value: string; label: string }[] {
 function SuccessToast({ message, visible }: { message: string; visible: boolean }) {
   return (
     <div
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
       className={`
-        fixed bottom-6 right-6 z-50
+        fixed bottom-6 inset-x-4 sm:left-auto sm:right-6 z-50
         flex items-center gap-2.5 px-5 py-3 rounded-xl
         bg-[var(--success)] text-white text-sm font-medium
         shadow-lg transition-all duration-300
         ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}
       `}
     >
-      <CheckIcon /> {message}
+      {visible && <><CheckIcon /> {message}</>}
     </div>
   );
 }
@@ -95,6 +98,12 @@ export default function ContaEditarPageClient() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [showToast, setShowToast] = useState(false);
+
+  useEffect(() => {
+    if (!showToast) return;
+    const timeout = window.setTimeout(() => setShowToast(false), 3000);
+    return () => window.clearTimeout(timeout);
+  }, [showToast]);
 
   // Auth guard
   useEffect(() => {
@@ -118,6 +127,7 @@ export default function ContaEditarPageClient() {
     if (!user) return;
 
     setError('');
+    setShowToast(false);
     setSaving(true);
 
     try {
@@ -130,7 +140,6 @@ export default function ContaEditarPageClient() {
 
       // Show success toast
       setShowToast(true);
-      setTimeout(() => setShowToast(false), 3000);
     } catch {
       setError('Erro ao salvar perfil. Tente novamente.');
     } finally {
@@ -141,7 +150,7 @@ export default function ContaEditarPageClient() {
   // Loading state
   if (!initialized || authLoading) {
     return (
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
+      <div className="student-flow max-w-2xl mx-auto px-4 sm:px-6 py-10">
         <div className="animate-pulse space-y-6">
           <div className="h-6 w-48 rounded bg-[var(--surface-2)]" />
           <div className="h-12 w-full rounded-xl bg-[var(--surface-2)]" />
@@ -156,7 +165,7 @@ export default function ContaEditarPageClient() {
   if (!user) return null;
 
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
+    <div className="student-flow max-w-2xl mx-auto px-4 sm:px-6 py-10">
       {/* Back link */}
       <Link
         href="/conta"
@@ -175,13 +184,13 @@ export default function ContaEditarPageClient() {
 
       {/* Error */}
       {error && (
-        <div className="mt-6 px-4 py-3 rounded-xl text-sm bg-[var(--danger-soft)] text-[var(--danger)] border border-[var(--danger)]/20">
+        <div role="alert" className="mt-6 px-4 py-3 rounded-xl text-sm bg-[var(--danger-soft)] text-[var(--danger)] border border-[var(--danger)]/20">
           {error}
         </div>
       )}
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+      <form onSubmit={handleSubmit} aria-busy={saving} className="mt-8 space-y-6">
         {/* Nome completo */}
         <div>
           <label htmlFor="edit-nome" className="block text-sm font-medium text-[var(--text-2)] mb-1.5">
@@ -190,6 +199,7 @@ export default function ContaEditarPageClient() {
           <input
             id="edit-nome"
             type="text"
+            disabled={saving}
             value={nome}
             onChange={(e) => setNome(e.target.value)}
             placeholder="Seu nome"
@@ -210,6 +220,7 @@ export default function ContaEditarPageClient() {
           </label>
           <textarea
             id="edit-bio"
+            disabled={saving}
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             placeholder="Conte um pouco sobre você..."
@@ -233,6 +244,7 @@ export default function ContaEditarPageClient() {
           </label>
           <select
             id="edit-objetivo"
+            disabled={saving}
             value={objetivo}
             onChange={(e) => setObjetivo(e.target.value)}
             className="
@@ -256,6 +268,7 @@ export default function ContaEditarPageClient() {
           </label>
           <select
             id="edit-ano"
+            disabled={saving}
             value={anoEnem}
             onChange={(e) => setAnoEnem(e.target.value)}
             className="
@@ -273,12 +286,12 @@ export default function ContaEditarPageClient() {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-3 pt-2">
+        <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center">
           <button
             type="submit"
             disabled={saving}
             className="
-              inline-flex items-center justify-center gap-2
+              inline-flex w-full sm:w-auto items-center justify-center gap-2
               px-6 py-3 rounded-xl text-sm font-semibold
               bg-[var(--brand)] text-white
               hover:bg-[var(--brand-hover)] active:bg-[var(--brand-active)]
@@ -288,12 +301,12 @@ export default function ContaEditarPageClient() {
             "
           >
             {saving ? <SpinnerIcon /> : null}
-            Salvar alterações
+            {saving ? 'Salvando…' : 'Salvar alterações'}
           </button>
           <Link
             href="/conta"
             className="
-              px-6 py-3 rounded-xl text-sm font-medium
+              inline-flex min-h-12 w-full sm:w-auto items-center justify-center px-6 py-3 rounded-xl text-sm font-medium
               text-[var(--text-2)]
               hover:bg-[var(--surface-2)] transition-colors
             "

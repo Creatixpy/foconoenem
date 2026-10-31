@@ -3,7 +3,9 @@ import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   DISCIPLINES,
+  QUIZ_ALTERNATIVE_IDS,
   generatedQuestionSchema,
+  storedQuestionSchema,
   normalizeText,
   type CanonicalQuestion,
   type Discipline,
@@ -45,8 +47,8 @@ function rethrowRpcError(error: unknown): never {
   throw error;
 }
 
-function normalizeQuestionRow(row: GeneratedQuestionRow): CanonicalQuestion {
-  const parsed = generatedQuestionSchema.safeParse({
+function normalizeQuestionRow(row: GeneratedQuestionRow, allowLegacy = false): CanonicalQuestion {
+  const parsed = (allowLegacy ? storedQuestionSchema : generatedQuestionSchema).safeParse({
     discipline: row.discipline,
     text: row.content,
     alternatives: row.alternatives,
@@ -88,8 +90,9 @@ export async function getBalancedQuestions(
 
   const rows = await runQuery((signal) =>
     client
-      .rpc('get_balanced_questions', {
+      .rpc('get_balanced_questions_by_alternative_count', {
         p_disciplines: disciplines,
+        p_alternative_count: QUIZ_ALTERNATIVE_IDS.length,
         p_limit_per_discipline: limitPerDiscipline,
       })
       .abortSignal(signal)
@@ -152,7 +155,7 @@ export async function getAttemptByRequestId(
     if (!row || Array.isArray(row)) {
       throw new QuizRepositoryError('database', 'A tentativa contém uma referência inválida.');
     }
-    return normalizeQuestionRow(row);
+    return normalizeQuestionRow(row, true);
   });
 
   return { id: attempt.id, expiresAt: attempt.expires_at, questions };

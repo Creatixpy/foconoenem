@@ -5,6 +5,8 @@ import {
 } from '../../lib/contracts/essay';
 import {
   generatedQuestionSchema,
+  publicQuestionSchema,
+  storedQuestionSchema,
   toPublicQuestion,
   type CanonicalQuestion,
 } from '../../lib/contracts/quiz';
@@ -16,6 +18,7 @@ const alternatives = [
   { id: 'B', text: 'Alternativa correta número dois', isCorrect: true },
   { id: 'C', text: 'Alternativa incorreta número três', isCorrect: false },
   { id: 'D', text: 'Alternativa incorreta número quatro', isCorrect: false },
+  { id: 'E', text: 'Alternativa incorreta número cinco', isCorrect: false },
 ];
 
 const question: CanonicalQuestion = {
@@ -32,6 +35,19 @@ const competence = (nota: 0 | 40 | 80 | 120 | 160 | 200) => ({
 });
 
 describe('contratos canônicos de redação e quiz', () => {
+  it('exige cinco alternativas A–E nas novas questões e preserva tentativas antigas', () => {
+    const { id: _id, ...generatedQuestion } = question;
+    expect(generatedQuestionSchema.safeParse(generatedQuestion).success).toBe(true);
+    const legacy = { ...generatedQuestion, alternatives: alternatives.slice(0, 4) };
+    expect(generatedQuestionSchema.safeParse(legacy).success).toBe(false);
+    expect(storedQuestionSchema.safeParse(legacy).success).toBe(true);
+    expect(publicQuestionSchema.safeParse(toPublicQuestion({ ...question, alternatives: legacy.alternatives })).success).toBe(true);
+    expect(generatedQuestionSchema.safeParse({
+      ...generatedQuestion,
+      alternatives: alternatives.map((alternative) => alternative.id === 'E' ? { ...alternative, id: 'F' } : alternative),
+    }).success).toBe(false);
+  });
+
   it('rejeita questões ambíguas e propriedades não previstas', () => {
     const { id: _id, ...generatedQuestion } = question;
     expect(generatedQuestionSchema.safeParse({
@@ -44,6 +60,7 @@ describe('contratos canônicos de redação e quiz', () => {
 
   it('serializa questões públicas sem gabarito nem explicação', () => {
     const serialized = toPublicQuestion(question);
+    expect(serialized.alternatives.map((alternative) => alternative.id)).toEqual(['A', 'B', 'C', 'D', 'E']);
     expect(serialized).not.toHaveProperty('explanation');
     expect(serialized.alternatives.every((alternative) => !('isCorrect' in alternative))).toBe(true);
   });
@@ -86,7 +103,7 @@ describe('contratos canônicos de redação e quiz', () => {
     expect(collision).not.toBe(first);
   });
 
-  it('mapeia a revisão persistida sem recalcular o resultado no cliente', () => {
+  it.each([4, 5])('mapeia a revisão persistida com %s alternativas sem recalcular o resultado', (alternativeCount) => {
     const result = parseQuizResult({
       id: '6c07e303-9abc-43cb-a0c5-07d9f89bb239',
       total_questions: 1,
@@ -98,7 +115,7 @@ describe('contratos canônicos de redação e quiz', () => {
         id: question.id,
         discipline: question.discipline,
         text: question.text,
-        alternatives,
+        alternatives: alternatives.slice(0, alternativeCount),
         explanation: question.explanation,
       }],
       answers_data: [{

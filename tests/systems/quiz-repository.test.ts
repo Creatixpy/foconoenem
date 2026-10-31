@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { describe, expect, it, vi } from 'vitest';
 import type { CanonicalQuestion } from '../../lib/contracts/quiz';
 import { DB_TIMEOUTS } from '../../lib/db/query';
-import { getBalancedQuestions, upsertGeneratedQuestions } from '../../lib/db/repositories/quizzes';
+import { getAttemptByRequestId, getBalancedQuestions, upsertGeneratedQuestions } from '../../lib/db/repositories/quizzes';
 import type { Database } from '../../types/supabase';
 
 vi.mock('server-only', () => ({}));
@@ -19,7 +19,7 @@ function question(index: number): CanonicalQuestion {
     id: `01928cf9-4aca-4037-8ba0-673edc94be5${index}`,
     discipline: 'Matemática',
     text: `Questão contextualizada número ${index} da disciplina Matemática.`,
-    alternatives: ['A', 'B', 'C', 'D'].map((id) => ({
+    alternatives: ['A', 'B', 'C', 'D', 'E'].map((id) => ({
       id, text: `Alternativa ${id} do enunciado ${index}`, isCorrect: id === 'B',
     })),
     explanation: 'A alternativa B resolve integralmente as condições propostas no enunciado.',
@@ -27,6 +27,31 @@ function question(index: number): CanonicalQuestion {
 }
 
 describe('persistência concorrente de questões', () => {
+  it('seleciona o catálogo de cinco alternativas sem alterar a RPC dos clientes antigos', async () => {
+    const stored = question(1);
+    const fetcher = vi.fn<typeof fetch>(async () => Response.json([{
+      ...stored, content: stored.text, topic: null, difficulty: null,
+    }]));
+    const result = await getBalancedQuestions(clientWith(fetcher), ['Matemática']);
+    expect(String(fetcher.mock.calls[0][0])).toContain('/rpc/get_balanced_questions_by_alternative_count');
+    expect(JSON.parse(String(fetcher.mock.calls[0][1]?.body))).toEqual({
+      p_disciplines: ['Matemática'], p_alternative_count: 5, p_limit_per_discipline: 30,
+    });
+    expect(result.Matemática[0].alternatives).toHaveLength(5);
+  });
+
+  it('recupera uma tentativa emitida com quatro alternativas e os mesmos IDs', async () => {
+    const stored = { ...question(1), alternatives: question(1).alternatives.slice(0, 4) };
+    const attemptId = '01928cf9-4aca-4037-8ba0-673edc94be50';
+    const fetcher = vi.fn<typeof fetch>(async (input) => String(input).includes('/quiz_attempt_questions')
+      ? Response.json([{ position: 0, generated_questions: { ...stored, content: stored.text } }])
+      : Response.json({ id: attemptId, expires_at: '2026-11-01T00:00:00Z' }));
+    const result = await getAttemptByRequestId(clientWith(fetcher), 'qa-user', 'qa-request');
+    expect(result?.id).toBe(attemptId);
+    expect(result?.questions[0].id).toBe(stored.id);
+    expect(result?.questions[0].alternatives).toHaveLength(4);
+  });
+
   it('aguarda todos os writes iniciados e preserva o primeiro erro da ordem de entrada', async () => {
     let releaseSecond!: (response: Response) => void;
     let settled = false;

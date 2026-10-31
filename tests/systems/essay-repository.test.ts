@@ -4,8 +4,10 @@ import type { Database } from '../../types/supabase';
 import { DB_TIMEOUTS, DatabaseError } from '../../lib/db/query';
 import {
   claimEssaySubmission,
+  claimSharedTheme,
   completeEssaySubmission,
   getEssayById,
+  getGeneratedTheme,
   upsertGeneratedThemes,
   type EssayResultSnapshot,
 } from '../../lib/db/repositories/essays';
@@ -25,6 +27,33 @@ function rpcClient(data: unknown) {
 }
 
 describe('persistência de redações com duração limitada', () => {
+  it.each([null, {
+    id: null,
+    owner_user_id: null,
+    tema: null,
+    texto_apoio1: null,
+    texto_apoio2: null,
+  }])('reconhece tema inexistente ou inacessível na resposta composta do RPC: %j', async (data) => {
+    const { client, rpc, abortSignal } = rpcClient(data);
+
+    expect(await getGeneratedTheme(client, identity.submissionId, identity.userId)).toBeNull();
+    expect(rpc).toHaveBeenCalledExactlyOnceWith('get_cached_theme', {
+      p_theme_id: identity.submissionId,
+      p_user_id: identity.userId,
+    });
+    expect(abortSignal).toHaveBeenCalledWith(expect.any(AbortSignal));
+  });
+
+  it.each([null, { id: null, tema: null, texto_apoio1: null, texto_apoio2: null }])(
+    'não devolve um tema compartilhado vazio quando o catálogo não encontra resultado: %j',
+    async (data) => {
+      const { client, rpc } = rpcClient(data);
+
+      expect(await claimSharedTheme(client, identity.userId)).toBeNull();
+      expect(rpc).toHaveBeenCalledExactlyOnceWith('claim_cached_theme', { p_user_id: identity.userId });
+    },
+  );
+
   it('aguarda writes ativos de temas antes de devolver a falha do lote', async () => {
     let releaseSecond!: (response: Response) => void;
     let settled = false;

@@ -7,7 +7,7 @@ import type { Database } from '@/types/supabase';
 type Client = SupabaseClient<Database>;
 
 export async function getAccountRecords(client: Client, userId: string) {
-  const [statistics, essays, subscription] = await Promise.all([
+  const [statistics, essays, quizzes, subscription] = await Promise.all([
     runQuery((signal) => client
       .from('user_statistics')
       .select('*')
@@ -22,10 +22,18 @@ export async function getAccountRecords(client: Client, userId: string) {
       .order('id', { ascending: false })
       .limit(10)
       .abortSignal(signal)),
+    runQuery((signal) => client
+      .from('quiz_results')
+      .select('id, score, total_questions, correct_answers, unanswered_questions, disciplines, created_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .order('id', { ascending: false })
+      .limit(10)
+      .abortSignal(signal)),
     getSubscriptionRecord(client, userId),
   ]);
 
-  return { statistics, essays: essays ?? [], subscription };
+  return { statistics, essays: essays ?? [], quizzes: quizzes ?? [], subscription };
 }
 
 export function getSubscriptionRecord(client: Client, userId: string) {

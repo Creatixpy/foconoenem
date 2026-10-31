@@ -38,9 +38,20 @@ interface EssaySummary {
   created_at: string;
 }
 
+interface QuizSummary {
+  id: string;
+  score: number;
+  total_questions: number;
+  correct_answers: number;
+  unanswered_questions: number;
+  disciplines: string[];
+  created_at: string;
+}
+
 interface ContaData {
   statistics: UserStatistics | null;
   essays: EssaySummary[];
+  quizzes: QuizSummary[];
   subscription: UserSubscriptionSummary;
 }
 
@@ -721,8 +732,33 @@ function EssaysTab({ essays }: { essays: EssaySummary[] }) {
   );
 }
 
-function QuestionsTab({ stats }: { stats: UserStatistics | null }) {
-  if (!stats || stats.total_questoes_respondidas === 0) {
+function QuizHistory({ quizzes }: { quizzes: QuizSummary[] }) {
+  if (!quizzes.length) return null;
+
+  return (
+    <section aria-labelledby="quiz-history-title" className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
+      <h3 id="quiz-history-title" className="border-b border-[var(--border)] px-5 py-4 text-base font-semibold text-[var(--text)]">Simulados concluídos</h3>
+      <ul className="divide-y divide-[var(--border)]">
+        {quizzes.map((quiz) => (
+          <li key={quiz.id} className="flex items-center justify-between gap-4 px-5 py-4">
+            <div className="min-w-0">
+              <p className="break-words text-sm font-semibold text-[var(--text)]">{quiz.disciplines.join(', ')}</p>
+              <p className="mt-1 text-xs leading-relaxed text-[var(--text-3)]">
+                {formatDate(quiz.created_at)} · {quiz.correct_answers}/{quiz.total_questions} acertos
+                {quiz.unanswered_questions > 0 && ` · ${quiz.unanswered_questions} em branco`}
+              </p>
+            </div>
+            <span className="shrink-0 text-lg font-bold tabular-nums text-[var(--brand-hover)]" aria-label={`Aproveitamento: ${quiz.score}%`}>{quiz.score}%</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function QuestionsTab({ stats, quizzes }: { stats: UserStatistics | null; quizzes: QuizSummary[] }) {
+  if (!stats && quizzes.length > 0) return <QuizHistory quizzes={quizzes} />;
+  if (!stats || (stats.total_simulados === 0 && quizzes.length === 0)) {
     return (
       <EmptyState
         title="Nenhum simulado realizado"
@@ -783,6 +819,8 @@ function QuestionsTab({ stats }: { stats: UserStatistics | null }) {
           })}
         </div>
       </div>
+
+      <QuizHistory quizzes={quizzes} />
     </div>
   );
 }
@@ -938,6 +976,7 @@ export default function ContaPageClient() {
 
   const stats = data?.statistics ?? null;
   const essays = data?.essays ?? [];
+  const quizzes = data?.quizzes ?? [];
   const subscription = data?.subscription ?? {
     planCode: 'free',
     planName: 'Gratuito',
@@ -1077,7 +1116,7 @@ export default function ContaPageClient() {
       {dataLoading ? (
         <StatsSkeleton />
       ) : dataError ? (
-        <div className="rounded-2xl border border-[var(--danger)]/30 bg-[var(--danger-soft)] p-5 flex items-center gap-3">
+        <div role="alert" className="rounded-2xl border border-[var(--danger)]/30 bg-[var(--danger-soft)] p-5 flex items-center gap-3">
           <span className="text-[var(--danger)]"><AlertTriangleIcon /></span>
           <span className="text-sm text-[var(--danger)] flex-1">{dataError}</span>
           <button onClick={fetchData} className="text-sm font-medium text-[var(--brand)] hover:underline">
@@ -1139,13 +1178,13 @@ export default function ContaPageClient() {
         <div className="mt-6">
           {dataLoading ? (
             <ContentSkeleton />
-          ) : (
+          ) : data ? (
             <>
               {activeTab === 'overview' && <OverviewTab stats={stats} essays={essays} />}
               {activeTab === 'essays' && <EssaysTab essays={essays} />}
-              {activeTab === 'questions' && <QuestionsTab stats={stats} />}
+              {activeTab === 'questions' && <QuestionsTab stats={stats} quizzes={quizzes} />}
             </>
-          )}
+          ) : null}
         </div>
       </div>
 

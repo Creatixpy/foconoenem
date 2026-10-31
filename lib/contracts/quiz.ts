@@ -11,40 +11,54 @@ export const DISCIPLINES = [
 export const disciplineSchema = z.enum(DISCIPLINES);
 export type Discipline = z.infer<typeof disciplineSchema>;
 
+export const QUIZ_ALTERNATIVE_IDS = ['A', 'B', 'C', 'D', 'E'] as const;
+
 export const quizAlternativeSchema = z.strictObject({
   id: z.string().trim().min(1).max(16),
   text: z.string().trim().min(1).max(1_000),
   isCorrect: z.boolean(),
 });
 
-export const generatedQuestionSchema = z
-  .strictObject({
-    discipline: disciplineSchema.optional(),
-    topic: z.string().trim().min(1).max(200).optional(),
-    difficulty: z.string().trim().min(1).max(50).optional(),
-    text: z.string().trim().min(20).max(8_000),
-    alternatives: z.array(quizAlternativeSchema).length(4),
-    explanation: z.string().trim().min(20).max(6_000),
-  })
-  .superRefine((question, context) => {
-    const ids = new Set(question.alternatives.map((alternative) => alternative.id));
-    const texts = new Set(
-      question.alternatives.map((alternative) => normalizeText(alternative.text))
-    );
-    const correctCount = question.alternatives.filter(
-      (alternative) => alternative.isCorrect
-    ).length;
+function createQuestionSchema(allowLegacy: boolean) {
+  return z
+    .strictObject({
+      discipline: disciplineSchema.optional(),
+      topic: z.string().trim().min(1).max(200).optional(),
+      difficulty: z.string().trim().min(1).max(50).optional(),
+      text: z.string().trim().min(20).max(8_000),
+      alternatives: allowLegacy
+        ? z.array(quizAlternativeSchema).min(4).max(QUIZ_ALTERNATIVE_IDS.length)
+        : z.array(quizAlternativeSchema).length(QUIZ_ALTERNATIVE_IDS.length),
+      explanation: z.string().trim().min(20).max(6_000),
+    })
+    .superRefine((question, context) => {
+      const ids = new Set(question.alternatives.map((alternative) => alternative.id));
+      const texts = new Set(
+        question.alternatives.map((alternative) => normalizeText(alternative.text))
+      );
+      const correctCount = question.alternatives.filter(
+        (alternative) => alternative.isCorrect
+      ).length;
 
-    if (ids.size !== 4) {
-      context.addIssue({ code: 'custom', message: 'Os IDs das alternativas devem ser únicos.' });
-    }
-    if (texts.size !== 4) {
-      context.addIssue({ code: 'custom', message: 'Os textos das alternativas devem ser únicos.' });
-    }
-    if (correctCount !== 1) {
-      context.addIssue({ code: 'custom', message: 'A questão deve ter exatamente uma alternativa correta.' });
-    }
-  });
+      if (ids.size !== question.alternatives.length) {
+        context.addIssue({ code: 'custom', message: 'Os IDs das alternativas devem ser únicos.' });
+      }
+      if (texts.size !== question.alternatives.length) {
+        context.addIssue({ code: 'custom', message: 'Os textos das alternativas devem ser únicos.' });
+      }
+      if (correctCount !== 1) {
+        context.addIssue({ code: 'custom', message: 'A questão deve ter exatamente uma alternativa correta.' });
+      }
+      if (question.alternatives.length === QUIZ_ALTERNATIVE_IDS.length &&
+          !QUIZ_ALTERNATIVE_IDS.every((id) => ids.has(id))) {
+        context.addIssue({ code: 'custom', message: 'As alternativas devem usar os IDs A, B, C, D e E.' });
+      }
+    });
+}
+
+export const generatedQuestionSchema = createQuestionSchema(false);
+// Previously issued attempts and result snapshots retain their original choices.
+export const storedQuestionSchema = createQuestionSchema(true);
 
 export const generatedQuestionsResponseSchema = z.strictObject({
   questions: z.array(generatedQuestionSchema).min(1),
@@ -70,14 +84,14 @@ export const publicQuestionSchema = z.strictObject({
   id: z.uuid(),
   discipline: disciplineSchema,
   text: z.string().trim().min(20).max(8_000),
-  alternatives: z.array(quizAlternativeSchema.omit({ isCorrect: true })).length(4),
+  alternatives: z.array(quizAlternativeSchema.omit({ isCorrect: true })).min(4).max(QUIZ_ALTERNATIVE_IDS.length),
 });
 
 export const quizQuestionReviewSchema = z.strictObject({
   id: z.uuid(),
   discipline: disciplineSchema,
   text: z.string().trim().min(20).max(8_000),
-  alternatives: z.array(quizAlternativeSchema).length(4),
+  alternatives: z.array(quizAlternativeSchema).min(4).max(QUIZ_ALTERNATIVE_IDS.length),
   explanation: z.string().trim().min(20).max(6_000),
   topic: z.string().trim().min(1).max(200).optional(),
   difficulty: z.string().trim().min(1).max(50).optional(),

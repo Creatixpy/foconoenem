@@ -1015,6 +1015,20 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      get_balanced_questions_by_alternative_count: {
+        Args: {
+          p_alternative_count: number
+          p_disciplines: string[]
+          p_limit_per_discipline?: number
+        }
+        Returns: Database["public"]["Tables"]["generated_questions"]["Row"][]
+        SetofOptions: {
+          from: "*"
+          to: "generated_questions"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_cached_theme: {
         Args: { p_theme_id: string; p_user_id: string }
         Returns: {

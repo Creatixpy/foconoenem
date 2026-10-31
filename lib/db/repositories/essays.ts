@@ -168,7 +168,7 @@ export async function getGeneratedTheme(
       p_user_id: userId,
     }).abortSignal(signal)
   );
-  return data ? normalizeTheme(data) : null;
+  return data?.id ? normalizeTheme(data) : null;
 }
 
 export async function claimSharedTheme(
@@ -178,7 +178,7 @@ export async function claimSharedTheme(
   const data = await runQuery((signal) =>
     client.rpc('claim_cached_theme', { p_user_id: userId }).abortSignal(signal)
   );
-  return data ? normalizeTheme(data) : null;
+  return data?.id ? normalizeTheme(data) : null;
 }
 
 export async function upsertGeneratedThemes(

@@ -40,6 +40,7 @@ export async function fetchContaData(userId: string) {
   return {
     statistics,
     essays: records.essays,
+    quizzes: records.quizzes,
     subscription: toSubscriptionSummary(records.subscription),
   };
 }
