@@ -36,7 +36,7 @@ function question(index: number, discipline: Discipline = 'Matemática'): Canoni
   return {
     id: randomUUID(), discipline,
     text: `Questão contextualizada número ${index} da disciplina ${discipline}.`,
-    alternatives: ['A', 'B', 'C', 'D'].map((id) => ({
+    alternatives: ['A', 'B', 'C', 'D', 'E'].map((id) => ({
       id, text: `Alternativa ${id} do enunciado ${index}`, isCorrect: id === 'B',
     })),
     explanation: 'A alternativa B resolve integralmente as condições propostas no enunciado.',
@@ -80,6 +80,41 @@ describe('preparação canônica de simulados', () => {
     expect(repository.create).toHaveBeenCalledWith(client, expect.objectContaining({
       userId: input.userId, requestId: input.requestId, questions: expect.any(Array),
     }));
+  });
+
+  it.each<Discipline[]>([['Português'], ['Matemática', 'Português']])(
+    'recusa requestId reutilizado com disciplinas diferentes: %j',
+    async (...disciplines) => {
+      repository.find.mockResolvedValue({
+        id: attempt.id,
+        expiresAt: attempt.expires_at,
+        questions: [question(1), question(2), question(3)],
+      });
+      const loadRuntime = vi.fn(async () => runtime());
+
+      await expect(prepareQuiz(client, loadRuntime, { ...input, disciplines }))
+        .rejects.toMatchObject({ kind: 'conflict' });
+      expect(loadRuntime).not.toHaveBeenCalled();
+      expect(repository.catalog).not.toHaveBeenCalled();
+      expect(repository.create).not.toHaveBeenCalled();
+      expect(generate).not.toHaveBeenCalled();
+    },
+  );
+
+  it('aceita replay com as mesmas disciplinas em outra ordem e sem depender de repetições', async () => {
+    const questions = [question(1), question(2, 'Português')];
+    repository.find.mockResolvedValue({ id: attempt.id, expiresAt: attempt.expires_at, questions });
+    const loadRuntime = vi.fn(async () => runtime());
+
+    const result = await prepareQuiz(client, loadRuntime, {
+      ...input,
+      disciplines: ['Português', 'Matemática', 'Português'],
+    });
+
+    expect(result.attemptId).toBe(attempt.id);
+    expect(result.questions.map((item) => item.id)).toEqual(questions.map((item) => item.id));
+    expect(loadRuntime).not.toHaveBeenCalled();
+    expect(repository.create).not.toHaveBeenCalled();
   });
 
   it('gera somente a quantidade faltante e usa IDs canônicos após deduplicação do banco', async () => {

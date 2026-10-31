@@ -42,8 +42,8 @@ The repository contains no active Supabase Edge Functions. Runtime APIs are Next
 | `/noticias/[slug]` | `app/noticias/[slug]/page.tsx`, `app/noticias/[slug]/article.module.css` | Sanitized article with local typography and optional related content; missing articles preserve 404 |
 | `/noticias/pesquisa` | `app/noticias/pesquisa/page.tsx` | URL-driven archive/AI search (`q`, optional `modo=ia`) with history synchronization |
 | `/noticias/admin` | `app/noticias/admin/page.tsx` | News admin panel |
-| `/conta` | `app/conta/page.tsx`, `app/conta/ContaPageClient.tsx` | Account dashboard, URL-selected history (`aba=redacoes`) and Max subscription management (`#plano`) |
-| `/conta/editar` | `app/conta/editar/page.tsx`, `app/conta/editar/ContaEditarPageClient.tsx` | Profile editing |
+| `/conta` | `app/conta/page.tsx`, `app/conta/ContaPageClient.tsx` | Account dashboard, URL-selected essay history, recent completed quiz summaries (including unanswered-only attempts) and Max subscription management (`#plano`) |
+| `/conta/editar` | `app/conta/editar/page.tsx`, `app/conta/editar/ContaEditarPageClient.tsx` | Profile editing with announced save/error feedback, locked fields while saving and mobile-sized controls |
 | `/resultados/[id]` | `app/resultados/[id]/page.tsx`, `app/resultados/[id]/ResultadosPageClient.tsx` | Essay result view |
 | `/doacao` | `app/doacao/page.tsx` | Donation page |
 | `/doacao/sucesso` | `app/doacao/sucesso/page.tsx` | Donation success page |
@@ -95,7 +95,7 @@ The repository contains no active Supabase Edge Functions. Runtime APIs are Next
 
 | Route | Methods | Purpose |
 | --- | --- | --- |
-| `/api/conta/dados` | `GET` | Account dashboard payload |
+| `/api/conta/dados` | `GET` | Verified user's statistics, recent essay/quiz summaries and subscription; quiz summaries exclude full questions/answers |
 | `/api/conta/excluir` | `POST` | Delete the authenticated account after password confirmation and purge user-owned quiz attempts, essays, quizzes and analytics |
 | `/api/conta/recalcular` | `POST` | Recalculate aggregated user statistics |
 | `/api/corrigir` | `POST` | Accept `{ submissionId, redacao, theme }`, resolve canonical theme data and persist one validated correction |
@@ -105,7 +105,7 @@ The repository contains no active Supabase Edge Functions. Runtime APIs are Next
 | `/api/doacao/checkout` | `POST` | Create Stripe Checkout session and persist `donation_checkouts` |
 | `/api/doacao/webhook` | `POST` | Process donation and subscription Stripe webhooks with idempotent persistence |
 | `/api/gerar-tema` | `POST` | Atomically claim/generate a canonical theme and return its `themeId` plus support texts |
-| `/api/perfil` | `GET`, `POST`, `PATCH` | Server-side profile reads and writes for the authenticated user |
+| `/api/perfil` | `GET`, `POST`, `PATCH` | Server-side profile reads and writes for the authenticated user; malformed JSON returns 400 before persistence |
 | `/api/noticias` | `GET` | List approved news and refresh stale highlights on demand when requested |
 | `/api/noticias/[slug]` | `GET` | Fetch a single approved article |
 | `/api/noticias/admin/moderar` | `POST` | Moderate news records |
@@ -115,7 +115,7 @@ The repository contains no active Supabase Edge Functions. Runtime APIs are Next
 | `/api/noticias/gpt-busca` | `POST` | AI summary based only on approved news stored in DB |
 | `/api/noticias/importar` | `POST` | Admin import from NewsAPI |
 | `/api/ocr` | `POST` | Authenticated in-memory OCR with typed errors and stable Gemini model fallback |
-| `/api/questoes` | `POST`, `PATCH` | Create by `{ requestId, disciplines }` without exposing answers / finalize by `{ attemptId, selectedAnswers }` with canonical review |
+| `/api/questoes` | `POST`, `PATCH` | Create by `{ requestId, disciplines }` without exposing answers; a replay with different disciplines returns 409 / finalize by `{ attemptId, selectedAnswers }` with canonical review |
 | `/auth/callback` | `GET` | OAuth code exchange route |
 
 ---
@@ -196,7 +196,7 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | --- | --- |
 | `lib/ai/gemini.ts` | Gemini OCR adapter with 25-second per-model cancellation, no provider initialization for an aborted request and SDK retries disabled |
 | `lib/ai/ocr-routing.ts` | Quality-first stable model order, readable-output validation and typed fallback errors |
-| `lib/ai/groq.ts` | Groq provider factory, current fallback model and retryable-error classification |
+| `lib/ai/groq.ts` | Groq provider factory, current fallback model and retryable-error classification, including provider JSON-generation validation failures within the two-attempt budget |
 | `lib/ai/retry.ts` | Global two-attempt retry/fallback budget; SDK retries remain disabled |
 
 ### `lib/contracts/`
@@ -207,7 +207,7 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | `lib/contracts/essay-input.ts` | Shared client word/character and manual-theme validation |
 | `lib/contracts/student-drafts.ts` | Validated essay/quiz draft shapes and frozen quiz submission snapshot |
 | `lib/contracts/ocr.ts` | Shared OCR MIME, payload, error-code and success-response contracts |
-| `lib/contracts/quiz.ts` | Strict question, attempt and review contracts plus public answer-safe serialization |
+| `lib/contracts/quiz.ts` | New questions require five A–E choices; stored attempts/reviews also accept legacy four-choice snapshots; public serialization omits answers |
 | `lib/contracts/quiz-result.ts` | Neutral validation/mapping of persisted quiz snapshots |
 | `lib/contracts/operating-hours.ts` | Shared São Paulo availability calculation; verified-user Max validity permits 24-hour presentation and expires back to the Free schedule |
 
@@ -248,8 +248,8 @@ There are currently no separate `components.css`, `forms.css` or `utilities.css`
 | --- | --- |
 | `lib/db/server.ts` | Server-only client factories; sessionless admin client reused by configuration and SSR clients isolated per request |
 | `lib/db/query.ts` | Typed `runQuery`, operation deadlines including SDK retry waits and database errors |
-| `lib/db/repositories/essays.ts` | Essay result, canonical theme and idempotent submission RPC adapters with 8-second cancellation |
-| `lib/db/repositories/quizzes.ts` | Atomic question catalog, request-id attempt and canonical submission RPC adapters; 8-second default cancellation and 4-second attempt-recovery queries |
+| `lib/db/repositories/essays.ts` | Essay result, canonical theme and idempotent submission RPC adapters with 8-second cancellation; null composite theme results are treated as absent |
+| `lib/db/repositories/quizzes.ts` | Five-choice catalog selection via `get_balanced_questions_by_alternative_count`, atomic persistence, legacy attempt replay and canonical scoring; 8-second default and 4-second recovery deadlines |
 | `lib/db/repositories/accounts.ts` | Parallel owner-filtered account history/statistics/subscription reads and statistics recalculation with 8-second deadlines |
 | `lib/db/repositories/profiles.ts` | Owner-filtered profile reads/writes and idempotent statistics initialization without replacing existing totals |
 | `lib/db/repositories/news.ts` | Approved news queries, stable ordering, search and empty-highlight fallback with operation cancellation |
@@ -358,7 +358,7 @@ The codebase does **not** currently read `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`.
 | `supabase/migrations/` | Local migration history; schema changes are recorded here |
 
 The stale remote schema snapshot and sensitive export helper were removed; use Supabase migrations plus MCP/CLI inspection as the source of truth.
-System migrations: `20260717180319_reform_essay_quiz_systems.sql`, the validation follow-up `20260717181851_complete_system_idempotency.sql` and `20261008050718_fix_maintenance_timestamp_throttle.sql`. The latest migration makes maintenance throttling recognize legacy timestamps with either `T` or a space, tolerate invalid dates and write new timestamps in UTC ISO format; locking, retention, historical results and the server-only RPC signature/access are preserved.
+System migrations include `20260717180319_reform_essay_quiz_systems.sql`, `20260717181851_complete_system_idempotency.sql` and `20261008050718_fix_maintenance_timestamp_throttle.sql`. Maintenance throttling recognizes legacy timestamps with either `T` or a space, tolerates invalid dates and writes new timestamps in UTC ISO format; locking, retention, historical results and the server-only RPC signature/access are preserved. `20261031081128_five_choice_quizzes.sql` permits five-choice catalog entries and adds a service-only selector by alternative count. The original selector keeps returning four-choice entries for the previous application during rollout; existing attempts and historical snapshots are retained.
 
 ---
 
@@ -386,6 +386,8 @@ System migrations: `20260717180319_reform_essay_quiz_systems.sql`, the validatio
 | `tests/systems/database-clients.test.ts` | Admin client lifecycle, request-isolated SSR cookies and session refresh headers |
 | `tests/systems/database-transport.test.ts` | Caller cancellation, response-body deadlines and bounded SDK retry waits |
 | `tests/systems/database-repositories.test.ts` | Account/profile ownership, missing records, stable news filters and persistence failures |
+| `tests/systems/profile-route.test.ts` | Profile HTTP validation, malformed JSON, trusted origins, verified-user writes and safe internal errors |
+| `tests/systems/ai-retry.test.ts` | Provider JSON-validation fallback, two-attempt bound and non-retryable configuration/authentication errors |
 | `tests/systems/rate-limit.test.ts` | Atomic limit decisions and fail-closed behavior during missing configuration, errors and timeout |
 
 ---

@@ -78,7 +78,14 @@ async function updateProfile(request: NextRequest) {
       return auth.error;
     }
 
-    const payload = profilePayloadSchema.parse(await request.json());
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'invalid_json' }, { status: 400 });
+    }
+
+    const payload = profilePayloadSchema.parse(body);
     const profile = await ensureProfile(auth.userId, payload);
     return NextResponse.json({ profile });
   } catch (error) {

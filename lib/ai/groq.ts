@@ -77,6 +77,18 @@ export function isRetryableGroqError(error: unknown): boolean {
     return true;
   }
 
+  if (status === 400 && error && typeof error === 'object' && 'error' in error) {
+    const payload = error.error;
+    const detail = payload && typeof payload === 'object' && 'error' in payload
+      ? payload.error
+      : payload;
+
+    // JSON mode can reject model output before our schema validator receives it.
+    if (detail && typeof detail === 'object' && 'code' in detail && detail.code === 'json_validate_failed') {
+      return true;
+    }
+  }
+
   if (error instanceof Error) {
     return (
       error.name === 'APIConnectionError' ||
